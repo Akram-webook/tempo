@@ -541,7 +541,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .legend-item em { font-style: normal; opacity: .7; }
 
 /* ---- org TREE (top-down node-link, fits-to-width) ---- */
-.tree-scroll { overflow-x: auto; text-align: center; padding: 4px 0 12px; cursor: grab; }
+/* fill the canvas: a small/collapsed chart centers in the viewport instead of
+   stranding in the corner; a large chart grows and scrolls from the start */
+.tree-scroll {
+  overflow-x: auto; text-align: center; padding: 4px 0 12px; cursor: grab;
+  min-height: max(380px, calc(100vh - 270px));
+  display: flex; align-items: center; justify-content: safe center;
+}
 .tree-scroll.panning { cursor: grabbing; }                       /* active pan = closed fist */
 .tree-scroll.panning, .tree-scroll.panning * { cursor: grabbing !important; user-select: none; }
 
@@ -2997,17 +3003,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   let collapseInit = false;
   let focusId = null;      // scope the tree to one team (subtree root)
 
-  // Progressive disclosure: by default collapse every node that has reports
-  // except the top of the visible tree — so the first view always fits.
+  // Progressive disclosure: keep the leadership spine open (director + the team-lead
+  // row) so the first view actually fills the canvas, and collapse only each team's
+  // internals. One click on a team card then drills in.
   function defaultCollapsed(people) {
     const hasKids = {};
     people.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
-    const inView = {};
-    people.forEach(function (p) { inView[p.id] = true; });
     const c = {};
     people.forEach(function (p) {
-      const isRoot = !p.managerId || !inView[p.managerId];
-      if (hasKids[p.id] && !isRoot) c[p.id] = true;
+      // a "team lead" carries a team label; collapse their subtree by default
+      if (hasKids[p.id] && p.team) c[p.id] = true;
     });
     return c;
   }
