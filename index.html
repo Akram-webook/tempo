@@ -2023,6 +2023,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     openRole:       { en: 'Open role', ar: 'شاغر' },
     joining:        { en: 'Joining', ar: 'ينضم' },
     noAccount:      { en: 'No account yet', ar: 'بدون حساب بعد' },
+    cantDemoteSelf: { en: "You can't change your own access level — ask another admin.", ar: 'لا يمكنك تغيير مستوى صلاحيتك بنفسك — اطلب من مشرف آخر.' },
     live:           { en: 'Live', ar: 'مباشر' },
     liveHint:       { en: 'Live — refreshes automatically every 10 seconds', ar: 'مباشر — يُحدّث تلقائياً كل ١٠ ثوانٍ' },
     totalLoad:      { en: 'Total load', ar: 'إجمالي الحِمل' },
@@ -2127,7 +2128,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
                name: 'Super Admin', nameAr: 'مدير الصلاحيات',
                title: 'Super Admin · Access management', titleAr: 'مدير النظام · إدارة الصلاحيات' };
     }
-    return WP.access.byId(WP.state.viewerId);
+    // Fall back to the first person if a stale/unknown viewerId was restored,
+    // so the app shell never crashes dereferencing an undefined viewer.
+    return WP.access.byId(WP.state.viewerId) || (WP.data && WP.data.PEOPLE && WP.data.PEOPLE[0]) || null;
   };
 
   WP.activityLog = []; // overrides + view-as changes (who/when/why) — provenance
@@ -3450,10 +3453,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   // typing in search, and no drag is in progress — and it restores the scroll position so
   // the refresh is invisible. A single shared timer (cleared each render) avoids pile-ups.
   let refreshTimer = null;
+  function stopAutoRefresh() { if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; } }
   function scheduleAutoRefresh(root) {
-    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    stopAutoRefresh();
     refreshTimer = setInterval(function () {
-      if (!document.body.contains(root)) { clearInterval(refreshTimer); refreshTimer = null; return; }
+      // Critical: every view shares the same #view container. Only refresh while the
+      // Workload map is the ACTIVE route — otherwise we'd repaint the map over whatever
+      // page the user navigated to (Evaluations, Daily tasks, …). Stop the timer the
+      // moment we're no longer on the map.
+      const onMap = WP.state && (WP.state.route === 'map' || WP.state.route == null);
+      if (!onMap || !document.body.contains(root)) { stopAutoRefresh(); return; }
       if (document.hidden) return;
       const sc = root.querySelector('.tree-scroll');
       const menuOpen = root.querySelector('.scope.open');
@@ -3612,12 +3621,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   const ui = WP.ui;
 
   function projectsList(person) {
-    if (!person.assignedEvents.length) {
+    const ids = (person && person.assignedEvents) || [];
+    const evs = ids.map(function (eid) { return WP.data.EVENTS[eid]; }).filter(Boolean);
+    if (!evs.length) {
       return '<div class="sub">' + WP.i18n.t('noProjects') + '</div>';
     }
-    return person.assignedEvents.map(function (eid) {
-      const ev = WP.data.EVENTS[eid];
-      const tier = WP.data.TIERS[ev.tier];
+    return evs.map(function (ev) {
+      const tier = WP.data.TIERS[ev.tier] || { labelAr: '', labelEn: '', weight: 0 };
       return '<div class="proj">' +
         '<span class="tier-chip" style="background:' + ui.tierColor(ev.tier) + '">' +
           (WP.state.lang === 'ar' ? tier.labelAr : tier.labelEn).split('·')[0].trim() + '</span>' +
@@ -3958,7 +3968,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
             r.sim.after + '%</b> · ' + ui.esc(WP.i18n.stateLabel(after)) + '</div></div>' +
           (locked
             ? '<button class="btn" data-override="' + r.p.id + '">' + WP.i18n.t('softLocked') + '</button>'
-            : '<button class="btn primary icon-btn" data-do="' + r.p.id + '" aria-label="' + t('assign') + '">' + WP.ui.icon('plus', 15) + '</button>') +
+            : '<button class="btn primary icon-btn" data-do="' + r.p.id + '" aria-label="' + WP.i18n.t('assign') + '">' + WP.ui.icon('plus', 15) + '</button>') +
         '</div>';
       }).join('') +
       '</div></div>';
@@ -4312,6 +4322,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       sel.onchange = function () {
         const p = WP.access.byId(sel.dataset.role);
         const oldLevel = p.level;
+        // safety: don't let an admin demote their own access and lock themselves out
+        if (p.id === WP.state.viewerId && !WP.access.canManage(Object.assign({}, p, { level: sel.value }))) {
+          window.alert(WP.i18n.t('cantDemoteSelf'));
+          sel.value = oldLevel; return;
+        }
         // governance + risk mitigation: confirm before changing someone's access
         const ok = window.confirm(WP.i18n.t('confirmRole')
           .replace('{n}', WP.i18n.name(p)).replace('{r}', roleLabel(sel.value)));
@@ -5063,6 +5078,10 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       const target = Date.now() + (23 * 864e5 + 11 * 36e5 + 15 * 6e4 + 8000);
       const pad = function (n) { return String(n).padStart(2, '0'); };
       const tick = function () {
+        // stop ticking once the user leaves Components (or the node is gone)
+        if ((WP.state && WP.state.route !== 'library') || !document.body.contains(cd)) {
+          clearInterval(WP._wbkCd); WP._wbkCd = null; return;
+        }
         let s = Math.max(0, Math.floor((target - Date.now()) / 1000));
         const d = Math.floor(s / 86400); s -= d * 86400;
         const h = Math.floor(s / 3600); s -= h * 3600;
@@ -5207,9 +5226,12 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       navClosed = !navClosed; persistNav(); applyNav();
     };
     if (backdrop) backdrop.onclick = function () { navClosed = true; persistNav(); applyNav(); };
-    document.addEventListener('keydown', function (ev) {
+    // single shared handler (removed before re-adding) so it never accumulates across renders
+    if (WP._navEscHandler) document.removeEventListener('keydown', WP._navEscHandler);
+    WP._navEscHandler = function (ev) {
       if (ev.key === 'Escape' && isMobile() && !navClosed) { navClosed = true; persistNav(); applyNav(); }
-    });
+    };
+    document.addEventListener('keydown', WP._navEscHandler);
 
     // account dropdown (top corner)
     const acct = appbar.querySelector('#account');
@@ -5219,7 +5241,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       const open = acct.classList.toggle('open');
       acctBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     };
-    document.addEventListener('click', function (ev) { if (!acct.contains(ev.target)) acct.classList.remove('open'); });
+    if (WP._acctDocClose) document.removeEventListener('click', WP._acctDocClose);
+    WP._acctDocClose = function (ev) { const a = document.getElementById('account'); if (a && !a.contains(ev.target)) a.classList.remove('open'); };
+    document.addEventListener('click', WP._acctDocClose);
 
     appbar.querySelector('#acct-lang').onclick = function () { WP.setState({ lang: WP.state.lang === 'en' ? 'ar' : 'en' }); };
     appbar.querySelector('#acct-theme').onclick = function () { WP.setState({ theme: WP.state.theme === 'light' ? 'dark' : 'light' }); };
