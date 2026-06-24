@@ -526,6 +526,53 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 @media (prefers-reduced-motion: reduce) {
   .predict, .predict-row { transition: none; animation: none; opacity: 1; transform: none; }
 }
+
+/* ---- compact toolbar dropdowns (View · Period) ---- */
+.dd { position: relative; display: inline-flex; }
+.dd-btn { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit; font-size: 13px;
+  height: 36px; box-sizing: border-box; padding: 0 10px 0 12px; border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--text); transition: background .15s ease, border-color .15s ease; }
+.dd-btn:hover { background: var(--surface); border-color: var(--border); }
+.dd-btn .icn { flex: none; color: var(--text-muted); }
+.dd-label { min-width: 48px; text-align: start; font-weight: 500; }
+.dd-caret { color: var(--text-muted); display: inline-flex; transition: transform .18s ease; }
+.dd.open .dd-caret { transform: rotate(180deg); }
+.dd.open .dd-btn { background: var(--surface); border-color: var(--border); }
+.dd-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 180px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 14px 34px rgba(0,0,0,.2); padding: 6px; z-index: 40;
+  opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top;
+  transition: opacity .16s ease, transform .16s cubic-bezier(.22,.61,.36,1), visibility .16s; }
+.dd.open .dd-menu { opacity: 1; visibility: visible; transform: none; }
+.dd-opt { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13.5px; }
+.dd-opt:hover, .dd-opt:focus { background: var(--surface-2); outline: none; }
+.dd-opt.selected { font-weight: 600; }
+.dd-opt .icn { color: var(--text-muted); flex: none; }
+.dd-opt-nm { flex: 1; }
+.dd-check { color: var(--brand); display: inline-flex; flex: none; }
+@media (prefers-reduced-motion: reduce) { .dd-menu, .dd-caret { transition: none; } }
+
+/* ---- unified Find (people + teams in one control) ---- */
+.finder { position: relative; display: inline-flex; align-items: center; gap: 8px; flex: 1 1 240px; min-width: 200px; max-width: 380px; }
+.finder .finder-input { flex: 1 1 auto; max-width: none; min-width: 0; }
+.scope-chip { display: inline-flex; align-items: center; gap: 6px; flex: none; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 600;
+  height: 36px; box-sizing: border-box; padding: 0 8px 0 10px; border: 1px solid transparent; border-radius: 999px;
+  background: var(--brand-soft, rgba(255,44,121,.12)); color: var(--brand); transition: background .15s ease; }
+.scope-chip .icn { flex: none; }
+.scope-chip:hover { background: var(--brand-soft, rgba(255,44,121,.22)); }
+.scope-chip span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* result rows: group labels, team rows, and the per-person team chip */
+.predict-group { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); padding: 9px 10px 4px; }
+.predict-group:first-child { padding-top: 4px; }
+.pr-ico { width: 30px; height: 30px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; color: var(--text-muted); flex: none; }
+.pr-go { font-size: 11px; font-weight: 600; color: var(--brand); flex: none; opacity: 0; transition: opacity .12s ease; }
+.predict-row.pr-team:hover .pr-go, .predict-row.pr-team.active .pr-go { opacity: 1; }
+.pr-teamchip { display: inline-flex; align-items: center; gap: 3px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted);
+  border-radius: 999px; padding: 1px 7px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; vertical-align: -1px; }
+.pr-teamchip:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft, rgba(255,44,121,.10)); }
+.pr-teamchip .icn { flex: none; }
+.pr-teamself { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+
 .period { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .seg-label { font-size: 12px; color: var(--text-muted); }
 .datenav { display: inline-flex; align-items: center; gap: 4px; }
@@ -1787,6 +1834,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     prevPeriod:     { en: 'Previous',               ar: 'السابق' },
     nextPeriod:     { en: 'Next',                   ar: 'التالي' },
     searchPerson:   { en: 'Search a person…',       ar: 'ابحث عن شخص…' },
+    findPlaceholder:{ en: 'Search people or teams…', ar: 'ابحث عن شخص أو فريق…' },
+    teams:          { en: 'Teams',                  ar: 'الفرق' },
+    people:         { en: 'People',                 ar: 'الأشخاص' },
+    view:           { en: 'View',                   ar: 'عرض' },
+    teamLead:       { en: 'Team lead',              ar: 'قائد الفريق' },
     allTeams:       { en: 'All teams',              ar: 'كل الفرق' },
     seniorTeams:    { en: 'Senior teams',           ar: 'الفرق الرئيسية' },
     subTeams:       { en: 'Sub-teams',              ar: 'الفرق الفرعية' },
@@ -3196,48 +3248,64 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       }).join('') + '</div>';
   }
 
-  // Search + team-focus controls so a director never has to scroll a giant tree.
-  function mapFilters(base) {
-    const t = WP.i18n.t;
+  // Localized team label (team leads carry a team name; everyone else falls back to their name).
+  function teamLabel(p) {
+    if (p.team) return WP.state.lang === 'ar' ? (p.teamAr || p.team) : p.team;
+    return WP.i18n.name(p);
+  }
+  // The team a person belongs to = nearest ancestor (incl. self) that carries a team label.
+  function teamLeadOf(id) {
+    let p = WP.access.byId(id), guard = 0;
+    while (p && guard++ < 20) { if (p.team) return p; p = p.managerId ? WP.access.byId(p.managerId) : null; }
+    return null;
+  }
+  // All focusable "teams" = anyone with reports, team-leads first (business order), then the rest.
+  function teamsList(base) {
     const hasKids = {};
     base.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
-    const byName = function (a, b) { return WP.i18n.name(a).localeCompare(WP.i18n.name(b), undefined, { sensitivity: 'base' }); };
-    // teams = people who have reports — grouped by level (seniors then managers),
-    // alphabetical within each. Exclude the director/root (their "team" == All teams).
-    const leadsAll = base.filter(function (p) { return hasKids[p.id]; });
-    const seniors = leadsAll.filter(function (p) { return p.level === 'sr_manager'; }).sort(byName);
-    const managers = leadsAll.filter(function (p) { return p.level === 'manager'; }).sort(byName);
-    // Custom themed listbox (native <select> popups can't match the dark/brand theme).
-    function opt(p) {
-      const id = p ? p.id : '';
-      const sel = (focusId || '') === id;
-      return '<div class="scope-opt' + (sel ? ' selected' : '') + '" role="option" aria-selected="' + sel + '" data-team="' + id + '" tabindex="-1">' +
-        (p ? ui.avatar(p, 'var(--brand)') : '<span class="scope-allicon">' + WP.ui.icon('users', 15) + '</span>') +
-        '<span class="scope-opt-nm">' + ui.esc(p ? WP.i18n.name(p) : t('allTeams')) + '</span>' +
-        (sel ? '<span class="scope-check">' + WP.ui.icon('check', 15) + '</span>' : '') +
-      '</div>';
-    }
-    const cur = focusId ? base.find(function (p) { return p.id === focusId; }) : null;
-    const curLabel = cur ? WP.i18n.name(cur) : t('allTeams');
-    const group = function (label, arr) {
-      return arr.length ? '<div class="scope-group" role="presentation">' + ui.esc(label) + '</div>' + arr.map(opt).join('') : '';
-    };
-    const menu = opt(null) + group(t('seniorTeams'), seniors) + group(t('subTeams'), managers);
+    const ORDER = ['Automation & Execution', 'Sports', 'Entertainment', 'On Ground', 'Cashless'];
+    return base.filter(function (p) { return hasKids[p.id]; }).sort(function (a, b) {
+      const ra = a.team ? (ORDER.indexOf(a.team) + 1 || 99) : 999;
+      const rb = b.team ? (ORDER.indexOf(b.team) + 1 || 99) : 999;
+      if (ra !== rb) return ra - rb;
+      return WP.i18n.name(a).localeCompare(WP.i18n.name(b), undefined, { sensitivity: 'base' });
+    });
+  }
 
-    return '<div class="map-filters">' +
-      '<div class="search">' + WP.ui.icon('search', 15) +
-        '<input id="map-search" type="text" placeholder="' + t('searchPerson') + '" aria-label="' + t('searchPerson') + '"' +
+  // Generic themed dropdown (button + listbox) — used for View and Period so the
+  // toolbar stays compact instead of two rows of segmented buttons.
+  function ddMenu(id, btnIcon, label, items) {
+    return '<div class="dd" id="' + id + '">' +
+      '<button class="dd-btn" id="' + id + '-btn" aria-haspopup="listbox" aria-expanded="false">' +
+        (btnIcon ? WP.ui.icon(btnIcon, 15) : '') +
+        '<span class="dd-label">' + ui.esc(label) + '</span>' +
+        '<span class="dd-caret">' + WP.ui.icon('caret', 14) + '</span></button>' +
+      '<div class="dd-menu" id="' + id + '-menu" role="listbox">' +
+        items.map(function (o) {
+          return '<div class="dd-opt' + (o.sel ? ' selected' : '') + '" role="option" aria-selected="' + (!!o.sel) + '" data-val="' + o.val + '" tabindex="-1">' +
+            (o.icon ? WP.ui.icon(o.icon, 15) : '') +
+            '<span class="dd-opt-nm">' + ui.esc(o.label) + '</span>' +
+            (o.sel ? '<span class="dd-check">' + WP.ui.icon('check', 14) + '</span>' : '') + '</div>';
+        }).join('') +
+      '</div></div>';
+  }
+
+  // Unified Find: ONE control that searches people AND teams. Person rows show the team
+  // they sit under (a clickable chip) so you can jump to the person OR their whole team.
+  function mapFilters(base) {
+    const t = WP.i18n.t;
+    const cur = focusId ? base.find(function (p) { return p.id === focusId; }) : null;
+    const chip = cur
+      ? '<button class="scope-chip" id="scope-clear" title="' + t('showAll') + '">' + WP.ui.icon('users', 14) +
+          '<span>' + ui.esc(teamLabel(cur)) + '</span>' + WP.ui.icon('x', 12) + '</button>'
+      : '';
+    return '<div class="finder' + (cur ? ' has-scope' : '') + '" id="finder">' + chip +
+      '<div class="search finder-input">' + WP.ui.icon('search', 15) +
+        '<input id="map-search" type="text" placeholder="' + t('findPlaceholder') + '" aria-label="' + t('findPlaceholder') + '"' +
           ' role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-suggest" autocomplete="off" />' +
         '<button class="search-clear" id="map-search-clear" aria-label="' + t('showAll') + '">' + WP.ui.icon('x', 13) + '</button>' +
-        '<div class="predict" id="map-suggest" role="listbox"></div>' +
       '</div>' +
-      '<div class="scope' + (focusId ? ' active' : '') + '" id="scope">' +
-        '<button class="scope-btn" id="scope-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="' + t('viewingTeam') + '">' +
-          WP.ui.icon('users', 15) + '<span class="scope-label">' + ui.esc(curLabel) + '</span>' +
-          '<span class="scope-caret">' + WP.ui.icon('caret', 14) + '</span>' +
-        '</button>' +
-        '<div class="scope-menu" id="scope-menu" role="listbox" aria-label="' + t('viewingTeam') + '">' + menu + '</div>' +
-      '</div>' +
+      '<div class="predict finder-menu" id="map-suggest" role="listbox"></div>' +
     '</div>';
   }
 
@@ -3354,15 +3422,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
     const t = WP.i18n.t;
     const win = WP.state.window;
+    const viewItems = [
+      { val: 'chart', label: t('treeView'), icon: 'tree', sel: !listMode },
+      { val: 'list', label: t('listView'), icon: 'list', sel: listMode },
+    ];
+    const periodItems = ['day', 'week', 'month', 'year'].map(function (k) {
+      return { val: k, label: t(k), sel: k === win };
+    });
     const toggle = '<div class="toolbar">' +
-      '<div class="seg" role="group" aria-label="' + t('workloadMap') + '">' +
-        '<button data-view="chart" class="' + (!listMode ? 'active' : '') + '">' + WP.ui.icon('tree', 15) + ' ' + t('treeView') + '</button>' +
-        '<button data-view="list" class="' + (listMode ? 'active' : '') + '">' + WP.ui.icon('list', 15) + ' ' + t('listView') + '</button></div>' +
-      '<div class="seg" role="group" aria-label="' + t('day') + '/' + t('week') + '/' + t('month') + '/' + t('year') + '">' +
-        [['day', t('day')], ['week', t('week')], ['month', t('month')], ['year', t('year')]].map(function (o) {
-          return '<button data-win="' + o[0] + '" class="' + (o[0] === win ? 'active' : '') + '">' + o[1] + '</button>';
-        }).join('') +
-      '</div>' +
+      ddMenu('view-dd', listMode ? 'list' : 'tree', listMode ? t('listView') : t('treeView'), viewItems) +
+      ddMenu('period-dd', null, t(win), periodItems) +
       dateNav(win, WP.state.refDate) +
     '</div>';
 
@@ -3383,12 +3452,6 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="controlbar">' + toggle + mapFilters(base) + '</div>' +
       legend + body;
 
-    root.querySelectorAll('[data-view]').forEach(function (b) {
-      b.onclick = function () { listMode = (b.dataset.view === 'list'); render(root); };
-    });
-    root.querySelectorAll('[data-win]').forEach(function (b) {
-      b.onclick = function () { WP.setState({ window: b.dataset.win }); };
-    });
     // Apple-style date navigator — prev / next / today (keeps the granularity)
     root.querySelectorAll('[data-nav]').forEach(function (b) {
       b.onclick = function () {
@@ -3425,13 +3488,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       el.onclick = function () { WP.ui.peek(el.dataset.id); };
     });
 
-    // team focus — custom themed listbox
-    setupScope(root);
+    // compact toolbar dropdowns (View · Period)
+    setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });
+    setupMenu(root, 'period-dd', function (v) { WP.setState({ window: v }); });
+    closeMenusOnOutside(root);
     const esa = root.querySelector('#empty-showall');
     if (esa) esa.onclick = function () { focusId = null; render(root); };
 
-    // predictive search (typeahead) — searches ALL teams, animated, keyboard-driven
-    setupPredict(root, base, allSnapById);
+    // unified Find — searches people AND teams; jump to a person or their whole team
+    setupFinder(root, base, allSnapById);
 
     // drag-to-pan the org canvas (grab / grabbing cursors)
     setupPan(root);
@@ -3463,12 +3528,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       if (!onMap || !document.body.contains(root)) { stopAutoRefresh(); return; }
       if (document.hidden) return;
       const sc = root.querySelector('.tree-scroll');
-      const menuOpen = root.querySelector('.scope.open');
+      const menuOpen = root.querySelector('.dd.open, .finder.open, .predict.open');
       const search = root.querySelector('#map-search');
       const typing = search && (document.activeElement === search || search.value);
       const dragging = sc && sc.classList.contains('panning');
-      const ddOpen = root.querySelector('.predict.open');
-      if (menuOpen || typing || dragging || ddOpen) return;       // don't interrupt the user
+      if (menuOpen || typing || dragging) return;                 // don't interrupt the user
       const sx = sc ? sc.scrollLeft : 0, sy = sc ? sc.scrollTop : 0;
       render(root);
       const sc2 = root.querySelector('.tree-scroll');
@@ -3512,41 +3576,43 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     });
   }
 
-  function setupScope(root) {
-    const wrap = root.querySelector('#scope');
+  // Generic dropdown menu wiring (View / Period). One open at a time; full keyboard support.
+  function closeMenusOnOutside(root) {
+    if (WP._ddDocClose) document.removeEventListener('click', WP._ddDocClose);
+    WP._ddDocClose = function (ev) {
+      root.querySelectorAll('.dd.open, .finder.open').forEach(function (w) {
+        if (!w.contains(ev.target)) {
+          w.classList.remove('open');
+          const b = w.querySelector('.dd-btn'); if (b) b.setAttribute('aria-expanded', 'false');
+          const m = w.querySelector('.finder-menu'); if (m) m.classList.remove('open');
+        }
+      });
+    };
+    document.addEventListener('click', WP._ddDocClose);
+  }
+  function setupMenu(root, id, onChoose) {
+    const wrap = root.querySelector('#' + id);
     if (!wrap) return;
-    const btn = root.querySelector('#scope-btn');
-    const menu = root.querySelector('#scope-menu');
-    const opts = [].slice.call(menu.querySelectorAll('.scope-opt'));
+    const btn = root.querySelector('#' + id + '-btn');
+    const menu = root.querySelector('#' + id + '-menu');
+    const opts = [].slice.call(menu.querySelectorAll('.dd-opt'));
     function open() {
+      root.querySelectorAll('.dd.open').forEach(function (w) { if (w !== wrap) w.classList.remove('open'); });
       wrap.classList.add('open'); btn.setAttribute('aria-expanded', 'true');
-      const s = menu.querySelector('.scope-opt.selected') || opts[0]; if (s) s.focus();
+      const s = menu.querySelector('.dd-opt.selected') || opts[0]; if (s) s.focus();
     }
     function close() { wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
-    function choose(o) {
-      focusId = o.dataset.team || null;
-      // Focusing a team shows it fully expanded; All teams returns to the fit-first default.
-      collapsed = focusId ? {} : defaultCollapsed(WP.access.visiblePeople(WP.viewer()));
-      render(root);
-    }
     btn.onclick = function (e) { e.stopPropagation(); wrap.classList.contains('open') ? close() : open(); };
-    btn.onkeydown = function (e) {
-      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
-    };
+    btn.onkeydown = function (e) { if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
     opts.forEach(function (o, i) {
-      o.onclick = function () { choose(o); };
+      o.onclick = function () { close(); onChoose(o.dataset.val); };
       o.onkeydown = function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(o); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); close(); onChoose(o.dataset.val); }
         else if (e.key === 'ArrowDown') { e.preventDefault(); (opts[i + 1] || opts[0]).focus(); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); (opts[i - 1] || opts[opts.length - 1]).focus(); }
         else if (e.key === 'Escape') { e.preventDefault(); close(); btn.focus(); }
       };
     });
-    // single shared outside-click listener (removed before re-adding) so 10s refreshes
-    // never pile up handlers
-    if (WP._scopeDocClose) document.removeEventListener('click', WP._scopeDocClose);
-    WP._scopeDocClose = function (ev) { if (!wrap.contains(ev.target)) close(); };
-    document.addEventListener('click', WP._scopeDocClose);
   }
 
   function highlight(name, q) {
@@ -3555,55 +3621,83 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return ui.esc(name.slice(0, i)) + '<mark>' + ui.esc(name.slice(i, i + q.length)) + '</mark>' + ui.esc(name.slice(i + q.length));
   }
 
-  function setupPredict(root, pool, snapById) {
+  // Unified Find: one combobox over people + teams. Person rows carry a clickable team
+  // chip, so a director can jump straight to a person OR scope the whole tree to their team.
+  function setupFinder(root, base, snapById) {
     const t = WP.i18n.t;
+    const finder = root.querySelector('#finder');
     const input = root.querySelector('#map-search');
     const dd = root.querySelector('#map-suggest');
     const clr = root.querySelector('#map-search-clear');
-    if (!input || !dd) return;
-    let items = [], active = -1;
+    if (!finder || !input || !dd) return;
+    const teams = teamsList(base);
+    let rows = [], active = -1;
+    const hay = function (p) { return (p.name + ' ' + (p.nameAr || '') + ' ' + (p.title || '') + ' ' + (p.titleAr || '')).toLowerCase(); };
 
-    function close() {
-      dd.classList.remove('open'); dd.innerHTML = ''; items = []; active = -1;
-      input.setAttribute('aria-expanded', 'false');
+    function closeDd() { finder.classList.remove('open'); dd.classList.remove('open'); dd.innerHTML = ''; rows = []; active = -1; input.setAttribute('aria-expanded', 'false'); }
+    function focusTeam(id) { closeDd(); input.value = ''; focusId = id || null; collapsed = focusId ? {} : defaultCollapsed(base); render(root); }
+    function openPerson(id) { closeDd(); input.value = ''; WP.ui.peek(id); }
+
+    function teamRow(p, q) {
+      return '<div class="predict-row pr-team" role="option" data-team="' + p.id + '">' +
+        '<span class="pr-ico">' + WP.ui.icon('users', 15) + '</span>' +
+        '<span class="predict-meta"><span class="nm">' + (q ? highlight(teamLabel(p), q) : ui.esc(teamLabel(p))) + '</span>' +
+        '<span class="ttl">' + ui.esc(WP.i18n.title(p)) + '</span></span>' +
+        '<span class="pr-go">' + t('view') + '</span></div>';
     }
-    function pick(id) { close(); input.value = ''; WP.ui.peek(id); }
-    function setActive(i) {
-      active = i;
-      dd.querySelectorAll('.predict-row').forEach(function (r, idx) {
-        const on = idx === i; r.classList.toggle('active', on); r.setAttribute('aria-selected', on ? 'true' : 'false');
-        if (on && r.scrollIntoView) r.scrollIntoView({ block: 'nearest' });
-      });
+    function personRow(p, q) {
+      const s = snapById[p.id]; const c = s ? ui.stateColor(s.state) : 'var(--brand)';
+      const lead = teamLeadOf(p.id);
+      const teamBit = (lead && lead.id !== p.id)
+        ? ' · <button class="pr-teamchip" data-team="' + lead.id + '" title="' + ui.esc(teamLabel(lead)) + '">' + WP.ui.icon('users', 11) + ' ' + ui.esc(teamLabel(lead)) + '</button>'
+        : (lead && lead.id === p.id) ? ' · <span class="pr-teamself">' + t('teamLead') + '</span>' : '';
+      const load = s ? '<span class="predict-load" style="color:' + c + '">' + s.load + '%</span>' : '';
+      return '<div class="predict-row pr-person" role="option" data-pick="' + p.id + '">' +
+        ui.avatar(p, c) +
+        '<span class="predict-meta"><span class="nm">' + (q ? highlight(WP.i18n.name(p), q) : ui.esc(WP.i18n.name(p))) + '</span>' +
+        '<span class="ttl">' + ui.esc(WP.i18n.title(p)) + teamBit + '</span></span>' + load + '</div>';
     }
+
     function build() {
       const q = input.value.trim().toLowerCase();
-      if (!q) { close(); return; }
-      const hay = function (p) { return (p.name + ' ' + (p.nameAr || '') + ' ' + (p.title || '') + ' ' + (p.titleAr || '')).toLowerCase(); };
-      items = pool.filter(function (p) { return hay(p).indexOf(q) >= 0; }).slice(0, 6);
-      input.setAttribute('aria-expanded', 'true');
-      if (!items.length) { dd.innerHTML = '<div class="predict-empty">' + t('noResults') + '</div>'; dd.classList.add('open'); return; }
-      dd.innerHTML = items.map(function (p, i) {
-        const s = snapById[p.id]; const c = s ? ui.stateColor(s.state) : 'var(--brand)';
-        const load = s ? '<span class="predict-load" style="color:' + c + '">' + s.load + '%</span>' : '';
-        return '<div class="predict-row" role="option" aria-selected="false" data-pick="' + p.id + '" style="--i:' + i + '">' +
-          ui.avatar(p, c) +
-          '<span class="predict-meta"><span class="nm">' + highlight(WP.i18n.name(p), q) + '</span>' +
-          '<span class="ttl">' + ui.esc(WP.i18n.title(p)) + '</span></span>' + load + '</div>';
-      }).join('');
-      dd.classList.add('open');
+      let html = '';
+      if (focusId) html += '<div class="predict-row pr-clear" role="option" data-team=""><span class="pr-ico">' + WP.ui.icon('users', 15) + '</span><span class="predict-meta"><span class="nm">' + t('allTeams') + '</span></span></div>';
+      const mTeams = teams.filter(function (p) { return !q || teamLabel(p).toLowerCase().indexOf(q) >= 0 || hay(p).indexOf(q) >= 0; });
+      const mPeople = q ? base.filter(function (p) { return hay(p).indexOf(q) >= 0; }).slice(0, 8) : [];
+      if (mTeams.length) html += '<div class="predict-group">' + t('teams') + '</div>' + mTeams.map(function (p) { return teamRow(p, q); }).join('');
+      if (mPeople.length) html += '<div class="predict-group">' + t('people') + '</div>' + mPeople.map(function (p) { return personRow(p, q); }).join('');
+      if (!html) html = '<div class="predict-empty">' + t('noResults') + '</div>';
+      dd.innerHTML = html;
+      finder.classList.add('open'); dd.classList.add('open'); input.setAttribute('aria-expanded', 'true');
+      rows = [].slice.call(dd.querySelectorAll('.predict-row')); active = -1;
+      dd.querySelectorAll('.pr-teamchip').forEach(function (b) {
+        b.onmousedown = function (e) { e.preventDefault(); e.stopPropagation(); focusTeam(b.dataset.team); };
+      });
       dd.querySelectorAll('[data-pick]').forEach(function (r) {
-        r.onmousedown = function (e) { e.preventDefault(); pick(r.dataset.pick); };
+        r.onmousedown = function (e) { if (e.target.closest('.pr-teamchip')) return; e.preventDefault(); openPerson(r.dataset.pick); };
+      });
+      dd.querySelectorAll('.predict-row[data-team]').forEach(function (r) {
+        r.onmousedown = function (e) { e.preventDefault(); focusTeam(r.dataset.team || null); };
       });
     }
+    function setActive(i) {
+      active = i;
+      rows.forEach(function (r, idx) { const on = idx === i; r.classList.toggle('active', on); if (on && r.scrollIntoView) r.scrollIntoView({ block: 'nearest' }); });
+    }
+    function activate(r) { if (!r) return; if (r.dataset.pick) openPerson(r.dataset.pick); else focusTeam(r.getAttribute('data-team') || null); }
+
+    input.onfocus = build;
     input.oninput = build;
     input.onkeydown = function (e) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); if (items.length) setActive(Math.min(items.length - 1, active + 1)); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); if (items.length) setActive(Math.max(0, active - 1)); }
-      else if (e.key === 'Enter') { if (items.length) pick((active >= 0 ? items[active] : items[0]).id); }
-      else if (e.key === 'Escape') { close(); input.blur(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (rows.length) setActive(Math.min(rows.length - 1, active + 1)); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); if (rows.length) setActive(Math.max(0, active - 1)); }
+      else if (e.key === 'Enter') { e.preventDefault(); activate(active >= 0 ? rows[active] : rows[0]); }
+      else if (e.key === 'Escape') { closeDd(); input.blur(); }
     };
-    input.onblur = function () { setTimeout(close, 140); };
-    if (clr) clr.onclick = function () { input.value = ''; close(); input.focus(); };
+    input.onblur = function () { setTimeout(closeDd, 160); };
+    if (clr) clr.onclick = function () { input.value = ''; build(); input.focus(); };
+    const sce = root.querySelector('#scope-clear');
+    if (sce) sce.onclick = function () { focusTeam(null); };
   }
 
   WP.ui.workloadMap = { render: render };
