@@ -1182,7 +1182,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   <div class="shell">
     <aside class="sidebar" id="topbar"></aside>
     <div class="nav-backdrop" id="nav-backdrop"></div>
-    <main id="view"></main>
+    <main class="view-main"><div id="eval-banner" hidden></div><div id="view"></div></main>
   </div>
   <div id="overlay-host"></div>
 
@@ -5442,9 +5442,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   // straight to their pending reviews. Lives in its own host above #view, so navigating
   // and the workload auto-refresh never wipe it.
   function renderEvalBanner() {
-    const root = document.getElementById('view');
+    // Host lives INSIDE the content column (above #view), never as a child of the row-flex
+    // shell — otherwise it stretches to full height. Created in index.html; create as a
+    // fallback inside .view-main if missing.
     let host = document.getElementById('eval-banner');
-    if (!host) { host = document.createElement('div'); host.id = 'eval-banner'; if (root && root.parentNode) root.parentNode.insertBefore(host, root); }
+    if (!host) {
+      host = document.createElement('div'); host.id = 'eval-banner';
+      const main = document.querySelector('.view-main'); const root = document.getElementById('view');
+      if (main && root) main.insertBefore(host, root);
+    }
     const t = WP.i18n.t, viewer = WP.viewer();
     const cyc = WP.evaluation && WP.evaluation.activeCycle && WP.evaluation.activeCycle();
     const req = (viewer && WP.evaluation && WP.evaluation.requiredFor) ? WP.evaluation.requiredFor(viewer.id) : null;
