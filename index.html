@@ -1025,6 +1025,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .la-ml { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .login-controls { display: flex; gap: 8px; }
 #g-btn-host { display: flex; justify-content: center; margin-top: 6px; min-height: 40px; }
+.login-codeto { font-size: 14px; color: var(--text-2, #a1a1aa); margin: 2px 0 12px; line-height: 1.5; }
+.login-codeto strong { color: var(--text-1, #e4e4e7); }
+.login-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; }
+.login-dot { color: var(--text-3, #71717a); }
+.linkbtn { background: none; border: 0; padding: 0; cursor: pointer; color: var(--brand, #ff2c79); font: inherit; font-size: 13px; }
+.linkbtn:hover { text-decoration: underline; }
+.linkbtn:disabled { color: var(--text-3, #71717a); cursor: default; text-decoration: none; }
 
 /* Sign in with Google */
 .g-btn {
@@ -1876,17 +1883,32 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 </script>
   <script>
 /* ============================================================
- * Tempo — Runtime config
+ * Tempo — Runtime config (sign-in security)
  * ------------------------------------------------------------
- * googleClientId: paste a Google OAuth **Web** Client ID here to turn on REAL,
- * verified sign-in (Google proves the person owns their @webook.com account).
- * Leave it empty to run the directory gate (demo): exact-email match only.
- * Steps to get the ID: see ACCESS-SETUP.md.
+ * Tempo supports three levels of sign-in. The strongest one that is
+ * configured wins:
+ *
+ *  1. EMAIL CODE (recommended) — set supabaseUrl + supabaseAnonKey below.
+ *     The user enters their @webook.com email, gets a 6-digit code in their
+ *     inbox, and types it back. The code goes to the REAL mailbox, so typing
+ *     someone else's email gets you nowhere. These two values are PUBLIC by
+ *     design (safe to ship in the page). See ACCESS-SETUP.md → "Email code".
+ *
+ *  2. GOOGLE — set googleClientId to a Google OAuth Web Client ID. Google
+ *     proves the @webook.com identity. See ACCESS-SETUP.md → "Google".
+ *
+ *  3. DIRECTORY GATE (demo, default when nothing is set) — exact-email match
+ *     only. Convenient for a trusted internal pilot, but NOT a real lock:
+ *     anyone who types a registered email gets in.
  * ========================================================== */
 (function (WP) {
   'use strict';
   WP.config = WP.config || {};
-  if (WP.config.googleClientId === undefined) WP.config.googleClientId = '';
+  // — Email code (Supabase). Paste your project URL + anon/public key. —
+  if (WP.config.supabaseUrl === undefined)     WP.config.supabaseUrl = '';
+  if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = '';
+  // — Google sign-in (optional alternative). —
+  if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
 })(window.WP = window.WP || {});
 
 </script>
@@ -2131,6 +2153,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     demoAuthNote:   { en: 'Prototype sign-in — no password. Your email is matched to your team profile and role.', ar: 'دخول تجريبي — بدون كلمة مرور. يُربط إيميلك بملفك ودورك في الفريق.' },
     verifyNote:     { en: 'Demo gate — your email must match a registered Tempo account. For verified sign-in, enable Google (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في تيمبو. للتحقق الفعلي فعّل Google (راجع ACCESS-SETUP.md).' },
     errVerify:      { en: 'Could not verify that Google account. Use your @webook.com account.', ar: 'تعذّر التحقق من حساب Google. استخدم حساب @webook.com.' },
+    // — email verification code (OTP) —
+    sendCode:       { en: 'Email me a code', ar: 'أرسل لي رمزاً' },
+    sendingCode:    { en: 'Sending…', ar: 'جارٍ الإرسال…' },
+    codeSentTo:     { en: 'We emailed a 6-digit code to', ar: 'أرسلنا رمزاً من ٦ أرقام إلى' },
+    codeLabel:      { en: 'Verification code', ar: 'رمز التحقق' },
+    codePh:         { en: '6-digit code', ar: 'الرمز المكوّن من ٦ أرقام' },
+    verifyBtn:      { en: 'Verify & sign in', ar: 'تحقّق وسجّل الدخول' },
+    verifying:      { en: 'Verifying…', ar: 'جارٍ التحقق…' },
+    resendCode:     { en: 'Resend code', ar: 'إعادة إرسال الرمز' },
+    changeEmail:    { en: 'Change email', ar: 'تغيير الإيميل' },
+    errBadCode:     { en: 'That code is wrong or expired. Try again or resend.', ar: 'الرمز غير صحيح أو منتهٍ. حاول مجدداً أو أعد الإرسال.' },
+    errSendCode:    { en: 'Could not send the code. Check the email and try again.', ar: 'تعذّر إرسال الرمز. تحقّق من الإيميل وحاول مجدداً.' },
+    verifiedNote:   { en: 'Verified sign-in — we email a one-time code to your @webook.com inbox. Only you receive it.', ar: 'دخول موثّق — نرسل رمزاً لمرة واحدة إلى بريد @webook.com الخاص بك. أنت وحدك تستلمه.' },
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
@@ -2886,17 +2921,17 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 </script>
   <script>
 /* ============================================================
- * Tempo — Sign in (email directory gate + optional Google verification)
+ * Tempo — Sign in
  * ------------------------------------------------------------
- * Honest model on a static host:
- *  - DIRECTORY GATE (default): you sign in with your EXACT registered
- *    @webook.com email. Unknown emails are rejected; you can't pick someone
- *    else's account from a list. This is identity selection, not crypto proof —
- *    it is NOT hardened against a determined user (no backend to verify).
- *  - VERIFIED (when WP.config.googleClientId is set): "Continue with Google"
- *    runs real Google Identity Services; Google proves the @webook.com email,
- *    we map it to the account. This is the real lock (see ACCESS-SETUP.md).
- * akram@webook.com is the Super Admin (View-as / open any account + access mgmt).
+ * Strongest configured method wins (see src/js/core/config.js):
+ *   1. EMAIL CODE (Supabase): enter @webook.com email → 6-digit code is
+ *      emailed to the REAL mailbox → type it back → verified. Typing someone
+ *      else's email gets you nowhere, because the code lands in THEIR inbox.
+ *   2. GOOGLE (GIS): Google proves the @webook.com identity.
+ *   3. DIRECTORY GATE (demo default): exact-email match only — convenient,
+ *      but NOT a real lock (anyone who types a known email gets in).
+ * In every mode the email must match a registered Tempo account, and
+ * akram@webook.com is the Super Admin (View-as any account + access mgmt).
  * ========================================================== */
 (function (WP) {
   'use strict';
@@ -2908,8 +2943,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return String(p && p.name || '').toLowerCase().replace(/[^a-z\s]/g, '').trim().replace(/\s+/g, '.') + '@' + DOMAIN;
   }
 
-  // EXACT directory match — one email → one account. No fuzzy fallback (that would
-  // let a typo land on someone else's account).
+  // EXACT directory match — one email → one account (no fuzzy fallback).
   function findByEmail(raw) {
     let email = String(raw || '').trim().toLowerCase();
     if (!email) return { error: 'errNoAccount' };
@@ -2920,6 +2954,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return p ? { person: p } : { error: 'errNoAccount' };
   }
 
+  function modeEmailCode() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
+  function modeGoogle() { return !modeEmailCode() && !!(WP.config && WP.config.googleClientId); }
+
   function signIn(personId) {
     WP.logEvent({ type: 'sign-in', by: personId, target: personId });
     WP._login = null; WP._denied = null;
@@ -2928,11 +2965,61 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   function signOut() {
     WP.logEvent({ type: 'sign-out', by: WP.state.viewerId, target: WP.state.viewerId });
     WP._login = null;
+    try { if (WP._sb && WP._sb.auth) WP._sb.auth.signOut(); } catch (e) {}
     WP.setState({ authed: false, selectedId: null });
   }
 
-  /* ---- Google Identity Services (real verification, only if configured) ---- */
-  function googleReady() { return !!(WP.config && WP.config.googleClientId); }
+  function rerender() { const v = document.getElementById('view'); if (v) render(v); }
+
+  /* ---------- Email code (Supabase) ---------- */
+  function sbClient(cb) {
+    if (WP._sb) { cb(WP._sb); return; }
+    function make() {
+      try {
+        WP._sb = window.supabase.createClient(WP.config.supabaseUrl, WP.config.supabaseAnonKey);
+        cb(WP._sb);
+      } catch (e) { cb(null); }
+    }
+    if (window.supabase && window.supabase.createClient) { make(); return; }
+    if (!document.getElementById('sb-script')) {
+      const s = document.createElement('script');
+      s.id = 'sb-script';
+      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      s.onload = make; s.onerror = function () { cb(null); };
+      document.head.appendChild(s);
+    } else {
+      let n = 0; const iv = setInterval(function () {
+        if ((window.supabase && window.supabase.createClient) || ++n > 40) { clearInterval(iv); make(); }
+      }, 150);
+    }
+  }
+  function sendCode(email, personId) {
+    WP._login = { step: 'code', email: email, personId: personId, sending: true }; rerender();
+    sbClient(function (sb) {
+      if (!sb) { WP._login = { step: 'email', email: email, err: 'errSendCode' }; rerender(); return; }
+      sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } })
+        .then(function (res) {
+          if (res && res.error) { WP._login = { step: 'email', email: email, err: 'errSendCode' }; }
+          else { WP._login = { step: 'code', email: email, personId: personId, sent: true }; }
+          rerender();
+        })
+        .catch(function () { WP._login = { step: 'email', email: email, err: 'errSendCode' }; rerender(); });
+    });
+  }
+  function verifyCode(email, code, personId) {
+    WP._login = { step: 'code', email: email, personId: personId, verifying: true }; rerender();
+    sbClient(function (sb) {
+      if (!sb) { WP._login = { step: 'code', email: email, personId: personId, err: 'errBadCode' }; rerender(); return; }
+      sb.auth.verifyOtp({ email: email, token: String(code).trim(), type: 'email' })
+        .then(function (res) {
+          if (res && res.error) { WP._login = { step: 'code', email: email, personId: personId, err: 'errBadCode' }; rerender(); }
+          else { signIn(personId); }   // verified: the code was delivered to this mailbox and matched
+        })
+        .catch(function () { WP._login = { step: 'code', email: email, personId: personId, err: 'errBadCode' }; rerender(); });
+    });
+  }
+
+  /* ---------- Google Identity Services ---------- */
   function decodeJwt(tok) {
     try {
       const b = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -2944,19 +3031,18 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   }
   function onGoogleCredential(resp) {
     const claims = resp && resp.credential ? decodeJwt(resp.credential) : null;
-    const root = document.getElementById('view');
-    if (!claims) { WP._login = { err: 'errVerify' }; WP.ui.login.render(root); return; }
+    if (!claims) { WP._login = { step: 'email', err: 'errVerify' }; rerender(); return; }
     const em = String(claims.email || '').toLowerCase();
-    if ((String(claims.hd || '').toLowerCase() !== DOMAIN) && em.slice(-('@' + DOMAIN).length) !== '@' + DOMAIN) {
-      WP._login = { err: 'errBadDomain' }; WP.ui.login.render(root); return;
+    if (String(claims.hd || '').toLowerCase() !== DOMAIN && em.slice(-('@' + DOMAIN).length) !== '@' + DOMAIN) {
+      WP._login = { step: 'email', err: 'errBadDomain' }; rerender(); return;
     }
     const r = findByEmail(em);
-    if (r.error) { WP._login = { email: em, err: r.error }; WP.ui.login.render(root); return; }
-    if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; WP.ui.login.render(root); return; }
+    if (r.error) { WP._login = { step: 'email', email: em, err: r.error }; rerender(); return; }
+    if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; rerender(); return; }
     signIn(r.person.id);
   }
   function initGoogle(root) {
-    if (!googleReady()) return;
+    if (!modeGoogle()) return;
     function setup() {
       try {
         if (!(window.google && window.google.accounts && window.google.accounts.id)) return;
@@ -2975,11 +3061,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     }
   }
 
+  /* ---------- Render ---------- */
   function render(root) {
     const t = WP.i18n.t;
     const logo = (WP.state.theme === 'dark' ? 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxOS4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMTA4MCAxMDgwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8cG9seWdvbiBpZD0iWE1MSURfODJfIiBjbGFzcz0ic3QwIiBwb2ludHM9IjI0OSw2NDguNCAyNzAuMyw2NDguNCAyNDguNyw3MTAuNCAyMzIsNzEwLjQgMjIwLjcsNjcyLjIgMjA5LjksNzEwLjQgMTkzLjIsNzEwLjQgDQoJMTcxLDY0OC40IDE5Mi4zLDY0OC40IDIwMi41LDY4My45IDIxMi43LDY0OC40IDIyOC41LDY0OC40IDIzOC44LDY4My45ICIvPg0KPHBhdGggaWQ9IlhNTElEXzc5XyIgY2xhc3M9InN0MCIgZD0iTTMxOCw2NzMuNmMtMC4zLTYuMS01LjctMTAuMi0xMi44LTEwLjJjLTUuOCwwLTExLjYsMi44LTEzLjYsMTAuMkgzMTh6IE0zMzcuMyw2ODUuMmgtNDUuNQ0KCWMxLjksNiw3LDkuNywxNC41LDkuN2M1LjgsMCwxMS44LTIuNywxNS43LTYuNGwxMC4xLDEyLjhDMzI2LDcwNy45LDMxNS4zLDcxMiwzMDUsNzEyYy0xOS43LDAtMzMuNS0xMy42LTMzLjUtMzIuNA0KCWMwLTIwLjIsMTUuNS0zMi44LDMzLjQtMzIuOGMxNy44LDAsMzIuNywxMi41LDMyLjcsMzEuNEMzMzcuNSw2NzkuOSwzMzcuNCw2ODIuMSwzMzcuMyw2ODUuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzc2XyIgY2xhc3M9InN0MCIgZD0iTTM5NS43LDY3OS4zYzAtNy44LTYuNi0xNC40LTE0LjQtMTQuNGMtNy40LDAtMTQuNCw2LjQtMTQuNCwxNC40YzAsOCw2LjgsMTQuNSwxNC40LDE0LjUNCglDMzg5LjEsNjkzLjgsMzk1LjcsNjg3LjIsMzk1LjcsNjc5LjMgTTQxNS43LDY3OS4zYzAsMjAuMS0xNC42LDMyLjctMzAuMiwzMi43Yy02LjQsMC0xNC42LTIuNS0xOS4xLTguNXY2LjloLTE5Ljd2LTg2LjJoMTkuN3YzMC45DQoJYzQuNS01LjgsMTIuOC04LjQsMTkuMS04LjRDNDAxLjEsNjQ2LjgsNDE1LjcsNjU5LjMsNDE1LjcsNjc5LjMiLz4NCjxwYXRoIGlkPSJYTUxJRF83M18iIGNsYXNzPSJzdDAiIGQ9Ik00NjksNjc5LjVjMC04LjUtNi4xLTE0LjUtMTMuNy0xNC41Yy03LjYsMC0xMy43LDYtMTMuNywxNC41YzAsOC41LDYuMSwxNC40LDEzLjcsMTQuNA0KCUM0NjIuOSw2OTMuOCw0NjksNjg4LDQ2OSw2NzkuNSBNNDIxLjcsNjc5LjVjMC0xOS43LDE1LjktMzIuNywzMy42LTMyLjdjMTcuNywwLDMzLjgsMTMsMzMuOCwzMi43QzQ4OSw2OTksNDczLDcxMiw0NTUuMyw3MTINCglDNDM3LjYsNzEyLDQyMS43LDY5OSw0MjEuNyw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzcwXyIgY2xhc3M9InN0MCIgZD0iTTU0Mi4yLDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNTM2LjEsNjkzLjgsNTQyLjIsNjg4LDU0Mi4yLDY3OS41IE00OTQuOSw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNTEwLjgsNzEyLDQ5NC45LDY5OSw0OTQuOSw2NzkuNSIvPg0KPHBvbHlnb24gaWQ9IlhNTElEXzY3XyIgY2xhc3M9InN0MCIgcG9pbnRzPSI2MzQuNCw3MTAuNCA2MTAuNSw3MTAuNCA1OTEuNCw2ODUuMiA1OTEuNCw3MTAuNCA1NzEuNyw3MTAuNCA1NzEuNyw2MjQuMyA1OTEuNCw2MjQuMyANCgk1OTEuNCw2NjUuOCA2MDQuNyw2NDguNCA2MjkuNCw2NDguNCA2MDYsNjc1LjkgIi8+DQo8cGF0aCBpZD0iWE1MSURfNjZfIiBjbGFzcz0ic3QwIiBkPSJNNjM1LjgsNjk5LjhjMC02LjYsNS40LTExLjYsMTItMTEuNmM2LjYsMCwxMi4yLDQuOSwxMi4yLDExLjZjMCw2LjktNS42LDExLjgtMTIuMiwxMS44DQoJQzY0MS4yLDcxMS42LDYzNS44LDcwNi43LDYzNS44LDY5OS44Ii8+DQo8cGF0aCBpZD0iWE1MSURfNjVfIiBjbGFzcz0ic3QwIiBkPSJNNjY2LjksNjc5LjJjMC0xOS43LDE2LjItMzIuNCwzNC4zLTMyLjRjMTIsMCwyMS4xLDUuOCwyNy4xLDE0LjZMNzEzLDY3MQ0KCWMtMi40LTMuNy03LjQtNi0xMS43LTZjLTksMC0xNC40LDYuNS0xNC40LDE0LjJjMCw3LjgsNS4zLDE0LjYsMTQuNCwxNC42YzQuMywwLDkuMy0yLjMsMTEuNy02bDE1LjMsOS42DQoJYy02LDguOC0xNS4xLDE0LjYtMjcuMSwxNC42QzY4My4xLDcxMiw2NjYuOSw2OTguOSw2NjYuOSw2NzkuMiIvPg0KPHBhdGggaWQ9IlhNTElEXzYyXyIgY2xhc3M9InN0MCIgZD0iTTc3OS42LDY3OS41YzAtOC41LTYuMS0xNC41LTEzLjctMTQuNWMtNy42LDAtMTMuNyw2LTEzLjcsMTQuNWMwLDguNSw2LjEsMTQuNCwxMy43LDE0LjQNCglDNzczLjQsNjkzLjgsNzc5LjYsNjg4LDc3OS42LDY3OS41IE03MzIuMiw2NzkuNWMwLTE5LjcsMTUuOS0zMi43LDMzLjYtMzIuN2MxNy43LDAsMzMuOCwxMywzMy44LDMyLjdjMCwxOS41LTE2LjEsMzIuNi0zMy44LDMyLjYNCglDNzQ4LjIsNzEyLDczMi4yLDY5OSw3MzIuMiw2NzkuNSIvPg0KPHBhdGggaWQ9IlhNTElEXzYxXyIgY2xhc3M9InN0MCIgZD0iTTkwOSw2NzcuMXYzMy40aC0xOS43di0zMi44YzAtOS42LTQuOC0xMi42LTkuOC0xMi42Yy02LjEsMC0xMC42LDQuMy0xMC42LDE1LjF2MzAuM2gtMTkuN1Y2NzgNCgljMC05LjYtNC44LTEzLTkuNy0xM2MtNS4zLDAtMTAuOCwyLjctMTAuOCwxM3YzMi40aC0xOS43di02Mi4xaDE5Ljd2OS44YzIuNC03LjgsMTAuOS0xMS40LDE2LjctMTEuNGM5LjIsMCwxNS45LDQuNCwxOS43LDExLjgNCgljNC4zLTguMiwxMy44LTExLjgsMjAuMy0xMS44QzkwMSw2NDYuOCw5MDksNjU4LjEsOTA5LDY3Ny4xIi8+DQo8cGF0aCBpZD0iWE1MSURfNjBfIiBjbGFzcz0ic3QwIiBkPSJNNjMwLjMsNDY0LjRsLTIwLjUsMTEuOGMtMi4zLDEuMy0yLjMsNC42LDAsNmwyMC41LDExLjhsMjMuOSwxMy44YzEuMSwwLjYsMS43LDEuOCwxLjcsM3Y1My4xDQoJYzAsMS4yLTAuNywyLjQtMS43LDNsLTM5LjcsMjIuOWMtMC41LDAuMy0xLjEsMC41LTEuNywwLjVINDI3LjVjLTEuOSwwLTMuNC0xLjUtMy40LTMuNFYzNzEuNWMwLTEuOSwxLjUtMy40LDMuNC0zLjRoMTg1LjINCgljMC42LDAsMS4yLDAuMiwxLjcsMC41bDM5LjcsMjIuOWMxLjEsMC42LDEuNywxLjcsMS43LDN2NTMuMWMwLDEuMi0wLjcsMi40LTEuNywzTDYzMC4zLDQ2NC40eiIvPg0KPHBhdGggaWQ9IlhNTElEXzU5XyIgY2xhc3M9InN0MCIgZD0iTTg3OC4yLDQ2MC44bC0yNi43LDE1LjRjLTIuMywxLjMtMi4zLDQuNiwwLDZsMjYuNywxNS40bDMwLjEsMTcuNGMxLjEsMC42LDEuNywxLjcsMS43LDN2NjguOQ0KCWMwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTExLjItMTkuNGwtOS4yLTE1LjljLTEuMy0yLjMtNC42LTIuMy02LDBsLTIwLjQsMzUuM2MtMC42LDEuMS0xLjcsMS43LTMsMS43DQoJaC04Ni4xYy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDg2LjFjMS4yLDAsMi40LDAuNywzLDEuN2wyMC40LDM1LjNjMS4zLDIuMyw0LjYsMi4zLDYsMGwyMC40LTM1LjMNCgljMC42LTEuMSwxLjgtMS43LDMtMS43aDg2LjFjMS45LDAsMy40LDEuNSwzLjQsMy40djY4LjljMCwxLjItMC43LDIuNC0xLjcsM0w4NzguMiw0NjAuOHoiLz4NCjxwYXRoIGlkPSJYTUxJRF81OF8iIGNsYXNzPSJzdDAiIGQ9Ik00MDIuMywzNzEuNXYyMTUuM2MwLDEuOS0xLjUsMy40LTMuNCwzLjRoLTg2LjFjLTEuMiwwLTIuNC0wLjctMy0xLjdsLTIwLjQtMzUuMw0KCWMtMS4zLTIuMy00LjYtMi4zLTYsMGwtMjAuNCwzNS4zYy0wLjYsMS4xLTEuNywxLjctMywxLjdIMTc0Yy0xLjksMC0zLjQtMS41LTMuNC0zLjRWMzcxLjVjMC0xLjksMS41LTMuNCwzLjQtMy40aDQyLjkNCgljMS4yLDAsMi40LDAuNywzLDEuN2wxNy4zLDMwbDE1LjQsMjYuN2MxLjMsMi4zLDQuNiwyLjMsNiwwbDI1LTQzLjNjMS4zLTIuMyw0LjYtMi4zLDYsMGwyNSw0My4zYzEuMywyLjMsNC42LDIuMyw2LDBsMTUuNC0yNi43DQoJbDE3LjMtMzBjMC42LTEuMSwxLjgtMS43LDMtMS43aDQyLjlDNDAwLjgsMzY4LjEsNDAyLjMsMzY5LjYsNDAyLjMsMzcxLjUiLz4NCjwvc3ZnPg0K' : 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE1OCAzNTYgNzY0IDM2OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogI2ZmMmI3ODsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI0OS4wMSA2NDguMzcgMjcwLjI3IDY0OC4zNyAyNDguNzUgNzEwLjQ0IDIzMiA3MTAuNDQgMjIwLjcgNjcyLjE2IDIwOS45NCA3MTAuNDQgMTkzLjE5IDcxMC40NCAxNzEgNjQ4LjM3IDE5Mi4yNiA2NDguMzcgMjAyLjUgNjgzLjg2IDIxMi43MyA2NDguMzcgMjI4LjU0IDY0OC4zNyAyMzguNzggNjgzLjg2IDI0OS4wMSA2NDguMzciLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0zMTcuOTksNjczLjYzYy0uMjYtNi4xMi01LjcxLTEwLjI0LTEyLjc2LTEwLjI0LTUuODUsMC0xMS41NiwyLjc5LTEzLjU2LDEwLjI0aDI2LjMxWk0zMzcuMjYsNjg1LjE5aC00NS40NWMxLjg2LDUuOTgsNy4wNCw5LjcsMTQuNDgsOS43LDUuODUsMCwxMS44My0yLjY2LDE1LjY4LTYuMzhsMTAuMSwxMi43NmMtNi4xMSw2LjY0LTE2Ljc1LDEwLjc2LTI3LjExLDEwLjc2LTE5LjY3LDAtMzMuNDktMTMuNTYtMzMuNDktMzIuNDMsMC0yMC4yLDE1LjU1LTMyLjgzLDMzLjM2LTMyLjgzczMyLjY5LDEyLjQ5LDMyLjY5LDMxLjM3YzAsMS43My0uMTMsMy45OS0uMjYsNy4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTM5NS43Myw2NzkuMzRjMC03Ljg0LTYuNjUtMTQuMzUtMTQuMzUtMTQuMzVzLTE0LjM1LDYuMzgtMTQuMzUsMTQuMzUsNi43OCwxNC40OCwxNC4zNSwxNC40OCwxNC4zNS02LjY0LDE0LjM1LTE0LjQ4TTQxNS42Nyw2NzkuMzRjMCwyMC4wNy0xNC42MiwzMi42OS0zMC4xNywzMi42OS02LjM4LDAtMTQuNjItMi41Mi0xOS4xNC04LjUxdjYuOTFoLTE5LjY3di04Ni4xOGgxOS42N3YzMC44OWM0LjUyLTUuODUsMTIuNzYtOC4zNywxOS4xNC04LjM3LDE1LjU1LDAsMzAuMTcsMTIuNDksMzAuMTcsMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik00NjguOTcsNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00MjEuNjUsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik01NDIuMTksNjc5LjQ3YzAtOC41MS02LjExLTE0LjQ4LTEzLjY5LTE0LjQ4cy0xMy42OSw1Ljk4LTEzLjY5LDE0LjQ4LDYuMTEsMTQuMzUsMTMuNjksMTQuMzUsMTMuNjktNS44NSwxMy42OS0xNC4zNU00OTQuODgsNjc5LjQ3YzAtMTkuNjcsMTUuOTUtMzIuNjksMzMuNjItMzIuNjlzMzMuNzYsMTMuMDMsMzMuNzYsMzIuNjktMTYuMDgsMzIuNTYtMzMuNzYsMzIuNTYtMzMuNjItMTMuMDItMzMuNjItMzIuNTYiLz4KICA8cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iNjM0LjQzIDcxMC40NCA2MTAuNSA3MTAuNDQgNTkxLjM3IDY4NS4xOSA1OTEuMzcgNzEwLjQ0IDU3MS43IDcxMC40NCA1NzEuNyA2MjQuMjYgNTkxLjM3IDYyNC4yNiA1OTEuMzcgNjY1Ljc5IDYwNC42NiA2NDguMzggNjI5LjM4IDY0OC4zOCA2MDUuOTkgNjc1Ljg4IDYzNC40MyA3MTAuNDQiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik02MzUuNzYsNjk5LjgxYzAtNi42NSw1LjQ1LTExLjU2LDExLjk2LTExLjU2czEyLjIyLDQuOTIsMTIuMjIsMTEuNTYtNS41OCwxMS44My0xMi4yMiwxMS44My0xMS45Ni00LjkyLTExLjk2LTExLjgzIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNjY2Ljg2LDY3OS4yMWMwLTE5LjY3LDE2LjIxLTMyLjQzLDM0LjI5LTMyLjQzLDExLjk2LDAsMjEuMTMsNS44NSwyNy4xMSwxNC42MmwtMTUuMjgsOS41N2MtMi4zOS0zLjcyLTcuNDQtNS45OC0xMS43LTUuOTgtOS4wMywwLTE0LjM1LDYuNTEtMTQuMzUsMTQuMjJzNS4zMiwxNC42MiwxNC4zNSwxNC42MmM0LjI1LDAsOS4zMS0yLjI2LDExLjctNS45OGwxNS4yOCw5LjU3Yy01Ljk4LDguNzctMTUuMTUsMTQuNjItMjcuMTEsMTQuNjItMTguMDgsMC0zNC4yOS0xMy4xNS0zNC4yOS0zMi44MyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTc3OS41Niw2NzkuNDdjMC04LjUxLTYuMTEtMTQuNDgtMTMuNjktMTQuNDhzLTEzLjY5LDUuOTgtMTMuNjksMTQuNDgsNi4xMSwxNC4zNSwxMy42OSwxNC4zNSwxMy42OS01Ljg1LDEzLjY5LTE0LjM1TTczMi4yNCw2NzkuNDdjMC0xOS42NywxNS45NS0zMi42OSwzMy42Mi0zMi42OXMzMy43NiwxMy4wMywzMy43NiwzMi42OS0xNi4wOCwzMi41Ni0zMy43NiwzMi41Ni0zMy42Mi0xMy4wMi0zMy42Mi0zMi41NiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkwOSw2NzcuMDh2MzMuMzZoLTE5LjY3di0zMi44M2MwLTkuNTctNC43OC0xMi42Mi05LjgzLTEyLjYyLTYuMTEsMC0xMC42Myw0LjI1LTEwLjYzLDE1LjE1djMwLjNoLTE5LjY3di0zMi40M2MwLTkuNTctNC43OC0xMy4wMi05LjctMTMuMDItNS4zMiwwLTEwLjc3LDIuNjYtMTAuNzcsMTMuMDJ2MzIuNDNoLTE5LjY3di02Mi4wNmgxOS42N3Y5LjgzYzIuMzktNy44NCwxMC45LTExLjQzLDE2Ljc1LTExLjQzLDkuMTcsMCwxNS45NSw0LjM5LDE5LjY3LDExLjgzLDQuMjUtOC4yNCwxMy44Mi0xMS44MywyMC4zMy0xMS44MywxNS41NSwwLDIzLjUyLDExLjMsMjMuNTIsMzAuMyIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTYzMC4yOSw0NjQuMzdsLTIwLjQ2LDExLjgxYy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyMC40NiwxMS44MiwyMy45LDEzLjhjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTM5LjY4LDIyLjkyYy0uNTIuMy0xLjEyLjQ2LTEuNzIuNDZoLTE4NS4yNGMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoMTg1LjI0Yy42LDAsMS4yLjE2LDEuNzIuNDZsMzkuNjgsMjIuOTFjMS4wNi42MSwxLjcyLDEuNzUsMS43MiwyLjk4djUzLjE0YzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTIzLjksMTMuOFoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik04NzguMTksNDYwLjhsLTI2LjY1LDE1LjM4Yy0yLjI5LDEuMzItMi4yOSw0LjYzLDAsNS45NWwyNi42NSwxNS4zOCwzMC4wOCwxNy4zN2MxLjA2LjYxLDEuNzIsMS43NSwxLjcyLDIuOTh2NjguOTFjMCwxLjktMS41NCwzLjQ0LTMuNDQsMy40NGgtODYuMTJjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTExLjE4LTE5LjM4LTkuMjEtMTUuOTVjLTEuMzItMi4yOS00LjYzLTIuMjktNS45NSwwbC0yMC40LDM1LjMyYy0uNjEsMS4wNi0xLjc1LDEuNzItMi45OCwxLjcyaC04Ni4xMWMtMS45LDAtMy40NC0xLjU0LTMuNDQtMy40NHYtMjE1LjI0YzAtMS45LDEuNTQtMy40NCwzLjQ0LTMuNDRoODYuMTFjMS4yMywwLDIuMzYuNjYsMi45OCwxLjcybDIwLjQsMzUuMzJjMS4zMiwyLjI5LDQuNjMsMi4yOSw1Ljk1LDBsMjAuMzktMzUuMzJjLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg4Ni4xMmMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0djY4LjkyYzAsMS4yMy0uNjYsMi4zNi0xLjcyLDIuOTdsLTMwLjA4LDE3LjM3WiIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQwMi4zMSwzNzEuNTN2MjE1LjI1YzAsMS45LTEuNTQsMy40NC0zLjQ0LDMuNDRoLTg2LjFjLTEuMjMsMC0yLjM2LS42Ni0yLjk4LTEuNzJsLTIwLjQxLTM1LjM0Yy0xLjMyLTIuMjktNC42My0yLjI5LTUuOTUsMGwtMjAuMzgsMzUuMzNjLS42MSwxLjA2LTEuNzUsMS43Mi0yLjk4LDEuNzJoLTg2LjEyYy0xLjksMC0zLjQ0LTEuNTQtMy40NC0zLjQ0di0yMTUuMjVjMC0xLjksMS41NC0zLjQ0LDMuNDQtMy40NGg0Mi44NWMxLjIzLDAsMi4zNi42NiwyLjk4LDEuNzJsMTcuMzEsMjkuOTksMTUuNDIsMjYuN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwyNC45OC00My4yN2MxLjMyLTIuMjksNC42My0yLjI5LDUuOTUsMGwyNC45OCw0My4yN2MxLjMyLDIuMjksNC42MywyLjI5LDUuOTUsMGwxNS40LTI2LjcsMTcuMzEtMjkuOTljLjYxLTEuMDYsMS43NS0xLjcyLDIuOTgtMS43Mmg0Mi44NWMxLjksMCwzLjQ0LDEuNTQsMy40NCwzLjQ0Ii8+Cjwvc3ZnPg==');
     const st = WP._login || {};
     let body;
+
     if (WP._denied) {
       const d = WP._denied;
       body =
@@ -2987,18 +3075,40 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<div class="g-denied-h">' + t('accessDenied') + '</div>' +
           '<div class="g-denied-sub">' + ui.esc(emailOf(d)) + ' — ' + t('accessDeniedSub') + '</div>' +
           '<button class="g-back" id="g-denied-back">' + t('useAnother') + '</button></div>';
+    } else if (st.step === 'code') {
+      // Step 2: enter the emailed code
+      const busy = st.sending || st.verifying;
+      body =
+        '<div class="login-codeto">' + t('codeSentTo') + ' <strong>' + ui.esc(st.email) + '</strong></div>' +
+        '<label class="login-lbl" for="login-code">' + t('codeLabel') + '</label>' +
+        '<form id="code-form" class="login-row">' +
+          '<input id="login-code" class="login-input" type="text" inputmode="numeric" autocomplete="one-time-code" ' +
+            'maxlength="8" placeholder="' + t('codePh') + '" aria-label="' + t('codeLabel') + '" ' + (busy ? 'disabled' : '') + ' />' +
+          '<button class="btn primary" type="submit" ' + (busy ? 'disabled' : '') + '>' +
+            (st.verifying ? t('verifying') : t('verifyBtn')) + '</button>' +
+        '</form>' +
+        '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
+        '<div class="login-actions">' +
+          '<button class="linkbtn" id="resend-code" ' + (busy ? 'disabled' : '') + '>' + (st.sending ? t('sendingCode') : t('resendCode')) + '</button>' +
+          '<span class="login-dot">·</span>' +
+          '<button class="linkbtn" id="change-email">' + t('changeEmail') + '</button>' +
+        '</div>';
     } else {
+      // Step 1: enter email
+      const primaryLabel = modeEmailCode() ? t('sendCode') : t('continueBtn');
+      let note;
+      if (modeEmailCode()) note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifiedNote') + '</div>';
+      else if (modeGoogle()) note = '<div class="login-divider">' + t('or') + '</div><div id="g-btn-host"></div>';
+      else note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifyNote') + '</div>';
       body =
         '<label class="login-lbl" for="login-email">' + t('emailLabel') + '</label>' +
         '<form id="login-form" class="login-row">' +
           '<input id="login-email" class="login-input" type="email" inputmode="email" autocomplete="email" ' +
             'placeholder="' + t('emailPh') + '" value="' + ui.esc(st.email || '') + '" aria-label="' + t('emailLabel') + '" />' +
-          '<button class="btn primary" type="submit">' + t('continueBtn') + '</button>' +
+          '<button class="btn primary" type="submit">' + primaryLabel + '</button>' +
         '</form>' +
         '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
-        (googleReady()
-          ? '<div class="login-divider">' + t('or') + '</div><div id="g-btn-host"></div>'
-          : '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifyNote') + '</div>');
+        note;
     }
 
     root.innerHTML =
@@ -3014,23 +3124,47 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           WP.ui.icon(WP.state.theme === 'light' ? 'moon' : 'sun') + '</button>' +
       '</div></div>';
 
+    // — wire step 1 (email) —
     const form = root.querySelector('#login-form');
     if (form) form.onsubmit = function (e) {
       e.preventDefault();
       const v = root.querySelector('#login-email').value;
       const r = findByEmail(v);
-      if (r.error) { WP._login = { email: v, err: r.error }; render(root); return; }
+      if (r.error) { WP._login = { step: 'email', email: v, err: r.error }; render(root); return; }
       if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; render(root); return; }
-      signIn(r.person.id);   // directory gate (or pre-check before Google, if enabled)
+      if (modeEmailCode()) { sendCode(r.person.email, r.person.id); }   // email a code (real verification)
+      else { signIn(r.person.id); }                                     // Google pre-check / demo gate
     };
+
+    // — wire step 2 (code) —
+    const cform = root.querySelector('#code-form');
+    if (cform) cform.onsubmit = function (e) {
+      e.preventDefault();
+      const code = root.querySelector('#login-code').value;
+      if (!code || !/^[0-9]{4,8}$/.test(String(code).trim())) { WP._login = Object.assign({}, st, { err: 'errBadCode' }); render(root); return; }
+      verifyCode(st.email, code, st.personId);
+    };
+    const resend = root.querySelector('#resend-code');
+    if (resend) resend.onclick = function () { sendCode(st.email, st.personId); };
+    const change = root.querySelector('#change-email');
+    if (change) change.onclick = function () { WP._login = { step: 'email', email: st.email }; render(root); };
+
     const dback = root.querySelector('#g-denied-back');
-    if (dback) dback.onclick = function () { WP._denied = null; WP._login = {}; render(root); };
+    if (dback) dback.onclick = function () { WP._denied = null; WP._login = { step: 'email' }; render(root); };
     root.querySelector('#login-lang').onclick = function () { WP.setState({ lang: WP.state.lang === 'en' ? 'ar' : 'en' }); };
     root.querySelector('#login-theme').onclick = function () { WP.setState({ theme: WP.state.theme === 'light' ? 'dark' : 'light' }); };
+
+    // auto-focus the code field after a send
+    if (st.step === 'code' && st.sent) { const ci = root.querySelector('#login-code'); if (ci) try { ci.focus(); } catch (e) {} }
     initGoogle(root);
   }
 
-  WP.auth = { domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail, signIn: signIn, signOut: signOut };
+  WP.auth = {
+    domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
+    signIn: signIn, signOut: signOut,
+    sendCode: sendCode, verifyCode: verifyCode,
+    mode: function () { return modeEmailCode() ? 'email-code' : modeGoogle() ? 'google' : 'directory'; }
+  };
   WP.ui.login = { render: render };
 })(window.WP = window.WP || {});
 
