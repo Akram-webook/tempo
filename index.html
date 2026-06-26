@@ -1904,9 +1904,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 (function (WP) {
   'use strict';
   WP.config = WP.config || {};
-  // — Email code (Supabase). Paste your project URL + anon/public key. —
-  if (WP.config.supabaseUrl === undefined)     WP.config.supabaseUrl = '';
-  if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = '';
+  // — Verified sign-in (Supabase). Project URL + publishable key (both public). —
+  if (WP.config.supabaseUrl === undefined)     WP.config.supabaseUrl = 'https://ftkbjsxdrxtjdzcojnve.supabase.co';
+  if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = 'sb_publishable_0SzG8Od9htPYqlp9PSwYqQ_IvPjdYgt';
   // — Google sign-in (optional alternative). —
   if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
 })(window.WP = window.WP || {});
@@ -2166,6 +2166,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     errBadCode:     { en: 'That code is wrong or expired. Try again or resend.', ar: 'الرمز غير صحيح أو منتهٍ. حاول مجدداً أو أعد الإرسال.' },
     errSendCode:    { en: 'Could not send the code. Check the email and try again.', ar: 'تعذّر إرسال الرمز. تحقّق من الإيميل وحاول مجدداً.' },
     verifiedNote:   { en: 'Verified sign-in — we email a one-time code to your @webook.com inbox. Only you receive it.', ar: 'دخول موثّق — نرسل رمزاً لمرة واحدة إلى بريد @webook.com الخاص بك. أنت وحدك تستلمه.' },
+    // — magic sign-in link (verified, no SMTP needed) —
+    sendLink:       { en: 'Email me a sign-in link', ar: 'أرسل لي رابط دخول' },
+    linkSentTo:     { en: 'We emailed a secure sign-in link to', ar: 'أرسلنا رابط دخول آمن إلى' },
+    openLinkHint:   { en: 'Open that email on this device and tap the link to finish. The link only works from your inbox.', ar: 'افتح ذلك الإيميل على هذا الجهاز واضغط الرابط لإكمال الدخول. الرابط يعمل فقط من بريدك.' },
+    resendLink:     { en: 'Resend link', ar: 'إعادة إرسال الرابط' },
+    verifiedNoteLink:{ en: 'Verified sign-in — we email a one-time link to your @webook.com inbox. Only you can open it.', ar: 'دخول موثّق — نرسل رابطاً لمرة واحدة إلى بريد @webook.com الخاص بك. أنت وحدك تفتحه.' },
+    verifyingSession:{ en: 'Verifying your sign-in…', ar: 'جارٍ التحقق من دخولك…' },
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
@@ -2924,9 +2931,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
  * Tempo — Sign in
  * ------------------------------------------------------------
  * Strongest configured method wins (see src/js/core/config.js):
- *   1. EMAIL CODE (Supabase): enter @webook.com email → 6-digit code is
- *      emailed to the REAL mailbox → type it back → verified. Typing someone
- *      else's email gets you nowhere, because the code lands in THEIR inbox.
+ *   1. VERIFIED LINK (Supabase): enter @webook.com email → a one-time
+ *      sign-in LINK is emailed to the REAL mailbox → open it → signed in.
+ *      Typing someone else's email gets you nowhere: the link lands in
+ *      THEIR inbox. (Supabase's default email sends a link; a literal typed
+ *      6-digit code needs custom SMTP — see ACCESS-SETUP.md.)
  *   2. GOOGLE (GIS): Google proves the @webook.com identity.
  *   3. DIRECTORY GATE (demo default): exact-email match only — convenient,
  *      but NOT a real lock (anyone who types a known email gets in).
@@ -2942,8 +2951,6 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     if (p && p.email) return p.email;
     return String(p && p.name || '').toLowerCase().replace(/[^a-z\s]/g, '').trim().replace(/\s+/g, '.') + '@' + DOMAIN;
   }
-
-  // EXACT directory match — one email → one account (no fuzzy fallback).
   function findByEmail(raw) {
     let email = String(raw || '').trim().toLowerCase();
     if (!email) return { error: 'errNoAccount' };
@@ -2954,8 +2961,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return p ? { person: p } : { error: 'errNoAccount' };
   }
 
-  function modeEmailCode() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
-  function modeGoogle() { return !modeEmailCode() && !!(WP.config && WP.config.googleClientId); }
+  function modeVerifiedLink() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
+  function modeGoogle() { return !modeVerifiedLink() && !!(WP.config && WP.config.googleClientId); }
+  function redirectUrl() { return location.origin + location.pathname; }
 
   function signIn(personId) {
     WP.logEvent({ type: 'sign-in', by: personId, target: personId });
@@ -2968,15 +2976,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     try { if (WP._sb && WP._sb.auth) WP._sb.auth.signOut(); } catch (e) {}
     WP.setState({ authed: false, selectedId: null });
   }
+  function rerender() { const v = document.getElementById('view'); if (v && !WP.state.authed) render(v); }
 
-  function rerender() { const v = document.getElementById('view'); if (v) render(v); }
-
-  /* ---------- Email code (Supabase) ---------- */
+  /* ---------- Supabase client (verified sign-in link) ---------- */
   function sbClient(cb) {
     if (WP._sb) { cb(WP._sb); return; }
     function make() {
       try {
-        WP._sb = window.supabase.createClient(WP.config.supabaseUrl, WP.config.supabaseAnonKey);
+        WP._sb = window.supabase.createClient(WP.config.supabaseUrl, WP.config.supabaseAnonKey, {
+          auth: { persistSession: true, detectSessionInUrl: true, autoRefreshToken: true }
+        });
         cb(WP._sb);
       } catch (e) { cb(null); }
     }
@@ -2993,29 +3002,43 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       }, 150);
     }
   }
-  function sendCode(email, personId) {
-    WP._login = { step: 'code', email: email, personId: personId, sending: true }; rerender();
+
+  // Map a verified Supabase session to a Tempo account and sign in (or deny).
+  function handleSession(session) {
+    const em = session && session.user && session.user.email ? String(session.user.email).toLowerCase() : '';
+    const r = findByEmail(em);
+    if (r.error || !r.person) { try { WP._sb.auth.signOut(); } catch (e) {} return; }
+    if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; rerender(); try { WP._sb.auth.signOut(); } catch (e) {} return; }
+    signIn(r.person.id);
+  }
+
+  // Called on boot when verified mode is on: consumes the link's token from the
+  // URL (detectSessionInUrl) and restores any persisted session ("stay signed in").
+  function initSession() {
+    if (!modeVerifiedLink()) return;
+    sbClient(function (sb) {
+      if (!sb) return;
+      try {
+        sb.auth.onAuthStateChange(function (_evt, session) { if (session && !WP.state.authed) handleSession(session); });
+        sb.auth.getSession().then(function (res) {
+          const session = res && res.data ? res.data.session : null;
+          if (session && !WP.state.authed) handleSession(session);
+        }).catch(function () {});
+      } catch (e) {}
+    });
+  }
+
+  function sendLink(email) {
+    WP._login = { step: 'sent', email: email, sending: true }; rerender();
     sbClient(function (sb) {
       if (!sb) { WP._login = { step: 'email', email: email, err: 'errSendCode' }; rerender(); return; }
-      sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true } })
+      sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: true, emailRedirectTo: redirectUrl() } })
         .then(function (res) {
           if (res && res.error) { WP._login = { step: 'email', email: email, err: 'errSendCode' }; }
-          else { WP._login = { step: 'code', email: email, personId: personId, sent: true }; }
+          else { WP._login = { step: 'sent', email: email, sent: true }; }
           rerender();
         })
         .catch(function () { WP._login = { step: 'email', email: email, err: 'errSendCode' }; rerender(); });
-    });
-  }
-  function verifyCode(email, code, personId) {
-    WP._login = { step: 'code', email: email, personId: personId, verifying: true }; rerender();
-    sbClient(function (sb) {
-      if (!sb) { WP._login = { step: 'code', email: email, personId: personId, err: 'errBadCode' }; rerender(); return; }
-      sb.auth.verifyOtp({ email: email, token: String(code).trim(), type: 'email' })
-        .then(function (res) {
-          if (res && res.error) { WP._login = { step: 'code', email: email, personId: personId, err: 'errBadCode' }; rerender(); }
-          else { signIn(personId); }   // verified: the code was delivered to this mailbox and matched
-        })
-        .catch(function () { WP._login = { step: 'code', email: email, personId: personId, err: 'errBadCode' }; rerender(); });
     });
   }
 
@@ -3075,29 +3098,20 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<div class="g-denied-h">' + t('accessDenied') + '</div>' +
           '<div class="g-denied-sub">' + ui.esc(emailOf(d)) + ' — ' + t('accessDeniedSub') + '</div>' +
           '<button class="g-back" id="g-denied-back">' + t('useAnother') + '</button></div>';
-    } else if (st.step === 'code') {
-      // Step 2: enter the emailed code
-      const busy = st.sending || st.verifying;
+    } else if (st.step === 'sent') {
       body =
-        '<div class="login-codeto">' + t('codeSentTo') + ' <strong>' + ui.esc(st.email) + '</strong></div>' +
-        '<label class="login-lbl" for="login-code">' + t('codeLabel') + '</label>' +
-        '<form id="code-form" class="login-row">' +
-          '<input id="login-code" class="login-input" type="text" inputmode="numeric" autocomplete="one-time-code" ' +
-            'maxlength="8" placeholder="' + t('codePh') + '" aria-label="' + t('codeLabel') + '" ' + (busy ? 'disabled' : '') + ' />' +
-          '<button class="btn primary" type="submit" ' + (busy ? 'disabled' : '') + '>' +
-            (st.verifying ? t('verifying') : t('verifyBtn')) + '</button>' +
-        '</form>' +
+        '<div class="login-codeto">' + WP.ui.icon('mail', 15) + ' ' + t('linkSentTo') + ' <strong>' + ui.esc(st.email) + '</strong></div>' +
+        '<p class="login-sub">' + t('openLinkHint') + '</p>' +
         '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
         '<div class="login-actions">' +
-          '<button class="linkbtn" id="resend-code" ' + (busy ? 'disabled' : '') + '>' + (st.sending ? t('sendingCode') : t('resendCode')) + '</button>' +
+          '<button class="linkbtn" id="resend-link" ' + (st.sending ? 'disabled' : '') + '>' + (st.sending ? t('sendingCode') : t('resendLink')) + '</button>' +
           '<span class="login-dot">·</span>' +
           '<button class="linkbtn" id="change-email">' + t('changeEmail') + '</button>' +
         '</div>';
     } else {
-      // Step 1: enter email
-      const primaryLabel = modeEmailCode() ? t('sendCode') : t('continueBtn');
+      const primaryLabel = modeVerifiedLink() ? t('sendLink') : t('continueBtn');
       let note;
-      if (modeEmailCode()) note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifiedNote') + '</div>';
+      if (modeVerifiedLink()) note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifiedNoteLink') + '</div>';
       else if (modeGoogle()) note = '<div class="login-divider">' + t('or') + '</div><div id="g-btn-host"></div>';
       else note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifyNote') + '</div>';
       body =
@@ -3124,7 +3138,6 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           WP.ui.icon(WP.state.theme === 'light' ? 'moon' : 'sun') + '</button>' +
       '</div></div>';
 
-    // — wire step 1 (email) —
     const form = root.querySelector('#login-form');
     if (form) form.onsubmit = function (e) {
       e.preventDefault();
@@ -3132,38 +3145,25 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       const r = findByEmail(v);
       if (r.error) { WP._login = { step: 'email', email: v, err: r.error }; render(root); return; }
       if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; render(root); return; }
-      if (modeEmailCode()) { sendCode(r.person.email, r.person.id); }   // email a code (real verification)
-      else { signIn(r.person.id); }                                     // Google pre-check / demo gate
+      if (modeVerifiedLink()) { sendLink(r.person.email); }   // email a verified sign-in link
+      else { signIn(r.person.id); }                            // Google pre-check / demo gate
     };
-
-    // — wire step 2 (code) —
-    const cform = root.querySelector('#code-form');
-    if (cform) cform.onsubmit = function (e) {
-      e.preventDefault();
-      const code = root.querySelector('#login-code').value;
-      if (!code || !/^[0-9]{4,8}$/.test(String(code).trim())) { WP._login = Object.assign({}, st, { err: 'errBadCode' }); render(root); return; }
-      verifyCode(st.email, code, st.personId);
-    };
-    const resend = root.querySelector('#resend-code');
-    if (resend) resend.onclick = function () { sendCode(st.email, st.personId); };
+    const resend = root.querySelector('#resend-link');
+    if (resend) resend.onclick = function () { sendLink(st.email); };
     const change = root.querySelector('#change-email');
     if (change) change.onclick = function () { WP._login = { step: 'email', email: st.email }; render(root); };
-
     const dback = root.querySelector('#g-denied-back');
     if (dback) dback.onclick = function () { WP._denied = null; WP._login = { step: 'email' }; render(root); };
     root.querySelector('#login-lang').onclick = function () { WP.setState({ lang: WP.state.lang === 'en' ? 'ar' : 'en' }); };
     root.querySelector('#login-theme').onclick = function () { WP.setState({ theme: WP.state.theme === 'light' ? 'dark' : 'light' }); };
-
-    // auto-focus the code field after a send
-    if (st.step === 'code' && st.sent) { const ci = root.querySelector('#login-code'); if (ci) try { ci.focus(); } catch (e) {} }
     initGoogle(root);
   }
 
   WP.auth = {
     domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
     signIn: signIn, signOut: signOut,
-    sendCode: sendCode, verifyCode: verifyCode,
-    mode: function () { return modeEmailCode() ? 'email-code' : modeGoogle() ? 'google' : 'directory'; }
+    sendLink: sendLink, initSession: initSession, handleSession: handleSession,
+    mode: function () { return modeVerifiedLink() ? 'verified-link' : modeGoogle() ? 'google' : 'directory'; }
   };
   WP.ui.login = { render: render };
 })(window.WP = window.WP || {});
@@ -5745,6 +5745,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
   document.addEventListener('DOMContentLoaded', function () {
     if (WP.persist) WP.persist.hydrate();   // restore the user's saved work before first paint
+    // Verified sign-in: consume a magic-link token from the URL and restore any
+    // persisted Supabase session, so returning from the email link signs the user in.
+    if (WP.auth && WP.auth.initSession) WP.auth.initSession();
     WP.render();
   });
   // safety net — also flush on unload in case a mutation didn't go through setState
