@@ -1,0 +1,92 @@
+/* ============================================================
+ * Tempo — DESIGN TOKENS  (real WOK v2.0 Light/Dark)
+ * ------------------------------------------------------------
+ * Values below are mapped directly from the WOK v2.0 token files
+ * (🌞 Light / 🌚 Dark). WOK token name is noted in a comment next
+ * to each. To re-sync later, keep the variable NAMES, swap values.
+ * ========================================================== */
+
+/* Mona Sans — official variable font (incl. WIDTH axis 75–125 for "Expanded") */
+@font-face {
+  font-family: "Mona Sans";
+  src: url("https://cdn.jsdelivr.net/gh/github/mona-sans@2.0.27/fonts/webfonts/Mona-Sans.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root,
+[data-theme="light"] {
+  /* surfaces / backgrounds */
+  --bg:            #E6E8EE; /* Bg-Secondary */
+  --surface:       #FCFCFC; /* Surface-Base / Bg-Primary */
+  --surface-2:     #F5F5F6; /* Surface-L2 */
+  --border:        #CFD4E1; /* Border-Tertiary / Surface-L3 */
+
+  /* text / content */
+  --text:          #18181B; /* Content-Primary */
+  --text-muted:    #5C6270; /* darkened from WOK Content-Secondary (#8B8E9A) for readable contrast */
+
+  /* brand (Webook magenta) */
+  --brand:         #FF2C79; /* Content-Brand / Bg-Brand */
+  --brand-contrast:#FCFCFC; /* Content-Light-Fixed */
+
+  /* capacity states — mapped to WOK semantic colors */
+  --state-available:  #17C653; /* Content-Success  (green = room to grow) */
+  --state-balanced:   #F6B100; /* Content-Warning  (yellow = healthy zone) */
+  --state-near:       #FF7F29; /* Brand 6 (orange) (pre-warning) */
+  --state-overloaded: #F8285A; /* Content-Danger   (red = soft-locked) */
+
+  /* tinted state backgrounds (20% WOK fills) */
+  --state-available-bg:  rgba(23,198,83,.16);
+  --state-near-bg:       rgba(255,127,41,.16);
+  --state-overloaded-bg: rgba(248,40,90,.16);
+
+  --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
+  --radius: 8px;     /* WBK DS · UI Radius-M (default) */
+  --radius-sm: 4px;  /* WBK DS · Radius-S */
+
+  /* custom scrollbar (slim, floating, theme-aware) */
+  --scrollbar-thumb:       rgba(16,24,40,.20);
+  --scrollbar-thumb-hover: rgba(16,24,40,.38);
+
+  /* typography — single cohesive family covering Arabic + Latin so
+     nothing shifts on the EN⇄AR toggle. (No font ships in the WOK
+     token files; this is the chosen default — swap if Webook has an
+     official brand font.) */
+  --font-sans:    "Figtree", "IBM Plex Sans Arabic", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-ar:      "IBM Plex Sans Arabic", "Figtree", -apple-system, system-ui, sans-serif;
+  /* WBK DS titles = Gellix; Mona Sans / Figtree fall back if Gellix isn't hosted */
+  --font-display: "Gellix", "Mona Sans", "Figtree", "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg:            #09090B; /* WBK DS · Surface-Base */
+  --surface:       #18181B; /* Surface-L1 */
+  --surface-2:     #27272A; /* WBK DS · Surface-L2 / Bg-Secondary */
+  --border:        #FFFFFF1A; /* WBK DS · Border-Tertiary (white 10%) */
+
+  --text:          #E4E4E7; /* WBK DS · Content-Primary */
+  --text-muted:    #A1A1AA; /* WBK DS · Content-Secondary */
+
+  --brand:         #FF2C79; /* Content-Brand */
+  --brand-contrast:#FCFCFC;
+
+  --state-available:  #17C653;
+  --state-balanced:   #F6B100;
+  --state-near:       #FF7F29;
+  --state-overloaded: #F8285A;
+
+  --state-available-bg:  rgba(23,198,83,.20);
+  --state-near-bg:       rgba(255,127,41,.20);
+  --state-overloaded-bg: rgba(248,40,90,.20);
+
+  --shadow: 0 1px 3px rgba(0,0,0,.5);
+  --radius: 8px;     /* WBK DS · UI Radius-M (default) */
+  --radius-sm: 4px;  /* WBK DS · Radius-S */
+
+  /* custom scrollbar — subtle light-on-dark so it disappears until needed */
+  --scrollbar-thumb:       rgba(255,255,255,.16);
+  --scrollbar-thumb-hover: rgba(255,255,255,.30);
+}
