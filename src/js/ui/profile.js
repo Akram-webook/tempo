@@ -201,6 +201,54 @@
       '<div class="disclaimer">' + t('compNote') + '</div></div>';
   }
 
+  /* ---- Evidence Timeline (Intelligence Layer P1) — manager/director/self only.
+   * Read-only, derived from real signals, every entry sourced (no fabrication).
+   * Growth highlighted; risk framed as early support. Filter by quarter+category. */
+  const CAT_LABEL = { workload: 'catWorkload', wellbeing: 'catWellbeing', evaluation: 'catEvaluation', recognition: 'catRecognition', decision: 'catDecision' };
+  const CAT_ICON = { workload: 'gauge', wellbeing: 'sprout', evaluation: 'clipboard', recognition: 'star', decision: 'key' };
+  function timelineSection(p) {
+    const t = WP.i18n.t, ar = WP.state.lang === 'ar';
+    const cached = (WP._tlCache && WP._tlCache.id === p.id) ? WP._tlCache.all : null;
+    if (!cached) {
+      // load persisted + derived once per opened profile, then re-render
+      WP.events.query(p.id, {}, WP.state.refDate).then(function (evts) {
+        WP._tlCache = { id: p.id, all: evts }; WP.setState({});
+      });
+    }
+    const all = cached || WP.events.sortDesc(WP.events.derive(p.id, WP.state.refDate)); // derived view while loading
+    const q = WP._tlQuarter || 'all', cat = WP._tlCategory || 'all';
+    const shown = WP.events.filter(all, { quarter: q, category: cat });
+    const qs = WP.events.quarters(all);
+
+    const qChips = ['all'].concat(qs).map(function (x) {
+      return '<button class="tl-chip' + (x === q ? ' on' : '') + '" data-tlq="' + x + '">' + (x === 'all' ? t('tlAll') : x) + '</button>';
+    }).join('');
+    const catChips = ['all'].concat(WP.events.CATEGORIES).map(function (x) {
+      return '<button class="tl-chip' + (x === cat ? ' on' : '') + '" data-tlc="' + x + '">' + (x === 'all' ? t('tlAll') : t(CAT_LABEL[x])) + '</button>';
+    }).join('');
+
+    let body;
+    if (!shown.length) {
+      body = '<div style="text-align:center;padding:22px 0"><div class="sub" style="font-weight:600">' + t('tlEmpty') + '</div>' +
+        '<div class="sub">' + t('tlEmptyNote') + '</div></div>';
+    } else {
+      body = shown.map(function (e) {
+        const d = new Date(e.ts), date = isNaN(d) ? '' : d.toISOString().slice(0, 10);
+        const label = t(CAT_LABEL[e.category] || 'catDecision');
+        return '<div class="tl-row' + (e.growth ? ' tl-growth' : '') + '">' +
+            '<span class="tl-cat tl-' + e.category + '">' + WP.ui.icon(CAT_ICON[e.category] || 'list', 13) + ' ' + label + '</span>' +
+            '<div class="tl-body"><div class="tl-desc">' + ui.esc(e.description) + '</div>' +
+              '<div class="tl-meta">' + date + ' · ' + t('tlSource') + ': ' + ui.esc(e.source) +
+                (e.confidence ? ' · ' + ui.esc(e.confidence) : '') + '</div></div>' +
+          '</div>';
+      }).join('');
+    }
+    return '<div class="section"><h3>' + WP.ui.icon('list', 16) + ' ' + t('tlTitle') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + WP.ui.icon('bulb', 13) + ' ' + t('tlHint') + '</div>' +
+      '<div class="tl-filters">' + qChips + '<span class="tl-sep"></span>' + catChips + '</div>' +
+      body + '</div>';
+  }
+
   /* ---- full profile ---- */
   function render(root) {
     const p = WP.access.byId(WP.state.selectedId);
@@ -248,11 +296,14 @@
           '<div class="k">' + t('learned') + '</div><div>' + ui.esc(dc.learned) + '</div>' +
           '</div></div>' : '') +
         growthSections(p, sens, selfView) +
+        (sens ? timelineSection(p) : '') +
         upwardReceived(p) +
         compPanel(p) +
       '</div>';
 
-    root.querySelector('#back').onclick = function () { WP.setState({ route: 'map', selectedId: null }); };
+    root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
+    root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
+    root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
     const oe = root.querySelector('#open-eval');
     if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation' }); };
     const em = root.querySelector('#eval-mgr');
