@@ -26,6 +26,10 @@ Tempo runs on **TAOS — the Tempo AI Operating System** (`/ai-os/`).
   (`ai-os/10-ai-agents/COUNCIL-OF-CRITICS.md`) — agents that try to BREAK it, not approve it.
 - Ground every standard in **`ai-os/REFERENCES.md`** (Google Eng Practices, SRE, Microsoft SDL,
   OWASP, WCAG 2.2, NN/g, DORA, Team Topologies, C4, Working Backwards) — official sources, not opinion.
+- **Every production issue is an Escape** (`ai-os/05-qa/ESCAPE-LEARNING.md`): ask "why did our system
+  let this through?", not "why did the AI err". Blameless — classify the gap, set maturity (L1–L4),
+  root-cause it, log it in the Failure Library, and close it only when a permanent test/rule prevents
+  recurrence. The metric that matters is a falling Escape Rate, not work completed.
 
 ## How we work on this project (standing method — do this every task, don't wait to be asked)
 1. **Skills first.** Check available skills and apply the relevant ones — especially

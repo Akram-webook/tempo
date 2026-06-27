@@ -1,8 +1,8 @@
-# Book 16 — Failure Library (lessons, not blame)
-Every meaningful mistake is recorded forever — as a lesson, not a bug ticket. Format:
-What happened · Root cause · How we caught it · The lesson / new rule · Where the rule now lives.
+# Book 16 — Failure Library / Escape Register (lessons, not blame)
+Every production issue is an **Escape** (see `../05-qa/ESCAPE-LEARNING.md`). Record format below.
+An Escape stays OPEN until the "prevented by" column names the permanent test/checklist/rule added.
 
-| Date | What happened | Root cause | Lesson → rule |
-|------|---------------|-----------|---------------|
-| 2026-06-27 | Live site briefly served the 2.7 KB dev shell instead of the bundle after a merge | GitHub Pages was in legacy "deploy from branch" mode, ignoring the CI artifact | Always verify the live artifact after deploy; Pages Source must be "GitHub Actions" → noted in `08-release-management` |
-| 2026-06-27 | Handoff brief described a repo structure that wasn't committed (only the bundle was) | Deployed the build output but never committed the source | Repo is the source of truth — commit source, not just artifacts |
+| Date | Escape | Level | Gap type | Why it escaped | Fix + system improvement | Prevented-by (permanent) | Status |
+|------|--------|-------|----------|----------------|--------------------------|--------------------------|--------|
+| 2026-06-27 | Live site briefly served the 2.7 KB dev shell instead of the bundle after a merge | L2 Process | Review + Evidence | Pages was in legacy "deploy from branch" mode; "all good" was assumed without checking the live artifact | Switched Pages Source to GitHub Actions; verify live artifact after every deploy | Release book rule "verify live after deploy"; byte-identical dist check in CI | Closed |
+| 2026-06-27 | Handoff brief described a repo structure that wasn't committed (only the bundle was) | L2 Process | Evidence | Deployed build output but never committed source; brief trusted intent, not the repo | Committed full modular source; repo is the source of truth | CLAUDE.md golden rule + "repo is source of truth" in governance | Closed |
