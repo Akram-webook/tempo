@@ -155,11 +155,29 @@ uses only the public **publishable** key (`sb_publishable_…`); RLS does the ga
 - **Write** (insert/update/delete): only your own rows — enforced by
   `author_email = auth.email()`. `author_email` is stamped server-side by the column
   default, so the client never sends it (and can't spoof it).
-- **Read (Phase 1 — PERMISSIVE, deliberate tradeoff):** any authenticated user may read
-  **all** evaluations. This ships the slice now without first moving role mapping
-  server-side. **Phase 2** tightens this to role-scoped reads (author + their managers /
-  directors / super-admin) once roles live in the database. Until then, do not treat
-  read-access as confidential separation.
+- **Read — role-scoped (Phase 2, ON as of migration `0003`).** Reads are now gated in the
+  **database**, not just the UI. The Phase-1 permissive `select ... using (true)` policies on
+  `evaluations` **and** `events` have been replaced with `using (can_read_person(subject_id))`.
+  You may read a person's rows only if you ARE that person, you are a **director/admin**, or you
+  are that person's **direct manager**. A peer querying with the publishable key now gets **zero
+  rows** back — confidential separation is real, not UI-only. (Earlier the SEV2 risk was: any
+  signed-in user could read every row directly via the anon key.)
+
+### Server-side roles — the directory (migration `0003`)
+`supabase/0003_directory_and_rls.sql` introduces `public.directory`
+(`email`, `person_id`, `role` ∈ employee|manager|director|admin, `manager_email`) — the
+**server-side role map** that finally moves role mapping out of the front-end. It is:
+- **Seeded idempotently** (`on conflict (email) do update`) from the app's 13 verified
+  `@webook.com` accounts and their manager links (source: `src/js/data/mock-data.js`).
+- **RLS-protected**: each user reads only their own directory row; directors/admins read all.
+  No client write policy — the directory is maintained via migrations / service-role tooling only.
+- The read predicate is the SQL helper
+  `can_read_person(subject_person_id) returns boolean` (SECURITY DEFINER), reused by both the
+  `evaluations` and `events` SELECT policies.
+
+Run `0003` in the Supabase SQL editor (same project) **after** `0001`/`0002`. Idempotent.
+`test/verify-db.js` mirrors `can_read_person` in JS and asserts the three cases: a **peer**
+gets no rows, a **manager** sees own + direct reports, a **director** sees all.
 
 ### Data mapping (lossless)
 `public.evaluations` keeps the SPEC's typed columns (`subject_id`, `author_id`, `cycle`,
@@ -170,5 +188,6 @@ existing local evaluations are imported once, de-duped by `id`, never overwritin
 server row.
 
 ### Not in this phase
-People/roles/check-ins stay local (unchanged). Realtime live updates and a server-side
-role model come in later phases (P2–P4).
+People/check-ins stay local (unchanged). The server-side **role** model now exists for
+read-gating (the `directory` table, migration `0003`); writing/managing roles from the UI and
+realtime live updates still come in later phases (P3–P4).

@@ -36,6 +36,44 @@ function makeFakeSb(server, opts) {
 }
 function resetDb() { WP.db._resetImport(); WP.db.status.offline = false; WP.db.status.synced = false; WP.db.status.loading = false; }
 
+// --- Role-scoped read simulation (mirrors supabase/0003 can_read_person) -----
+// 0003 moves reads server-side: SELECT on evaluations/events is gated by
+// can_read_person(subject_id). RLS itself can't run in jsdom, so this fake
+// applies the SAME predicate the SQL does, against a tiny directory fixture
+// seeded from the 0003 INSERT block — proving WP.db surfaces ONLY the rows a
+// given viewer may read. SQL note: the live policy is
+// `using (public.can_read_person(subject_id))` — see supabase/0003_directory_and_rls.sql.
+const DIR = {
+  'akram@webook.com':         { person_id: 'p_akram',       role: 'admin',    manager_email: null },
+  'ahmed.othman@webook.com':  { person_id: 'p_ahmed',       role: 'director', manager_email: null },
+  'maksousa@webook.com':      { person_id: 'p_abdulrahman', role: 'employee', manager_email: null },
+  'shamma@webook.com':        { person_id: 'p_shamma',      role: 'employee', manager_email: null },
+  'meshal@webook.com':        { person_id: 'p_meshalB',     role: 'employee', manager_email: null },
+  'o.taher.c@webook.com':     { person_id: 'p_osama',       role: 'employee', manager_email: 'akram@webook.com' },
+  'talal.samir.c@webook.com': { person_id: 'p_talal',       role: 'employee', manager_email: 'maksousa@webook.com' }
+};
+function canReadPerson(viewerEmail, subjectId) {
+  const me = DIR[viewerEmail];
+  if (me && me.person_id === subjectId) return true;                       // (a) own row
+  if (me && (me.role === 'director' || me.role === 'admin')) return true;  // (b) director/admin
+  const subj = Object.keys(DIR).map(function (e) { return DIR[e]; })
+    .find(function (r) { return r.person_id === subjectId; });
+  if (subj && subj.manager_email === viewerEmail) return true;            // (c) subject's manager
+  return false;
+}
+// Like makeFakeSb, but select() only returns rows the viewerEmail may read.
+function makeScopedSb(server, viewerEmail) {
+  return { from() { return {
+    select() {
+      const data = Object.keys(server).map(function (id) { return server[id]; })
+        .filter(function (row) { return canReadPerson(viewerEmail, row.subject_id); });
+      return { data: data, error: null };
+    },
+    upsert() { return { error: null }; },                                  // reads-only scenario
+    delete() { return { eq() { return { error: null }; } }; }
+  }; } };
+}
+
 (async () => {
   try {
     assert(WP.db && WP.db.evaluations && WP.db.evaluations.list && WP.db.evaluations.upsert && WP.db.evaluations.remove, 'WP.db.evaluations API present');
@@ -98,9 +136,45 @@ function resetDb() { WP.db._resetImport(); WP.db.status.offline = false; WP.db.s
     WP._sb = makeFakeSb(server); WP.data.EVALUATIONS = { p_test: { scores: {}, feedback: {} } };
     await WP.db.evaluations.remove('p_test');
     assert(!WP.data.EVALUATIONS.p_test && !server.p_test, 'F: remove clears local and backend');
+
+    // --- Role-scoped reads (0003) — the SEV2 fix. Same server set, three viewers.
+    // Server holds evals for: p_abdulrahman, p_talal (his report), p_osama,
+    // p_shamma. Local store is empty so list() is a pure read (no import push).
+    function scopedServer() {
+      return {
+        p_abdulrahman: WP.db._recToRow('p_abdulrahman', { scores: {}, feedback: {} }),
+        p_talal:       WP.db._recToRow('p_talal',       { scores: {}, feedback: {} }),
+        p_osama:       WP.db._recToRow('p_osama',       { scores: {}, feedback: {} }),
+        p_shamma:      WP.db._recToRow('p_shamma',      { scores: {}, feedback: {} })
+      };
+    }
+
+    // --- G) PEER → no rows. meshal is an employee with no reports and no own
+    //         eval row in the set: a peer can read nothing.
+    WP._sb = makeScopedSb(scopedServer(), 'meshal@webook.com'); resetDb();
+    WP.data.EVALUATIONS = {};
+    let scoped = await WP.db.evaluations.list();
+    assert(Object.keys(scoped).length === 0, 'G: peer (meshal) sees NO rows — own row absent, no reports');
+
+    // --- H) MANAGER → own + direct reports only. maksousa (p_abdulrahman)
+    //         manages p_talal; must NOT see p_osama (akram's report).
+    WP._sb = makeScopedSb(scopedServer(), 'maksousa@webook.com'); resetDb();
+    WP.data.EVALUATIONS = {};
+    scoped = await WP.db.evaluations.list();
+    assert(scoped.p_abdulrahman, 'H: manager sees own row');
+    assert(scoped.p_talal, 'H: manager sees direct report (p_talal)');
+    assert(!scoped.p_osama && !scoped.p_shamma, 'H: manager does NOT see non-reports');
+    assert(Object.keys(scoped).length === 2, 'H: manager sees exactly own + reports (2 rows)');
+
+    // --- I) DIRECTOR → all rows. ahmed (director) sees everyone.
+    WP._sb = makeScopedSb(scopedServer(), 'ahmed.othman@webook.com'); resetDb();
+    WP.data.EVALUATIONS = {};
+    scoped = await WP.db.evaluations.list();
+    assert(Object.keys(scoped).length === 4, 'I: director sees ALL rows (4)');
+    assert(scoped.p_abdulrahman && scoped.p_talal && scoped.p_osama && scoped.p_shamma, 'I: director sees every subject');
   } catch (e) { errors.push('[run] ' + e.message + '\n' + e.stack); }
 
   if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-  console.log('PASS — WP.db evaluations: backend round-trip, localStorage fallback, offline on failed write, and lossless de-duped import handoff.');
+  console.log('PASS — WP.db evaluations: backend round-trip, localStorage fallback, offline on failed write, lossless de-duped import handoff, and role-scoped reads (peer→none, manager→own+reports, director→all).');
   process.exit(0);
 })();
