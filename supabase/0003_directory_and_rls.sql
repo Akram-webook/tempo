@@ -34,6 +34,11 @@ do $$ begin
     add constraint directory_role_chk check (role in ('employee','manager','director','admin'));
 exception when duplicate_object then null; end $$;
 
+-- Index the manager-relationship lookup: can_read_person()'s "is the subject's
+-- manager" clause filters directory by person_id (the email PK doesn't help it),
+-- so this keeps role-scoped reads off a seq scan as the org grows (Scalability lens).
+create index if not exists directory_person_id on public.directory (person_id);
+
 alter table public.directory enable row level security;
 
 -- Role lookup as SECURITY DEFINER so the directory SELECT policy can reference
