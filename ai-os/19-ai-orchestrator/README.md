@@ -17,6 +17,13 @@ Every task starts here. The orchestrator right-sizes process to task size (see `
 7. **Release** (`08`) — branch+PR, Akram merges, verify live, log the decision (`15`).
 8. **Improve** — schedule the post-release review (`17`).
 
+## When a production issue appears → it's an ESCAPE, not just a bug
+Run the mandatory AI Failure Learning System (`../05-qa/ESCAPE-LEARNING.md`): ask "why did our system
+let this through?", classify the gap, set the maturity level (L1 feature / L2 process / L3 constitution
+/ L4 strategy), root-cause it, and apply the required updates (checklist, tests, docs, knowledge base,
+Constitution if L3). Log it in the Failure Library. The Escape closes only when a permanent test/rule
+prevents its recurrence. Same Escape twice = the learning process failed.
+
 ## Rigor by size
 - XS: steps 5 + checklist (`13`).
 - S: + Design (`02`) + light score.
