@@ -815,6 +815,23 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .ev-meta { flex: 1; min-width: 0; }
 .ev-status { flex: none; }
 
+/* ---- Evidence Timeline (Intelligence Layer P1) ---- */
+.tl-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 12px; }
+.tl-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+.tl-chip { font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
+.tl-chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+.tl-row { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.tl-row:last-child { border-bottom: 0; }
+.tl-row.tl-growth { border-inline-start: 3px solid var(--state-available); padding-inline-start: 9px; }
+.tl-cat { flex: none; align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 8px;
+  background: var(--surface-2, rgba(127,127,127,.10)); color: var(--text-muted); border: 1px solid var(--border); }
+.tl-cat .icn { flex: none; }
+.tl-body { min-width: 0; }
+.tl-desc { font-size: 13.5px; color: var(--text); line-height: 1.5; }
+.tl-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
 /* ---- Wellbeing Early-Warning (support view, manager-scoped) ---- */
 .wb-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
 .wb-row:last-child { border-bottom: 0; }

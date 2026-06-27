@@ -165,12 +165,71 @@
     }
   };
 
+  /* --- events: append-only evidence/decision store (Intelligence Layer) ------
+   * Append-only by contract — there is intentionally NO edit/remove (an evidence
+   * trail you can rewrite is worthless). Supabase 'events' when signed in; a
+   * separate localStorage key as fallback. Persisted events are *appended*
+   * decisions/evidence; derived-from-signal events are recomputed in events.js. */
+  var EVENTS_KEY = 'tempo_events';
+  function localEvents() {
+    try { return JSON.parse(localStorage.getItem(EVENTS_KEY) || '[]') || []; } catch (e) { return []; }
+  }
+  function saveLocalEvents(arr) { try { localStorage.setItem(EVENTS_KEY, JSON.stringify(arr)); } catch (e) {} }
+
+  var events = {
+    /* List persisted events (optionally for one subject). Backend when available,
+     * else localStorage. Never throws — falls back. */
+    list: function (subjectId) {
+      var c = client();
+      var filt = function (arr) { return subjectId ? arr.filter(function (e) { return e.subjectId === subjectId; }) : arr; };
+      if (!c) return Promise.resolve(filt(localEvents()));
+      var q = c.from('events').select('*');
+      if (subjectId && q.eq) q = q.eq('subject_id', subjectId);
+      return Promise.resolve(q)
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          status.offline = false;
+          return ((res && res.data) || []).map(rowToEvent);
+        })
+        .catch(function (e) { status.offline = true; status.lastError = e; return filt(localEvents()); });
+    },
+    /* Append one event. Append-only: always persisted locally; pushed to backend
+     * when available. Returns {ok, offline}. */
+    append: function (evt) {
+      if (!evt || !evt.id) return Promise.resolve({ ok: false, error: 'event needs an id' });
+      var arr = localEvents();
+      if (arr.some(function (e) { return e.id === evt.id; })) return Promise.resolve({ ok: true, dedup: true }); // idempotent
+      arr.push(evt); saveLocalEvents(arr);
+      var c = client();
+      if (!c) return Promise.resolve({ ok: true, offline: false, local: true });
+      return Promise.resolve(c.from('events').insert(eventToRow(evt)))
+        .then(function (res) { if (res && res.error) throw res.error; status.offline = false; return { ok: true, offline: false }; })
+        .catch(function (e) { status.offline = true; status.lastError = e; return { ok: false, offline: true, error: e }; });
+    },
+    _localKey: EVENTS_KEY
+  };
+
+  function eventToRow(e) {
+    return { id: e.id, ts: e.ts, type: e.type, actor: e.actor || null, subject_id: e.subjectId,
+      category: e.category, before: e.before || null, after: e.after || null, description: e.description,
+      source: e.source, related: e.related || null, confidence: e.confidence || null,
+      evidence_refs: e.evidenceRefs || [], visibility: e.visibility || 'managers' };
+  }
+  function rowToEvent(r) {
+    return { id: r.id, ts: r.ts, type: r.type, actor: r.actor, subjectId: r.subject_id,
+      category: r.category, before: r.before, after: r.after, description: r.description,
+      source: r.source, related: r.related, confidence: r.confidence,
+      evidenceRefs: r.evidence_refs || [], visibility: r.visibility || 'managers' };
+  }
+
   WP.db = {
     status: status,
     usingBackend: usingBackend,
     evaluations: evaluations,
+    events: events,
     _recToRow: recToRow,        // exposed for tests
     _rowToRec: rowToRec,
+    _eventToRow: eventToRow,
     _resetImport: function () { importDone = false; }  // tests
   };
 })(window.WP = window.WP || {});

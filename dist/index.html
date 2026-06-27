@@ -924,6 +924,23 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .ev-meta { flex: 1; min-width: 0; }
 .ev-status { flex: none; }
 
+/* ---- Evidence Timeline (Intelligence Layer P1) ---- */
+.tl-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 12px; }
+.tl-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+.tl-chip { font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
+.tl-chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+.tl-row { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.tl-row:last-child { border-bottom: 0; }
+.tl-row.tl-growth { border-inline-start: 3px solid var(--state-available); padding-inline-start: 9px; }
+.tl-cat { flex: none; align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 8px;
+  background: var(--surface-2, rgba(127,127,127,.10)); color: var(--text-muted); border: 1px solid var(--border); }
+.tl-cat .icn { flex: none; }
+.tl-body { min-width: 0; }
+.tl-desc { font-size: 13.5px; color: var(--text); line-height: 1.5; }
+.tl-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
 /* ---- Wellbeing Early-Warning (support view, manager-scoped) ---- */
 .wb-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
 .wb-row:last-child { border-bottom: 0; }
@@ -2018,6 +2035,17 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     noDataYet:      { en: 'No data yet', ar: 'لا توجد بيانات بعد' },
     ofPeople:       { en: 'of {n} people', ar: 'من {n} أشخاص' },
     nearCapSub:     { en: 'at 76%+ load', ar: 'بحمل ٧٦٪ فأكثر' },
+    tlTitle:        { en: 'Evidence timeline', ar: 'سجل الأدلة' },
+    tlHint:         { en: 'Evidence, not memory — derived from real signals. Review the facts, you decide.', ar: 'أدلة لا ذاكرة — مشتقّة من إشارات حقيقية. راجع الحقائق، والقرار لك.' },
+    tlEmpty:        { en: 'No evidence captured yet', ar: 'لا توجد أدلة بعد' },
+    tlEmptyNote:    { en: 'As workload, evaluations, recognition and decisions accrue, they’ll appear here with their source.', ar: 'مع تراكم الحِمل والتقييمات والتقدير والقرارات، ستظهر هنا مع مصدرها.' },
+    tlSource:       { en: 'Source', ar: 'المصدر' },
+    tlAll:          { en: 'All', ar: 'الكل' },
+    catWorkload:    { en: 'Workload', ar: 'الحِمل' },
+    catWellbeing:   { en: 'Wellbeing', ar: 'الرفاهية' },
+    catEvaluation:  { en: 'Evaluation', ar: 'التقييم' },
+    catRecognition: { en: 'Recognition', ar: 'التقدير' },
+    catDecision:    { en: 'Decision', ar: 'القرار' },
     skills:         { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
     hardSkills:     { en: 'Technical', ar: 'تقنية' },
     softSkills:     { en: 'Behavioral', ar: 'سلوكية' },
@@ -3039,12 +3067,71 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     }
   };
 
+  /* --- events: append-only evidence/decision store (Intelligence Layer) ------
+   * Append-only by contract — there is intentionally NO edit/remove (an evidence
+   * trail you can rewrite is worthless). Supabase 'events' when signed in; a
+   * separate localStorage key as fallback. Persisted events are *appended*
+   * decisions/evidence; derived-from-signal events are recomputed in events.js. */
+  var EVENTS_KEY = 'tempo_events';
+  function localEvents() {
+    try { return JSON.parse(localStorage.getItem(EVENTS_KEY) || '[]') || []; } catch (e) { return []; }
+  }
+  function saveLocalEvents(arr) { try { localStorage.setItem(EVENTS_KEY, JSON.stringify(arr)); } catch (e) {} }
+
+  var events = {
+    /* List persisted events (optionally for one subject). Backend when available,
+     * else localStorage. Never throws — falls back. */
+    list: function (subjectId) {
+      var c = client();
+      var filt = function (arr) { return subjectId ? arr.filter(function (e) { return e.subjectId === subjectId; }) : arr; };
+      if (!c) return Promise.resolve(filt(localEvents()));
+      var q = c.from('events').select('*');
+      if (subjectId && q.eq) q = q.eq('subject_id', subjectId);
+      return Promise.resolve(q)
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          status.offline = false;
+          return ((res && res.data) || []).map(rowToEvent);
+        })
+        .catch(function (e) { status.offline = true; status.lastError = e; return filt(localEvents()); });
+    },
+    /* Append one event. Append-only: always persisted locally; pushed to backend
+     * when available. Returns {ok, offline}. */
+    append: function (evt) {
+      if (!evt || !evt.id) return Promise.resolve({ ok: false, error: 'event needs an id' });
+      var arr = localEvents();
+      if (arr.some(function (e) { return e.id === evt.id; })) return Promise.resolve({ ok: true, dedup: true }); // idempotent
+      arr.push(evt); saveLocalEvents(arr);
+      var c = client();
+      if (!c) return Promise.resolve({ ok: true, offline: false, local: true });
+      return Promise.resolve(c.from('events').insert(eventToRow(evt)))
+        .then(function (res) { if (res && res.error) throw res.error; status.offline = false; return { ok: true, offline: false }; })
+        .catch(function (e) { status.offline = true; status.lastError = e; return { ok: false, offline: true, error: e }; });
+    },
+    _localKey: EVENTS_KEY
+  };
+
+  function eventToRow(e) {
+    return { id: e.id, ts: e.ts, type: e.type, actor: e.actor || null, subject_id: e.subjectId,
+      category: e.category, before: e.before || null, after: e.after || null, description: e.description,
+      source: e.source, related: e.related || null, confidence: e.confidence || null,
+      evidence_refs: e.evidenceRefs || [], visibility: e.visibility || 'managers' };
+  }
+  function rowToEvent(r) {
+    return { id: r.id, ts: r.ts, type: r.type, actor: r.actor, subjectId: r.subject_id,
+      category: r.category, before: r.before, after: r.after, description: r.description,
+      source: r.source, related: r.related, confidence: r.confidence,
+      evidenceRefs: r.evidence_refs || [], visibility: r.visibility || 'managers' };
+  }
+
   WP.db = {
     status: status,
     usingBackend: usingBackend,
     evaluations: evaluations,
+    events: events,
     _recToRow: recToRow,        // exposed for tests
     _rowToRec: rowToRec,
+    _eventToRow: eventToRow,
     _resetImport: function () { importDone = false; }  // tests
   };
 })(window.WP = window.WP || {});
@@ -3215,6 +3302,153 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     scoreForPerson: scoreForPerson,
     canView: canView,
     atRisk: atRisk
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Evidence/Decision events (Intelligence Layer P1, core)
+ * SPEC: docs/SPEC-evidence-timeline.md · GATE: ai-os/00-governance/INTELLIGENCE-ETHICS.md
+ * ------------------------------------------------------------
+ * Pure derivation + query over the append-only event store. Every event is
+ * derived from a REAL existing signal and carries its `source` — nothing is
+ * fabricated (Ethics #2). Risk entries are framed as early support, not
+ * punishment (Ethics #5). No DOM, no business logic in views.
+ *
+ * P1 timeline = events DERIVED from signals we already have (capacity, wellbeing,
+ * completed evaluations, check-ins/kudos) + DECISION events from WP.activityLog,
+ * merged with any explicitly appended events from WP.db.events.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  var CATEGORIES = ['workload', 'wellbeing', 'evaluation', 'recognition', 'decision'];
+
+  function iso(d) { return (d instanceof Date ? d : new Date(d)).toISOString(); }
+  function quarterOf(ts) {
+    var d = new Date(ts); if (isNaN(d)) return '';
+    return 'Q' + (Math.floor(d.getUTCMonth() / 3) + 1) + '-' + d.getUTCFullYear();
+  }
+  function ev(o) {
+    // every event MUST have a source — guard against fabrication at construction
+    if (!o.source) throw new Error('event without a source is not allowed (Ethics #2): ' + o.description);
+    return {
+      id: o.id, ts: o.ts, type: o.type || 'evidence', actor: o.actor || null, subjectId: o.subjectId,
+      category: o.category, description: o.description, source: o.source,
+      confidence: o.confidence || 'observed', growth: !!o.growth, evidenceRefs: o.evidenceRefs || []
+    };
+  }
+
+  /* Build evidence/decision events for one person from live signals. Pure +
+   * deterministic given the data; emits NOTHING when a signal is absent (we say
+   * "no evidence" rather than invent it). */
+  function derive(subjectId, refDate) {
+    var p = WP.access.byId(subjectId);
+    if (!p) return [];
+    var refISO = iso((refDate || (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10)) + (String(refDate).length === 10 ? 'T12:00:00Z' : ''));
+    var out = [];
+
+    // 1) Workload (capacity engine) — only if the person actually has load
+    try {
+      var snap = WP.capacity.snapshot(p, 'month', (refDate || (WP.state && WP.state.refDate)));
+      if (snap && snap.load > 0) {
+        out.push(ev({ id: 'der_workload_' + subjectId + '_' + refISO, ts: refISO, type: 'evidence', subjectId: subjectId,
+          category: 'workload', confidence: 'observed', source: 'Capacity engine',
+          description: 'Workload at ' + snap.load + '% (' + WP.i18n.stateLabel(snap.state) + ') this period' }));
+      }
+    } catch (e) {}
+
+    // 2) Wellbeing — early SUPPORT signal, never punishment (Ethics #5)
+    try {
+      if (WP.wellbeing && WP.wellbeing.scoreFor) {
+        var w = WP.wellbeing.scoreFor(subjectId, refDate);
+        if (w && w.band) {
+          out.push(ev({ id: 'der_wellbeing_' + subjectId + '_' + refISO, ts: refISO, type: 'evidence', subjectId: subjectId,
+            category: 'wellbeing', confidence: 'signal', source: 'Wellbeing engine',
+            description: 'Early support signal (' + w.band + '): ' + w.factors.map(function (f) { return f.en; }).join('; ') }));
+        }
+      }
+    } catch (e) {}
+
+    // 3) Completed evaluation
+    try {
+      var rec = WP.data.EVALUATIONS && WP.data.EVALUATIONS[subjectId];
+      if (rec && rec.status === 'Completed') {
+        var overall = (WP.evaluation && WP.evaluation.overall) ? WP.evaluation.overall(rec) : null;
+        out.push(ev({ id: 'der_eval_' + subjectId + '_' + (rec.updated_at || rec.period || refISO), ts: iso(rec.updated_at || refISO),
+          type: 'evidence', subjectId: subjectId, category: 'evaluation', confidence: 'recorded', source: 'Evaluation', growth: true,
+          description: 'Evaluation completed (' + (rec.period || '') + ')' + (overall != null ? ' — overall ' + overall + '/5' : '') }));
+      }
+    } catch (e) {}
+
+    // 4) Recognition / check-ins (growth highlighted)
+    try {
+      var eng = (WP.engage && WP.engage.snapshot) ? WP.engage.snapshot()[subjectId] : null;
+      if (eng) {
+        (eng.kudos || []).forEach(function (k, i) {
+          out.push(ev({ id: 'der_kudos_' + subjectId + '_' + i, ts: refISO, type: 'evidence', subjectId: subjectId,
+            category: 'recognition', confidence: 'recorded', source: 'Check-in / kudos', growth: true,
+            description: 'Recognition: “' + k.text + '”' + (k.from ? ' — ' + WP.i18n.name(WP.access.byId(k.from) || { name: k.from }) : '') }));
+        });
+        if (eng.weekGoal && eng.weekDone >= eng.weekGoal) {
+          out.push(ev({ id: 'der_checkin_' + subjectId + '_' + refISO, ts: refISO, type: 'evidence', subjectId: subjectId,
+            category: 'recognition', confidence: 'observed', source: 'Daily check-ins', growth: true,
+            description: 'Consistent check-ins (' + eng.weekDone + '/' + eng.weekGoal + ' this week)' }));
+        }
+      }
+    } catch (e) {}
+
+    // 5) Decision events from the existing activity log (role changes, access, eval edits)
+    try {
+      (WP.activityLog || []).forEach(function (a, i) {
+        if (a.target !== subjectId) return;
+        out.push(ev({ id: 'der_act_' + subjectId + '_' + (a.at || i) + '_' + i, ts: iso(a.at || refISO),
+          type: 'decision', actor: a.by || null, subjectId: subjectId, category: 'decision', confidence: 'recorded',
+          source: 'Activity log', description: (a.type || 'decision') + (a.reason ? ' · ' + a.reason : '') }));
+      });
+    } catch (e) {}
+
+    return out;
+  }
+
+  function filter(events, opts) {
+    opts = opts || {};
+    return events.filter(function (e) {
+      if (opts.category && opts.category !== 'all' && e.category !== opts.category) return false;
+      if (opts.quarter && opts.quarter !== 'all' && quarterOf(e.ts) !== opts.quarter) return false;
+      return true;
+    });
+  }
+  function sortDesc(events) {
+    return events.slice().sort(function (a, b) { return new Date(b.ts) - new Date(a.ts); });
+  }
+
+  /* Full timeline: derived (from live signals) ∪ appended (persisted), de-duped
+   * by id, filtered, newest first. Async because persisted events come from WP.db. */
+  function query(subjectId, opts, refDate) {
+    var derived = derive(subjectId, refDate);
+    var listP = (WP.db && WP.db.events) ? WP.db.events.list(subjectId) : Promise.resolve([]);
+    return Promise.resolve(listP).then(function (persisted) {
+      var byId = {};
+      derived.concat(persisted || []).forEach(function (e) { if (e && e.id) byId[e.id] = e; });
+      return sortDesc(filter(Object.keys(byId).map(function (k) { return byId[k]; }), opts));
+    });
+  }
+
+  function quarters(events) {
+    var seen = {}; events.forEach(function (e) { var q = quarterOf(e.ts); if (q) seen[q] = true; });
+    return Object.keys(seen).sort().reverse();
+  }
+
+  WP.events = {
+    CATEGORIES: CATEGORIES,
+    derive: derive,
+    filter: filter,
+    sortDesc: sortDesc,
+    query: query,
+    quarterOf: quarterOf,
+    quarters: quarters
   };
 })(window.WP = window.WP || {});
 
@@ -4626,6 +4860,54 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="disclaimer">' + t('compNote') + '</div></div>';
   }
 
+  /* ---- Evidence Timeline (Intelligence Layer P1) — manager/director/self only.
+   * Read-only, derived from real signals, every entry sourced (no fabrication).
+   * Growth highlighted; risk framed as early support. Filter by quarter+category. */
+  const CAT_LABEL = { workload: 'catWorkload', wellbeing: 'catWellbeing', evaluation: 'catEvaluation', recognition: 'catRecognition', decision: 'catDecision' };
+  const CAT_ICON = { workload: 'gauge', wellbeing: 'sprout', evaluation: 'clipboard', recognition: 'star', decision: 'key' };
+  function timelineSection(p) {
+    const t = WP.i18n.t, ar = WP.state.lang === 'ar';
+    const cached = (WP._tlCache && WP._tlCache.id === p.id) ? WP._tlCache.all : null;
+    if (!cached) {
+      // load persisted + derived once per opened profile, then re-render
+      WP.events.query(p.id, {}, WP.state.refDate).then(function (evts) {
+        WP._tlCache = { id: p.id, all: evts }; WP.setState({});
+      });
+    }
+    const all = cached || WP.events.sortDesc(WP.events.derive(p.id, WP.state.refDate)); // derived view while loading
+    const q = WP._tlQuarter || 'all', cat = WP._tlCategory || 'all';
+    const shown = WP.events.filter(all, { quarter: q, category: cat });
+    const qs = WP.events.quarters(all);
+
+    const qChips = ['all'].concat(qs).map(function (x) {
+      return '<button class="tl-chip' + (x === q ? ' on' : '') + '" data-tlq="' + x + '">' + (x === 'all' ? t('tlAll') : x) + '</button>';
+    }).join('');
+    const catChips = ['all'].concat(WP.events.CATEGORIES).map(function (x) {
+      return '<button class="tl-chip' + (x === cat ? ' on' : '') + '" data-tlc="' + x + '">' + (x === 'all' ? t('tlAll') : t(CAT_LABEL[x])) + '</button>';
+    }).join('');
+
+    let body;
+    if (!shown.length) {
+      body = '<div style="text-align:center;padding:22px 0"><div class="sub" style="font-weight:600">' + t('tlEmpty') + '</div>' +
+        '<div class="sub">' + t('tlEmptyNote') + '</div></div>';
+    } else {
+      body = shown.map(function (e) {
+        const d = new Date(e.ts), date = isNaN(d) ? '' : d.toISOString().slice(0, 10);
+        const label = t(CAT_LABEL[e.category] || 'catDecision');
+        return '<div class="tl-row' + (e.growth ? ' tl-growth' : '') + '">' +
+            '<span class="tl-cat tl-' + e.category + '">' + WP.ui.icon(CAT_ICON[e.category] || 'list', 13) + ' ' + label + '</span>' +
+            '<div class="tl-body"><div class="tl-desc">' + ui.esc(e.description) + '</div>' +
+              '<div class="tl-meta">' + date + ' · ' + t('tlSource') + ': ' + ui.esc(e.source) +
+                (e.confidence ? ' · ' + ui.esc(e.confidence) : '') + '</div></div>' +
+          '</div>';
+      }).join('');
+    }
+    return '<div class="section"><h3>' + WP.ui.icon('list', 16) + ' ' + t('tlTitle') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + WP.ui.icon('bulb', 13) + ' ' + t('tlHint') + '</div>' +
+      '<div class="tl-filters">' + qChips + '<span class="tl-sep"></span>' + catChips + '</div>' +
+      body + '</div>';
+  }
+
   /* ---- full profile ---- */
   function render(root) {
     const p = WP.access.byId(WP.state.selectedId);
@@ -4673,11 +4955,14 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<div class="k">' + t('learned') + '</div><div>' + ui.esc(dc.learned) + '</div>' +
           '</div></div>' : '') +
         growthSections(p, sens, selfView) +
+        (sens ? timelineSection(p) : '') +
         upwardReceived(p) +
         compPanel(p) +
       '</div>';
 
-    root.querySelector('#back').onclick = function () { WP.setState({ route: 'map', selectedId: null }); };
+    root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
+    root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
+    root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
     const oe = root.querySelector('#open-eval');
     if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation' }); };
     const em = root.querySelector('#eval-mgr');
