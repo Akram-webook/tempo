@@ -1175,3 +1175,22 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   .sig-dept { flex: none; justify-content: center; }
   .sig-sep { display: none; }
 }
+
+/* ── Evaluation prep · evidence (Wave 3.002, P2). PREP ONLY — sourced lines + gaps,
+   never a score/verdict. Manager-gated; rendered above the scoring criteria. */
+.eval-prep { border-left: 3px solid var(--brand); }
+.eval-prep .ttl { line-height: 1.5; }
+.ep-cat { margin: 12px 0; }
+.ep-cat .mini-label { display: flex; align-items: center; gap: 6px; }
+.ep-count { color: var(--text-muted); font-weight: 400; }
+.ep-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ep-line { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.ep-text { color: var(--text); font-size: 14px; line-height: 1.45; }
+.ep-src { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); font-size: 12px; }
+.ep-highlights .ep-line { border-color: color-mix(in srgb, var(--brand) 35%, var(--border)); }
+.ep-empty { padding: 12px; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); margin-top: 8px; }
+.ep-gaps { margin-top: 14px; }
+.ep-gap { color: var(--text-muted); font-size: 13px; padding: 4px 0; }
+[dir="rtl"] .eval-prep { border-left: 0; border-right: 3px solid var(--brand); }

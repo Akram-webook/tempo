@@ -1285,6 +1285,25 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   .sig-sep { display: none; }
 }
 
+/* ── Evaluation prep · evidence (Wave 3.002, P2). PREP ONLY — sourced lines + gaps,
+   never a score/verdict. Manager-gated; rendered above the scoring criteria. */
+.eval-prep { border-left: 3px solid var(--brand); }
+.eval-prep .ttl { line-height: 1.5; }
+.ep-cat { margin: 12px 0; }
+.ep-cat .mini-label { display: flex; align-items: center; gap: 6px; }
+.ep-count { color: var(--text-muted); font-weight: 400; }
+.ep-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ep-line { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.ep-text { color: var(--text); font-size: 14px; line-height: 1.45; }
+.ep-src { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); font-size: 12px; }
+.ep-highlights .ep-line { border-color: color-mix(in srgb, var(--brand) 35%, var(--border)); }
+.ep-empty { padding: 12px; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); margin-top: 8px; }
+.ep-gaps { margin-top: 14px; }
+.ep-gap { color: var(--text-muted); font-size: 13px; padding: 4px 0; }
+[dir="rtl"] .eval-prep { border-left: 0; border-right: 3px solid var(--brand); }
+
 </style>
 </head>
 <body>
@@ -2096,6 +2115,21 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
     sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
     sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
+    // ─────────── Wave 3.002 Eval-Prep keys (Builder A) — keep fenced together for clean rebase ───────────
+    epTitle:        { en: 'Evaluation prep · evidence', ar: 'تحضير التقييم · الأدلة' },
+    epIntro:        { en: 'The evidence already on record — sourced, not invented. Prep only: no score, no verdict. You decide.', ar: 'الأدلة المسجّلة فعلاً — بمصادرها، لا مُختلقة. تحضير فقط: بلا درجة ولا حكم. القرار لك.' },
+    epToggleShow:   { en: 'Show evidence prep', ar: 'إظهار تحضير الأدلة' },
+    epToggleHide:   { en: 'Hide evidence prep', ar: 'إخفاء تحضير الأدلة' },
+    epLoading:      { en: 'Gathering the evidence on record…', ar: 'جارٍ تجميع الأدلة المسجّلة…' },
+    epHighlights:   { en: 'Growth highlights', ar: 'أبرز محطات النمو' },
+    epGaps:         { en: 'Gaps — no evidence on record (not filled in)', ar: 'فجوات — لا أدلة مسجّلة (لم تُملأ)' },
+    epGapLine:      { en: 'No evidence captured for {c} this period', ar: 'لا توجد أدلة مسجّلة لـ {c} في هذه الفترة' },
+    epNotEnough:    { en: 'Not enough evidence yet', ar: 'الأدلة غير كافية بعد' },
+    epNotEnoughNote:{ en: 'Too little is on record to prepare a fair picture. Shown below is everything there is — add observations over time; don’t infer beyond it.', ar: 'المسجَّل أقل من أن يُكوّن صورة عادلة. في الأسفل كل ما هو متاح — أضِف ملاحظات مع الوقت، ولا تستنتج أبعد منها.' },
+    epSource:       { en: 'Source', ar: 'المصدر' },
+    epCount:        { en: '{n} sourced item(s)', ar: '{n} عنصر بمصدر' },
+    epHuman:        { en: 'This is raw material for your judgment — not a rating or a decision.', ar: 'هذه مادة خام لحكمك — وليست تقييماً ولا قراراً.' },
+    // ─────────── end Eval-Prep keys ───────────
     skills:         { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
     hardSkills:     { en: 'Technical', ar: 'تقنية' },
     softSkills:     { en: 'Behavioral', ar: 'سلوكية' },
@@ -3750,6 +3784,111 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     query: query,
     quarterOf: quarterOf,
     quarters: quarters
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — AI Evaluation Preparation (Intelligence Layer P2, core)
+ * SPEC: docs/SPEC-eval-prep.md · GATE: ai-os/00-governance/INTELLIGENCE-ETHICS.md
+ * ------------------------------------------------------------
+ * PREP ONLY. This assembles the evidence a manager ALREADY has (the Wave 3.001
+ * append-only event store) into a grouped, sourced, gap-honest summary so they
+ * walk into an evaluation prepared instead of relying on memory.
+ *
+ * Hard guardrails (enforced here, not just by convention):
+ *  - NO score, NO rating, NO verdict, NO recommendation. Scoring/bias is P3.
+ *    summarize() returns NOTHING that ranks or judges — only sourced lines + gaps.
+ *  - NO fabrication: a line with no `source` is DROPPED, never invented (Ethics #2).
+ *  - Gaps are LISTED, not filled: an empty category becomes a stated gap.
+ *  - "Not enough evidence" is a first-class result when the store is sparse.
+ *  - Access gating + framing ("you decide") live in the UI layer.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  var CONFIG = {
+    minEvidence: 3, // fewer than this many SOURCED events → "not enough evidence yet"
+    // categories we expect to find evidence across (mirrors the event store)
+    categories: ['workload', 'wellbeing', 'evaluation', 'recognition', 'decision']
+  };
+
+  function categories() {
+    return (WP.events && WP.events.CATEGORIES) ? WP.events.CATEGORIES.slice() : CONFIG.categories.slice();
+  }
+
+  /* Map one event → one prep line. Returns null when the event has no source, so
+   * the caller can drop it (anti-fabrication guard at the boundary). */
+  function lineOf(e) {
+    if (!e || !e.source) return null; // never show a line we can't attribute
+    return {
+      text: e.description || '',
+      source: e.source,
+      ts: e.ts || null,
+      confidence: e.confidence || 'observed',
+      category: e.category || 'decision',
+      growth: !!e.growth
+    };
+  }
+
+  /* PURE + DETERMINISTIC. Turn an events array into a prep summary.
+   * Returns ONLY descriptive structure — no score/rating/verdict, ever. */
+  function summarize(events, opts) {
+    opts = opts || {};
+    var cats = categories();
+    var sourced = (events || []).map(lineOf).filter(Boolean); // drops sourceless = no fabrication
+
+    var byCategory = {};
+    cats.forEach(function (c) { byCategory[c] = []; });
+    sourced.forEach(function (ln) {
+      if (!byCategory[ln.category]) byCategory[ln.category] = []; // tolerate unknown category
+      byCategory[ln.category].push(ln);
+    });
+
+    // sections in a stable, meaningful order; only categories that HAVE evidence
+    var sections = cats
+      .filter(function (c) { return byCategory[c] && byCategory[c].length; })
+      .map(function (c) { return { category: c, lines: byCategory[c] }; });
+
+    // gaps: expected categories with zero sourced evidence — listed, never filled
+    var gaps = cats
+      .filter(function (c) { return !byCategory[c] || !byCategory[c].length; })
+      .map(function (c) { return { category: c, reason: 'noEvidence' }; });
+
+    // growth highlights (sourced), newest-first preserved from input order
+    var highlights = sourced.filter(function (ln) { return ln.growth; });
+
+    return {
+      enough: sourced.length >= CONFIG.minEvidence,
+      total: (events || []).length,
+      sourcedCount: sourced.length,
+      byCategory: byCategory,
+      sections: sections,
+      gaps: gaps,
+      highlights: highlights
+      // NOTE: intentionally no `score`, `rating`, `verdict`, or `recommendation`.
+    };
+  }
+
+  /* Async wrapper: pull this person's events from the store (derived ∪ appended),
+   * then summarize. Core stays data-only; the UI handles access + presentation. */
+  function prepare(subjectId, opts, refDate) {
+    var q = (WP.events && WP.events.query)
+      ? WP.events.query(subjectId, opts || {}, refDate)
+      : Promise.resolve([]);
+    return Promise.resolve(q).then(function (events) {
+      var s = summarize(events, opts);
+      s.subjectId = subjectId;
+      return s;
+    });
+  }
+
+  WP.evalPrep = {
+    CONFIG: CONFIG,
+    summarize: summarize,
+    prepare: prepare,
+    _lineOf: lineOf // exposed for tests
   };
 })(window.WP = window.WP || {});
 
@@ -5760,6 +5899,64 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return s === 'Completed' ? 'Exceeds' : s === 'In progress' ? 'Developing' : 'Meets';
   }
 
+  // Localized label for an event category — reuses the timeline cat* keys.
+  function catLabel(c, t) {
+    var key = 'cat' + c.charAt(0).toUpperCase() + c.slice(1);
+    var lbl = t(key);
+    return (lbl && lbl !== key) ? lbl : c;
+  }
+
+  // One sourced evidence line: text + an attributed source chip (no judgement).
+  function lineHTML(ln, t) {
+    var when = ln.ts ? new Date(ln.ts).toISOString().slice(0, 10) : '';
+    return '<li class="ep-line">' +
+        '<span class="ep-text">' + WP.ui.esc(ln.text) + '</span>' +
+        '<span class="ep-src">' + WP.ui.icon('eye', 12) + ' ' + t('epSource') + ': ' + WP.ui.esc(ln.source) +
+          (when ? ' · ' + when : '') + '</span>' +
+      '</li>';
+  }
+
+  /* Render the evidence-prep summary. PREP ONLY — deliberately renders NO score,
+   * rating, or verdict; just sourced lines, growth highlights, and listed gaps. */
+  function prepHTML(s, t, ar) {
+    var head = '<h3>' + WP.ui.icon('clipboard', 14) + ' ' + t('epTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('epIntro') + '</div>';
+
+    // Sparse → say so plainly; still show whatever little is on record.
+    if (!s.enough) {
+      var thin = s.sections.map(function (sec) {
+        return '<div class="ep-cat"><div class="mini-label">' + catLabel(sec.category, t) + '</div>' +
+          '<ul class="ep-list">' + sec.lines.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>';
+      }).join('');
+      return head +
+        '<div class="ep-empty"><div class="ttl" style="font-weight:600">' + WP.ui.icon('clock', 14) + ' ' + t('epNotEnough') + '</div>' +
+          '<div class="ttl">' + t('epNotEnoughNote') + '</div></div>' +
+        thin +
+        '<div class="disclaimer">' + t('epHuman') + '</div>';
+    }
+
+    var highlights = s.highlights.length
+      ? '<div class="ep-cat ep-highlights"><div class="mini-label">' + WP.ui.icon('sprout', 13) + ' ' + t('epHighlights') + '</div>' +
+          '<ul class="ep-list">' + s.highlights.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>'
+      : '';
+
+    var sections = s.sections.map(function (sec) {
+      return '<div class="ep-cat"><div class="mini-label">' + catLabel(sec.category, t) +
+          ' <span class="ep-count">' + t('epCount').replace('{n}', sec.lines.length) + '</span></div>' +
+        '<ul class="ep-list">' + sec.lines.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>';
+    }).join('');
+
+    var gaps = s.gaps.length
+      ? '<div class="ep-gaps"><div class="mini-label">' + WP.ui.icon('alert', 13) + ' ' + t('epGaps') + '</div>' +
+          '<ul class="ep-list">' + s.gaps.map(function (g) {
+            return '<li class="ep-gap">' + t('epGapLine').replace('{c}', catLabel(g.category, t)) + '</li>';
+          }).join('') + '</ul></div>'
+      : '';
+
+    return head + highlights + sections + gaps +
+      '<div class="disclaimer">' + t('epHuman') + '</div>';
+  }
+
   function render(root) {
     const t = WP.i18n.t, ar = WP.state.lang === 'ar';
     const p = WP.access.byId(WP.state.selectedId);
@@ -5775,6 +5972,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const selfCmp = selfMode ? null : WP.data.SELF[p.id]; // manager sees the employee's self-rating beside theirs
     const score = WP.evaluation.overall(ev);
     const evaluator = ev.evaluatorId ? WP.access.byId(ev.evaluatorId) : null;
+    // Evaluation prep (P2) — evidence the manager already has, manager-gated and
+    // never in self-mode. PREP ONLY: the panel never shows a score/rating/verdict.
+    const showPrep = !selfMode && WP.evalPrep && WP.access.canSeeSensitive(viewer, p.id);
 
     const criteria = WP.data.EVAL_CRITERIA.map(function (c, i) {
       const cur = ev.scores[c.id];
@@ -5810,6 +6010,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<span class="rating ' + statusClass(ev.status) + '">' + ui.esc(ev.status) + '</span></div>' +
       '</div>' +
 
+      (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +
+
       '<div class="section"><h3>' + (selfMode ? t('selfAssessment') : t('downwardFeedback')) + ' · ' + t('criteriaTitle') +
         '<span class="ttl" style="font-weight:400"> · ' + t('groupWeight') + ' 100% · ' + t('scale') + ' 1–5</span></h3>' +
         (selfCmp ? '<div class="disclaimer">' + WP.ui.icon('user',13) + ' = ' + t('selfRating') + '</div>' : '') +
@@ -5823,6 +6025,18 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '</div>';
 
     root.querySelector('#back').onclick = back;
+
+    // Fill the evidence-prep panel asynchronously (reads the append-only event store).
+    if (showPrep) {
+      WP.evalPrep.prepare(p.id, {}, WP.state.refDate).then(function (summary) {
+        const host = root.querySelector('#eval-prep-host');
+        if (host) host.innerHTML = prepHTML(summary, t, ar);
+      }).catch(function () {
+        const host = root.querySelector('#eval-prep-host');
+        if (host) host.innerHTML = '<div class="ttl">' + t('epNotEnough') + '</div>';
+      });
+    }
+
     // Downward evaluations sync through WP.db (shared backend + localStorage
     // fallback). Self-assessments (SELF) stay local in Phase 1 — out of scope.
     const saveEval = function () {

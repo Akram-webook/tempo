@@ -18,6 +18,64 @@
     return s === 'Completed' ? 'Exceeds' : s === 'In progress' ? 'Developing' : 'Meets';
   }
 
+  // Localized label for an event category — reuses the timeline cat* keys.
+  function catLabel(c, t) {
+    var key = 'cat' + c.charAt(0).toUpperCase() + c.slice(1);
+    var lbl = t(key);
+    return (lbl && lbl !== key) ? lbl : c;
+  }
+
+  // One sourced evidence line: text + an attributed source chip (no judgement).
+  function lineHTML(ln, t) {
+    var when = ln.ts ? new Date(ln.ts).toISOString().slice(0, 10) : '';
+    return '<li class="ep-line">' +
+        '<span class="ep-text">' + WP.ui.esc(ln.text) + '</span>' +
+        '<span class="ep-src">' + WP.ui.icon('eye', 12) + ' ' + t('epSource') + ': ' + WP.ui.esc(ln.source) +
+          (when ? ' · ' + when : '') + '</span>' +
+      '</li>';
+  }
+
+  /* Render the evidence-prep summary. PREP ONLY — deliberately renders NO score,
+   * rating, or verdict; just sourced lines, growth highlights, and listed gaps. */
+  function prepHTML(s, t, ar) {
+    var head = '<h3>' + WP.ui.icon('clipboard', 14) + ' ' + t('epTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('epIntro') + '</div>';
+
+    // Sparse → say so plainly; still show whatever little is on record.
+    if (!s.enough) {
+      var thin = s.sections.map(function (sec) {
+        return '<div class="ep-cat"><div class="mini-label">' + catLabel(sec.category, t) + '</div>' +
+          '<ul class="ep-list">' + sec.lines.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>';
+      }).join('');
+      return head +
+        '<div class="ep-empty"><div class="ttl" style="font-weight:600">' + WP.ui.icon('clock', 14) + ' ' + t('epNotEnough') + '</div>' +
+          '<div class="ttl">' + t('epNotEnoughNote') + '</div></div>' +
+        thin +
+        '<div class="disclaimer">' + t('epHuman') + '</div>';
+    }
+
+    var highlights = s.highlights.length
+      ? '<div class="ep-cat ep-highlights"><div class="mini-label">' + WP.ui.icon('sprout', 13) + ' ' + t('epHighlights') + '</div>' +
+          '<ul class="ep-list">' + s.highlights.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>'
+      : '';
+
+    var sections = s.sections.map(function (sec) {
+      return '<div class="ep-cat"><div class="mini-label">' + catLabel(sec.category, t) +
+          ' <span class="ep-count">' + t('epCount').replace('{n}', sec.lines.length) + '</span></div>' +
+        '<ul class="ep-list">' + sec.lines.map(function (l) { return lineHTML(l, t); }).join('') + '</ul></div>';
+    }).join('');
+
+    var gaps = s.gaps.length
+      ? '<div class="ep-gaps"><div class="mini-label">' + WP.ui.icon('alert', 13) + ' ' + t('epGaps') + '</div>' +
+          '<ul class="ep-list">' + s.gaps.map(function (g) {
+            return '<li class="ep-gap">' + t('epGapLine').replace('{c}', catLabel(g.category, t)) + '</li>';
+          }).join('') + '</ul></div>'
+      : '';
+
+    return head + highlights + sections + gaps +
+      '<div class="disclaimer">' + t('epHuman') + '</div>';
+  }
+
   function render(root) {
     const t = WP.i18n.t, ar = WP.state.lang === 'ar';
     const p = WP.access.byId(WP.state.selectedId);
@@ -33,6 +91,9 @@
     const selfCmp = selfMode ? null : WP.data.SELF[p.id]; // manager sees the employee's self-rating beside theirs
     const score = WP.evaluation.overall(ev);
     const evaluator = ev.evaluatorId ? WP.access.byId(ev.evaluatorId) : null;
+    // Evaluation prep (P2) — evidence the manager already has, manager-gated and
+    // never in self-mode. PREP ONLY: the panel never shows a score/rating/verdict.
+    const showPrep = !selfMode && WP.evalPrep && WP.access.canSeeSensitive(viewer, p.id);
 
     const criteria = WP.data.EVAL_CRITERIA.map(function (c, i) {
       const cur = ev.scores[c.id];
@@ -68,6 +129,8 @@
           '<span class="rating ' + statusClass(ev.status) + '">' + ui.esc(ev.status) + '</span></div>' +
       '</div>' +
 
+      (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +
+
       '<div class="section"><h3>' + (selfMode ? t('selfAssessment') : t('downwardFeedback')) + ' · ' + t('criteriaTitle') +
         '<span class="ttl" style="font-weight:400"> · ' + t('groupWeight') + ' 100% · ' + t('scale') + ' 1–5</span></h3>' +
         (selfCmp ? '<div class="disclaimer">' + WP.ui.icon('user',13) + ' = ' + t('selfRating') + '</div>' : '') +
@@ -81,6 +144,18 @@
       '</div>';
 
     root.querySelector('#back').onclick = back;
+
+    // Fill the evidence-prep panel asynchronously (reads the append-only event store).
+    if (showPrep) {
+      WP.evalPrep.prepare(p.id, {}, WP.state.refDate).then(function (summary) {
+        const host = root.querySelector('#eval-prep-host');
+        if (host) host.innerHTML = prepHTML(summary, t, ar);
+      }).catch(function () {
+        const host = root.querySelector('#eval-prep-host');
+        if (host) host.innerHTML = '<div class="ttl">' + t('epNotEnough') + '</div>';
+      });
+    }
+
     // Downward evaluations sync through WP.db (shared backend + localStorage
     // fallback). Self-assessments (SELF) stay local in Phase 1 — out of scope.
     const saveEval = function () {
