@@ -10,6 +10,23 @@ daily tasks, role dashboards, Super-Admin/permissions. EN + AR (RTL/LTR), light/
 - Live: https://akram-webook.github.io/tempo/ · Repo: https://github.com/akram-webook/tempo (`main`)
 - Stack: **vanilla HTML/CSS/JS, no framework**, single global namespace `window.WP`.
 
+## Operating System — route every task through it
+Tempo runs on **TAOS — the Tempo AI Operating System** (`/ai-os/`).
+- **Supreme law: `ai-os/CONSTITUTION.md`** (Articles I–VIII). Nothing may violate it. Key articles:
+  Purpose (improve decisions, not reporting), Human-First (track work, never surveil people),
+  Simplicity (simpler wins absent evidence), Evidence (no feature/metric without a decision it serves),
+  Trust (explainable + traceable), Quality (survive independent challenge).
+- **The 24 Books index: `ai-os/BOOKS.md`** (each maps to a folder; tight now, grows on-demand).
+- **Every task enters through `ai-os/19-ai-orchestrator/`**, which right-sizes process to task
+  size (XS/S/M/L) so quality rises without bureaucracy.
+- Also read `ai-os/00-governance/PRINCIPLES.md`, `ai-os/18-executive-reviews/ANTI-PATTERNS.md`
+  (things Tempo NEVER does), and `ai-os/VISION.md` (Tempo = a Digital COO).
+- Before proposing/re-debating, check **AI Memory** (`ai-os/15-knowledge-base/AI-MEMORY.md`).
+- For M/L tasks, an idea must survive the **Council of Critics**
+  (`ai-os/10-ai-agents/COUNCIL-OF-CRITICS.md`) — agents that try to BREAK it, not approve it.
+- Ground every standard in **`ai-os/REFERENCES.md`** (Google Eng Practices, SRE, Microsoft SDL,
+  OWASP, WCAG 2.2, NN/g, DORA, Team Topologies, C4, Working Backwards) — official sources, not opinion.
+
 ## How we work on this project (standing method — do this every task, don't wait to be asked)
 1. **Skills first.** Check available skills and apply the relevant ones — especially
    `world-class-first`, `multi-expert-review` / `tempo-multi-expert-system`, `ui-polish`,
