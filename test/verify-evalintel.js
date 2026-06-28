@@ -69,6 +69,15 @@ function richEvents() {
     // anchor still reflects the positive delivery/recognition evidence.
     assert(s.range[1] >= 3.0, 'open blocker is surfaced, not used to quietly tank the score');
 
+    // Calibration follow-up — anchor tracks the org baseline when one is supplied,
+    // and the report is transparent about which anchor it used.
+    assert(s.baseline && s.baseline.anchoredTo === 'default', 'no orgMean → anchored to default, transparently');
+    const hi = WP.evalIntel.assess(richEvents(), { orgMean: 4.2 });
+    const lo = WP.evalIntel.assess(richEvents(), { orgMean: 2.5 });
+    assert(hi.baseline.anchoredTo === 'orgMean' && hi.baseline.value === 4.2, 'orgMean → anchored to baseline, value reported');
+    assert(hi.range[0] > lo.range[0] && hi.range[1] > lo.range[1], 'a higher baseline shifts the suggested band up (calibration)');
+    assert(hi.range[0] < hi.range[1] && lo.range[0] < lo.range[1], 'calibrated band is still a true span, never one number');
+
     // Sparse → "Not enough evidence yet" is a first-class result (no fabricated range).
     const sparse = WP.evalIntel.assess(richEvents().slice(0, 2), {});
     assert(sparse.enoughEvidence === false, 'sparse input → enoughEvidence:false');
