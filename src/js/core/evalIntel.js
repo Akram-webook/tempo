@@ -91,8 +91,11 @@
     var plan = byCat.plan || [];
     var risk = byCat.risk || [];
 
-    // --- anchor: start neutral, lift on cited positive evidence (each capped) ---
-    var center = CONFIG.base;
+    // --- anchor: calibrate to the org baseline mean when we have one (so the band
+    // tracks how this team actually rates), else the neutral CONFIG.base. Then lift
+    // on cited positive evidence (each capped). ---
+    var calibrated = (typeof opts.orgMean === 'number');
+    var center = calibrated ? opts.orgMean : CONFIG.base;
     var reasoning = [];
 
     if (delivery.length) {
@@ -159,6 +162,9 @@
       reasoning: reasoning,
       evidence: cited,
       risks: risks,
+      // transparent about the anchor: calibrated to the cycle baseline when available,
+      // else the neutral default — so the /5 band tracks how this team actually rates.
+      baseline: calibrated ? { anchoredTo: 'orgMean', value: r1(opts.orgMean) } : { anchoredTo: 'default', value: CONFIG.base },
       sourcedCount: cited.length,
       total: (events || []).length
     };
@@ -194,6 +200,19 @@
     return !!(WP.access && WP.access.canSeeSensitive && WP.access.canSeeSensitive(opts.viewer, personId));
   }
 
+  /* Org baseline = mean overall across ALL completed reviews (anonymous aggregate).
+   * Used to calibrate the suggested-range anchor + to flag leniency/severity skew. */
+  function orgBaselineMean() {
+    var EV = (WP.data && WP.data.EVALUATIONS) || {};
+    var overallOf = (WP.evaluation && WP.evaluation.overall) ? WP.evaluation.overall : function () { return null; };
+    var vals = [];
+    Object.keys(EV).forEach(function (pid) {
+      var rec = EV[pid];
+      if (rec && rec.status === 'Completed') { var o = overallOf(rec); if (typeof o === 'number') vals.push(o); }
+    });
+    return vals.length ? vals.reduce(function (a, b) { return a + b; }, 0) / vals.length : null;
+  }
+
   /* Async wrapper: pull this person's cycle-scoped events from the store, then
    * assess. Core stays data-only; the UI handles presentation + final framing. */
   function suggestedRange(personId, cycle, opts) {
@@ -201,9 +220,15 @@
     if (!gateOk(opts, personId)) return Promise.resolve(denied(personId));
     var win = cycleWindow(cycle);
     var q = (WP.events && WP.events.query) ? WP.events.query(personId, {}, opts.refDate) : Promise.resolve([]);
+    // calibrate the anchor to the cycle baseline unless the caller overrode orgMean.
+    var assessOpts = opts;
+    if (typeof opts.orgMean !== 'number') {
+      var base = orgBaselineMean();
+      if (base != null) { assessOpts = {}; for (var k in opts) assessOpts[k] = opts[k]; assessOpts.orgMean = base; }
+    }
     return Promise.resolve(q).then(function (events) {
       var scoped = (events || []).filter(function (e) { return inWindow(e.ts, win); });
-      var s = assess(scoped, opts);
+      var s = assess(scoped, assessOpts);
       s.subjectId = personId;
       s.cycle = win ? win.id : null;
       return s;
@@ -283,15 +308,8 @@
     var EV = (WP.data && WP.data.EVALUATIONS) || {};
     var overallOf = (WP.evaluation && WP.evaluation.overall) ? WP.evaluation.overall : function () { return null; };
 
-    // org baseline: mean overall across ALL completed reviews in the cycle (anonymous aggregate).
-    var allOveralls = [];
-    Object.keys(EV).forEach(function (pid) {
-      var rec = EV[pid];
-      if (rec && rec.status === 'Completed' && (!win || !rec.period || true)) {
-        var o = overallOf(rec); if (typeof o === 'number') allOveralls.push(o);
-      }
-    });
-    var orgMean = allOveralls.length ? allOveralls.reduce(function (a, b) { return a + b; }, 0) / allOveralls.length : null;
+    // org baseline: mean overall across ALL completed reviews (anonymous aggregate).
+    var orgMean = orgBaselineMean();
 
     // this evaluator's completed reviews
     var mine = Object.keys(EV).filter(function (pid) {
