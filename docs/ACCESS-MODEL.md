@@ -47,6 +47,25 @@ never skip-level or peers by default.
 - Try it: "View as" Akram → open Osama (full detail, he's the direct manager); "View as" Motaa
   → open Osama (skip-level → growth/notes/risk hidden); "View as" Ahmed → full (director).
 
+## Slack daily check-in ingest (F-034) — what we ingest, and what we never touch
+The daily check-in feature turns a structured post in **`#daily-checkin` only** into
+Evidence Timeline events. It is deliberately narrow, to honour the Intelligence-Ethics gate
+(support, never surveil):
+- **Source = the one public channel `#daily-checkin`.** NO DMs, NO private channels, NO other
+  channels. Self-reported and opt-in — the team posts a template; we read what they chose to share.
+- **We store only**: the verbatim work-item line, its category (`delivery` / `risk` / `plan`),
+  the Slack **permalink** (provenance), the timestamp, and the resolved subject. Nothing is inferred.
+- **We never derive or store**: presence/online status, response time, message counts, typing,
+  sentiment, tone, "activity", or any behavioural/psychological signal. No auto-scoring, ever — a
+  check-in is evidence a human reads, not a rating.
+- **Author resolution is fail-closed**: a Slack user is mapped to a person only via their verified
+  email → `public.directory` (migration `0003`). No match → the whole post is dropped and logged
+  ("unmapped author"); a person not yet in `directory` simply produces no events (safe and quiet).
+- **Same access gate as everything else**: check-in events live in the `events` store and are read
+  through `can_read_person(subject_id)` (0003). A **peer cannot see another person's check-ins**;
+  the **subject**, their **direct manager**, and **Director/HR** can (verified by `test/verify-db.js`
+  scenario J). The ingest job runs server-side with the service-role key — never in the front-end.
+
 ## For any department (generalizable)
 The model is role + relationship, not hard-coded to events ops. Any department plugs in its own
 org tree; the same tiers, the same field-sensitivity, the same aggregate-vs-drilldown split apply.
