@@ -225,6 +225,43 @@
       '<div class="wbk-dock" style="margin-top:10px"><span class="wbk-price is-sm"><span class="wbk-price-v">570</span><span class="wbk-price-c">SAR</span></span>' +
         '<button class="btn primary">Checkout</button></div>', 'nodes 2061-24126 / 4398-34377');
 
+    // ---- Wave 3 organisms ----
+    const pageHeader = function (title, sub, withBack) {
+      return '<header class="wbk-pageheader">' +
+        (withBack ? '<button class="wbk-ph-back" aria-label="' + t('phBack') + '">' + ic('chevL', 18) + '</button>' : '') +
+        '<div class="wbk-ph-main"><h2 class="wbk-ph-title">' + ui.esc(title) + '</h2>' +
+          (sub ? '<div class="wbk-ph-sub">' + ui.esc(sub) + '</div>' : '') + '</div>' +
+        '<div class="wbk-ph-actions"><button class="btn icon-btn" aria-label="Search">' + ic('search', 16) + '</button></div></header>';
+    };
+    const pageheader = sec('App page header', pageHeader('Riyadh Season', '24 May · Boulevard City', true), 'node 2182-36236');
+
+    // Three page templates — DS components composed into representative screens.
+    const tplRow = function (label, val, mut) { return '<div class="wbk-tpl-row"><span' + (mut ? ' class="mut"' : '') + '>' + ui.esc(label) + '</span><span>' + ui.esc(val) + '</span></div>'; };
+    const dining = '<div class="wbk-tpl">' +
+      '<div class="wbk-tpl-cap"><span>' + t('tplDining') + '</span><span>6817-35044</span></div>' +
+      pageHeader(t('tplDining'), null, true) +
+      '<div class="wbk-row"><span class="wbk-chip is-selected">' + t('tplDining') + '</span><span class="wbk-chip">' + t('ticketVip') + '</span></div>' +
+      '<div class="wbk-tpl-cap" style="color:var(--text)">' + t('tplHotSpots') + '</div>' +
+      '<div class="wbk-tpl-scroll"><button class="wbk-tile">' + ic('flame', 20) + 'A</button><button class="wbk-tile">' + ic('star', 20) + 'B</button><button class="wbk-tile">' + ic('sparkles', 20) + 'C</button></div>' +
+      '<div class="wbk-media">' + ic('eye', 24) + '</div>' +
+      '<div class="wbk-row"><span class="wbk-mappin is-active">' + ic('target', 14) + t('mapRestaurant') + '</span></div></div>';
+    const checkout = '<div class="wbk-tpl">' +
+      '<div class="wbk-tpl-cap"><span>' + t('tplCheckout') + '</span><span>4372-30333</span></div>' +
+      pageHeader(t('tplCheckout'), null, true) +
+      '<div class="wbk-card"><div class="wbk-card-media">' + ic('star', 22) + '</div><div class="wbk-card-b"><div class="wbk-card-t">Club World Cup</div><div class="wbk-card-m">24 May · 20:00</div></div></div>' +
+      tplRow(t('ticketGeneral') + ' ×2', '300 SAR') + tplRow(t('tplFees'), '20 SAR', true) +
+      '<div class="wbk-tpl-total"><span>' + t('tplTotal') + '</span><span class="wbk-price is-sm"><span class="wbk-price-v">320</span><span class="wbk-price-c">SAR</span></span></div>' +
+      '<div class="wbk-dock"><span class="wbk-blabel wbk-blabel--positive">' + ic('check', 14) + t('blConfirmed') + '</span><button class="btn primary">' + t('tplPayNow') + '</button></div></div>';
+    const details = '<div class="wbk-tpl">' +
+      '<div class="wbk-tpl-cap"><span>' + t('tplDetails') + '</span><span>4372-30101</span></div>' +
+      pageHeader(t('tplDetails'), null, true) +
+      '<div class="wbk-media is-square" style="max-height:120px">' + ic('eye', 24) + '</div>' +
+      tplRow(t('tplDate'), '24 May 2026') + tplRow(t('tplSeat'), 'B-14 · VIP') + tplRow(t('ticketGeneral'), '×2') +
+      '<div class="wbk-tpl-total"><span>' + t('tplTotal') + '</span><span class="wbk-price is-sm"><span class="wbk-price-v">320</span><span class="wbk-price-c">SAR</span></span></div>' +
+      '<nav class="wbk-bc" style="margin-top:4px"><a href="#">' + t('bcEvents') + '</a><span class="wbk-bc-sep">' + ic('chevR', 12) + '</span><span aria-current="page">' + t('tplDetails') + '</span></nav></div>';
+    const templates = sec('Page templates', '<div class="wbk-tpl-grid">' + dining + checkout + details + '</div>',
+      'nodes 6817-35044 · 4372-30333 · 4372-30101');
+
     const card = sec('Card · List item · Section heading',
       '<div class="wbk-card">' +
         '<div class="wbk-card-media">' + ic('users', 26) + '</div>' +
@@ -245,7 +282,8 @@
         '<div class="wbk-grid">' +
           buttons + chips + segmented + stepper + slider + choice + badges + blabel + progress +
           avatars + tabs + toasts + banners + tooltip + dialog + countdown + datepick + pin +
-          breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock + card +
+          breadcrumb + uploader + tiles + price + media + bubble + mappin + ticket + dock +
+          pageheader + templates + card +
         '</div>' +
       '</div>' +
       '<div class="wbk-modal" id="wbk-modal" hidden><div class="wbk-modal-bd"></div>' +

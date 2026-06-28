@@ -161,6 +161,40 @@ body {
   background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
 .wbk-dock .btn.primary, .wbk-dock .wbk-btn--primary { margin-inline-start: auto; }
 
+/* ============================================================
+ * WBK DS — Wave 3 (organisms). Shared page header + page templates.
+ * ========================================================== */
+
+/* App page header (node 2182-36236) — back affordance + Header-XL title +
+   optional subtitle + trailing actions. Replaces ad-hoc per-page headers. */
+.wbk-pageheader { display: flex; align-items: flex-start; gap: var(--sp-4); padding-block: var(--sp-4); }
+.wbk-pageheader .wbk-ph-back {
+  flex: none; inline-size: 36px; block-size: 36px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
+}
+.wbk-pageheader .wbk-ph-back:hover { border-color: var(--brand); color: var(--brand); }
+[dir="rtl"] .wbk-ph-back svg { transform: scaleX(-1); }
+.wbk-pageheader .wbk-ph-main { flex: 1; min-inline-size: 0; }
+.wbk-pageheader .wbk-ph-title { font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 36px; color: var(--text); margin: 0; }
+.wbk-pageheader .wbk-ph-sub { margin-block-start: var(--sp-1); font-size: var(--fs-s); color: var(--text-muted); }
+.wbk-pageheader .wbk-ph-actions { flex: none; display: inline-flex; gap: var(--sp-3); align-items: center; }
+
+/* Page templates (nodes 6817-35044 dining · 4372-30333 checkout · 4372-30101 details)
+   — DS components composed into representative screens, shown as device-framed previews. */
+.wbk-tpl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-5); }
+.wbk-tpl {
+  display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden;
+}
+.wbk-tpl-cap { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--text-muted); display: flex; justify-content: space-between; }
+.wbk-tpl .wbk-pageheader { padding-block: 0; }
+.wbk-tpl .wbk-pageheader .wbk-ph-title { font-size: 20px; line-height: 28px; }
+.wbk-tpl-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-s); color: var(--text); }
+.wbk-tpl-row .mut { color: var(--text-muted); }
+.wbk-tpl-total { display: flex; align-items: center; justify-content: space-between; padding-block-start: var(--sp-3); border-block-start: 1px solid var(--border); font-weight: 700; }
+.wbk-tpl-scroll { display: flex; gap: var(--sp-3); overflow-x: auto; padding-block-end: var(--sp-2); }
+.wbk-tpl-scroll .wbk-tile { flex: none; inline-size: 84px; block-size: 84px; }
+
 /* status palette for toasts / system banners (pair with an icon, never color alone) */
 .wbk-toast, .wbk-banner {
   display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 14px; color: var(--text);
@@ -1005,9 +1039,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
  * ========================================================== */
 .topnav { display: inline-flex; align-items: center; gap: 4px; }
 .nav-item {
-  display: inline-flex; align-items: center; gap: 7px;
+  display: inline-flex; align-items: center; gap: var(--sp-3); /* WBK Gap-M (8) — reconciled */
   border: 0; background: transparent; color: var(--text-muted);
-  padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500;
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; /* Padding-M/L → tokens */
   cursor: pointer; transition: background .18s ease, color .18s ease;
 }
 .nav-item:hover { background: var(--surface-2); color: var(--text); }

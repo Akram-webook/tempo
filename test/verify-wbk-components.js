@@ -50,6 +50,20 @@ try{
   // map pin uses .wbk-mappin (must NOT collide with the PIN-code .wbk-pin atom)
   assert(!view.querySelector('.wbk-mappin.wbk-pin'),'map pin and PIN-code atom use distinct classes');
 
+  // Wave 3 organisms: shared page header + three page templates compose from DS parts
+  assert(view.querySelector('.wbk-pageheader'),'app page header mounts');
+  assert(view.querySelector('.wbk-pageheader .wbk-ph-title'),'page header has a title');
+  assert(view.querySelector('.wbk-ph-back[aria-label]'),'page header back control is labelled');
+  const tpls=view.querySelectorAll('.wbk-tpl');
+  assert(tpls.length>=3,'all three page templates render (dining/checkout/details)');
+  assert(view.querySelector('.wbk-tpl .wbk-pageheader') && view.querySelector('.wbk-tpl .wbk-media') &&
+         view.querySelector('.wbk-tpl .wbk-mappin') && view.querySelector('.wbk-tpl .wbk-dock') &&
+         view.querySelector('.wbk-tpl .wbk-blabel') && view.querySelector('.wbk-tpl .wbk-bc'),
+         'templates reuse DS organisms/molecules (header, media, map pin, dock, booking label, breadcrumb)');
+  const appcss2=fs.readFileSync(path.join(root,'src/css/app.css'),'utf8');
+  const navBlock=appcss2.slice(appcss2.indexOf('.nav-item {'),appcss2.indexOf('.nav-item:hover'));
+  assert(/var\(--sp-3\)/.test(navBlock) && /var\(--sp-4\)/.test(navBlock),'nav-item reconciled to spacing-scale tokens');
+
   // exact WBK DS semantic values now live in tokens (no longer the capacity-state proxy)
   const tk=fs.readFileSync(path.join(root,'src/css/tokens.css'),'utf8');
   assert(/--state-positive:\s*#22c55e/i.test(tk),'Content-Positive wired to exact DS #22c55e');
@@ -102,5 +116,5 @@ try{
   });
 }catch(e){errors.push('[run] '+e.message+'\n'+e.stack);}
 if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}
-console.log('PASS — WBK atoms + molecules: gallery mounts clean; PIN, booking label, breadcrumb, uploader, tile (single-select), price, media, chat bubble, map pin, ticket stepper (clamp-at-0), actions/dock all render; exact DS semantic tokens wired; RTL flips; EN+AR strings present.');
+console.log('PASS — WBK atoms + molecules + organisms: gallery mounts clean; new atoms/molecules render; app page header + 3 page templates (dining/checkout/details) compose from DS parts; nav reconciled to tokens; exact DS semantics wired; RTL flips; EN+AR present.');
 process.exit(0);
