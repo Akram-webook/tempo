@@ -172,6 +172,31 @@ function makeScopedSb(server, viewerEmail) {
     scoped = await WP.db.evaluations.list();
     assert(Object.keys(scoped).length === 4, 'I: director sees ALL rows (4)');
     assert(scoped.p_abdulrahman && scoped.p_talal && scoped.p_osama && scoped.p_shamma, 'I: director sees every subject');
+
+    // --- J) Slack check-in EVENTS (F-034) are role-scoped too. The ingest writes
+    //         source:'slack:#daily-checkin' events to the SAME events store, gated
+    //         by the SAME can_read_person(subject_id) policy (0003). So a peer must
+    //         not see another person's check-ins; the subject + their manager do.
+    //         (events.list() filters by subject_id and maps rows -> events.)
+    function checkinEventServer() {
+      // two check-in events for p_osama (osama reports to akram)
+      return {
+        ev1: WP.db._eventToRow({ id: 'ev1', ts: '1782900000.0001', type: 'evidence', subjectId: 'p_osama', category: 'delivery', description: 'issued 40 tickets', source: 'slack:#daily-checkin', evidenceRefs: ['https://slack/x'] }),
+        ev2: WP.db._eventToRow({ id: 'ev2', ts: '1782900000.0002', type: 'evidence', subjectId: 'p_osama', category: 'plan', description: 'close the MotoGP defect', source: 'slack:#daily-checkin', evidenceRefs: ['https://slack/x'] })
+      };
+    }
+    // peer (meshal): no relationship to p_osama → zero check-in events
+    WP._sb = makeScopedSb(checkinEventServer(), 'meshal@webook.com'); resetDb();
+    let evList = await WP.db.events.list('p_osama');
+    assert(evList.length === 0, 'J: peer (meshal) sees NO Slack check-in events for p_osama');
+    // subject (osama): sees own check-ins
+    WP._sb = makeScopedSb(checkinEventServer(), 'o.taher.c@webook.com'); resetDb();
+    evList = await WP.db.events.list('p_osama');
+    assert(evList.length === 2 && evList.every(function (e) { return e.source === 'slack:#daily-checkin'; }), 'J: subject (osama) sees own check-in events');
+    // direct manager (akram): sees the report's check-ins
+    WP._sb = makeScopedSb(checkinEventServer(), 'akram@webook.com'); resetDb();
+    evList = await WP.db.events.list('p_osama');
+    assert(evList.length === 2, 'J: direct manager (akram) sees the report\'s check-in events');
   } catch (e) { errors.push('[run] ' + e.message + '\n' + e.stack); }
 
   if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
