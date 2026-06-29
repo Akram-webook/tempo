@@ -2556,6 +2556,44 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = 'sb_publishable_0SzG8Od9htPYqlp9PSwYqQ_IvPjdYgt';
   // — Google sign-in (optional alternative). —
   if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
+
+  /* ----------------------------------------------------------------
+   * MVP FLAG (reversible, one line) — what the org SEES in v1.
+   * ----------------------------------------------------------------
+   * Same idea as the theme cutover (WP.DEFAULT_THEME in state.js):
+   * ONE constant flips the whole product. The advanced layer stays
+   * fully merged and tested — only HIDDEN — so it is one line from
+   * returning.
+   *
+   *   true  → lean v1: login, role dashboard + org/workload map,
+   *           daily check-in, evaluations + evaluation, profile, me,
+   *           permissions, settings. The deferred layer is hidden:
+   *           nav entries removed, routes redirect home, and the
+   *           in-screen advanced panels are not rendered.
+   *   false → everything returns exactly as built (full nav, all
+   *           routes, all panels). Nothing was deleted.
+   *
+   * ← flip to false to un-defer the advanced layer.
+   *
+   * NOTE: the append-only events store + Slack ingest keep running
+   * under MVP so real evidence still ACCRUES quietly. The intel
+   * VIEWS are hidden (compute-on-view ⇒ no cost), but the data keeps
+   * building for when you un-defer.
+   * -------------------------------------------------------------- */
+  if (WP.config.mvp === undefined) WP.config.mvp = true;
+
+  // The advanced surfaces deferred when mvp === true. These ids match
+  // nav ids / route names AND in-screen panel keys, so a single helper
+  // (WP.deferred) gates nav, routes, and panels alike.
+  WP.MVP_DEFER = ['library', 'weekly', 'wellbeing', 'fairness', 'upward', 'org',
+                  'evalPrep', 'evalBand', 'evalConsistency', 'devPanel', 'timeline'];
+
+  // SINGLE GUARD HELPER — true ⇒ this surface is hidden in v1. When
+  // mvp is false (un-deferred) it always returns false, so every
+  // surface returns. Nothing is ever deleted — only gated.
+  WP.deferred = function (id) {
+    return !!WP.config.mvp && WP.MVP_DEFER.indexOf(id) >= 0;
+  };
 })(window.WP = window.WP || {});
 
 </script>
@@ -7440,7 +7478,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       provenance +
       ((rel === 'manager' || rel === 'director') ? '<button class="btn primary" id="open-eval" style="margin-bottom:14px">' + ui.icon('clipboard', 15) + ' ' + t('openEvaluation') + '</button>' : '') +
       (selfView ? '<button class="btn primary" id="self-eval" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('mySelfAssessment') + '</button> ' : '') +
-      (selfView && p.managerId ? '<button class="btn" id="eval-mgr" style="margin-bottom:14px"><span class="ar ar-up"></span> ' + t('evaluateMyManager') + '</button>' : '') +
+      (selfView && p.managerId && !WP.deferred('upward') ? '<button class="btn" id="eval-mgr" style="margin-bottom:14px"><span class="ar ar-up"></span> ' + t('evaluateMyManager') + '</button>' : '') +
       (snap.burnout ? '<div class="warn-banner">' + WP.ui.icon('flame',15) + ' ' + t('burnoutFlag') + '</div>' : '') +
       (sens && !selfView && fr.risk ? '<div class="banner-risk">' + WP.ui.icon('alert',15) + ' ' + t('flightRisk') + ' — ' + ui.esc(fr.reasons.join(' · ')) + '</div>' : '') +
       (WP.growth.isRamping(p) ? '<div class="banner-info">' + WP.ui.icon('sprout',15) + ' ' + t('rampingUp') + '</div>' : '') +
@@ -7458,8 +7496,10 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         // (self / direct manager / director). NEVER a readiness score/rank/verdict.
         // The fair-shot signal sits beside it: evidence + fairness, never a promo %.
         (sens ? fairShotSection(p) : '') +
-        (sens ? WP.ui.readiness.developmentPanel(p) : '') +
-        (sens ? timelineSection(p) : '') +
+        // P6 Development & growth + P1 evidence-timeline — deferred in v1
+        // (WP.deferred); the core profile works fully without them.
+        (sens && !WP.deferred('devPanel') ? WP.ui.readiness.developmentPanel(p) : '') +
+        (sens && !WP.deferred('timeline') ? timelineSection(p) : '') +
         upwardReceived(p) +
         compPanel(p) +
       '</div>';
@@ -7475,7 +7515,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const se = root.querySelector('#self-eval');
     if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id, evalOrigin: 'profile' }); };
     // Wire the development panel's cited-evidence chips (only present when sensitive-gated).
-    if (sens) WP.ui.readiness.wireDevPanel(root, p);
+    if (sens && !WP.deferred('devPanel')) WP.ui.readiness.wireDevPanel(root, p);
   }
 
   WP.ui.peek = peek;
@@ -8164,7 +8204,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const evaluator = ev.evaluatorId ? WP.access.byId(ev.evaluatorId) : null;
     // Evaluation prep (P2) — evidence the manager already has, manager-gated and
     // never in self-mode. PREP ONLY: the panel never shows a score/rating/verdict.
-    const showPrep = !selfMode && WP.evalPrep && WP.access.canSeeSensitive(viewer, p.id);
+    // MVP flag: the P2 evidence-prep summary AND the P3 suggested-range band
+    // are both gated by showPrep — deferred in v1 (WP.deferred). The core
+    // manager review (criteria + questions + approve) works fully without them.
+    const showPrep = !selfMode && WP.evalPrep && WP.access.canSeeSensitive(viewer, p.id) &&
+      !WP.deferred('evalPrep') && !WP.deferred('evalBand');
 
     const criteria = WP.data.EVAL_CRITERIA.map(function (c, i) {
       const cur = ev.scores[c.id];
@@ -8506,7 +8550,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
       // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
       // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
-      ((isReal && reports.length) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
+      ((isReal && reports.length && !WP.deferred('evalConsistency')) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
 
       '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
 
@@ -9888,7 +9932,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
     }
-    const navHTML = nav.map(function (n) {
+    // MVP flag: drop the deferred nav entries (library/weekly/wellbeing/
+    // fairness/org). One line returns them — WP.deferred() is false when
+    // mvp is off. Nothing is removed from `nav` permanently.
+    const visibleNav = nav.filter(function (n) { return !WP.deferred(n.id); });
+    const navHTML = visibleNav.map(function (n) {
       const active = n.routes.indexOf(route) >= 0 ? ' active' : '';
       const cur = active ? ' aria-current="page"' : '';
       return '<button type="button" class="nav-item' + active + '" data-go="' + n.id + '"' + cur + '>' + ic(n.icon) + '<span>' + n.label + '</span></button>';
@@ -10018,6 +10066,10 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     bar.style.display = '';
     if (appbar) appbar.style.display = '';
     if (backdrop) backdrop.style.display = '';
+    // MVP flag (defence in depth): a deferred route — reached by a stale
+    // link, bookmark, or restored session — redirects to home. The nav
+    // already hides these entries; this guards the route itself.
+    if (WP.deferred(WP.state.route)) WP.state.route = 'dashboard';
     topbar();
     if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
