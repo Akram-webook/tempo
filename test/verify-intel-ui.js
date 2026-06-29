@@ -24,6 +24,7 @@ function finish(){if(errors.length){console.log('FAIL\n'+errors.join('\n'));proc
 (async()=>{
 try{
   WP.state.authed=true;WP.state.lang='en';
+  WP.config.mvp=false; // intel UIs (suggested band, consistency) are deferred surfaces — un-defer to exercise them (verify-mvp-flag covers the gating)
 
   // ── P3a · Suggested-range band — pure-engine output rendered as a RANGE ───
   // Drive the pure engine with synthetic sourced events and confirm a range (low<high),

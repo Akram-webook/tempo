@@ -30,6 +30,7 @@ function finish(){if(errors.length){console.log('FAIL\n'+errors.join('\n'));proc
 (async()=>{
 try{
   WP.state.authed=true;WP.state.lang='en';
+  WP.config.mvp=false; // P6 dev panel + org view are deferred surfaces — un-defer to exercise them (verify-mvp-flag covers the gating)
 
   // ── SOURCE INVARIANTS — the render boundary carries no verdict vocabulary ──
   // The dev-panel code must never compute or print a score/rank/verdict/promote-hold.

@@ -113,7 +113,7 @@
 
       // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
       // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
-      ((isReal && reports.length) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
+      ((isReal && reports.length && !WP.deferred('evalConsistency')) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
 
       '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
 

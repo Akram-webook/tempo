@@ -207,7 +207,11 @@
     const evaluator = ev.evaluatorId ? WP.access.byId(ev.evaluatorId) : null;
     // Evaluation prep (P2) — evidence the manager already has, manager-gated and
     // never in self-mode. PREP ONLY: the panel never shows a score/rating/verdict.
-    const showPrep = !selfMode && WP.evalPrep && WP.access.canSeeSensitive(viewer, p.id);
+    // MVP flag: the P2 evidence-prep summary AND the P3 suggested-range band
+    // are both gated by showPrep — deferred in v1 (WP.deferred). The core
+    // manager review (criteria + questions + approve) works fully without them.
+    const showPrep = !selfMode && WP.evalPrep && WP.access.canSeeSensitive(viewer, p.id) &&
+      !WP.deferred('evalPrep') && !WP.deferred('evalBand');
 
     const criteria = WP.data.EVAL_CRITERIA.map(function (c, i) {
       const cur = ev.scores[c.id];

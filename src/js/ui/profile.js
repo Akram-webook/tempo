@@ -286,7 +286,7 @@
       provenance +
       ((rel === 'manager' || rel === 'director') ? '<button class="btn primary" id="open-eval" style="margin-bottom:14px">' + ui.icon('clipboard', 15) + ' ' + t('openEvaluation') + '</button>' : '') +
       (selfView ? '<button class="btn primary" id="self-eval" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('mySelfAssessment') + '</button> ' : '') +
-      (selfView && p.managerId ? '<button class="btn" id="eval-mgr" style="margin-bottom:14px"><span class="ar ar-up"></span> ' + t('evaluateMyManager') + '</button>' : '') +
+      (selfView && p.managerId && !WP.deferred('upward') ? '<button class="btn" id="eval-mgr" style="margin-bottom:14px"><span class="ar ar-up"></span> ' + t('evaluateMyManager') + '</button>' : '') +
       (snap.burnout ? '<div class="warn-banner">' + WP.ui.icon('flame',15) + ' ' + t('burnoutFlag') + '</div>' : '') +
       (sens && !selfView && fr.risk ? '<div class="banner-risk">' + WP.ui.icon('alert',15) + ' ' + t('flightRisk') + ' — ' + ui.esc(fr.reasons.join(' · ')) + '</div>' : '') +
       (WP.growth.isRamping(p) ? '<div class="banner-info">' + WP.ui.icon('sprout',15) + ' ' + t('rampingUp') + '</div>' : '') +
@@ -304,8 +304,10 @@
         // (self / direct manager / director). NEVER a readiness score/rank/verdict.
         // The fair-shot signal sits beside it: evidence + fairness, never a promo %.
         (sens ? fairShotSection(p) : '') +
-        (sens ? WP.ui.readiness.developmentPanel(p) : '') +
-        (sens ? timelineSection(p) : '') +
+        // P6 Development & growth + P1 evidence-timeline — deferred in v1
+        // (WP.deferred); the core profile works fully without them.
+        (sens && !WP.deferred('devPanel') ? WP.ui.readiness.developmentPanel(p) : '') +
+        (sens && !WP.deferred('timeline') ? timelineSection(p) : '') +
         upwardReceived(p) +
         compPanel(p) +
       '</div>';
@@ -321,7 +323,7 @@
     const se = root.querySelector('#self-eval');
     if (se) se.onclick = function () { WP.setState({ route: 'evaluation', selectedId: p.id, evalOrigin: 'profile' }); };
     // Wire the development panel's cited-evidence chips (only present when sensitive-gated).
-    if (sens) WP.ui.readiness.wireDevPanel(root, p);
+    if (sens && !WP.deferred('devPanel')) WP.ui.readiness.wireDevPanel(root, p);
   }
 
   WP.ui.peek = peek;

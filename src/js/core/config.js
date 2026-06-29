@@ -25,4 +25,42 @@
   if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = 'sb_publishable_0SzG8Od9htPYqlp9PSwYqQ_IvPjdYgt';
   // — Google sign-in (optional alternative). —
   if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
+
+  /* ----------------------------------------------------------------
+   * MVP FLAG (reversible, one line) — what the org SEES in v1.
+   * ----------------------------------------------------------------
+   * Same idea as the theme cutover (WP.DEFAULT_THEME in state.js):
+   * ONE constant flips the whole product. The advanced layer stays
+   * fully merged and tested — only HIDDEN — so it is one line from
+   * returning.
+   *
+   *   true  → lean v1: login, role dashboard + org/workload map,
+   *           daily check-in, evaluations + evaluation, profile, me,
+   *           permissions, settings. The deferred layer is hidden:
+   *           nav entries removed, routes redirect home, and the
+   *           in-screen advanced panels are not rendered.
+   *   false → everything returns exactly as built (full nav, all
+   *           routes, all panels). Nothing was deleted.
+   *
+   * ← flip to false to un-defer the advanced layer.
+   *
+   * NOTE: the append-only events store + Slack ingest keep running
+   * under MVP so real evidence still ACCRUES quietly. The intel
+   * VIEWS are hidden (compute-on-view ⇒ no cost), but the data keeps
+   * building for when you un-defer.
+   * -------------------------------------------------------------- */
+  if (WP.config.mvp === undefined) WP.config.mvp = true;
+
+  // The advanced surfaces deferred when mvp === true. These ids match
+  // nav ids / route names AND in-screen panel keys, so a single helper
+  // (WP.deferred) gates nav, routes, and panels alike.
+  WP.MVP_DEFER = ['library', 'weekly', 'wellbeing', 'fairness', 'upward', 'org',
+                  'evalPrep', 'evalBand', 'evalConsistency', 'devPanel', 'timeline'];
+
+  // SINGLE GUARD HELPER — true ⇒ this surface is hidden in v1. When
+  // mvp is false (un-deferred) it always returns false, so every
+  // surface returns. Nothing is ever deleted — only gated.
+  WP.deferred = function (id) {
+    return !!WP.config.mvp && WP.MVP_DEFER.indexOf(id) >= 0;
+  };
 })(window.WP = window.WP || {});

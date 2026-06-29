@@ -17,6 +17,7 @@ const reportJs=fs.readFileSync(path.join(root,'src/js/ui/weeklyReport.js'),'utf8
 const appJs=fs.readFileSync(path.join(root,'src/js/app.js'),'utf8');
 try{
   WP.state.authed=true;WP.state.lang='en';
+  WP.config.mvp=false; // the weekly report is a deferred surface — un-defer to render it (verify-mvp-flag covers the gating)
   const view=window.document.getElementById('view');
 
   // ── ACCESS GATE: director/admin only ─────────────────────────────────────

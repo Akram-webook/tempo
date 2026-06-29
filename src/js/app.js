@@ -63,7 +63,11 @@
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
     }
-    const navHTML = nav.map(function (n) {
+    // MVP flag: drop the deferred nav entries (library/weekly/wellbeing/
+    // fairness/org). One line returns them — WP.deferred() is false when
+    // mvp is off. Nothing is removed from `nav` permanently.
+    const visibleNav = nav.filter(function (n) { return !WP.deferred(n.id); });
+    const navHTML = visibleNav.map(function (n) {
       const active = n.routes.indexOf(route) >= 0 ? ' active' : '';
       const cur = active ? ' aria-current="page"' : '';
       return '<button type="button" class="nav-item' + active + '" data-go="' + n.id + '"' + cur + '>' + ic(n.icon) + '<span>' + n.label + '</span></button>';
@@ -193,6 +197,10 @@
     bar.style.display = '';
     if (appbar) appbar.style.display = '';
     if (backdrop) backdrop.style.display = '';
+    // MVP flag (defence in depth): a deferred route — reached by a stale
+    // link, bookmark, or restored session — redirects to home. The nav
+    // already hides these entries; this guards the route itself.
+    if (WP.deferred(WP.state.route)) WP.state.route = 'dashboard';
     topbar();
     if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);

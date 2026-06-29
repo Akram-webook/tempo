@@ -14,6 +14,7 @@ for(const s of srcs){try{new window.Function(fs.readFileSync(path.join(root,s),'
 const WP=window.WP;function assert(c,m){if(!c)errors.push('[assert] '+m);}
 try{
   WP.state.authed=true;WP.state.lang='en';
+  WP.config.mvp=false; // the component library is a deferred surface — un-defer to render it (verify-mvp-flag covers the gating)
   WP.setState({route:'library'});
   const view=window.document.getElementById('view');
   const h=view.innerHTML;
