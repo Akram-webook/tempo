@@ -93,6 +93,16 @@ const job = require('../tools/slack-ingest-job.js'); // require.main !== module 
   ok('O: Slack unreachable emits no events', cap3.length === 0);
   ok('P: Slack unreachable writes no state', !fs.existsSync(STATE));
 
+  // --- run 4: --dry CI smoke — full loop runs, NOTHING written, cursor frozen ----
+  try { fs.unlinkSync(STATE); } catch (e) {}
+  const cap4 = [];
+  global.fetch = makeFetch(cap4);
+  const res4 = await job.run({ dry: true });
+  ok('Q: dry run exercises the full loop (2 events would be emitted)', res4 && res4.emitted === 2);
+  ok('R: dry run POSTs nothing to Supabase', cap4.length === 0);
+  ok('S: dry run advances no cursor (no state file written)', !fs.existsSync(STATE));
+  ok('T: dry run reports its mode honestly', res4 && res4.dry === true);
+
   try { fs.unlinkSync(STATE); } catch (e) {}
   console.log('\n' + (failed ? failed + ' FAILED' : 'ALL PASS'));
   process.exit(failed ? 1 : 0);

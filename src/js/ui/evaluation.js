@@ -163,6 +163,17 @@
 
     root.querySelector('#back').onclick = back;
 
+    // AI-acceptance provenance: alongside the prep panel (same sensitive-access gate),
+    // pull the engine's SUGGESTED rating band. We stamp acceptance at approval only
+    // when a real suggestion exists (enoughEvidence) — never fabricate it on a manual
+    // eval with no AI input. Held in a closure the approve handler reads.
+    let aiSuggestion = null;
+    if (showPrep && WP.evalIntel) {
+      Promise.resolve(WP.evalIntel.suggestedRange(p.id, ev.period, { viewer: viewer, refDate: WP.state.refDate }))
+        .then(function (s) { if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s; })
+        .catch(function () {});
+    }
+
     // Fill the evidence-prep panel asynchronously (reads the append-only event store).
     if (showPrep) {
       WP.evalPrep.prepare(p.id, {}, WP.state.refDate).then(function (summary) {
@@ -196,7 +207,14 @@
     const ap = root.querySelector('#approve');
     if (ap) ap.onclick = function () {
       ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
-      WP.logEvent({ type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (WP.evaluation.overall(ev) || '–') + '/5' });
+      const overall = WP.evaluation.overall(ev);
+      const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
+      // Accepted = the human's final overall landed inside the AI-suggested band.
+      // Only when a suggestion was actually shown (enoughEvidence); else no flag.
+      if (aiSuggestion && typeof overall === 'number') {
+        entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
+      }
+      WP.logEvent(entry);
       saveEval();
       WP.setState({});
     };
