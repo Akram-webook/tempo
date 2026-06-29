@@ -75,6 +75,20 @@ const emailB = WP.identity._resolveEmail(B);
     // A's data is still safely on disk under A's key (not lost, just not B's).
     assert(STORE._m[keyA] && STORE._m[keyA].indexOf('A-ONLY note') !== -1, "1: A's work remains intact under A's own namespace");
 
+    // --- 1b) IN-MEMORY isolation on a NO-RELOAD handover (the follow-up close-out).
+    //         A signs in, adds in-memory work, signs out, B signs in — WITHOUT the
+    //         test clearing WP.data. B must NOT see A's in-memory evaluation, because
+    //         the identity change resets the work stores to the mock baseline.
+    STORE = makeStore();
+    WP.state.authed = false; WP.identity.clear();
+    WP.setState({ authed: true, viewerId: A });
+    WP.data.EVALUATIONS['p_inmem'] = { period: 'Q2', status: 'Completed', scores: {}, feedback: { secret: 'A in-memory only' }, updated_at: '2026-06-02T00:00:00Z' };
+    WP.persist.saveData();
+    WP.setState({ authed: false });                 // sign-out -> resetToBaseline wipes A's in-memory work
+    assert(!WP.data.EVALUATIONS.p_inmem, '1b: sign-out resets in-memory work to baseline (A\'s eval gone from memory)');
+    WP.setState({ authed: true, viewerId: B });      // B signs in WITHOUT any manual WP.data wipe
+    assert(!WP.data.EVALUATIONS.p_inmem, "1b: B does NOT see A's in-memory work on a no-reload handover");
+
     // --- 2) one-time legacy-global migration into the current user, exactly once.
     STORE = makeStore();                            // clean slate
     // A pre-release global blob (un-namespaced), as older builds wrote it.

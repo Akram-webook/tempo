@@ -82,10 +82,17 @@
       if (id === _active) return false;
       _active = id; writePtr(id);
       migrateLegacyAll();
+      // Wipe the previous user's in-memory work to the mock baseline, THEN load
+      // this user's saved work — so a no-reload handover never leaks A's work into B.
+      if (WP.persist && WP.persist.resetToBaseline) WP.persist.resetToBaseline();
       if (WP.persist && WP.persist.hydrate) WP.persist.hydrate();
       return true;
     },
-    clear: function () { _active = '__anon__'; writePtr('__anon__'); },
+    clear: function () {
+      _active = '__anon__'; writePtr('__anon__');
+      // Sign-out drops the in-memory work too, so the next user starts clean.
+      if (WP.persist && WP.persist.resetToBaseline) WP.persist.resetToBaseline();
+    },
     _resolveEmail: resolveEmail   // tests
   };
 

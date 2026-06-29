@@ -48,5 +48,32 @@
     } catch (e) {}
   }
 
-  WP.persist = { saveData: saveData, hydrate: hydrate };
+  /* F7 (in-memory completion): namespacing isolates the PERSISTED caches, but the
+   * mutable work stores (EVALUATIONS/SELF/roles/grants/engage/activity) live in
+   * one shared WP.data. On a no-reload handover (user A signs out, user B signs in
+   * in the same page) B's hydrate would MERGE onto A's lingering in-memory work.
+   * So on every identity change we first reset those stores to the synthetic
+   * BASELINE (the mock captured at load, before any saved work was applied), then
+   * hydrate the new user. Unlike hydrate() (which merges), this REPLACES — it
+   * deletes keys not in the baseline so nothing from the previous user survives.
+   * Same user reloading is unaffected: identity doesn't change, so reset isn't called. */
+  function deep(o) { try { return JSON.parse(JSON.stringify(o)); } catch (e) { return o; } }
+  var BASELINE = deep(snapshot());   // captured at module load = the pure mock state
+
+  function resetToBaseline() {
+    try {
+      var s = BASELINE || {}; var d = WP.data || {};
+      if (d.EVALUATIONS) { Object.keys(d.EVALUATIONS).forEach(function (k) { delete d.EVALUATIONS[k]; });
+        if (s.evaluations) Object.keys(s.evaluations).forEach(function (k) { d.EVALUATIONS[k] = deep(s.evaluations[k]); }); }
+      if (d.SELF) { Object.keys(d.SELF).forEach(function (k) { delete d.SELF[k]; });
+        if (s.self) Object.keys(s.self).forEach(function (k) { d.SELF[k] = deep(s.self[k]); }); }
+      if (s.roles && d.PEOPLE) d.PEOPLE.forEach(function (p) { if (p && s.roles[p.id]) p.level = s.roles[p.id]; });
+      if (WP.access && WP.access.setAccess) WP.access.setAccess(s.granted || []);
+      if (WP.engage && WP.engage.restore) WP.engage.restore(deep(s.engage));
+      if (s.activeCycle && WP.evaluation && WP.evaluation.setActiveCycle) WP.evaluation.setActiveCycle(s.activeCycle);
+      WP.activityLog = Array.isArray(s.activity) ? deep(s.activity) : [];
+    } catch (e) {}
+  }
+
+  WP.persist = { saveData: saveData, hydrate: hydrate, resetToBaseline: resetToBaseline };
 })(window.WP = window.WP || {});
