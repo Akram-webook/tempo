@@ -70,10 +70,28 @@
   --state-positive:        #17C653; /* Success */
   --state-negative:        #F8285A; /* Content-Danger */
   --state-negative-active: #D81A48; /* Content-Danger-Active */
-  --state-notice:          #FCC800; /* no dedicated V3 token yet — carry-over */
+  --state-notice:          #FCC800; /* Content-Notice — confirmed from 🎨 WBK DS Foundation (the library V3 binds Notice from); no longer a carry-over */
   --state-positive-bg: color-mix(in srgb, var(--state-positive) 14%, transparent);
   --state-negative-bg: #FFEEF3; /* Bg-Danger (exact) */
   --state-notice-bg:   color-mix(in srgb, var(--state-notice) 16%, transparent);
+  --state-notice-border: color-mix(in srgb, var(--state-notice) 30%, transparent);
+
+  /* additional semantic + categorical tokens (V3 States collection / Tempo domain),
+     added in the finish pass so NO raw colour lives outside this file */
+  --state-info:    #2563EB; /* informational (toast/banner info) */
+  --state-info-bg: color-mix(in srgb, var(--state-info) 14%, transparent);
+  --state-over:    #C0392B; /* critical / over (wellbeing · fairness) */
+  --state-over-bg: color-mix(in srgb, var(--state-over) 13%, transparent);
+  --state-watch:   #D2691E; /* at-risk amber-orange (wellbeing) */
+  --state-watch-bg: color-mix(in srgb, var(--state-watch) 14%, transparent);
+  --cat-freelance:    #7C5CFF; /* employment category: Freelance (violet) */
+  --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 14%, transparent);
+  --cat-joining:      #9A6B00; /* employment category: Joining soon — AA gold text on light */
+  --cat-joining-bg:   var(--state-balanced-bg);
+  --state-balanced-bg: color-mix(in srgb, var(--state-balanced) 16%, transparent);
+  --sig-gold:      #6E5410; /* signature accent — AA-readable gold on light */
+  --fixed-white:   #FFFFFF; /* fixed white for a mark on a brand/dark fill (check tick, toggle knob) */
+  --tree-line:     #B7BBC7; /* org-tree connector */
 
   --shadow: 0 4px 12px rgba(0,0,0,.07); /* DropShadow Light */
 
@@ -158,6 +176,22 @@
   --state-positive-bg: color-mix(in srgb, var(--state-positive) 22%, transparent);
   --state-negative-bg: color-mix(in srgb, var(--state-negative) 22%, transparent);
   --state-notice-bg:   color-mix(in srgb, var(--state-notice) 22%, transparent);
+  --state-notice-border: color-mix(in srgb, var(--state-notice) 38%, transparent);
+
+  --state-info:    #5B8DEF; /* lifted for legibility on dark */
+  --state-info-bg: color-mix(in srgb, var(--state-info) 22%, transparent);
+  --state-over:    #E05A4A;
+  --state-over-bg: color-mix(in srgb, var(--state-over) 22%, transparent);
+  --state-watch:   #E8843C;
+  --state-watch-bg: color-mix(in srgb, var(--state-watch) 22%, transparent);
+  --cat-freelance:    #9A7DFF;
+  --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 22%, transparent);
+  --cat-joining:      #E0B341; /* brighter gold reads on dark */
+  --cat-joining-bg:   var(--state-balanced-bg);
+  --state-balanced-bg: color-mix(in srgb, var(--state-balanced) 24%, transparent);
+  --sig-gold:      #C8A24A; /* brighter gold reads better on dark */
+  --fixed-white:   #FFFFFF;
+  --tree-line:     #4A4A52;
 
   --shadow: 0 4px 12px rgba(0,0,0,.5);
 

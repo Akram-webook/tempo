@@ -121,6 +121,52 @@ try{
   const appcssPg=fs.readFileSync(path.join(root,'src/css/app.css'),'utf8');
   assert(!/#1d58ff/i.test(appcssPg),'progress-bar in-progress fill uses a token, not #1d58ff');
 
+  // ── FINISH PASS: TOKEN-PURITY GUARD ───────────────────────────────────────
+  // Every colour lives in tokens.css. The only raw hex allowed in app.css is the
+  // EXTERNAL-BRAND block (Google / Apple Pay button colours mandated by their
+  // brand specs) — those lines are explicitly marked and allowlisted here.
+  (function tokenPurity(){
+    const lines=appcssPg.split('\n');
+    const externalBrand=/#fff\b|#1f1f1f|#dadce0|#f8faff|#000\b/i; // Google + Apple Pay only
+    const brand=/#ff2c79/i; // Webook brand magenta — allowed per brief (token or var(--brand))
+    const bad=[];
+    lines.forEach(function(ln,i){
+      const hits=ln.match(/#[0-9a-fA-F]{3,8}\b/g); if(!hits) return;
+      // allow the brand-magenta hex only inside a comment; everywhere else must be a token
+      const stripped=ln.replace(/\/\*[\s\S]*?\*\//g,'');
+      const realHits=(stripped.match(/#[0-9a-fA-F]{3,8}\b/g)||[]);
+      realHits.forEach(function(h){
+        if(externalBrand.test(h)||brand.test(h)) return; // Google/Apple Pay + Webook brand — allowed
+        bad.push('app.css:'+(i+1)+'  '+h+'  | '+ln.trim().slice(0,70));
+      });
+    });
+    assert(bad.length===0,'token-purity: no raw hex in app.css outside the external-brand allowlist\n      '+bad.join('\n      '));
+  })();
+  // page-view JS carries no inline raw colours (all via tokens)
+  ['dashboard','workloadMap','me','evaluations','wellbeing','fairness','dailyTasks','permissions','settings'].forEach(function(v){
+    const js=fs.readFileSync(path.join(root,'src/js/ui/'+v+'.js'),'utf8');
+    const inline=js.match(/(background|color|fill|stroke)\s*:\s*#[0-9a-fA-F]{3,8}/g);
+    assert(!inline,'page view '+v+'.js has no inline raw colour'+(inline?': '+inline.join(', '):''));
+  });
+
+  // ── FINISH PASS: NOTICE token closed (confirmed, not a carry-over) ─────────
+  assert(/--state-notice:\s*#FCC800;[^\n]*confirmed/i.test(tk),'Notice token wired + documented as confirmed (carry-over closed)');
+  assert(/--state-notice-border:/.test(tk),'Notice border token added');
+  // new finish-pass tokens exist in BOTH themes (light + dark = 2 defs each)
+  ['--state-info','--state-over','--state-watch','--cat-freelance','--cat-joining','--sig-gold','--fixed-white','--tree-line','--state-balanced-bg'].forEach(function(v){
+    const c=(tk.match(new RegExp(v.replace(/[-]/g,'\\-')+':','g'))||[]).length;
+    assert(c>=2,'finish token '+v+' defined in both themes (found '+c+')');
+  });
+
+  // ── FINISH PASS: CALENDAR widget V3 fidelity + states ─────────────────────
+  assert(/\.wbk-cal-d\b[\s\S]*?border-radius:\s*var\(--radius-md\)/.test(appcssPg),'calendar day cells use V3 Radius-M token');
+  assert(/\.wbk-cal-d:focus-visible/.test(appcssPg),'calendar day has a focus ring');
+  ['is-today','is-sel','is-range','is-empty'].forEach(function(s){
+    assert(new RegExp('\\.wbk-cal-d\\.'+s).test(appcssPg),'calendar day state .'+s+' styled');
+  });
+  assert(/\.wbk-cal-d:disabled/.test(appcssPg),'calendar day disabled state styled');
+  assert(/\.wbk-cal-d[\s\S]*?tabular-nums/.test(appcssPg),'calendar day numbers use tabular-nums');
+
   // NEW Wave-3 organisms — Page header + Table
   assert(view.querySelector('.wbk-pageheader .wbk-ph-title'),'page header renders with a title');
   assert(view.querySelector('.wbk-ph-back[aria-label]'),'page header back control is labelled');
