@@ -82,6 +82,60 @@
       '<div class="disclaimer">' + t('epHuman') + '</div>';
   }
 
+  /* Render the SUGGESTED RANGE as a calm support panel (P3, WP.evalIntel). It shows a
+   * /5 BAND [low–high] — never a single number to copy — with confidence, cited
+   * reasoning, and risks framed "weigh these". It NEVER replaces the manager's input
+   * and carries NO apply button (the human decides). Sensitive-gated by the caller. */
+  function bandHTML(s, t) {
+    var head = '<h3>' + WP.ui.icon('sparkles', 14) + ' ' + t('sbTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('sbIntro') + '</div>';
+
+    // "Not enough evidence yet" is a first-class, honest result — no fabricated band.
+    if (!s || s.denied || !s.enoughEvidence || !Array.isArray(s.range)) {
+      return head +
+        '<div class="wbk-band-empty"><strong>' + WP.ui.icon('clock', 14) + ' ' + t('sbNotEnough') + '</strong>' +
+          '<div class="wbk-band-sub">' + t('sbNotEnoughNote') + '</div></div>' +
+        '<div class="disclaimer">' + t('sbHuman') + '</div>';
+    }
+
+    var lo = s.range[0], hi = s.range[1];
+    var pct = function (v) { return ((v - 1) / 4) * 100; }; // /5 → 0–100% across the track
+    var left = pct(lo), width = Math.max(pct(hi) - pct(lo), 2);
+    var confKey = s.confidence === 'high' ? 'sbConfHigh' : (s.confidence === 'low' ? 'sbConfLow' : 'sbConfMed');
+
+    var track =
+      '<div class="wbk-band-val">' + lo.toFixed(1) + '–' + hi.toFixed(1) + '<span>/5</span></div>' +
+      '<div class="wbk-band-track" role="img" aria-label="' + t('sbAria').replace('{lo}', lo).replace('{hi}', hi) + '">' +
+        '<span class="wbk-band-span" style="inset-inline-start:' + left + '%;inline-size:' + width + '%"></span></div>' +
+      '<div class="wbk-band-scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>';
+
+    var reason = s.reasoning && s.reasoning.length
+      ? '<ul class="wbk-band-reason">' + s.reasoning.map(function (r) {
+          var n = (r.evidence || []).length;
+          return '<li><span>' + WP.ui.esc(r.text) + '</span>' +
+            (n ? '<span class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' + t('sbCites').replace('{n}', n) + '</span>' : '') + '</li>';
+        }).join('') + '</ul>'
+      : '';
+
+    var risks = s.risks && s.risks.length
+      ? '<div class="ep-gaps"><div class="mini-label">' + WP.ui.icon('alert', 13) + ' ' + t('sbWeigh') + '</div>' +
+          '<ul class="wbk-band-reason">' + s.risks.map(function (rk) {
+            return '<li class="wbk-band-risk"><span>' + WP.ui.esc(rk.text) + '</span>' +
+              '<span class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' + t('sbCites').replace('{n}', (rk.evidence || []).length) + '</span></li>';
+          }).join('') + '</ul></div>'
+      : '';
+
+    var anchor = s.baseline
+      ? '<div class="wbk-band-sub">' + (s.baseline.anchoredTo === 'orgMean'
+          ? t('sbAnchorOrg').replace('{v}', s.baseline.value) : t('sbAnchorDefault')) + '</div>'
+      : '';
+
+    return head +
+      '<div class="wbk-band-head"><span class="wbk-band-conf">' + WP.ui.icon('gauge', 12) + ' ' + t(confKey) + '</span></div>' +
+      track + anchor + reason + risks +
+      '<div class="disclaimer">' + t('sbHuman') + '</div>';
+  }
+
   function render(root) {
     const t = WP.i18n.t, ar = WP.state.lang === 'ar';
     const p = WP.access.byId(WP.state.selectedId);
@@ -149,6 +203,8 @@
 
       (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +
 
+      (showPrep ? '<div class="section wbk-band" id="eval-suggested-band" data-suggested="" aria-live="polite"><div class="ttl">' + WP.ui.icon('sparkles',14) + ' ' + t('epLoading') + '</div></div>' : '') +
+
       '<div class="section"><h3>' + (selfMode ? t('selfAssessment') : t('downwardFeedback')) + ' · ' + t('criteriaTitle') +
         '<span class="ttl" style="font-weight:400"> · ' + t('groupWeight') + ' 100% · ' + t('scale') + ' 1–5</span></h3>' +
         (selfCmp ? '<div class="disclaimer">' + WP.ui.icon('user',13) + ' = ' + t('selfRating') + '</div>' : '') +
@@ -170,8 +226,21 @@
     let aiSuggestion = null;
     if (showPrep && WP.evalIntel) {
       Promise.resolve(WP.evalIntel.suggestedRange(p.id, ev.period, { viewer: viewer, refDate: WP.state.refDate }))
-        .then(function (s) { if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s; })
-        .catch(function () {});
+        .then(function (s) {
+          if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s;
+          const host = root.querySelector('#eval-suggested-band');
+          if (host) {
+            host.innerHTML = bandHTML(s, t);
+            // Stable provenance hook (B1): stamp the SHOWN band on the element so
+            // acceptance is measured against exactly what the manager saw, not a
+            // recomputation. Empty when there was no real suggestion.
+            host.setAttribute('data-suggested', (s && s.enoughEvidence && Array.isArray(s.range)) ? (s.range[0] + '-' + s.range[1]) : '');
+          }
+        })
+        .catch(function () {
+          const host = root.querySelector('#eval-suggested-band');
+          if (host) { host.innerHTML = bandHTML(null, t); host.setAttribute('data-suggested', ''); }
+        });
     }
 
     // Fill the evidence-prep panel asynchronously (reads the append-only event store).

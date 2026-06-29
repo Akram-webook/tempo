@@ -1714,6 +1714,45 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 .ep-gap { color: var(--text-muted); font-size: 13px; padding: 4px 0; }
 [dir="rtl"] .eval-prep { border-left: 0; border-right: 3px solid var(--brand); }
 
+/* ── Suggested-range SUPPORT panel (P3, WP.evalIntel.suggestedRange). A calm aid
+   BESIDE the manager's own rating — never replaces it. Shows a RANGE band on /5
+   (never a single number to copy), confidence, cited reasoning, and risks framed
+   "weigh these". Sensitive-gated. Tokens only; both themes; RTL via logical props. */
+.wbk-band { border-inline-start: 3px solid var(--brand); }
+.wbk-band .ttl { line-height: 1.5; }
+.wbk-band-head { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.wbk-band-sub { color: var(--text-muted); font-size: var(--fs-body-s); line-height: var(--lh-body-s); margin-top: 2px; }
+.wbk-band-conf { display: inline-flex; align-items: center; gap: var(--sp-1); margin-inline-start: auto;
+  font-size: var(--fs-label-xs); line-height: var(--lh-label-xs); text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-muted); }
+/* the /5 range track — a highlighted band [low–high], not a point */
+.wbk-band-track { position: relative; block-size: 8px; border-radius: 999px; background: var(--surface-3);
+  margin: var(--sp-5) 0 var(--sp-3); }
+.wbk-band-span { position: absolute; block-size: 100%; border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 55%, transparent); border: 1px solid var(--brand); }
+.wbk-band-scale { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary); font-size: var(--fs-body-xs); }
+.wbk-band-val { font-family: var(--font-display); font-weight: 600; color: var(--text);
+  font-size: var(--fs-h5); line-height: var(--lh-h5); font-variant-numeric: tabular-nums; }
+.wbk-band-val span { color: var(--text-muted); font-size: var(--fs-body-m); font-weight: 400; }
+.wbk-band-reason { list-style: none; margin: var(--sp-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.wbk-band-reason li { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3);
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--fs-body-m); color: var(--text); }
+.wbk-band-ev { display: inline-flex; align-items: center; gap: var(--sp-1); color: var(--text-muted); font-size: var(--fs-body-s); }
+.wbk-band-risk { border-color: var(--state-notice-border); }
+.wbk-band-risk .wbk-band-ev { color: var(--state-notice); }
+.wbk-band-empty { padding: var(--sp-4); border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--text-muted); }
+
+/* ── Consistency / bias AWARENESS cards (P3, WP.evalIntel.consistencyCheck). Neutral
+   "worth a second look" — never blocking, never a rank/score of anyone. */
+.wbk-consist { display: flex; flex-direction: column; gap: var(--sp-3); }
+.wbk-consist-card { display: flex; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-4);
+  border: 1px solid var(--state-notice-border); background: var(--state-notice-bg); border-radius: var(--radius); }
+.wbk-consist-ic { flex: none; color: var(--state-notice); margin-block-start: 1px; }
+.wbk-consist-t { font-weight: 600; font-size: var(--fs-label-m); line-height: var(--lh-label-m); color: var(--text); }
+.wbk-consist-x { font-size: var(--fs-body-s); line-height: var(--lh-body-s); color: var(--text-muted); margin-top: 2px; }
+
 </style>
 </head>
 <body>
@@ -2609,6 +2648,24 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     epCount:        { en: '{n} sourced item(s)', ar: '{n} عنصر بمصدر' },
     epHuman:        { en: 'This is raw material for your judgment — not a rating or a decision.', ar: 'هذه مادة خام لحكمك — وليست تقييماً ولا قراراً.' },
     // ─────────── end Eval-Prep keys ───────────
+    // ─────────── P3 · Suggested-range support panel ───────────
+    sbTitle:        { en: 'Suggested range — support', ar: 'النطاق المقترح — دعم' },
+    sbIntro:        { en: 'A range from the evidence to anchor your thinking. You set the rating — this never does.', ar: 'نطاق مستمد من الأدلة لتأطير تفكيرك. أنت من يحدّد التقييم — هذا لا يفعل ذلك أبداً.' },
+    sbNotEnough:    { en: 'Not enough evidence yet', ar: 'الأدلة غير كافية بعد' },
+    sbNotEnoughNote:{ en: 'We won’t guess a range without enough sourced evidence. Rate from your own judgment.', ar: 'لن نخمّن نطاقاً دون أدلة كافية موثّقة. قيّم وفق حكمك الخاص.' },
+    sbConfHigh:     { en: 'High confidence', ar: 'ثقة عالية' },
+    sbConfMed:      { en: 'Medium confidence', ar: 'ثقة متوسطة' },
+    sbConfLow:      { en: 'Low confidence', ar: 'ثقة منخفضة' },
+    sbCites:        { en: 'cites {n} item(s)', ar: 'يستند إلى {n} عنصر' },
+    sbWeigh:        { en: 'Weigh these', ar: 'ضع هذه في الحسبان' },
+    sbAnchorOrg:    { en: 'Anchored to this cycle’s average ({v}/5).', ar: 'مُعاير على متوسط هذه الدورة ({v}/٥).' },
+    sbAnchorDefault:{ en: 'Anchored to a neutral midpoint (no cycle baseline yet).', ar: 'مُعاير على نقطة وسط محايدة (لا أساس للدورة بعد).' },
+    sbHuman:        { en: 'A range, not a score — you decide. There is no “apply” here by design.', ar: 'نطاق وليس درجة — القرار لك. لا يوجد زر «تطبيق» هنا عن قصد.' },
+    sbAria:         { en: 'Suggested range from {lo} to {hi} out of 5', ar: 'النطاق المقترح من {lo} إلى {hi} من ٥' },
+    // ─────────── P3 · Consistency awareness ───────────
+    ccTitle:        { en: 'Worth a second look', ar: 'يستحق نظرة ثانية' },
+    ccIntro:        { en: 'Calibration awareness across your own reviews — not a judgment of you or anyone. Nothing here blocks you.', ar: 'وعي بالمعايرة عبر تقييماتك — وليس حكماً عليك أو على أحد. لا شيء هنا يمنعك.' },
+    ccCites:        { en: 'cites {n} review(s)', ar: 'يستند إلى {n} تقييم' },
     skills:         { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
     hardSkills:     { en: 'Technical', ar: 'تقنية' },
     softSkills:     { en: 'Behavioral', ar: 'سلوكية' },
@@ -7491,6 +7548,60 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       '<div class="disclaimer">' + t('epHuman') + '</div>';
   }
 
+  /* Render the SUGGESTED RANGE as a calm support panel (P3, WP.evalIntel). It shows a
+   * /5 BAND [low–high] — never a single number to copy — with confidence, cited
+   * reasoning, and risks framed "weigh these". It NEVER replaces the manager's input
+   * and carries NO apply button (the human decides). Sensitive-gated by the caller. */
+  function bandHTML(s, t) {
+    var head = '<h3>' + WP.ui.icon('sparkles', 14) + ' ' + t('sbTitle') + '</h3>' +
+      '<div class="disclaimer">' + t('sbIntro') + '</div>';
+
+    // "Not enough evidence yet" is a first-class, honest result — no fabricated band.
+    if (!s || s.denied || !s.enoughEvidence || !Array.isArray(s.range)) {
+      return head +
+        '<div class="wbk-band-empty"><strong>' + WP.ui.icon('clock', 14) + ' ' + t('sbNotEnough') + '</strong>' +
+          '<div class="wbk-band-sub">' + t('sbNotEnoughNote') + '</div></div>' +
+        '<div class="disclaimer">' + t('sbHuman') + '</div>';
+    }
+
+    var lo = s.range[0], hi = s.range[1];
+    var pct = function (v) { return ((v - 1) / 4) * 100; }; // /5 → 0–100% across the track
+    var left = pct(lo), width = Math.max(pct(hi) - pct(lo), 2);
+    var confKey = s.confidence === 'high' ? 'sbConfHigh' : (s.confidence === 'low' ? 'sbConfLow' : 'sbConfMed');
+
+    var track =
+      '<div class="wbk-band-val">' + lo.toFixed(1) + '–' + hi.toFixed(1) + '<span>/5</span></div>' +
+      '<div class="wbk-band-track" role="img" aria-label="' + t('sbAria').replace('{lo}', lo).replace('{hi}', hi) + '">' +
+        '<span class="wbk-band-span" style="inset-inline-start:' + left + '%;inline-size:' + width + '%"></span></div>' +
+      '<div class="wbk-band-scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>';
+
+    var reason = s.reasoning && s.reasoning.length
+      ? '<ul class="wbk-band-reason">' + s.reasoning.map(function (r) {
+          var n = (r.evidence || []).length;
+          return '<li><span>' + WP.ui.esc(r.text) + '</span>' +
+            (n ? '<span class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' + t('sbCites').replace('{n}', n) + '</span>' : '') + '</li>';
+        }).join('') + '</ul>'
+      : '';
+
+    var risks = s.risks && s.risks.length
+      ? '<div class="ep-gaps"><div class="mini-label">' + WP.ui.icon('alert', 13) + ' ' + t('sbWeigh') + '</div>' +
+          '<ul class="wbk-band-reason">' + s.risks.map(function (rk) {
+            return '<li class="wbk-band-risk"><span>' + WP.ui.esc(rk.text) + '</span>' +
+              '<span class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' + t('sbCites').replace('{n}', (rk.evidence || []).length) + '</span></li>';
+          }).join('') + '</ul></div>'
+      : '';
+
+    var anchor = s.baseline
+      ? '<div class="wbk-band-sub">' + (s.baseline.anchoredTo === 'orgMean'
+          ? t('sbAnchorOrg').replace('{v}', s.baseline.value) : t('sbAnchorDefault')) + '</div>'
+      : '';
+
+    return head +
+      '<div class="wbk-band-head"><span class="wbk-band-conf">' + WP.ui.icon('gauge', 12) + ' ' + t(confKey) + '</span></div>' +
+      track + anchor + reason + risks +
+      '<div class="disclaimer">' + t('sbHuman') + '</div>';
+  }
+
   function render(root) {
     const t = WP.i18n.t, ar = WP.state.lang === 'ar';
     const p = WP.access.byId(WP.state.selectedId);
@@ -7558,6 +7669,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
       (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +
 
+      (showPrep ? '<div class="section wbk-band" id="eval-suggested-band" data-suggested="" aria-live="polite"><div class="ttl">' + WP.ui.icon('sparkles',14) + ' ' + t('epLoading') + '</div></div>' : '') +
+
       '<div class="section"><h3>' + (selfMode ? t('selfAssessment') : t('downwardFeedback')) + ' · ' + t('criteriaTitle') +
         '<span class="ttl" style="font-weight:400"> · ' + t('groupWeight') + ' 100% · ' + t('scale') + ' 1–5</span></h3>' +
         (selfCmp ? '<div class="disclaimer">' + WP.ui.icon('user',13) + ' = ' + t('selfRating') + '</div>' : '') +
@@ -7579,8 +7692,21 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     let aiSuggestion = null;
     if (showPrep && WP.evalIntel) {
       Promise.resolve(WP.evalIntel.suggestedRange(p.id, ev.period, { viewer: viewer, refDate: WP.state.refDate }))
-        .then(function (s) { if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s; })
-        .catch(function () {});
+        .then(function (s) {
+          if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s;
+          const host = root.querySelector('#eval-suggested-band');
+          if (host) {
+            host.innerHTML = bandHTML(s, t);
+            // Stable provenance hook (B1): stamp the SHOWN band on the element so
+            // acceptance is measured against exactly what the manager saw, not a
+            // recomputation. Empty when there was no real suggestion.
+            host.setAttribute('data-suggested', (s && s.enoughEvidence && Array.isArray(s.range)) ? (s.range[0] + '-' + s.range[1]) : '');
+          }
+        })
+        .catch(function () {
+          const host = root.querySelector('#eval-suggested-band');
+          if (host) { host.innerHTML = bandHTML(null, t); host.setAttribute('data-suggested', ''); }
+        });
     }
 
     // Fill the evidence-prep panel asynchronously (reads the append-only event store).
@@ -7829,10 +7955,39 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
             '<span><span class="dot" style="background:var(--text-muted)"></span> ' + pct(counts['Not started']) + '% ' + t('notStartedL') + '</span></div></div>' +
       '</div>' +
 
+      // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
+      // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
+      ((isReal && reports.length) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
+
       '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
 
     // S3-1 + S4-1 — open THIS cycle's evaluation, and remember we came from the hub
     // so the evaluation's back button returns here ("Back to evaluations").
+    // Fill the consistency-awareness panel asynchronously (reads completed reviews +
+    // their evidence counts). Neutral cards; hidden entirely when there's nothing to
+    // flag or not enough data — never an empty accusation, never a score of anyone.
+    const consistHost = root.querySelector('#eval-consist-host');
+    if (consistHost && WP.evalIntel && WP.evalIntel.consistencyCheck) {
+      Promise.resolve(WP.evalIntel.consistencyCheck(viewer.id, cycle.id, { refDate: WP.state.refDate }))
+        .then(function (c) {
+          if (!c || !c.enoughData || !c.warnings || !c.warnings.length) { consistHost.hidden = true; return; }
+          consistHost.hidden = false;
+          consistHost.innerHTML =
+            '<h3>' + WP.ui.icon('bulb', 14) + ' ' + t('ccTitle') + '</h3>' +
+            '<div class="disclaimer">' + t('ccIntro') + '</div>' +
+            '<div class="wbk-consist">' + c.warnings.map(function (w) {
+              return '<div class="wbk-consist-card">' +
+                '<span class="wbk-consist-ic">' + WP.ui.icon('alert', 16) + '</span>' +
+                '<div><div class="wbk-consist-t">' + ui.esc(w.text) + '</div>' +
+                  '<div class="wbk-consist-x">' + ui.esc(w.explanation || '') + '</div>' +
+                  '<div class="wbk-band-ev">' + WP.ui.icon('eye', 12) + ' ' +
+                    t('ccCites').replace('{n}', (w.evidence || []).length) + '</div></div>' +
+              '</div>';
+            }).join('') + '</div>';
+        })
+        .catch(function () { consistHost.hidden = true; });
+    }
+
     const openEval = function (id) {
       WP.setState({ route: 'evaluation', selectedId: id, selectedCycle: cycle.id, evalOrigin: 'evaluations' });
     };
