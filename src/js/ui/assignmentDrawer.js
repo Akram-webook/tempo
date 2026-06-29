@@ -68,6 +68,11 @@
       return a.sim.before - b.sim.before;                  // then lowest current load
     });
 
+    // The top of the ranked list is the system's SUGGESTED pick (capacity + proximity).
+    // We record whether the human took it — honest AI-acceptance provenance, only when
+    // a suggestion was actually shown (ranked has candidates). No ranking → no flag.
+    const aiSuggested = ranked.length ? ranked[0].p.id : null;
+
     const host = document.getElementById('overlay-host');
     host.innerHTML = '<div class="overlay"><div class="drawer">' +
       '<button class="btn icon-btn" id="close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
@@ -93,23 +98,27 @@
     host.querySelector('.overlay').onclick = function (e) { if (e.target.classList.contains('overlay')) host.innerHTML = ''; };
 
     host.querySelectorAll('[data-do]').forEach(function (b) {
-      b.onclick = function () { doAssign(eventId, b.dataset.do, false); host.innerHTML = ''; };
+      b.onclick = function () { doAssign(eventId, b.dataset.do, false, null, aiSuggested); host.innerHTML = ''; };
     });
     host.querySelectorAll('[data-override]').forEach(function (b) {
       b.onclick = function () {
         const why = prompt('Override reason (logged):');
-        if (why) { doAssign(eventId, b.dataset.override, true, why); host.innerHTML = ''; }
+        if (why) { doAssign(eventId, b.dataset.override, true, why, aiSuggested); host.innerHTML = ''; }
       };
     });
   }
 
-  function doAssign(eventId, personId, override, why) {
+  function doAssign(eventId, personId, override, why, aiSuggested) {
     const p = WP.access.byId(personId);
     if (!p.assignedEvents.includes(eventId)) p.assignedEvents.push(eventId);
-    WP.logEvent({
+    const entry = {
       type: override ? 'override-assign' : 'assign',
       by: WP.state.viewerId, target: personId, event: eventId, reason: why || null,
-    });
+    };
+    // AI-acceptance provenance: only stamp when a suggestion was actually shown.
+    // Taking the top-ranked pick = accepted; choosing another / overriding = not.
+    if (aiSuggested != null) entry.aiAccepted = (!override && personId === aiSuggested);
+    WP.logEvent(entry);
     WP.setState({}); // re-render
   }
 

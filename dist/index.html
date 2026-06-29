@@ -6688,6 +6688,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       return a.sim.before - b.sim.before;                  // then lowest current load
     });
 
+    // The top of the ranked list is the system's SUGGESTED pick (capacity + proximity).
+    // We record whether the human took it — honest AI-acceptance provenance, only when
+    // a suggestion was actually shown (ranked has candidates). No ranking → no flag.
+    const aiSuggested = ranked.length ? ranked[0].p.id : null;
+
     const host = document.getElementById('overlay-host');
     host.innerHTML = '<div class="overlay"><div class="drawer">' +
       '<button class="btn icon-btn" id="close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
@@ -6713,23 +6718,27 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     host.querySelector('.overlay').onclick = function (e) { if (e.target.classList.contains('overlay')) host.innerHTML = ''; };
 
     host.querySelectorAll('[data-do]').forEach(function (b) {
-      b.onclick = function () { doAssign(eventId, b.dataset.do, false); host.innerHTML = ''; };
+      b.onclick = function () { doAssign(eventId, b.dataset.do, false, null, aiSuggested); host.innerHTML = ''; };
     });
     host.querySelectorAll('[data-override]').forEach(function (b) {
       b.onclick = function () {
         const why = prompt('Override reason (logged):');
-        if (why) { doAssign(eventId, b.dataset.override, true, why); host.innerHTML = ''; }
+        if (why) { doAssign(eventId, b.dataset.override, true, why, aiSuggested); host.innerHTML = ''; }
       };
     });
   }
 
-  function doAssign(eventId, personId, override, why) {
+  function doAssign(eventId, personId, override, why, aiSuggested) {
     const p = WP.access.byId(personId);
     if (!p.assignedEvents.includes(eventId)) p.assignedEvents.push(eventId);
-    WP.logEvent({
+    const entry = {
       type: override ? 'override-assign' : 'assign',
       by: WP.state.viewerId, target: personId, event: eventId, reason: why || null,
-    });
+    };
+    // AI-acceptance provenance: only stamp when a suggestion was actually shown.
+    // Taking the top-ranked pick = accepted; choosing another / overriding = not.
+    if (aiSuggested != null) entry.aiAccepted = (!override && personId === aiSuggested);
+    WP.logEvent(entry);
     WP.setState({}); // re-render
   }
 
@@ -7245,6 +7254,17 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
 
     root.querySelector('#back').onclick = back;
 
+    // AI-acceptance provenance: alongside the prep panel (same sensitive-access gate),
+    // pull the engine's SUGGESTED rating band. We stamp acceptance at approval only
+    // when a real suggestion exists (enoughEvidence) — never fabricate it on a manual
+    // eval with no AI input. Held in a closure the approve handler reads.
+    let aiSuggestion = null;
+    if (showPrep && WP.evalIntel) {
+      Promise.resolve(WP.evalIntel.suggestedRange(p.id, ev.period, { viewer: viewer, refDate: WP.state.refDate }))
+        .then(function (s) { if (s && s.enoughEvidence && Array.isArray(s.range)) aiSuggestion = s; })
+        .catch(function () {});
+    }
+
     // Fill the evidence-prep panel asynchronously (reads the append-only event store).
     if (showPrep) {
       WP.evalPrep.prepare(p.id, {}, WP.state.refDate).then(function (summary) {
@@ -7278,7 +7298,14 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const ap = root.querySelector('#approve');
     if (ap) ap.onclick = function () {
       ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
-      WP.logEvent({ type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (WP.evaluation.overall(ev) || '–') + '/5' });
+      const overall = WP.evaluation.overall(ev);
+      const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
+      // Accepted = the human's final overall landed inside the AI-suggested band.
+      // Only when a suggestion was actually shown (enoughEvidence); else no flag.
+      if (aiSuggestion && typeof overall === 'number') {
+        entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
+      }
+      WP.logEvent(entry);
       saveEval();
       WP.setState({});
     };

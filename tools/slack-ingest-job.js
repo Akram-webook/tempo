@@ -105,7 +105,9 @@ function toRow(ev) {
   };
 }
 
-async function run() {
+async function run(opts) {
+  opts = opts || {};
+  const dry = opts.dry || DRY; // CLI --dry OR programmatic (CI smoke) — preview, no writes
   const state = readState();
   let history;
   try {
@@ -132,14 +134,15 @@ async function run() {
     const events = SI.toEvents(parsed, { subjectId: subjectId, permalink: permalink, ts: m.ts, checkinId: 'chk:' + subjectId + ':' + m.ts, confidence: confidence });
 
     for (const ev of events) {
-      if (DRY) { log('DRY would append ' + JSON.stringify(toRow(ev))); emitted++; continue; }
+      if (dry) { log('DRY would append ' + JSON.stringify(toRow(ev))); emitted++; continue; }
       await supa('POST', '/rest/v1/events', toRow(ev)); // idempotent (id = slack:<dedupeKey>)
       emitted++;
     }
   }
 
-  if (!DRY) writeState({ last_run_ts: maxTs });
-  log('done — events:' + emitted + ' skipped(unreadable):' + skipped + ' dropped(unmapped):' + dropped + (DRY ? ' [DRY]' : ''));
+  if (!dry) writeState({ last_run_ts: maxTs }); // DRY never advances the cursor
+  log('done — events:' + emitted + ' skipped(unreadable):' + skipped + ' dropped(unmapped):' + dropped + (dry ? ' [DRY]' : ''));
+  return { emitted: emitted, skipped: skipped, dropped: dropped, dry: dry, maxTs: maxTs };
 }
 
 // Export internals for the CI mock (test/verify-slack-job.js); auto-run only when

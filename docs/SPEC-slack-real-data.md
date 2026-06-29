@@ -61,7 +61,35 @@ Runs out-of-band with secrets from **env only** (`SLACK_BOT_TOKEN`,
 6. `author_email = 'system:slack-ingest'` (the events table column is NOT NULL with a
    default of `auth.email()`, which is NULL under the service role — set explicitly).
 7. Slack unreachable → no-op (no throw, no state write). Never hard-deletes.
-- Tested by `test/verify-slack-job.js` (fake Slack + Supabase; 16 checks).
+- Tested by `test/verify-slack-job.js` (fake Slack + Supabase; 20 checks, incl. a `--dry` smoke).
+
+### Running the job (operations runbook)
+The job is **server-side only** — `build.js` never bundles `tools/**`, so it never reaches the
+front-end. Secrets come from the environment, never the repo:
+
+```bash
+# required env (set in the scheduler's secret store — NOT committed)
+export SLACK_BOT_TOKEN=xoxb-…             # scopes: channels:history, users:read.email
+export SLACK_CHECKIN_CHANNEL_ID=C0XXXXXX  # the #daily-checkin channel id
+export SUPABASE_URL=https://<proj>.supabase.co
+export SUPABASE_SERVICE_ROLE_KEY=eyJ…     # service_role — SERVER ONLY, never front-end
+export SLACK_FORM_BOT_USER_ID=U0…         # optional: posts by the form bot → confidence 'high'
+
+npm run ingest        # one real run (advances the cursor, appends events idempotently)
+npm run ingest:dry    # preview: full loop, logs what it WOULD append, writes nothing
+```
+
+- **Schedule it** as a cron / scheduled task (e.g. every 15 min): `*/15 * * * * cd /path/to/tempo && npm run ingest >> /var/log/tempo-ingest.log 2>&1`.
+- The cursor lives in `.slack-ingest-state.json` (gitignored, not secret); override its path with
+  `TEMPO_INGEST_STATE` (the CI mock points it at a temp file). Re-running over the same messages is
+  **idempotent** (event id = `slack:<dedupeKey>`), so a missed tick self-heals on the next run.
+- **CI smoke:** `npm test` runs `verify-slack-job.js`, which exercises the entire loop — including a
+  `--dry` pass proving the cursor never advances and nothing is POSTed — against a fake Slack +
+  Supabase with **no network**.
+
+> **Go-live dependency (honest):** this makes the job *runnable and tested*, but it only produces real
+> events once Akram stands up the `#daily-checkin` Slack Workflow form **and** invites the bot to that
+> channel. Until then the job is a safe no-op (Slack returns nothing / unreachable → no-op).
 
 ## Access — same gate as everything else
 Check-in events live in the `events` store and are read through
