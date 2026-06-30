@@ -1847,6 +1847,21 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   line-height: var(--lh-h2); color: var(--text); margin: 0; }
 .wbk-phead-sub { color: var(--text-muted); font-size: var(--fs-body-m); line-height: var(--lh-body-m); margin: 2px 0 0; }
 .wbk-phead-r { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+/* page-level chart actions (full-screen / copy link) — secondary .btn group; the header's
+   flex auto-mirrors in RTL, so no custom direction rule is needed */
+.phead-actions { display: inline-flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.phead-actions .btn { text-decoration: none; }
+
+/* shared toast host — fixed, bottom-end; reuses the .wbk-toast component visuals */
+#wbk-toast-host { position: fixed; inset-block-end: 18px; inset-inline-end: 18px; z-index: 1200;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+#wbk-toast-host .wbk-toast { pointer-events: auto; animation: wbkToastIn .18s ease both; }
+#wbk-toast-host .wbk-toast.wbk-toast-out { animation: wbkToastOut .2s ease forwards; }
+@keyframes wbkToastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes wbkToastOut { to { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) {
+  #wbk-toast-host .wbk-toast, #wbk-toast-host .wbk-toast.wbk-toast-out { animation: none; }
+}
 
 /* Status badge — green Active / grey Inactive family */
 .wbk-status { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-s);
@@ -3279,6 +3294,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     dashSubEmployee:{ en: 'Your workload and growth at a glance', ar: 'عبء عملك ونموّك في لمحة' },
     mapTitle:       { en: 'People & workload', ar: 'الأشخاص والعبء' },
     mapSub:         { en: 'Everyone in your scope, their capacity and team', ar: 'كل من في نطاقك، سعتهم وفريقهم' },
+    fullscreenChart:{ en: 'Full-screen chart', ar: 'الرسم البياني بملء الشاشة' },
+    copyLink:       { en: 'Copy link', ar: 'نسخ الرابط' },
+    previewLinkCopied: { en: 'Preview link copied', ar: 'تم نسخ رابط المعاينة' },
     // KPI info tooltips + delta
     teamHealthInfo: { en: 'Share of people in the healthy capacity band — this period vs the one before.', ar: 'نسبة الأشخاص ضمن نطاق السعة الصحي — هذه الفترة مقابل السابقة.' },
     nearCapInfo:    { en: 'People at or over capacity. Lower is better.', ar: 'الأشخاص عند السعة أو فوقها. الأقل أفضل.' },
@@ -5139,9 +5157,33 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   function tableMount(host, o) { if (!host) return; host.innerHTML = tableHTML(o); tableWire(host, o); }
 
   WP.ui = WP.ui || {};
+  // Transient toast — REUSES the WBK `.wbk-toast` DS component (markup + styles already
+  // shipped). The app had the component but no runtime show-helper, so this adds only the
+  // mount + auto-dismiss behaviour (one shared aria-live host, created once). Never throws.
+  function toast(message, status) {
+    try {
+      var host = document.getElementById('wbk-toast-host');
+      if (!host) {
+        host = document.createElement('div');
+        host.id = 'wbk-toast-host';
+        host.setAttribute('aria-live', 'polite');
+        document.body.appendChild(host);
+      }
+      var el = document.createElement('div');
+      el.className = 'wbk-toast wbk-is-' + (status || 'success');
+      el.innerHTML = '<span class="wbk-status-dot"></span><span>' + esc(message) + '</span>';
+      host.appendChild(el);
+      setTimeout(function () {
+        el.classList.add('wbk-toast-out');
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 220);
+      }, 2600);
+    } catch (e) {}
+  }
+
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;
+  WP.ui.toast = toast;
   WP.ui.avatar = avatar;
   WP.ui.provenanceNote = provenanceNote;
   WP.ui.breadcrumb = breadcrumb;
@@ -5204,6 +5246,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     caret:    '<path d="M6 9l6 6 6-6"/>',
     info:     '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
     filter:   '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
+    external: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>',
+    link:     '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
   };
   WP.ui = WP.ui || {};
   WP.ui.icon = function (name, size) {
@@ -5551,6 +5595,44 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     '</div>';
   }
 
+  // Page-level header actions: open the already-merged standalone chart export (PR #46,
+  // dist/chart.html) full-screen in a new tab, and copy its shareable link. The href is
+  // RELATIVE so it resolves against the current page on Pages AND locally; the copied link
+  // is the absolute resolved URL. Read-only, sample-data export — no real data wired here.
+  function chartActions() {
+    const t = WP.i18n.t;
+    return '<div class="phead-actions">' +
+      '<a class="btn" id="oc-fullscreen" href="chart.html" target="_blank" rel="noopener noreferrer" aria-label="' + t('fullscreenChart') + '">' +
+        WP.ui.icon('external', 15) + ' ' + ui.esc(t('fullscreenChart')) + '</a>' +
+      '<button type="button" class="btn" id="oc-copylink" aria-label="' + t('copyLink') + '">' +
+        WP.ui.icon('link', 15) + ' ' + ui.esc(t('copyLink')) + '</button>' +
+    '</div>';
+  }
+
+  // Copy the absolute chart.html URL with a graceful fallback for older / insecure-context
+  // browsers (clipboard API needs HTTPS or localhost). Confirms via the shared toast.
+  function wireChartActions(root) {
+    const t = WP.i18n.t;
+    const btn = root.querySelector('#oc-copylink');
+    if (!btn) return;
+    btn.onclick = function () {
+      let url;
+      try { url = new URL('chart.html', location.href).href; } catch (e) { url = 'chart.html'; }
+      const done = function () { if (WP.ui.toast) WP.ui.toast(t('previewLinkCopied')); };
+      const fallback = function () {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = url; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+          done();
+        } catch (e) { if (WP.ui.toast) WP.ui.toast(url, 'info'); }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(fallback);
+      } else { fallback(); }
+    };
+  }
+
   function render(root) {
     const viewer = WP.viewer();
     const base = WP.access.visiblePeople(viewer);
@@ -5609,6 +5691,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('mapTitle') }],
         title: t('mapTitle'),
         subtitle: t('mapSub'),
+        right: chartActions(),   // page-level: open / share the full standalone chart export
       })) + metricsBar(m) +
       // The predictive finder is the tree's quick-jump; in list mode the table's own
       // search/filter does that job, so we don't show two search boxes (minimalism).
@@ -5693,6 +5776,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         emptyText: t('tblNoPeople'),
       });
     }
+
+    // page-level header actions (full-screen chart + copy link)
+    wireChartActions(root);
 
     // compact toolbar dropdowns (View · Period)
     setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });

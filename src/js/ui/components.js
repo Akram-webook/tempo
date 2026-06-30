@@ -217,9 +217,33 @@
   function tableMount(host, o) { if (!host) return; host.innerHTML = tableHTML(o); tableWire(host, o); }
 
   WP.ui = WP.ui || {};
+  // Transient toast — REUSES the WBK `.wbk-toast` DS component (markup + styles already
+  // shipped). The app had the component but no runtime show-helper, so this adds only the
+  // mount + auto-dismiss behaviour (one shared aria-live host, created once). Never throws.
+  function toast(message, status) {
+    try {
+      var host = document.getElementById('wbk-toast-host');
+      if (!host) {
+        host = document.createElement('div');
+        host.id = 'wbk-toast-host';
+        host.setAttribute('aria-live', 'polite');
+        document.body.appendChild(host);
+      }
+      var el = document.createElement('div');
+      el.className = 'wbk-toast wbk-is-' + (status || 'success');
+      el.innerHTML = '<span class="wbk-status-dot"></span><span>' + esc(message) + '</span>';
+      host.appendChild(el);
+      setTimeout(function () {
+        el.classList.add('wbk-toast-out');
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 220);
+      }, 2600);
+    } catch (e) {}
+  }
+
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;
+  WP.ui.toast = toast;
   WP.ui.avatar = avatar;
   WP.ui.provenanceNote = provenanceNote;
   WP.ui.breadcrumb = breadcrumb;

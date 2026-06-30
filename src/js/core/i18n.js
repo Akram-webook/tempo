@@ -583,6 +583,9 @@
     dashSubEmployee:{ en: 'Your workload and growth at a glance', ar: 'عبء عملك ونموّك في لمحة' },
     mapTitle:       { en: 'People & workload', ar: 'الأشخاص والعبء' },
     mapSub:         { en: 'Everyone in your scope, their capacity and team', ar: 'كل من في نطاقك، سعتهم وفريقهم' },
+    fullscreenChart:{ en: 'Full-screen chart', ar: 'الرسم البياني بملء الشاشة' },
+    copyLink:       { en: 'Copy link', ar: 'نسخ الرابط' },
+    previewLinkCopied: { en: 'Preview link copied', ar: 'تم نسخ رابط المعاينة' },
     // KPI info tooltips + delta
     teamHealthInfo: { en: 'Share of people in the healthy capacity band — this period vs the one before.', ar: 'نسبة الأشخاص ضمن نطاق السعة الصحي — هذه الفترة مقابل السابقة.' },
     nearCapInfo:    { en: 'People at or over capacity. Lower is better.', ar: 'الأشخاص عند السعة أو فوقها. الأقل أفضل.' },
