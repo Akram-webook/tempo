@@ -1836,6 +1836,101 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   font-size: var(--fs-body-s); line-height: var(--lh-body-s); }
 .wbk-consist-ok-ic { display: inline-flex; color: var(--state-positive); }
 
+/* ============================================================
+   WBK PRO design-parity — page header, status badge, sub-tabs,
+   data table, KPI info + delta. Token-driven, RTL-safe (logical
+   properties), both themes. ONE set of components, reused.
+   ============================================================ */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Standard page header */
+.wbk-phead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4);
+  flex-wrap: wrap; margin: var(--sp-2) 0 var(--sp-5); }
+.wbk-phead-title { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-h2);
+  line-height: var(--lh-h2); color: var(--text); margin: 0; }
+.wbk-phead-sub { color: var(--text-muted); font-size: var(--fs-body-m); line-height: var(--lh-body-m); margin: 2px 0 0; }
+.wbk-phead-r { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+
+/* Status badge — green Active / grey Inactive family */
+.wbk-status { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-body-s);
+  font-weight: 600; padding: 2px var(--sp-3); border-radius: 999px; white-space: nowrap;
+  border: 1px solid var(--border); color: var(--text-muted); background: var(--surface-2); }
+.wbk-status .wbk-status-dot { inline-size: 7px; block-size: 7px; border-radius: 50%; background: currentColor; }
+.wbk-status--ok    { color: var(--state-available); }
+.wbk-status--warn  { color: var(--state-near); }
+.wbk-status--bad   { color: var(--state-overloaded); }
+.wbk-status--info  { color: var(--brand); }
+.wbk-status--muted { color: var(--text-muted); }
+
+/* Sub-tabs */
+.wbk-subtabs { display: flex; gap: var(--sp-1); border-bottom: 1px solid var(--border); margin-bottom: var(--sp-5); }
+.wbk-subtab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: var(--sp-3) var(--sp-3); margin-bottom: -1px; cursor: pointer; color: var(--text-muted);
+  font-family: inherit; font-size: var(--fs-body-m); font-weight: 600; }
+.wbk-subtab:hover { color: var(--text); }
+.wbk-subtab.is-on { color: var(--brand); border-bottom-color: var(--brand); }
+.wbk-subtab:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* Table toolbar (search left, Filters right) + filter chips */
+.wbk-tbl-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.wbk-tbl-search { flex: 1 1 auto; max-inline-size: 360px; }
+.wbk-tbl-bar-r { display: flex; align-items: center; gap: var(--sp-2); }
+.wbk-tbl-filter { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.wbk-tbl-fcount { display: inline-flex; align-items: center; justify-content: center; min-inline-size: 18px;
+  block-size: 18px; padding: 0 5px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 11px; font-weight: 700; }
+.wbk-tbl-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.wbk-fchip { appearance: none; cursor: pointer; font-family: inherit; font-size: var(--fs-body-s); font-weight: 600;
+  padding: 3px var(--sp-3); border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted); }
+.wbk-fchip:hover { color: var(--text); }
+.wbk-fchip.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.wbk-fchip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Sortable headers */
+.wbk-sort-btn { appearance: none; background: none; border: 0; cursor: pointer; font: inherit;
+  text-transform: inherit; letter-spacing: inherit; color: inherit; font-weight: 600;
+  display: inline-flex; align-items: center; gap: var(--sp-1); padding: 0; }
+.wbk-sort-caret { display: inline-flex; opacity: .35; transition: transform .12s ease, opacity .12s ease; }
+.wbk-sort-caret.is-asc { opacity: 1; transform: rotate(180deg); }
+.wbk-sort-caret.is-desc { opacity: 1; }
+.wbk-th-sort .wbk-sort-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* Identity cell (avatar + name) + row actions */
+.wbk-cell-id { display: inline-flex; align-items: center; gap: var(--sp-3); }
+.wbk-cell-id .avatar { inline-size: 28px; block-size: 28px; font-size: 11px; }
+.wbk-table tbody tr[role="button"] { cursor: pointer; }
+.wbk-table tbody tr[role="button"]:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.wbk-th-actions, .wbk-td-actions { text-align: end; white-space: nowrap; }
+.wbk-row-act { appearance: none; background: none; border: 0; cursor: pointer; color: var(--text-muted);
+  padding: var(--sp-1); border-radius: var(--radius-sm); display: inline-flex; }
+.wbk-row-act:hover { color: var(--brand); background: var(--surface-2); }
+.wbk-row-act:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.wbk-tbl-empty { text-align: center; color: var(--text-muted); padding: var(--sp-6) var(--sp-4) !important; }
+
+/* Pagination footer */
+.wbk-tbl-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+  flex-wrap: wrap; margin-top: var(--sp-3); font-size: var(--fs-body-s); color: var(--text-muted); }
+.wbk-tbl-size select { margin-inline-start: var(--sp-2); }
+.wbk-tbl-count { flex: 1 1 auto; text-align: center; }
+.wbk-tbl-pages { display: flex; align-items: center; gap: var(--sp-1); }
+.wbk-pg-n { appearance: none; cursor: pointer; min-inline-size: 30px; block-size: 30px; padding: 0 var(--sp-2);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: var(--radius-sm);
+  font: inherit; font-size: var(--fs-body-s); display: inline-flex; align-items: center; justify-content: center; }
+.wbk-pg-n:hover:not([disabled]) { border-color: var(--brand); color: var(--brand); }
+.wbk-pg-n.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.wbk-pg-n[disabled] { opacity: .4; cursor: default; }
+.wbk-pg-n:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+
+/* KPI info tooltip + prior-period delta */
+.kpi-info { display: inline-flex; vertical-align: middle; color: var(--text-muted); cursor: help; }
+.kpi-info:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 50%; }
+.kpi-delta { display: inline-flex; align-items: center; gap: 3px; margin-top: var(--sp-2);
+  font-size: var(--fs-body-s); font-weight: 600; }
+.kpi-delta span { color: var(--text-muted); font-weight: 400; }
+.kpi-delta--good { color: var(--state-available); }
+.kpi-delta--bad { color: var(--state-overloaded); }
+.kpi-delta.is-down svg { transform: rotate(180deg); }
+
 </style>
 </head>
 <body>
@@ -3173,6 +3268,53 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     accessDenied:   { en: 'Access denied', ar: 'الدخول مرفوض' },
     accessDeniedSub:{ en: "this account hasn't been granted access. Ask your admin.", ar: 'هذا الحساب لم يُمنح صلاحية الدخول. كلّم المدير.' },
     useAnother:     { en: 'Use another account', ar: 'استخدم حساباً آخر' },
+
+    /* ── WBK PRO design-parity: breadcrumb / header / table / sub-tabs / KPI delta ── */
+    breadcrumb:     { en: 'Breadcrumb', ar: 'مسار التنقل' },
+    bcTempo:        { en: 'Tempo', ar: 'تيمبو' },
+    // page-header subtitles
+    dashSubDirector:{ en: 'Org-wide capacity & team health · {n} people in scope', ar: 'السعة وصحة الفرق على مستوى المنظمة · {n} شخصاً ضمن النطاق' },
+    dashSubManager: { en: 'Your team’s capacity & growth · {n} reports', ar: 'سعة فريقك ونموّه · {n} من المرؤوسين' },
+    dashSubEmployee:{ en: 'Your workload and growth at a glance', ar: 'عبء عملك ونموّك في لمحة' },
+    mapTitle:       { en: 'People & workload', ar: 'الأشخاص والعبء' },
+    mapSub:         { en: 'Everyone in your scope, their capacity and team', ar: 'كل من في نطاقك، سعتهم وفريقهم' },
+    // KPI info tooltips + delta
+    teamHealthInfo: { en: 'Share of people in the healthy capacity band — this period vs the one before.', ar: 'نسبة الأشخاص ضمن نطاق السعة الصحي — هذه الفترة مقابل السابقة.' },
+    nearCapInfo:    { en: 'People at or over capacity. Lower is better.', ar: 'الأشخاص عند السعة أو فوقها. الأقل أفضل.' },
+    kpiPts:         { en: ' pts', ar: ' نقطة' },
+    kpiVsPrior:     { en: 'vs last {period}', ar: 'مقابل {period} السابقة' },
+    // table
+    tblSearch:      { en: 'Search', ar: 'بحث' },
+    tblSearchPeople:{ en: 'Search people…', ar: 'ابحث عن أشخاص…' },
+    tblSearchCycles:{ en: 'Search cycles…', ar: 'ابحث عن دورات…' },
+    tblFilters:     { en: 'Filters', ar: 'تصفية' },
+    tblAll:         { en: 'All', ar: 'الكل' },
+    tblActions:     { en: 'Actions', ar: 'إجراءات' },
+    tblEmpty:       { en: 'No matches', ar: 'لا نتائج مطابقة' },
+    tblNoPeople:    { en: 'No people to show', ar: 'لا أشخاص للعرض' },
+    tblNoCycles:    { en: 'No cycles yet', ar: 'لا دورات بعد' },
+    tblPerPage:     { en: 'Show', ar: 'عرض' },
+    tblShowing:     { en: '{from}–{to} of {total}', ar: '{from}–{to} من {total}' },
+    tblPrev:        { en: 'Previous page', ar: 'الصفحة السابقة' },
+    tblNext:        { en: 'Next page', ar: 'الصفحة التالية' },
+    tblOpenEval:    { en: 'Open evaluation', ar: 'فتح التقييم' },
+    // column headers
+    thName:         { en: 'Name', ar: 'الاسم' },
+    thRole:         { en: 'Role', ar: 'الدور' },
+    thTeam:         { en: 'Team', ar: 'الفريق' },
+    thLoad:         { en: 'Load', ar: 'العبء' },
+    thStatus:       { en: 'Status', ar: 'الحالة' },
+    thCycle:        { en: 'Cycle', ar: 'الدورة' },
+    thType:         { en: 'Type', ar: 'النوع' },
+    thPeriod:       { en: 'Period', ar: 'الفترة' },
+    // status badge labels (evaluations)
+    statusCompleted:{ en: 'Completed', ar: 'مكتمل' },
+    statusInProgress:{ en: 'In progress', ar: 'قيد التنفيذ' },
+    statusNotStarted:{ en: 'Not started', ar: 'لم يبدأ' },
+    // sub-tabs + row action
+    subActive:      { en: 'Active cycle', ar: 'الدورة الحالية' },
+    subHistory:     { en: 'History', ar: 'السجل' },
+    manageAccess:   { en: 'Manage access', ar: 'إدارة الصلاحيات' },
   };
 
   function t(key) {
@@ -3871,9 +4013,18 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     };
   }
 
+  /* Reference date for the window immediately BEFORE the one containing refDate —
+   * one day before the current window's start lands in the previous window. Lets
+   * a KPI show an HONEST prior-period delta (this week vs last) from the same
+   * engine, never a fabricated trend. Work-metric only by construction. */
+  function priorRefDate(windowKey, refDate) {
+    const b = windowBounds(windowKey, refDate);
+    return new Date(b.start - MS_DAY).toISOString().slice(0, 10);
+  }
+
   WP.capacity = {
     loadForPerson, loadBreakdown, stateForLoad, isHealthy, burnoutSignal,
-    snapshot, teamMetrics, simulateAssignment, windowBounds,
+    snapshot, teamMetrics, simulateAssignment, windowBounds, priorRefDate,
   };
 })(window.WP = window.WP || {});
 
@@ -6042,12 +6193,191 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>';
   }
 
+  /* ============================================================
+   * WBK PRO design-language parity — reusable shell pieces.
+   * ONE breadcrumb + ONE page header + ONE status badge + ONE
+   * sub-tab strip + ONE data table, reused across screens (not
+   * per-screen copies). All token-driven, RTL-safe (logical CSS),
+   * EN+AR via WP.i18n. ETHICS: these are presentation only — the
+   * table renders exactly what the caller passes; no per-person
+   * surveillance control lives here.
+   * ========================================================== */
+
+  // Breadcrumb above a page title (e.g. Home › Evaluations › List). Reuses the
+  // existing .wbk-bc DS styles (RTL chevron mirror handled in CSS). Links carry
+  // data-bc-go="<route>" and are wired once, centrally, in app.js.
+  function breadcrumb(parts) {
+    const sep = '<span class="wbk-bc-sep" aria-hidden="true">' + WP.ui.icon('chevR', 14) + '</span>';
+    return '<nav class="wbk-bc" aria-label="' + esc(WP.i18n.t('breadcrumb')) + '">' + parts.map(function (p, i) {
+      const last = i === parts.length - 1;
+      const node = (!last && p.route)
+        ? '<a href="#" data-bc-go="' + esc(p.route) + '">' + esc(p.label) + '</a>'
+        : '<span' + (last ? ' aria-current="page"' : '') + '>' + esc(p.label) + '</span>';
+      return node + (last ? '' : sep);
+    }).join('') + '</nav>';
+  }
+
+  // Standard page header: breadcrumb + big title + one-line subtitle + a
+  // right-aligned controls slot (primary action / scope / date). o.right is raw
+  // HTML (caller-built controls); title/subtitle are escaped.
+  function pageHeader(o) {
+    return (o.crumbs ? breadcrumb(o.crumbs) : '') +
+      '<div class="wbk-phead">' +
+        '<div class="wbk-phead-t"><h1 class="wbk-phead-title">' + esc(o.title) + '</h1>' +
+          (o.subtitle ? '<p class="wbk-phead-sub">' + esc(o.subtitle) + '</p>' : '') + '</div>' +
+        (o.right ? '<div class="wbk-phead-r">' + o.right + '</div>' : '') +
+      '</div>';
+  }
+
+  // Status badge — green Active / grey Inactive style (tones: ok | muted | warn | info).
+  function statusBadge(tone, label) {
+    return '<span class="wbk-status wbk-status--' + esc(tone) + '"><span class="wbk-status-dot"></span>' + esc(label) + '</span>';
+  }
+
+  // Sub-tab strip under a header (only where a page has genuine sub-views).
+  // Buttons carry data-subtab="<val>"; the caller owns the active-state + wiring.
+  function subTabs(items, active) {
+    return '<div class="wbk-subtabs" role="tablist">' + items.map(function (it) {
+      const on = it.val === active;
+      return '<button type="button" class="wbk-subtab' + (on ? ' is-on' : '') + '" role="tab"' +
+        ' aria-selected="' + (on ? 'true' : 'false') + '" data-subtab="' + esc(it.val) + '">' + esc(it.label) + '</button>';
+    }).join('') + '</div>';
+  }
+
+  /* ---- Data table: search + Filters + sortable headers + status-badge cells +
+   * per-row action icons + pagination. Self-contained — owns its UI state and
+   * re-renders ONLY its own subtree (so typing in search never re-renders the
+   * whole app or drops focus). Mount with WP.ui.table.mount(host, opts).
+   * opts: { id, columns:[{key,label,num,sortable,get(row)}], rows, cell(row,key),
+   *   rowId(row), searchText(row)->str, searchPlaceholder, filter:{label,get,values:[{val,label}]},
+   *   actions(row)->[{act,icon,label}], onAction(act,id), onOpen(id), defaultSort:{key,dir},
+   *   pageSizes:[..], emptyText } */
+  const TBL = {}; // module-level per-id UI state (not persisted; survives re-renders)
+  function tblState(o) {
+    if (!TBL[o.id]) TBL[o.id] = { q: '', sort: o.defaultSort || null, filter: '__all', page: 1, size: (o.pageSizes && o.pageSizes[0]) || 10, fopen: false };
+    return TBL[o.id];
+  }
+  function tblCmp(a, b) {
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    return String(a == null ? '' : a).localeCompare(String(b == null ? '' : b));
+  }
+  function tblGet(col, row) { return col.get ? col.get(row) : row[col.key]; }
+  function tblCompute(o) {
+    const st = tblState(o);
+    let rows = o.rows.slice();
+    if (st.q && o.searchText) {
+      const q = st.q.toLowerCase();
+      rows = rows.filter(function (r) { return String(o.searchText(r)).toLowerCase().indexOf(q) >= 0; });
+    }
+    if (o.filter && st.filter !== '__all') rows = rows.filter(function (r) { return String(o.filter.get(r)) === String(st.filter); });
+    if (st.sort) {
+      const col = o.columns.filter(function (c) { return c.key === st.sort.key; })[0];
+      if (col) rows.sort(function (a, b) { return tblCmp(tblGet(col, a), tblGet(col, b)) * (st.sort.dir === 'desc' ? -1 : 1); });
+    }
+    const total = rows.length;
+    const pages = Math.max(1, Math.ceil(total / st.size));
+    if (st.page > pages) st.page = pages;
+    if (st.page < 1) st.page = 1;
+    const start = (st.page - 1) * st.size;
+    return { st: st, total: total, pages: pages, start: start, pageRows: rows.slice(start, start + st.size) };
+  }
+  function tableHTML(o) {
+    const t = WP.i18n.t, c = tblCompute(o), st = c.st, ncol = o.columns.length + (o.actions ? 1 : 0);
+    const search = o.searchText
+      ? '<div class="search wbk-tbl-search">' + WP.ui.icon('search', 15) +
+          '<input type="text" data-tbl-q value="' + esc(st.q) + '" placeholder="' + esc(o.searchPlaceholder || t('tblSearch')) +
+          '" aria-label="' + esc(o.searchPlaceholder || t('tblSearch')) + '" /></div>'
+      : '<span></span>';
+    let filterBtn = '', chips = '';
+    if (o.filter) {
+      filterBtn = '<button type="button" class="btn wbk-tbl-filter" data-tbl-fopen aria-expanded="' + (st.fopen ? 'true' : 'false') + '">' +
+        WP.ui.icon('filter', 15) + ' ' + t('tblFilters') + (st.filter !== '__all' ? ' <span class="wbk-tbl-fcount">1</span>' : '') + '</button>';
+      if (st.fopen) {
+        const vals = [{ val: '__all', label: t('tblAll') }].concat(o.filter.values);
+        chips = '<div class="wbk-tbl-chips" role="group" aria-label="' + esc(o.filter.label) + '">' + vals.map(function (v) {
+          const on = String(st.filter) === String(v.val);
+          return '<button type="button" class="wbk-fchip' + (on ? ' is-on' : '') + '" data-tbl-filter="' + esc(v.val) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(v.label) + '</button>';
+        }).join('') + '</div>';
+      }
+    }
+    const thead = '<thead><tr>' + o.columns.map(function (col) {
+      const numCls = col.num ? ' wbk-th-num' : '';
+      if (!col.sortable) return '<th class="' + numCls.trim() + '">' + esc(col.label) + '</th>';
+      const active = st.sort && st.sort.key === col.key, dir = active ? st.sort.dir : '';
+      return '<th class="wbk-th-sort' + numCls + '" aria-sort="' + (active ? (dir === 'desc' ? 'descending' : 'ascending') : 'none') + '">' +
+        '<button type="button" class="wbk-sort-btn" data-tbl-sort="' + esc(col.key) + '">' + esc(col.label) +
+          '<span class="wbk-sort-caret' + (active ? ' is-' + dir : '') + '">' + WP.ui.icon('caret', 14) + '</span></button></th>';
+    }).join('') + (o.actions ? '<th class="wbk-th-actions"><span class="sr-only">' + t('tblActions') + '</span></th>' : '') + '</tr></thead>';
+    let body;
+    if (!c.pageRows.length) {
+      body = '<tbody><tr><td class="wbk-tbl-empty" colspan="' + ncol + '">' + esc(o.emptyText || t('tblEmpty')) + '</td></tr></tbody>';
+    } else {
+      body = '<tbody>' + c.pageRows.map(function (row) {
+        const id = o.rowId ? o.rowId(row) : row.id;
+        const cells = o.columns.map(function (col) { return '<td class="' + (col.num ? 'wbk-td-num' : '') + '">' + o.cell(row, col.key) + '</td>'; }).join('');
+        const acts = o.actions ? '<td class="wbk-td-actions">' + (o.actions(row) || []).map(function (a) {
+          return '<button type="button" class="wbk-row-act" data-tbl-act="' + esc(a.act) + '" data-tbl-row="' + esc(id) + '" title="' + esc(a.label) + '" aria-label="' + esc(a.label) + '">' + WP.ui.icon(a.icon, 16) + '</button>';
+        }).join('') + '</td>' : '';
+        const openable = o.onOpen ? esc(id) : '';
+        return '<tr data-tbl-open="' + openable + '"' + (openable ? ' tabindex="0" role="button"' : '') + '>' + cells + acts + '</tr>';
+      }).join('') + '</tbody>';
+    }
+    const sizes = o.pageSizes || [10, 25, 50];
+    const sizeSel = '<label class="wbk-tbl-size">' + t('tblPerPage') + ' <select data-tbl-size>' +
+      sizes.map(function (n) { return '<option value="' + n + '"' + (n === st.size ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>';
+    const from = c.total ? c.start + 1 : 0, to = Math.min(c.start + st.size, c.total);
+    const count = '<span class="wbk-tbl-count">' + esc(t('tblShowing').replace('{from}', from).replace('{to}', to).replace('{total}', c.total)) + '</span>';
+    let nums = '';
+    for (let p = 1; p <= c.pages; p++) nums += '<button type="button" class="wbk-pg-n' + (p === st.page ? ' is-on' : '') + '" data-tbl-page="' + p + '"' + (p === st.page ? ' aria-current="page"' : '') + '>' + p + '</button>';
+    const prev = '<button type="button" class="wbk-pg-n" data-tbl-page="' + (st.page - 1) + '"' + (st.page <= 1 ? ' disabled' : '') + ' aria-label="' + t('tblPrev') + '">' + WP.ui.icon('chevL', 16) + '</button>';
+    const next = '<button type="button" class="wbk-pg-n" data-tbl-page="' + (st.page + 1) + '"' + (st.page >= c.pages ? ' disabled' : '') + ' aria-label="' + t('tblNext') + '">' + WP.ui.icon('chevR', 16) + '</button>';
+    const footer = '<div class="wbk-tbl-foot">' + sizeSel + count + '<div class="wbk-tbl-pages">' + prev + nums + next + '</div></div>';
+    return '<div class="wbk-tbl-bar">' + search + '<div class="wbk-tbl-bar-r">' + filterBtn + '</div></div>' + chips +
+      '<div class="wbk-table-wrap"><table class="wbk-table wbk-table--zebra">' + thead + body + '</table></div>' + footer;
+  }
+  function tableWire(host, o) {
+    const st = tblState(o);
+    const rerender = function (refocus) {
+      host.innerHTML = tableHTML(o);
+      tableWire(host, o);
+      if (refocus) { const i = host.querySelector('[data-tbl-q]'); if (i) { i.focus(); const v = i.value; i.value = ''; i.value = v; } }
+    };
+    const q = host.querySelector('[data-tbl-q]');
+    if (q) q.oninput = function () { st.q = q.value; st.page = 1; rerender(true); };
+    host.querySelectorAll('[data-tbl-sort]').forEach(function (b) {
+      b.onclick = function () {
+        const key = b.dataset.tblSort;
+        if (st.sort && st.sort.key === key) st.sort.dir = st.sort.dir === 'asc' ? 'desc' : 'asc';
+        else st.sort = { key: key, dir: 'asc' };
+        rerender();
+      };
+    });
+    const fo = host.querySelector('[data-tbl-fopen]');
+    if (fo) fo.onclick = function () { st.fopen = !st.fopen; rerender(); };
+    host.querySelectorAll('[data-tbl-filter]').forEach(function (b) { b.onclick = function () { st.filter = b.dataset.tblFilter; st.page = 1; rerender(); }; });
+    host.querySelectorAll('[data-tbl-page]').forEach(function (b) { if (b.disabled) return; b.onclick = function () { st.page = parseInt(b.dataset.tblPage, 10); rerender(); }; });
+    const sz = host.querySelector('[data-tbl-size]');
+    if (sz) sz.onchange = function () { st.size = parseInt(sz.value, 10); st.page = 1; rerender(); };
+    host.querySelectorAll('[data-tbl-act]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); if (o.onAction) o.onAction(b.dataset.tblAct, b.dataset.tblRow); }; });
+    if (o.onOpen) host.querySelectorAll('[data-tbl-open]').forEach(function (r) {
+      if (!r.getAttribute('data-tbl-open')) return;
+      r.onclick = function (e) { if (e.target.closest('[data-tbl-act]')) return; o.onOpen(r.getAttribute('data-tbl-open')); };
+      r.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); o.onOpen(r.getAttribute('data-tbl-open')); } };
+    });
+  }
+  function tableMount(host, o) { if (!host) return; host.innerHTML = tableHTML(o); tableWire(host, o); }
+
   WP.ui = WP.ui || {};
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;
   WP.ui.avatar = avatar;
   WP.ui.provenanceNote = provenanceNote;
+  WP.ui.breadcrumb = breadcrumb;
+  WP.ui.pageHeader = pageHeader;
+  WP.ui.statusBadge = statusBadge;
+  WP.ui.subTabs = subTabs;
+  WP.ui.table = { html: tableHTML, wire: tableWire, mount: tableMount, _state: TBL };
 })(window.WP = window.WP || {});
 
 </script>
@@ -6101,6 +6431,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     x:        '<path d="M18 6 6 18M6 6l12 12"/>',
     search:   '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
     caret:    '<path d="M6 9l6 6 6-6"/>',
+    info:     '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+    filter:   '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
   };
   WP.ui = WP.ui || {};
   WP.ui.icon = function (name, size) {
@@ -6367,22 +6699,41 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   'use strict';
   const ui = WP.ui;
 
-  function kpi(label, value, sub, color) {
-    return '<div class="card"><div class="label">' + label + '</div>' +
+  // KPI delta row — WBK PRO parity. Shows an HONEST prior-period change (computed
+  // by the engine, this window vs last) with a directional arrow and good/bad
+  // colour. ETHICS: only ever passed for WORK metrics (team-health, capacity) —
+  // never a per-person/presence delta. Flat or no-prior → renders nothing.
+  function deltaRow(d) {
+    if (!d || d.points == null || d.points === 0) return '';
+    const up = d.points > 0;
+    const good = (up && d.goodDir === 'up') || (!up && d.goodDir === 'down');
+    return '<div class="kpi-delta kpi-delta--' + (good ? 'good' : 'bad') + (up ? '' : ' is-down') + '">' +
+      WP.ui.icon('arrowUp', 13) + ' ' + Math.abs(d.points) + WP.i18n.t('kpiPts') +
+      ' <span>' + WP.i18n.t('kpiVsPrior').replace('{period}', d.period) + '</span></div>';
+  }
+  // extra: { info: tooltip string, delta: {points, period, goodDir} }
+  function kpi(label, value, sub, color, extra) {
+    extra = extra || {};
+    const info = extra.info
+      ? ' <span class="kpi-info" tabindex="0" role="img" aria-label="' + ui.esc(extra.info) + '" title="' + ui.esc(extra.info) + '">' + WP.ui.icon('info', 13) + '</span>'
+      : '';
+    return '<div class="card"><div class="label">' + label + info + '</div>' +
       '<div class="value"' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</div>' +
-      '<div class="sub">' + (sub || '') + '</div></div>';
+      '<div class="sub">' + (sub || '') + '</div>' + deltaRow(extra.delta) + '</div>';
   }
   /* Team Health on sample/empty data: a bare "0%" reads as broken/alarming, not
    * calm. When no real load signal exists yet, show a neutral "no data" state
    * instead of a misleading 0% (S1 — Calm UI). A real 0% with load is still shown. */
-  function teamHealthKpi(m) {
+  function teamHealthKpi(m, mPrev, period) {
     const t = WP.i18n.t;
     const hasData = m.snaps.some(function (s) { return s.load > 0; });
     if (!hasData) return kpi(t('teamHealth'), '—', t('noDataYet'), 'var(--text-muted)');
     // S3-3 — frame the headline as "{h} of {n} in healthy band" so a low/zero
     // percentage reads as informative (band split) rather than an alarm.
     const split = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
-    return kpi(t('teamHealth'), m.teamHealth + '%', split, 'var(--state-balanced)');
+    const delta = mPrev ? { points: m.teamHealth - mPrev.teamHealth, period: period, goodDir: 'up' } : null;
+    return kpi(t('teamHealth'), m.teamHealth + '%', split, 'var(--state-balanced)',
+      { info: t('teamHealthInfo'), delta: delta });
   }
   function ofPeople(n) { return WP.i18n.t('ofPeople').replace('{n}', n); }
   function loadBar(pct) {
@@ -6406,6 +6757,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const t = WP.i18n.t, win = WP.state.window, ref = WP.state.refDate;
     const people = WP.access.visiblePeople(viewer);
     const m = WP.capacity.teamMetrics(people, win, ref);
+    const mPrev = WP.capacity.teamMetrics(people, win, WP.capacity.priorRefDate(win, ref));
+    const period = t(win);
     const attn = m.snaps.filter(function (s) {
       return s.state.key === 'overloaded' || s.state.key === 'near' || s.burnout;
     }).sort(function (a, b) { return b.load - a.load; }).slice(0, 6);
@@ -6438,12 +6791,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     }).join('') : '<div class="sub">' + t('allClear') + '</div>';
 
     root.innerHTML =
-      '<div class="ttl">' + t('navDashboard') + ' · ' + t('director') + '</div>' +
-      '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
+      WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('navDashboard') }],
+        title: t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + WP.i18n.name(viewer).split(' ')[0],
+        subtitle: t('dashSubDirector').replace('{n}', people.length),
+      }) +
       '<div class="metrics">' +
-        teamHealthKpi(m) +
+        teamHealthKpi(m, mPrev, period) +
         kpi(t('available'), m.counts.available, ofPeople(people.length)) +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub')) +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), null,
+          { info: t('nearCapInfo'), delta: { points: m.nearOrOver - mPrev.nearOrOver, period: period, goodDir: 'down' } }) +
         kpi(t('earlyWarnings'), m.earlyWarnings, t('burnoutShort')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -6463,6 +6820,8 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const team = WP.access.teamOf(viewer.id);
     const reports = team.filter(function (p) { return p.id !== viewer.id; });
     const m = WP.capacity.teamMetrics(team, win, ref);
+    const mPrev = WP.capacity.teamMetrics(team, win, WP.capacity.priorRefDate(win, ref));
+    const period = t(win);
     const snaps = {}; m.snaps.forEach(function (s) { snaps[s.id] = s; });
 
     const free = reports.slice().sort(function (a, b) { return snaps[a.id].load - snaps[b.id].load; }).slice(0, 5);
@@ -6487,12 +6846,16 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     }).join('') : '<div class="sub">—</div>';
 
     root.innerHTML =
-      '<div class="ttl">' + t('navDashboard') + ' · ' + (viewer.level === 'sr_manager' ? t('director') : t('manager')) + '</div>' +
-      '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
+      WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('navDashboard') }],
+        title: t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + WP.i18n.name(viewer).split(' ')[0],
+        subtitle: t('dashSubManager').replace('{n}', reports.length),
+      }) +
       '<div class="metrics">' +
-        teamHealthKpi(m) +
+        teamHealthKpi(m, mPrev, period) +
         kpi(t('freeForWork'), m.counts.available, ofPeople(reports.length), 'var(--state-available)') +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), 'var(--state-overloaded)') +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), 'var(--state-overloaded)',
+          { info: t('nearCapInfo'), delta: { points: m.nearOrOver - mPrev.nearOrOver, period: period, goodDir: 'down' } }) +
         kpi(t('toDevelop'), develop.length, t('talent')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -6509,8 +6872,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const c = ui.stateColor(snap.state);
 
     root.innerHTML =
-      '<div class="ttl">' + t('navDashboard') + ' · ' + t('employee') + '</div>' +
-      '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + ' 👋</h2>' +
+      WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('navDashboard') }],
+        title: t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + WP.i18n.name(viewer).split(' ')[0],
+        subtitle: t('dashSubEmployee'),
+      }) +
       '<div class="metrics">' +
         kpi(t('myLoad'), snap.load + '%', WP.i18n.stateLabel(snap.state), c) +
         kpi(t('currentProjects'), snap.eventCount, '') +
@@ -6744,25 +7110,6 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
       roots.map(li).join('') + '</ul></div></div>';
   }
 
-  function listView(people, snapById) {
-    return '<div class="list">' + people
-      .slice()
-      .sort(function (a, b) { return snapById[b.id].load - snapById[a.id].load; })
-      .map(function (p) {
-        const s = snapById[p.id];
-        const c = ui.stateColor(s.state);
-        return '<div class="row" data-id="' + p.id + '" style="--node-accent:' + c + '">' +
-          ui.avatar(p, c) +
-          '<div style="min-width:150px"><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
-          '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + ' ' + empBadge(p) + '</div></div>' +
-          '<div class="lr-acctline">' + acctLine(p) + '</div>' +
-          '<div class="bar"><i style="width:' + Math.min(100, s.load) + '%"></i></div>' +
-          '<div class="pct">' + s.load + '%</div>' +
-          (s.burnout ? '<span title="' + WP.i18n.t('burnoutFlag') + '" style="color:var(--state-overloaded);line-height:0">' + WP.ui.icon('flame', 15) + '</span>' : '') +
-        '</div>';
-      }).join('') + '</div>';
-  }
-
   // Localized team label (team leads carry a team name; everyone else falls back to their name).
   function teamLabel(p) {
     if (p.team) return WP.state.lang === 'ar' ? (p.teamAr || p.team) : p.team;
@@ -6961,9 +7308,15 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     const body = people.length === 0
       ? '<div class="map-empty">' + WP.ui.icon('users', 18) + ' <span>' + t('emptyTeam') + '</span>' +
           (focusPerson ? ' <button class="btn" id="empty-showall">' + t('showAll') + '</button>' : '') + '</div>'
-      : (listMode ? listView(people, snapById) : treeChart(people, snapById, colMap));
-    root.innerHTML = metricsBar(m) +
-      '<div class="controlbar">' + toggle + mapFilters(base) + '</div>' +
+      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap));
+    root.innerHTML = WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('mapTitle') }],
+        title: t('mapTitle'),
+        subtitle: t('mapSub'),
+      }) + metricsBar(m) +
+      // The predictive finder is the tree's quick-jump; in list mode the table's own
+      // search/filter does that job, so we don't show two search boxes (minimalism).
+      '<div class="controlbar">' + toggle + (listMode ? '' : mapFilters(base)) + '</div>' +
       legend + body;
 
     // Apple-style date navigator — prev / next / today (keeps the granularity)
@@ -6997,10 +7350,53 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         else WP.ui.peek(id);
       };
     });
-    // LIST rows always open the profile
-    root.querySelectorAll('.list .row[data-id]').forEach(function (el) {
-      el.onclick = function () { WP.ui.peek(el.dataset.id); };
-    });
+    // Directory table (list mode) — WBK PRO parity: search + filter-by-state +
+    // sortable headers + status badges + pagination. Row actions are operational
+    // only (open profile; manage access ONLY for managers) — never a surveillance
+    // toggle (Intelligence-Ethics). ponytail: the predictive finder above still
+    // does tree-jump; the table search filters the directory list itself.
+    if (listMode && people.length) {
+      const canManage = WP.access.canManage(viewer);
+      const stTone = function (key) { return key === 'available' || key === 'balanced' ? 'ok' : key === 'near' ? 'warn' : 'bad'; };
+      // The team a person belongs to = nearest ancestor carrying a team label.
+      const teamName = function (p) { const l = teamLeadOf(p.id); return l ? teamLabel(l) : '—'; };
+      WP.ui.table.mount(root.querySelector('#map-table'), {
+        id: 'directory',
+        rows: people.slice(),
+        searchText: function (p) { return WP.i18n.name(p) + ' ' + WP.i18n.title(p) + ' ' + teamName(p); },
+        searchPlaceholder: t('tblSearchPeople'),
+        defaultSort: { key: 'load', dir: 'desc' },
+        filter: { label: t('thStatus'), get: function (p) { return snapById[p.id].state.key; },
+          values: WP.data.STATES.map(function (s) { return { val: s.key, label: WP.i18n.stateLabel(s) }; }) },
+        columns: [
+          { key: 'name', label: t('thName'), sortable: true, get: function (p) { return WP.i18n.name(p); } },
+          { key: 'role', label: t('thRole'), sortable: true, get: function (p) { return WP.i18n.title(p); } },
+          { key: 'team', label: t('thTeam'), sortable: true, get: function (p) { return teamName(p); } },
+          { key: 'load', label: t('thLoad'), num: true, sortable: true, get: function (p) { return snapById[p.id].load; } },
+          { key: 'status', label: t('thStatus'), sortable: true, get: function (p) { return snapById[p.id].load; } },
+        ],
+        cell: function (p, key) {
+          const s = snapById[p.id];
+          if (key === 'name') return '<span class="wbk-cell-id">' + ui.avatar(p, ui.stateColor(s.state)) + '<span>' + ui.esc(WP.i18n.name(p)) + '</span></span>';
+          if (key === 'role') return ui.esc(WP.i18n.title(p)) + ' ' + empBadge(p);
+          if (key === 'team') return ui.esc(teamName(p));
+          if (key === 'load') return s.load + '%';
+          return WP.ui.statusBadge(stTone(s.state.key), WP.i18n.stateLabel(s.state)) +
+            (s.burnout ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
+        },
+        actions: function () {
+          const a = [{ act: 'open', icon: 'eye', label: t('openProfile') }];
+          if (canManage) a.push({ act: 'manage', icon: 'key', label: t('manageAccess') });
+          return a;
+        },
+        onAction: function (act, id) {
+          if (act === 'open') WP.ui.peek(id);
+          else if (act === 'manage' && canManage) WP.setState({ route: 'permissions', selectedId: id });
+        },
+        onOpen: function (id) { WP.ui.peek(id); },
+        emptyText: t('tblNoPeople'),
+      });
+    }
 
     // compact toolbar dropdowns (View · Period)
     setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });
@@ -8545,48 +8941,107 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         }).join('');
     }
 
-    // ---- employee status list (scope) ----
-    const rows = scope.map(function (p) {
-      return '<div class="ev-row" data-open="' + p.id + '">' + ui.avatar(p, 'var(--brand)') +
-        '<div class="ev-meta"><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
-          '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></div>' +
-        '<div class="ev-status">' + statusChip(dStatus(p.id)) + '</div></div>';
-    }).join('');
+    // Sub-tab: Active cycle (status per person) vs History (past/all cycles). A
+    // genuine sub-view split — not an invented tab.
+    const tab = WP.state.evalTab || 'active';
+    const statusTone = function (s) { return s === 'Completed' ? 'ok' : s === 'In progress' ? 'info' : 'muted'; };
+    const statusOrder = { 'Completed': 0, 'In progress': 1, 'Not started': 2 };
 
     const cycleOptions = WP.evaluation.cycles().map(function (c) {
       return '<option value="' + c.id + '"' + (c.id === cycle.id ? ' selected' : '') + '>' + c.name + ' · ' + c.status + '</option>';
     }).join('');
 
-    root.innerHTML =
-      '<div class="ttl">' + t('performance') + ' › ' + t('evaluationsHub') + '</div>' +
-      '<div class="eval-head" style="margin-top:4px">' +
-        '<div><h2 style="margin:0 0 2px">' + ui.esc(cycle.name) + ' ' + t('evaluation') +
-          ' <span class="rating ' + (cycle.status === 'Active' ? 'Exceeds' : 'Meets') + '">' + cycle.status + '</span></h2>' +
-          '<div class="ttl">' + cycle.type + ' · ' + cycle.start + ' → ' + cycle.end + '</div></div>' +
-        '<div style="display:flex;gap:8px;align-items:center">' +
-          '<select id="cycle" class="btn">' + cycleOptions + '</select>' +
-          (WP.access.canManage(viewer) ? '<button class="btn primary" id="new-cycle">' + WP.ui.icon('plus', 15) + ' ' + t('newCycle') + '</button>' : '') +
+    const header = WP.ui.pageHeader({
+      crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('performance') }, { label: t('evaluationsHub') }],
+      title: cycle.name + ' ' + t('evaluation'),
+      subtitle: cycle.type + ' · ' + cycle.start + ' → ' + cycle.end,
+      right: WP.ui.statusBadge(cycle.status === 'Active' ? 'ok' : 'muted', cycle.status) +
+        '<select id="cycle" class="btn">' + cycleOptions + '</select>' +
+        (WP.access.canManage(viewer) ? '<button class="btn primary" id="new-cycle">' + WP.ui.icon('plus', 15) + ' ' + t('newCycle') + '</button>' : ''),
+    });
+    const tabsBar = WP.ui.subTabs([
+      { val: 'active', label: t('subActive') },
+      { val: 'history', label: t('subHistory') },
+    ], tab);
+
+    let main;
+    if (tab === 'history') {
+      main = '<div class="section"><h3>' + t('subHistory') + '</h3><div id="eval-cycle-table"></div></div>';
+    } else {
+      main = syncBanner() +
+        '<div class="grid-2" style="align-items:start">' +
+          '<div class="section"><h3>' + t('myTasks') + '</h3>' + tasks + '</div>' +
+          '<div class="section"><h3>' + t('teamProgress') + '</h3>' +
+            '<div class="prog"><i class="pg-done" style="width:' + pct(counts.Completed) + '%"></i>' +
+              '<i class="pg-prog" style="width:' + pct(counts['In progress']) + '%"></i></div>' +
+            '<div class="prog-legend">' +
+              '<span><span class="dot" style="background:var(--state-available)"></span> ' + pct(counts.Completed) + '% ' + t('done') + '</span>' +
+              '<span><span class="dot" style="background:var(--brand)"></span> ' + pct(counts['In progress']) + '% ' + t('inProgressL') + '</span>' +
+              '<span><span class="dot" style="background:var(--text-muted)"></span> ' + pct(counts['Not started']) + '% ' + t('notStartedL') + '</span></div></div>' +
         '</div>' +
-      '</div>' +
+        // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
+        // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
+        ((isReal && reports.length && !WP.deferred('evalConsistency')) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
+        '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3><div id="eval-emp-table"></div></div>';
+    }
+    root.innerHTML = header + tabsBar + main;
 
-      syncBanner() +
+    // sub-tab wiring (Active / History)
+    root.querySelectorAll('[data-subtab]').forEach(function (b) {
+      b.onclick = function () { WP.setState({ evalTab: b.dataset.subtab }); };
+    });
 
-      '<div class="grid-2" style="align-items:start">' +
-        '<div class="section"><h3>' + t('myTasks') + '</h3>' + tasks + '</div>' +
-        '<div class="section"><h3>' + t('teamProgress') + '</h3>' +
-          '<div class="prog"><i class="pg-done" style="width:' + pct(counts.Completed) + '%"></i>' +
-            '<i class="pg-prog" style="width:' + pct(counts['In progress']) + '%"></i></div>' +
-          '<div class="prog-legend">' +
-            '<span><span class="dot" style="background:var(--state-available)"></span> ' + pct(counts.Completed) + '% ' + t('done') + '</span>' +
-            '<span><span class="dot" style="background:var(--brand)"></span> ' + pct(counts['In progress']) + '% ' + t('inProgressL') + '</span>' +
-            '<span><span class="dot" style="background:var(--text-muted)"></span> ' + pct(counts['Not started']) + '% ' + t('notStartedL') + '</span></div></div>' +
-      '</div>' +
-
-      // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
-      // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
-      ((isReal && reports.length && !WP.deferred('evalConsistency')) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
-
-      '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
+    // Employees table (Active tab) — search + filter-by-status + sortable + paginated.
+    // Row action = open this person's evaluation (operational only; no surveillance control).
+    if (tab !== 'history') {
+      WP.ui.table.mount(root.querySelector('#eval-emp-table'), {
+        id: 'evals-emp',
+        rows: scope,
+        searchText: function (p) { return WP.i18n.name(p) + ' ' + WP.i18n.title(p); },
+        searchPlaceholder: t('tblSearchPeople'),
+        defaultSort: { key: 'name', dir: 'asc' },
+        filter: { label: t('thStatus'), get: function (p) { return dStatus(p.id); },
+          values: [{ val: 'Completed', label: t('statusCompleted') }, { val: 'In progress', label: t('statusInProgress') }, { val: 'Not started', label: t('statusNotStarted') }] },
+        columns: [
+          { key: 'name', label: t('thName'), sortable: true, get: function (p) { return WP.i18n.name(p); } },
+          { key: 'role', label: t('thRole'), sortable: true, get: function (p) { return WP.i18n.title(p); } },
+          { key: 'status', label: t('thStatus'), sortable: true, get: function (p) { return statusOrder[dStatus(p.id)]; } },
+        ],
+        cell: function (p, key) {
+          if (key === 'name') return '<span class="wbk-cell-id">' + ui.avatar(p, 'var(--brand)') + '<span>' + ui.esc(WP.i18n.name(p)) + '</span></span>';
+          if (key === 'role') return ui.esc(WP.i18n.title(p));
+          return WP.ui.statusBadge(statusTone(dStatus(p.id)), dStatus(p.id));
+        },
+        actions: function () { return [{ act: 'open', icon: 'clipboard', label: t('tblOpenEval') }]; },
+        onAction: function (act, id) { if (act === 'open') openEval(id); },
+        onOpen: function (id) { openEval(id); },
+        emptyText: t('tblNoPeople'),
+      });
+    } else {
+      // History tab — all cycles as a sortable table; opening one makes it active.
+      WP.ui.table.mount(root.querySelector('#eval-cycle-table'), {
+        id: 'evals-cycles',
+        rows: WP.evaluation.cycles(),
+        searchText: function (c) { return c.name + ' ' + c.type; },
+        searchPlaceholder: t('tblSearchCycles'),
+        defaultSort: { key: 'name', dir: 'asc' },
+        columns: [
+          { key: 'name', label: t('thCycle'), sortable: true, get: function (c) { return c.name; } },
+          { key: 'type', label: t('thType'), sortable: true, get: function (c) { return c.type; } },
+          { key: 'period', label: t('thPeriod'), get: function (c) { return c.start; } },
+          { key: 'status', label: t('thStatus'), sortable: true, get: function (c) { return c.status; } },
+        ],
+        cell: function (c, key) {
+          if (key === 'name') return ui.esc(c.name);
+          if (key === 'type') return ui.esc(c.type);
+          if (key === 'period') return ui.esc(c.start + ' → ' + c.end);
+          return WP.ui.statusBadge(c.status === 'Active' ? 'ok' : 'muted', c.status);
+        },
+        onOpen: function (id) { WP.evaluation.setActiveCycle(id); WP.setState({ evalTab: 'active' }); },
+        rowId: function (c) { return c.id; },
+        emptyText: t('tblNoCycles'),
+      });
+    }
 
     // S3-1 + S4-1 — open THIS cycle's evaluation, and remember we came from the hub
     // so the evaluation's back button returns here ("Back to evaluations").
@@ -8624,9 +9079,9 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
         .catch(function () { consistHost.hidden = true; });
     }
 
-    const openEval = function (id) {
+    function openEval(id) {
       WP.setState({ route: 'evaluation', selectedId: id, selectedCycle: cycle.id, evalOrigin: 'evaluations' });
-    };
+    }
     root.querySelectorAll('[data-eval]').forEach(function (el) {
       el.onclick = function () { openEval(el.dataset.eval); };
     });
@@ -10120,6 +10575,11 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     else if (WP.state.route === 'org') WP.ui.readiness.orgRender(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
+
+    // Breadcrumb links (WP.ui.breadcrumb) — wired once, centrally, for every screen.
+    root.querySelectorAll('[data-bc-go]').forEach(function (a) {
+      a.onclick = function (e) { e.preventDefault(); WP.setState({ route: a.dataset.bcGo, selectedId: null }); };
+    });
 
     // mandatory evaluation banner — follows a manager across every page until done
     renderEvalBanner();

@@ -47,6 +47,8 @@
     x:        '<path d="M18 6 6 18M6 6l12 12"/>',
     search:   '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
     caret:    '<path d="M6 9l6 6 6-6"/>',
+    info:     '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+    filter:   '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
   };
   WP.ui = WP.ui || {};
   WP.ui.icon = function (name, size) {

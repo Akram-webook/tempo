@@ -573,6 +573,53 @@
     accessDenied:   { en: 'Access denied', ar: 'الدخول مرفوض' },
     accessDeniedSub:{ en: "this account hasn't been granted access. Ask your admin.", ar: 'هذا الحساب لم يُمنح صلاحية الدخول. كلّم المدير.' },
     useAnother:     { en: 'Use another account', ar: 'استخدم حساباً آخر' },
+
+    /* ── WBK PRO design-parity: breadcrumb / header / table / sub-tabs / KPI delta ── */
+    breadcrumb:     { en: 'Breadcrumb', ar: 'مسار التنقل' },
+    bcTempo:        { en: 'Tempo', ar: 'تيمبو' },
+    // page-header subtitles
+    dashSubDirector:{ en: 'Org-wide capacity & team health · {n} people in scope', ar: 'السعة وصحة الفرق على مستوى المنظمة · {n} شخصاً ضمن النطاق' },
+    dashSubManager: { en: 'Your team’s capacity & growth · {n} reports', ar: 'سعة فريقك ونموّه · {n} من المرؤوسين' },
+    dashSubEmployee:{ en: 'Your workload and growth at a glance', ar: 'عبء عملك ونموّك في لمحة' },
+    mapTitle:       { en: 'People & workload', ar: 'الأشخاص والعبء' },
+    mapSub:         { en: 'Everyone in your scope, their capacity and team', ar: 'كل من في نطاقك، سعتهم وفريقهم' },
+    // KPI info tooltips + delta
+    teamHealthInfo: { en: 'Share of people in the healthy capacity band — this period vs the one before.', ar: 'نسبة الأشخاص ضمن نطاق السعة الصحي — هذه الفترة مقابل السابقة.' },
+    nearCapInfo:    { en: 'People at or over capacity. Lower is better.', ar: 'الأشخاص عند السعة أو فوقها. الأقل أفضل.' },
+    kpiPts:         { en: ' pts', ar: ' نقطة' },
+    kpiVsPrior:     { en: 'vs last {period}', ar: 'مقابل {period} السابقة' },
+    // table
+    tblSearch:      { en: 'Search', ar: 'بحث' },
+    tblSearchPeople:{ en: 'Search people…', ar: 'ابحث عن أشخاص…' },
+    tblSearchCycles:{ en: 'Search cycles…', ar: 'ابحث عن دورات…' },
+    tblFilters:     { en: 'Filters', ar: 'تصفية' },
+    tblAll:         { en: 'All', ar: 'الكل' },
+    tblActions:     { en: 'Actions', ar: 'إجراءات' },
+    tblEmpty:       { en: 'No matches', ar: 'لا نتائج مطابقة' },
+    tblNoPeople:    { en: 'No people to show', ar: 'لا أشخاص للعرض' },
+    tblNoCycles:    { en: 'No cycles yet', ar: 'لا دورات بعد' },
+    tblPerPage:     { en: 'Show', ar: 'عرض' },
+    tblShowing:     { en: '{from}–{to} of {total}', ar: '{from}–{to} من {total}' },
+    tblPrev:        { en: 'Previous page', ar: 'الصفحة السابقة' },
+    tblNext:        { en: 'Next page', ar: 'الصفحة التالية' },
+    tblOpenEval:    { en: 'Open evaluation', ar: 'فتح التقييم' },
+    // column headers
+    thName:         { en: 'Name', ar: 'الاسم' },
+    thRole:         { en: 'Role', ar: 'الدور' },
+    thTeam:         { en: 'Team', ar: 'الفريق' },
+    thLoad:         { en: 'Load', ar: 'العبء' },
+    thStatus:       { en: 'Status', ar: 'الحالة' },
+    thCycle:        { en: 'Cycle', ar: 'الدورة' },
+    thType:         { en: 'Type', ar: 'النوع' },
+    thPeriod:       { en: 'Period', ar: 'الفترة' },
+    // status badge labels (evaluations)
+    statusCompleted:{ en: 'Completed', ar: 'مكتمل' },
+    statusInProgress:{ en: 'In progress', ar: 'قيد التنفيذ' },
+    statusNotStarted:{ en: 'Not started', ar: 'لم يبدأ' },
+    // sub-tabs + row action
+    subActive:      { en: 'Active cycle', ar: 'الدورة الحالية' },
+    subHistory:     { en: 'History', ar: 'السجل' },
+    manageAccess:   { en: 'Manage access', ar: 'إدارة الصلاحيات' },
   };
 
   function t(key) {
