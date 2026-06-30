@@ -32,8 +32,23 @@
     return p ? { person: p } : { error: 'errNoAccount' };
   }
 
-  function modeVerifiedLink() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
-  function modeGoogle() { return !modeVerifiedLink() && !!(WP.config && WP.config.googleClientId); }
+  // Is Supabase configured? This gates the DATA layer (WP.db) and the verified-link
+  // option — it is NOT the same question as "which auth provider do we use".
+  function dbConfigured() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
+  function googleConfigured() { return !!(WP.config && WP.config.googleClientId); }
+  // The active AUTH provider. WP.config.authMode wins when set to a known value;
+  // otherwise fall back to the legacy precedence (verified-link > google > directory).
+  // Decoupled from dbConfigured() so Google can be the provider while Supabase stays
+  // wired for data.
+  function mode() {
+    var m = WP.config && WP.config.authMode;
+    if (m === 'google' || m === 'verified-link' || m === 'directory') return m;
+    if (dbConfigured()) return 'verified-link';
+    if (googleConfigured()) return 'google';
+    return 'directory';
+  }
+  function modeVerifiedLink() { return mode() === 'verified-link'; }
+  function modeGoogle() { return mode() === 'google'; }
   function redirectUrl() { return location.origin + location.pathname; }
 
   function signIn(personId) {
@@ -86,9 +101,13 @@
   // Called on boot when verified mode is on: consumes the link's token from the
   // URL (detectSessionInUrl) and restores any persisted session ("stay signed in").
   function initSession() {
-    if (!modeVerifiedLink()) return;
+    // Create the Supabase client whenever Supabase is configured — WP.db (the data
+    // layer) reads through WP._sb, so it must exist even when the AUTH provider is
+    // Google. Only the verified-LINK email session wiring below is auth-mode specific.
+    if (!dbConfigured()) return;
     sbClient(function (sb) {
       if (!sb) return;
+      if (!modeVerifiedLink()) return;   // client is up for WP.db; no email-link auth to wire
       try {
         sb.auth.onAuthStateChange(function (_evt, session) { if (session && !WP.state.authed) handleSession(session); });
         sb.auth.getSession().then(function (res) {
@@ -179,12 +198,19 @@
           '<span class="login-dot">·</span>' +
           '<button class="linkbtn" id="change-email">' + t('changeEmail') + '</button>' +
         '</div>';
+    } else if (modeGoogle()) {
+      // Google is the provider: ONLY the Google button. No email field — typing an
+      // email here would be the unverified directory gate, which would let anyone in
+      // without Google ever proving the identity. The GIS script fills #g-btn-host.
+      body =
+        '<div id="g-btn-host" class="g-btn-host"></div>' +
+        '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
+        '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('googleNote') + '</div>';
     } else {
       const primaryLabel = modeVerifiedLink() ? t('sendLink') : t('continueBtn');
-      let note;
-      if (modeVerifiedLink()) note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifiedNoteLink') + '</div>';
-      else if (modeGoogle()) note = '<div class="login-divider">' + t('or') + '</div><div id="g-btn-host"></div>';
-      else note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifyNote') + '</div>';
+      const note = modeVerifiedLink()
+        ? '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifiedNoteLink') + '</div>'
+        : '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifyNote') + '</div>';
       body =
         '<label class="login-lbl" for="login-email">' + t('emailLabel') + '</label>' +
         '<form id="login-form" class="login-row">' +
@@ -234,7 +260,7 @@
     domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
-    mode: function () { return modeVerifiedLink() ? 'verified-link' : modeGoogle() ? 'google' : 'directory'; }
+    mode: mode
   };
   WP.ui.login = { render: render };
 })(window.WP = window.WP || {});

@@ -2672,8 +2672,18 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   // — Verified sign-in (Supabase). Project URL + publishable key (both public). —
   if (WP.config.supabaseUrl === undefined)     WP.config.supabaseUrl = 'https://ftkbjsxdrxtjdzcojnve.supabase.co';
   if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = 'sb_publishable_0SzG8Od9htPYqlp9PSwYqQ_IvPjdYgt';
-  // — Google sign-in (optional alternative). —
-  if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
+  // — Google sign-in. Set authMode below to 'google' to use it. —
+  // Akram is creating an OAuth Web Client ID (origin https://akram-webook.github.io,
+  // Internal consent = @webook.com). Until the REAL id lands, leave the placeholder —
+  // it fails safe (Google can't init, no fake id ships, nobody is signed in wrongly).
+  if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '<<AKRAM_WILL_PROVIDE>>.apps.googleusercontent.com';
+  // — Auth provider selector (DECOUPLED from the Supabase DATA layer above). —
+  // Supabase stays connected for WP.db (people/evaluations) no matter what this is —
+  // this ONLY chooses how people sign IN. Values: 'google' | 'verified-link' | 'directory'.
+  // Unset ('') keeps the legacy precedence (verified-link if Supabase set, else google,
+  // else the demo directory gate). Set to 'google' because Supabase's built-in email
+  // sender is rate-limited ("Could not send the code"); Google has no such limit.
+  if (WP.config.authMode === undefined)        WP.config.authMode = 'google';
 
   /* ----------------------------------------------------------------
    * MVP FLAG (reversible, one line) — what the org SEES in v1.
@@ -3119,6 +3129,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     demoAuthNote:   { en: 'Prototype sign-in — no password. Your email is matched to your team profile and role.', ar: 'دخول تجريبي — بدون كلمة مرور. يُربط إيميلك بملفك ودورك في الفريق.' },
     verifyNote:     { en: 'Demo gate — your email must match a registered Tempo account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في تيمبو. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
     errVerify:      { en: 'Could not verify that Google account. Use your @webook.com account.', ar: 'تعذّر التحقق من حساب Google. استخدم حساب @webook.com.' },
+    googleNote:     { en: 'Sign in with your @webook.com Google account.', ar: 'سجّل الدخول بحساب @webook.com على Google.' },
     // — email verification code (OTP) —
     sendCode:       { en: 'Email me a code', ar: 'أرسل لي رمزاً' },
     sendingCode:    { en: 'Sending…', ar: 'جارٍ الإرسال…' },
@@ -6537,8 +6548,23 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     return p ? { person: p } : { error: 'errNoAccount' };
   }
 
-  function modeVerifiedLink() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
-  function modeGoogle() { return !modeVerifiedLink() && !!(WP.config && WP.config.googleClientId); }
+  // Is Supabase configured? This gates the DATA layer (WP.db) and the verified-link
+  // option — it is NOT the same question as "which auth provider do we use".
+  function dbConfigured() { return !!(WP.config && WP.config.supabaseUrl && WP.config.supabaseAnonKey); }
+  function googleConfigured() { return !!(WP.config && WP.config.googleClientId); }
+  // The active AUTH provider. WP.config.authMode wins when set to a known value;
+  // otherwise fall back to the legacy precedence (verified-link > google > directory).
+  // Decoupled from dbConfigured() so Google can be the provider while Supabase stays
+  // wired for data.
+  function mode() {
+    var m = WP.config && WP.config.authMode;
+    if (m === 'google' || m === 'verified-link' || m === 'directory') return m;
+    if (dbConfigured()) return 'verified-link';
+    if (googleConfigured()) return 'google';
+    return 'directory';
+  }
+  function modeVerifiedLink() { return mode() === 'verified-link'; }
+  function modeGoogle() { return mode() === 'google'; }
   function redirectUrl() { return location.origin + location.pathname; }
 
   function signIn(personId) {
@@ -6591,9 +6617,13 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
   // Called on boot when verified mode is on: consumes the link's token from the
   // URL (detectSessionInUrl) and restores any persisted session ("stay signed in").
   function initSession() {
-    if (!modeVerifiedLink()) return;
+    // Create the Supabase client whenever Supabase is configured — WP.db (the data
+    // layer) reads through WP._sb, so it must exist even when the AUTH provider is
+    // Google. Only the verified-LINK email session wiring below is auth-mode specific.
+    if (!dbConfigured()) return;
     sbClient(function (sb) {
       if (!sb) return;
+      if (!modeVerifiedLink()) return;   // client is up for WP.db; no email-link auth to wire
       try {
         sb.auth.onAuthStateChange(function (_evt, session) { if (session && !WP.state.authed) handleSession(session); });
         sb.auth.getSession().then(function (res) {
@@ -6684,12 +6714,19 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
           '<span class="login-dot">·</span>' +
           '<button class="linkbtn" id="change-email">' + t('changeEmail') + '</button>' +
         '</div>';
+    } else if (modeGoogle()) {
+      // Google is the provider: ONLY the Google button. No email field — typing an
+      // email here would be the unverified directory gate, which would let anyone in
+      // without Google ever proving the identity. The GIS script fills #g-btn-host.
+      body =
+        '<div id="g-btn-host" class="g-btn-host"></div>' +
+        '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
+        '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('googleNote') + '</div>';
     } else {
       const primaryLabel = modeVerifiedLink() ? t('sendLink') : t('continueBtn');
-      let note;
-      if (modeVerifiedLink()) note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifiedNoteLink') + '</div>';
-      else if (modeGoogle()) note = '<div class="login-divider">' + t('or') + '</div><div id="g-btn-host"></div>';
-      else note = '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifyNote') + '</div>';
+      const note = modeVerifiedLink()
+        ? '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifiedNoteLink') + '</div>'
+        : '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('verifyNote') + '</div>';
       body =
         '<label class="login-lbl" for="login-email">' + t('emailLabel') + '</label>' +
         '<form id="login-form" class="login-row">' +
@@ -6739,7 +6776,7 @@ main { padding: 22px; max-width: 1180px; margin: 0 auto; }
     domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
-    mode: function () { return modeVerifiedLink() ? 'verified-link' : modeGoogle() ? 'google' : 'directory'; }
+    mode: mode
   };
   WP.ui.login = { render: render };
 })(window.WP = window.WP || {});

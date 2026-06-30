@@ -23,8 +23,18 @@
   // — Verified sign-in (Supabase). Project URL + publishable key (both public). —
   if (WP.config.supabaseUrl === undefined)     WP.config.supabaseUrl = 'https://ftkbjsxdrxtjdzcojnve.supabase.co';
   if (WP.config.supabaseAnonKey === undefined) WP.config.supabaseAnonKey = 'sb_publishable_0SzG8Od9htPYqlp9PSwYqQ_IvPjdYgt';
-  // — Google sign-in (optional alternative). —
-  if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
+  // — Google sign-in. Set authMode below to 'google' to use it. —
+  // Akram is creating an OAuth Web Client ID (origin https://akram-webook.github.io,
+  // Internal consent = @webook.com). Until the REAL id lands, leave the placeholder —
+  // it fails safe (Google can't init, no fake id ships, nobody is signed in wrongly).
+  if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '<<AKRAM_WILL_PROVIDE>>.apps.googleusercontent.com';
+  // — Auth provider selector (DECOUPLED from the Supabase DATA layer above). —
+  // Supabase stays connected for WP.db (people/evaluations) no matter what this is —
+  // this ONLY chooses how people sign IN. Values: 'google' | 'verified-link' | 'directory'.
+  // Unset ('') keeps the legacy precedence (verified-link if Supabase set, else google,
+  // else the demo directory gate). Set to 'google' because Supabase's built-in email
+  // sender is rate-limited ("Could not send the code"); Google has no such limit.
+  if (WP.config.authMode === undefined)        WP.config.authMode = 'google';
 
   /* ----------------------------------------------------------------
    * MVP FLAG (reversible, one line) — what the org SEES in v1.
