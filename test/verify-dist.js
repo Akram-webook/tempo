@@ -13,10 +13,12 @@ setTimeout(()=>{
     const WP=window.WP;
     if(!WP){errors.push('WP namespace missing — scripts did not run');}
     else{
-      if(!WP.config||WP.config.googleClientId!=='') errors.push('config.googleClientId should default to empty string');
+      if(!WP.config||WP.config.authMode!=='google') errors.push('config.authMode should default to google (Supabase email is rate-limited)');
+      if(WP.auth.mode()!=='google') errors.push('auth mode should resolve to google even with Supabase configured (data layer stays wired)');
       const view=window.document.getElementById('view');
       WP.state.authed=false; WP.ui.login.render(view);
-      if(!view.querySelector('#login-email')) errors.push('login email gate not rendered in bundle');
+      if(!view.querySelector('#g-btn-host')) errors.push('Google sign-in button host not rendered in bundle');
+      if(view.querySelector('#login-email')) errors.push('email gate must NOT render in Google mode (would bypass Google verification)');
       const logo=view.querySelector('.login-logo');
       if(!logo||logo.getAttribute('src').indexOf('data:image/svg+xml')!==0) errors.push('logo not inlined as data URI in bundle');
       if(WP.auth.findByEmail('akram@webook.com').person.id!=='p_akram') errors.push('directory gate broken in bundle');

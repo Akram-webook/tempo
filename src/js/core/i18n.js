@@ -401,6 +401,7 @@
     demoAuthNote:   { en: 'Prototype sign-in — no password. Your email is matched to your team profile and role.', ar: 'دخول تجريبي — بدون كلمة مرور. يُربط إيميلك بملفك ودورك في الفريق.' },
     verifyNote:     { en: 'Demo gate — your email must match a registered Tempo account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في تيمبو. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
     errVerify:      { en: 'Could not verify that Google account. Use your @webook.com account.', ar: 'تعذّر التحقق من حساب Google. استخدم حساب @webook.com.' },
+    googleNote:     { en: 'Sign in with your @webook.com Google account.', ar: 'سجّل الدخول بحساب @webook.com على Google.' },
     // — email verification code (OTP) —
     sendCode:       { en: 'Email me a code', ar: 'أرسل لي رمزاً' },
     sendingCode:    { en: 'Sending…', ar: 'جارٍ الإرسال…' },
