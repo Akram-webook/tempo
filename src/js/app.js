@@ -218,6 +218,11 @@
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
 
+    // Breadcrumb links (WP.ui.breadcrumb) — wired once, centrally, for every screen.
+    root.querySelectorAll('[data-bc-go]').forEach(function (a) {
+      a.onclick = function (e) { e.preventDefault(); WP.setState({ route: a.dataset.bcGo, selectedId: null }); };
+    });
+
     // mandatory evaluation banner — follows a manager across every page until done
     renderEvalBanner();
 

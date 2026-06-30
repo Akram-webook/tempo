@@ -177,8 +177,17 @@
     };
   }
 
+  /* Reference date for the window immediately BEFORE the one containing refDate —
+   * one day before the current window's start lands in the previous window. Lets
+   * a KPI show an HONEST prior-period delta (this week vs last) from the same
+   * engine, never a fabricated trend. Work-metric only by construction. */
+  function priorRefDate(windowKey, refDate) {
+    const b = windowBounds(windowKey, refDate);
+    return new Date(b.start - MS_DAY).toISOString().slice(0, 10);
+  }
+
   WP.capacity = {
     loadForPerson, loadBreakdown, stateForLoad, isHealthy, burnoutSignal,
-    snapshot, teamMetrics, simulateAssignment, windowBounds,
+    snapshot, teamMetrics, simulateAssignment, windowBounds, priorRefDate,
   };
 })(window.WP = window.WP || {});

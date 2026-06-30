@@ -183,25 +183,6 @@
       roots.map(li).join('') + '</ul></div></div>';
   }
 
-  function listView(people, snapById) {
-    return '<div class="list">' + people
-      .slice()
-      .sort(function (a, b) { return snapById[b.id].load - snapById[a.id].load; })
-      .map(function (p) {
-        const s = snapById[p.id];
-        const c = ui.stateColor(s.state);
-        return '<div class="row" data-id="' + p.id + '" style="--node-accent:' + c + '">' +
-          ui.avatar(p, c) +
-          '<div style="min-width:150px"><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
-          '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + ' ' + empBadge(p) + '</div></div>' +
-          '<div class="lr-acctline">' + acctLine(p) + '</div>' +
-          '<div class="bar"><i style="width:' + Math.min(100, s.load) + '%"></i></div>' +
-          '<div class="pct">' + s.load + '%</div>' +
-          (s.burnout ? '<span title="' + WP.i18n.t('burnoutFlag') + '" style="color:var(--state-overloaded);line-height:0">' + WP.ui.icon('flame', 15) + '</span>' : '') +
-        '</div>';
-      }).join('') + '</div>';
-  }
-
   // Localized team label (team leads carry a team name; everyone else falls back to their name).
   function teamLabel(p) {
     if (p.team) return WP.state.lang === 'ar' ? (p.teamAr || p.team) : p.team;
@@ -400,9 +381,15 @@
     const body = people.length === 0
       ? '<div class="map-empty">' + WP.ui.icon('users', 18) + ' <span>' + t('emptyTeam') + '</span>' +
           (focusPerson ? ' <button class="btn" id="empty-showall">' + t('showAll') + '</button>' : '') + '</div>'
-      : (listMode ? listView(people, snapById) : treeChart(people, snapById, colMap));
-    root.innerHTML = metricsBar(m) +
-      '<div class="controlbar">' + toggle + mapFilters(base) + '</div>' +
+      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap));
+    root.innerHTML = WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('mapTitle') }],
+        title: t('mapTitle'),
+        subtitle: t('mapSub'),
+      }) + metricsBar(m) +
+      // The predictive finder is the tree's quick-jump; in list mode the table's own
+      // search/filter does that job, so we don't show two search boxes (minimalism).
+      '<div class="controlbar">' + toggle + (listMode ? '' : mapFilters(base)) + '</div>' +
       legend + body;
 
     // Apple-style date navigator — prev / next / today (keeps the granularity)
@@ -436,10 +423,53 @@
         else WP.ui.peek(id);
       };
     });
-    // LIST rows always open the profile
-    root.querySelectorAll('.list .row[data-id]').forEach(function (el) {
-      el.onclick = function () { WP.ui.peek(el.dataset.id); };
-    });
+    // Directory table (list mode) — WBK PRO parity: search + filter-by-state +
+    // sortable headers + status badges + pagination. Row actions are operational
+    // only (open profile; manage access ONLY for managers) — never a surveillance
+    // toggle (Intelligence-Ethics). ponytail: the predictive finder above still
+    // does tree-jump; the table search filters the directory list itself.
+    if (listMode && people.length) {
+      const canManage = WP.access.canManage(viewer);
+      const stTone = function (key) { return key === 'available' || key === 'balanced' ? 'ok' : key === 'near' ? 'warn' : 'bad'; };
+      // The team a person belongs to = nearest ancestor carrying a team label.
+      const teamName = function (p) { const l = teamLeadOf(p.id); return l ? teamLabel(l) : '—'; };
+      WP.ui.table.mount(root.querySelector('#map-table'), {
+        id: 'directory',
+        rows: people.slice(),
+        searchText: function (p) { return WP.i18n.name(p) + ' ' + WP.i18n.title(p) + ' ' + teamName(p); },
+        searchPlaceholder: t('tblSearchPeople'),
+        defaultSort: { key: 'load', dir: 'desc' },
+        filter: { label: t('thStatus'), get: function (p) { return snapById[p.id].state.key; },
+          values: WP.data.STATES.map(function (s) { return { val: s.key, label: WP.i18n.stateLabel(s) }; }) },
+        columns: [
+          { key: 'name', label: t('thName'), sortable: true, get: function (p) { return WP.i18n.name(p); } },
+          { key: 'role', label: t('thRole'), sortable: true, get: function (p) { return WP.i18n.title(p); } },
+          { key: 'team', label: t('thTeam'), sortable: true, get: function (p) { return teamName(p); } },
+          { key: 'load', label: t('thLoad'), num: true, sortable: true, get: function (p) { return snapById[p.id].load; } },
+          { key: 'status', label: t('thStatus'), sortable: true, get: function (p) { return snapById[p.id].load; } },
+        ],
+        cell: function (p, key) {
+          const s = snapById[p.id];
+          if (key === 'name') return '<span class="wbk-cell-id">' + ui.avatar(p, ui.stateColor(s.state)) + '<span>' + ui.esc(WP.i18n.name(p)) + '</span></span>';
+          if (key === 'role') return ui.esc(WP.i18n.title(p)) + ' ' + empBadge(p);
+          if (key === 'team') return ui.esc(teamName(p));
+          if (key === 'load') return s.load + '%';
+          return WP.ui.statusBadge(stTone(s.state.key), WP.i18n.stateLabel(s.state)) +
+            (s.burnout ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
+        },
+        actions: function () {
+          const a = [{ act: 'open', icon: 'eye', label: t('openProfile') }];
+          if (canManage) a.push({ act: 'manage', icon: 'key', label: t('manageAccess') });
+          return a;
+        },
+        onAction: function (act, id) {
+          if (act === 'open') WP.ui.peek(id);
+          else if (act === 'manage' && canManage) WP.setState({ route: 'permissions', selectedId: id });
+        },
+        onOpen: function (id) { WP.ui.peek(id); },
+        emptyText: t('tblNoPeople'),
+      });
+    }
 
     // compact toolbar dropdowns (View · Period)
     setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });

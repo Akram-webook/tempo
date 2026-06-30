@@ -8,22 +8,41 @@
   'use strict';
   const ui = WP.ui;
 
-  function kpi(label, value, sub, color) {
-    return '<div class="card"><div class="label">' + label + '</div>' +
+  // KPI delta row — WBK PRO parity. Shows an HONEST prior-period change (computed
+  // by the engine, this window vs last) with a directional arrow and good/bad
+  // colour. ETHICS: only ever passed for WORK metrics (team-health, capacity) —
+  // never a per-person/presence delta. Flat or no-prior → renders nothing.
+  function deltaRow(d) {
+    if (!d || d.points == null || d.points === 0) return '';
+    const up = d.points > 0;
+    const good = (up && d.goodDir === 'up') || (!up && d.goodDir === 'down');
+    return '<div class="kpi-delta kpi-delta--' + (good ? 'good' : 'bad') + (up ? '' : ' is-down') + '">' +
+      WP.ui.icon('arrowUp', 13) + ' ' + Math.abs(d.points) + WP.i18n.t('kpiPts') +
+      ' <span>' + WP.i18n.t('kpiVsPrior').replace('{period}', d.period) + '</span></div>';
+  }
+  // extra: { info: tooltip string, delta: {points, period, goodDir} }
+  function kpi(label, value, sub, color, extra) {
+    extra = extra || {};
+    const info = extra.info
+      ? ' <span class="kpi-info" tabindex="0" role="img" aria-label="' + ui.esc(extra.info) + '" title="' + ui.esc(extra.info) + '">' + WP.ui.icon('info', 13) + '</span>'
+      : '';
+    return '<div class="card"><div class="label">' + label + info + '</div>' +
       '<div class="value"' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</div>' +
-      '<div class="sub">' + (sub || '') + '</div></div>';
+      '<div class="sub">' + (sub || '') + '</div>' + deltaRow(extra.delta) + '</div>';
   }
   /* Team Health on sample/empty data: a bare "0%" reads as broken/alarming, not
    * calm. When no real load signal exists yet, show a neutral "no data" state
    * instead of a misleading 0% (S1 — Calm UI). A real 0% with load is still shown. */
-  function teamHealthKpi(m) {
+  function teamHealthKpi(m, mPrev, period) {
     const t = WP.i18n.t;
     const hasData = m.snaps.some(function (s) { return s.load > 0; });
     if (!hasData) return kpi(t('teamHealth'), '—', t('noDataYet'), 'var(--text-muted)');
     // S3-3 — frame the headline as "{h} of {n} in healthy band" so a low/zero
     // percentage reads as informative (band split) rather than an alarm.
     const split = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
-    return kpi(t('teamHealth'), m.teamHealth + '%', split, 'var(--state-balanced)');
+    const delta = mPrev ? { points: m.teamHealth - mPrev.teamHealth, period: period, goodDir: 'up' } : null;
+    return kpi(t('teamHealth'), m.teamHealth + '%', split, 'var(--state-balanced)',
+      { info: t('teamHealthInfo'), delta: delta });
   }
   function ofPeople(n) { return WP.i18n.t('ofPeople').replace('{n}', n); }
   function loadBar(pct) {
@@ -47,6 +66,8 @@
     const t = WP.i18n.t, win = WP.state.window, ref = WP.state.refDate;
     const people = WP.access.visiblePeople(viewer);
     const m = WP.capacity.teamMetrics(people, win, ref);
+    const mPrev = WP.capacity.teamMetrics(people, win, WP.capacity.priorRefDate(win, ref));
+    const period = t(win);
     const attn = m.snaps.filter(function (s) {
       return s.state.key === 'overloaded' || s.state.key === 'near' || s.burnout;
     }).sort(function (a, b) { return b.load - a.load; }).slice(0, 6);
@@ -79,12 +100,16 @@
     }).join('') : '<div class="sub">' + t('allClear') + '</div>';
 
     root.innerHTML =
-      '<div class="ttl">' + t('navDashboard') + ' · ' + t('director') + '</div>' +
-      '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
+      WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('navDashboard') }],
+        title: t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + WP.i18n.name(viewer).split(' ')[0],
+        subtitle: t('dashSubDirector').replace('{n}', people.length),
+      }) +
       '<div class="metrics">' +
-        teamHealthKpi(m) +
+        teamHealthKpi(m, mPrev, period) +
         kpi(t('available'), m.counts.available, ofPeople(people.length)) +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub')) +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), null,
+          { info: t('nearCapInfo'), delta: { points: m.nearOrOver - mPrev.nearOrOver, period: period, goodDir: 'down' } }) +
         kpi(t('earlyWarnings'), m.earlyWarnings, t('burnoutShort')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -104,6 +129,8 @@
     const team = WP.access.teamOf(viewer.id);
     const reports = team.filter(function (p) { return p.id !== viewer.id; });
     const m = WP.capacity.teamMetrics(team, win, ref);
+    const mPrev = WP.capacity.teamMetrics(team, win, WP.capacity.priorRefDate(win, ref));
+    const period = t(win);
     const snaps = {}; m.snaps.forEach(function (s) { snaps[s.id] = s; });
 
     const free = reports.slice().sort(function (a, b) { return snaps[a.id].load - snaps[b.id].load; }).slice(0, 5);
@@ -128,12 +155,16 @@
     }).join('') : '<div class="sub">—</div>';
 
     root.innerHTML =
-      '<div class="ttl">' + t('navDashboard') + ' · ' + (viewer.level === 'sr_manager' ? t('director') : t('manager')) + '</div>' +
-      '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + '</h2>' +
+      WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('navDashboard') }],
+        title: t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + WP.i18n.name(viewer).split(' ')[0],
+        subtitle: t('dashSubManager').replace('{n}', reports.length),
+      }) +
       '<div class="metrics">' +
-        teamHealthKpi(m) +
+        teamHealthKpi(m, mPrev, period) +
         kpi(t('freeForWork'), m.counts.available, ofPeople(reports.length), 'var(--state-available)') +
-        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), 'var(--state-overloaded)') +
+        kpi(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), 'var(--state-overloaded)',
+          { info: t('nearCapInfo'), delta: { points: m.nearOrOver - mPrev.nearOrOver, period: period, goodDir: 'down' } }) +
         kpi(t('toDevelop'), develop.length, t('talent')) +
       '</div>' +
       '<div class="grid-2" style="align-items:start">' +
@@ -150,8 +181,11 @@
     const c = ui.stateColor(snap.state);
 
     root.innerHTML =
-      '<div class="ttl">' + t('navDashboard') + ' · ' + t('employee') + '</div>' +
-      '<h2 style="margin:2px 0 16px">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(viewer).split(' ')[0]) + ' 👋</h2>' +
+      WP.ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('navDashboard') }],
+        title: t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + WP.i18n.name(viewer).split(' ')[0],
+        subtitle: t('dashSubEmployee'),
+      }) +
       '<div class="metrics">' +
         kpi(t('myLoad'), snap.load + '%', WP.i18n.stateLabel(snap.state), c) +
         kpi(t('currentProjects'), snap.eventCount, '') +

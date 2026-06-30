@@ -74,48 +74,107 @@
         }).join('');
     }
 
-    // ---- employee status list (scope) ----
-    const rows = scope.map(function (p) {
-      return '<div class="ev-row" data-open="' + p.id + '">' + ui.avatar(p, 'var(--brand)') +
-        '<div class="ev-meta"><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
-          '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></div>' +
-        '<div class="ev-status">' + statusChip(dStatus(p.id)) + '</div></div>';
-    }).join('');
+    // Sub-tab: Active cycle (status per person) vs History (past/all cycles). A
+    // genuine sub-view split — not an invented tab.
+    const tab = WP.state.evalTab || 'active';
+    const statusTone = function (s) { return s === 'Completed' ? 'ok' : s === 'In progress' ? 'info' : 'muted'; };
+    const statusOrder = { 'Completed': 0, 'In progress': 1, 'Not started': 2 };
 
     const cycleOptions = WP.evaluation.cycles().map(function (c) {
       return '<option value="' + c.id + '"' + (c.id === cycle.id ? ' selected' : '') + '>' + c.name + ' · ' + c.status + '</option>';
     }).join('');
 
-    root.innerHTML =
-      '<div class="ttl">' + t('performance') + ' › ' + t('evaluationsHub') + '</div>' +
-      '<div class="eval-head" style="margin-top:4px">' +
-        '<div><h2 style="margin:0 0 2px">' + ui.esc(cycle.name) + ' ' + t('evaluation') +
-          ' <span class="rating ' + (cycle.status === 'Active' ? 'Exceeds' : 'Meets') + '">' + cycle.status + '</span></h2>' +
-          '<div class="ttl">' + cycle.type + ' · ' + cycle.start + ' → ' + cycle.end + '</div></div>' +
-        '<div style="display:flex;gap:8px;align-items:center">' +
-          '<select id="cycle" class="btn">' + cycleOptions + '</select>' +
-          (WP.access.canManage(viewer) ? '<button class="btn primary" id="new-cycle">' + WP.ui.icon('plus', 15) + ' ' + t('newCycle') + '</button>' : '') +
+    const header = WP.ui.pageHeader({
+      crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('performance') }, { label: t('evaluationsHub') }],
+      title: cycle.name + ' ' + t('evaluation'),
+      subtitle: cycle.type + ' · ' + cycle.start + ' → ' + cycle.end,
+      right: WP.ui.statusBadge(cycle.status === 'Active' ? 'ok' : 'muted', cycle.status) +
+        '<select id="cycle" class="btn">' + cycleOptions + '</select>' +
+        (WP.access.canManage(viewer) ? '<button class="btn primary" id="new-cycle">' + WP.ui.icon('plus', 15) + ' ' + t('newCycle') + '</button>' : ''),
+    });
+    const tabsBar = WP.ui.subTabs([
+      { val: 'active', label: t('subActive') },
+      { val: 'history', label: t('subHistory') },
+    ], tab);
+
+    let main;
+    if (tab === 'history') {
+      main = '<div class="section"><h3>' + t('subHistory') + '</h3><div id="eval-cycle-table"></div></div>';
+    } else {
+      main = syncBanner() +
+        '<div class="grid-2" style="align-items:start">' +
+          '<div class="section"><h3>' + t('myTasks') + '</h3>' + tasks + '</div>' +
+          '<div class="section"><h3>' + t('teamProgress') + '</h3>' +
+            '<div class="prog"><i class="pg-done" style="width:' + pct(counts.Completed) + '%"></i>' +
+              '<i class="pg-prog" style="width:' + pct(counts['In progress']) + '%"></i></div>' +
+            '<div class="prog-legend">' +
+              '<span><span class="dot" style="background:var(--state-available)"></span> ' + pct(counts.Completed) + '% ' + t('done') + '</span>' +
+              '<span><span class="dot" style="background:var(--brand)"></span> ' + pct(counts['In progress']) + '% ' + t('inProgressL') + '</span>' +
+              '<span><span class="dot" style="background:var(--text-muted)"></span> ' + pct(counts['Not started']) + '% ' + t('notStartedL') + '</span></div></div>' +
         '</div>' +
-      '</div>' +
+        // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
+        // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
+        ((isReal && reports.length && !WP.deferred('evalConsistency')) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
+        '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3><div id="eval-emp-table"></div></div>';
+    }
+    root.innerHTML = header + tabsBar + main;
 
-      syncBanner() +
+    // sub-tab wiring (Active / History)
+    root.querySelectorAll('[data-subtab]').forEach(function (b) {
+      b.onclick = function () { WP.setState({ evalTab: b.dataset.subtab }); };
+    });
 
-      '<div class="grid-2" style="align-items:start">' +
-        '<div class="section"><h3>' + t('myTasks') + '</h3>' + tasks + '</div>' +
-        '<div class="section"><h3>' + t('teamProgress') + '</h3>' +
-          '<div class="prog"><i class="pg-done" style="width:' + pct(counts.Completed) + '%"></i>' +
-            '<i class="pg-prog" style="width:' + pct(counts['In progress']) + '%"></i></div>' +
-          '<div class="prog-legend">' +
-            '<span><span class="dot" style="background:var(--state-available)"></span> ' + pct(counts.Completed) + '% ' + t('done') + '</span>' +
-            '<span><span class="dot" style="background:var(--brand)"></span> ' + pct(counts['In progress']) + '% ' + t('inProgressL') + '</span>' +
-            '<span><span class="dot" style="background:var(--text-muted)"></span> ' + pct(counts['Not started']) + '% ' + t('notStartedL') + '</span></div></div>' +
-      '</div>' +
-
-      // Consistency / bias AWARENESS (P3) — only for an actual evaluator, about THEIR
-      // OWN ratings. Neutral "worth a second look", never blocking, never a rank.
-      ((isReal && reports.length && !WP.deferred('evalConsistency')) ? '<div class="section wbk-band" id="eval-consist-host" aria-live="polite" hidden></div>' : '') +
-
-      '<div class="section"><h3>' + t('employees') + ' · ' + scope.length + '</h3>' + (rows || '<div class="sub">—</div>') + '</div>';
+    // Employees table (Active tab) — search + filter-by-status + sortable + paginated.
+    // Row action = open this person's evaluation (operational only; no surveillance control).
+    if (tab !== 'history') {
+      WP.ui.table.mount(root.querySelector('#eval-emp-table'), {
+        id: 'evals-emp',
+        rows: scope,
+        searchText: function (p) { return WP.i18n.name(p) + ' ' + WP.i18n.title(p); },
+        searchPlaceholder: t('tblSearchPeople'),
+        defaultSort: { key: 'name', dir: 'asc' },
+        filter: { label: t('thStatus'), get: function (p) { return dStatus(p.id); },
+          values: [{ val: 'Completed', label: t('statusCompleted') }, { val: 'In progress', label: t('statusInProgress') }, { val: 'Not started', label: t('statusNotStarted') }] },
+        columns: [
+          { key: 'name', label: t('thName'), sortable: true, get: function (p) { return WP.i18n.name(p); } },
+          { key: 'role', label: t('thRole'), sortable: true, get: function (p) { return WP.i18n.title(p); } },
+          { key: 'status', label: t('thStatus'), sortable: true, get: function (p) { return statusOrder[dStatus(p.id)]; } },
+        ],
+        cell: function (p, key) {
+          if (key === 'name') return '<span class="wbk-cell-id">' + ui.avatar(p, 'var(--brand)') + '<span>' + ui.esc(WP.i18n.name(p)) + '</span></span>';
+          if (key === 'role') return ui.esc(WP.i18n.title(p));
+          return WP.ui.statusBadge(statusTone(dStatus(p.id)), dStatus(p.id));
+        },
+        actions: function () { return [{ act: 'open', icon: 'clipboard', label: t('tblOpenEval') }]; },
+        onAction: function (act, id) { if (act === 'open') openEval(id); },
+        onOpen: function (id) { openEval(id); },
+        emptyText: t('tblNoPeople'),
+      });
+    } else {
+      // History tab — all cycles as a sortable table; opening one makes it active.
+      WP.ui.table.mount(root.querySelector('#eval-cycle-table'), {
+        id: 'evals-cycles',
+        rows: WP.evaluation.cycles(),
+        searchText: function (c) { return c.name + ' ' + c.type; },
+        searchPlaceholder: t('tblSearchCycles'),
+        defaultSort: { key: 'name', dir: 'asc' },
+        columns: [
+          { key: 'name', label: t('thCycle'), sortable: true, get: function (c) { return c.name; } },
+          { key: 'type', label: t('thType'), sortable: true, get: function (c) { return c.type; } },
+          { key: 'period', label: t('thPeriod'), get: function (c) { return c.start; } },
+          { key: 'status', label: t('thStatus'), sortable: true, get: function (c) { return c.status; } },
+        ],
+        cell: function (c, key) {
+          if (key === 'name') return ui.esc(c.name);
+          if (key === 'type') return ui.esc(c.type);
+          if (key === 'period') return ui.esc(c.start + ' → ' + c.end);
+          return WP.ui.statusBadge(c.status === 'Active' ? 'ok' : 'muted', c.status);
+        },
+        onOpen: function (id) { WP.evaluation.setActiveCycle(id); WP.setState({ evalTab: 'active' }); },
+        rowId: function (c) { return c.id; },
+        emptyText: t('tblNoCycles'),
+      });
+    }
 
     // S3-1 + S4-1 — open THIS cycle's evaluation, and remember we came from the hub
     // so the evaluation's back button returns here ("Back to evaluations").
@@ -153,9 +212,9 @@
         .catch(function () { consistHost.hidden = true; });
     }
 
-    const openEval = function (id) {
+    function openEval(id) {
       WP.setState({ route: 'evaluation', selectedId: id, selectedCycle: cycle.id, evalOrigin: 'evaluations' });
-    };
+    }
     root.querySelectorAll('[data-eval]').forEach(function (el) {
       el.onclick = function () { openEval(el.dataset.eval); };
     });
