@@ -332,6 +332,44 @@
     '</div>';
   }
 
+  // Page-level header actions: open the already-merged standalone chart export (PR #46,
+  // dist/chart.html) full-screen in a new tab, and copy its shareable link. The href is
+  // RELATIVE so it resolves against the current page on Pages AND locally; the copied link
+  // is the absolute resolved URL. Read-only, sample-data export — no real data wired here.
+  function chartActions() {
+    const t = WP.i18n.t;
+    return '<div class="phead-actions">' +
+      '<a class="btn" id="oc-fullscreen" href="chart.html" target="_blank" rel="noopener noreferrer" aria-label="' + t('fullscreenChart') + '">' +
+        WP.ui.icon('external', 15) + ' ' + ui.esc(t('fullscreenChart')) + '</a>' +
+      '<button type="button" class="btn" id="oc-copylink" aria-label="' + t('copyLink') + '">' +
+        WP.ui.icon('link', 15) + ' ' + ui.esc(t('copyLink')) + '</button>' +
+    '</div>';
+  }
+
+  // Copy the absolute chart.html URL with a graceful fallback for older / insecure-context
+  // browsers (clipboard API needs HTTPS or localhost). Confirms via the shared toast.
+  function wireChartActions(root) {
+    const t = WP.i18n.t;
+    const btn = root.querySelector('#oc-copylink');
+    if (!btn) return;
+    btn.onclick = function () {
+      let url;
+      try { url = new URL('chart.html', location.href).href; } catch (e) { url = 'chart.html'; }
+      const done = function () { if (WP.ui.toast) WP.ui.toast(t('previewLinkCopied')); };
+      const fallback = function () {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = url; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+          done();
+        } catch (e) { if (WP.ui.toast) WP.ui.toast(url, 'info'); }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(fallback);
+      } else { fallback(); }
+    };
+  }
+
   function render(root) {
     const viewer = WP.viewer();
     const base = WP.access.visiblePeople(viewer);
@@ -390,6 +428,7 @@
         crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('mapTitle') }],
         title: t('mapTitle'),
         subtitle: t('mapSub'),
+        right: chartActions(),   // page-level: open / share the full standalone chart export
       })) + metricsBar(m) +
       // The predictive finder is the tree's quick-jump; in list mode the table's own
       // search/filter does that job, so we don't show two search boxes (minimalism).
@@ -474,6 +513,9 @@
         emptyText: t('tblNoPeople'),
       });
     }
+
+    // page-level header actions (full-screen chart + copy link)
+    wireChartActions(root);
 
     // compact toolbar dropdowns (View · Period)
     setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });
