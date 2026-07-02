@@ -33,6 +33,11 @@ function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
     // Director viewer can act and sees everyone → the drawer ranks real candidates.
     const director = WP.data.PEOPLE.find(p => p.level === 'director');
     WP.state.viewerId = director.id;
+    // Pin refDate into the sample-data window (June 2026) so the drawer ranks against REAL load —
+    // otherwise, at a wall-clock date past the sample month, every load reads 0, nobody is
+    // soft-locked, the override branch never fires, and we log too few decisions for a report.
+    // (Same time-coupling fix as verify-eval.js / engine.test.js.)
+    WP.state.refDate = '2026-06-17';
     WP.activityLog.length = 0;
 
     const host = window.document.getElementById('overlay-host');

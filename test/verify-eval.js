@@ -27,8 +27,11 @@ try{
   // due info present + active cycle is the quarterly one
   const di=WP.evaluation.dueInfo(); assert(di && di.cycle && di.cycle.status==='Active','active cycle has a due date');
 
-  // S3-3 + S3-2: dashboard frames team health as a band split and shows the Sample data badge
-  WP.setState({route:'dashboard'});
+  // S3-3 + S3-2: dashboard frames team health as a band split and shows the Sample data badge.
+  // Pin refDate INTO the sample-data window (June 2026) — the band-split framing only applies
+  // when there IS load; a period with no data correctly shows the S1 "calm" — state instead.
+  // (Matches engine.test.js / growth.test.js, which pin the same reference into the sample month.)
+  WP.setState({route:'dashboard', refDate:'2026-06-17'});
   const dashHtml=window.document.getElementById('view').innerHTML;
   assert(/Sample data/.test(dashHtml),'S3-2 — dashboard shows the "Sample data" honesty badge');
   assert(/in healthy band/.test(dashHtml),'S3-3 — team health reads as "{h} of {n} in healthy band", not a bare alarm %');
