@@ -82,6 +82,38 @@ Suggested alerts: `consecutiveErrorRuns >= 3`, or `cursorStuckSince` older than 
 `now − lastSuccessAt` exceeding a few cron intervals. `--dry` previews do **not** write this
 file (a manual preview must never clobber the scheduled-run health).
 
+## Health alert consumer (`npm run ingest:healthcheck`)
+
+Producing the heartbeat isn't enough — something has to *read* it and page you. That's
+`tools/ingest-healthcheck.js`:
+
+```bash
+npm run ingest:healthcheck            # reads .slack-ingest-health.json, exits non-zero if unhealthy
+TEMPO_INGEST_HEALTH=/path/health.json npm run ingest:healthcheck   # override the path
+node tools/ingest-healthcheck.js --selftest   # verify the decision logic offline (CI-safe)
+```
+
+It prints a clear reason and **exits non-zero** when any of these fire (thresholds are constants
+at the top of the script — tune there):
+
+- `consecutiveErrorRuns >= 3` — ingest failing repeatedly,
+- `cursorStuckSince` older than **1h** — messages present but cursor not advancing,
+- `now − lastSuccessAt` older than **6h** — no recent successful run,
+- the health file is missing — the cron isn't writing it at all.
+
+Exit codes: `0` healthy · `1` unhealthy · `2` cannot read/parse. Like the heartbeat, it consumes
+**operational counts only — no PII.**
+
+**Point a monitor at it.** Either add it to the ingest cron (a non-zero exit alerts your job
+runner), or run it on its own schedule and forward failures to Slack/email. Example cron line:
+
+```cron
+# every 15 min: alert if ingest is unhealthy (non-zero exit → your cron mailer/monitor notifies)
+*/15 * * * * cd /path/to/tempo && npm run --silent ingest:healthcheck || echo "Tempo ingest UNHEALTHY" | <your-alert-channel>
+```
+
+No secrets are needed to run it — it only reads the local, non-secret health file.
+
 ## CI
 
 `npm test` runs `test/verify-slack-job.js` every build — the full loop against a fake paginated
