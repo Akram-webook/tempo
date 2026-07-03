@@ -23,6 +23,21 @@
   // Observable-ish status the evaluations view reads to render states.
   var status = { loading: false, offline: false, synced: false, lastError: null };
 
+  /* --- query hygiene (PR A, item 4) ----------------------------------------
+   * Select ONLY the columns each mapper reads (never select('*') — narrower rows,
+   * less over the wire), and cap every list read at MAX_ROWS as a defensive
+   * backstop against an unexpectedly huge table. (True user-facing pagination is
+   * PR B — this is just the safety ceiling + column projection.) .range()/.eq()
+   * are guarded so they no-op against a builder that lacks them (test doubles). */
+  var MAX_ROWS = 2000;
+  var COLS = {
+    evaluations: 'id,subject_id,author_id,cycle,scores,feedback,status,updated_at',
+    events: 'id,ts,type,actor,subject_id,category,before,after,description,source,related,confidence,evidence_refs,visibility',
+    people: 'person_id,name,name_ar,title,title_ar,level,manager_id,employment,initials,active',
+    growth: 'person_id,skills,eq,manager_note,director_note,quarterly,work_style'
+  };
+  function bounded(q) { return (q && typeof q.range === 'function') ? q.range(0, MAX_ROWS - 1) : q; }
+
   // --- backend availability ------------------------------------------------
   // Usable only when a Supabase client with a query builder is present. When a
   // user is signed out there may be a client but no session; those calls throw
@@ -103,7 +118,7 @@
       var c = client();
       if (!c) { status.offline = false; return Promise.resolve(localStore()); }
       status.loading = true; status.lastError = null;
-      return Promise.resolve(c.from(TABLE).select('*'))
+      return Promise.resolve(bounded(c.from(TABLE).select(COLS.evaluations)))
         .then(function (res) {
           if (res && res.error) throw res.error;
           var rows = (res && res.data) || [];
@@ -187,8 +202,9 @@
       var c = client();
       var filt = function (arr) { return subjectId ? arr.filter(function (e) { return e.subjectId === subjectId; }) : arr; };
       if (!c) return Promise.resolve(filt(localEvents()));
-      var q = c.from('events').select('*');
-      if (subjectId && q.eq) q = q.eq('subject_id', subjectId);
+      var q = c.from('events').select(COLS.events);
+      if (subjectId && q.eq) q = q.eq('subject_id', subjectId);   // server-side filter → no client N+1
+      q = bounded(q);
       return Promise.resolve(q)
         .then(function (res) {
           if (res && res.error) throw res.error;
@@ -279,20 +295,29 @@
     }
   }
 
+  // Directory cache (PR A, item 4): the directory changes rarely and every view that
+  // needs it would otherwise re-read the whole table. Cache per SESSION by keying on the
+  // live client reference — a real session keeps one client (so we fetch once and reuse),
+  // while a new/rotated client (sign-in change, tests swapping WP._sb) auto-invalidates.
+  // Pass list(true) to force a refresh.
+  var peopleCache = { client: null };
+
   var people = {
     /* Fetch the directory the user may read and merge into WP.data.PEOPLE.
      * Falls back to the bundled mock on signed-out/offline/error. Never throws.
      * Returns WP.data.PEOPLE (the same array reference the UI reads). */
-    list: function () {
+    list: function (force) {
       var c = client();
       if (!c) { status.offline = false; return Promise.resolve(peopleStore()); }
+      if (!force && peopleCache.client === c) return Promise.resolve(peopleStore()); // cached this session
       status.loading = true; status.lastError = null;
-      return Promise.resolve(c.from(PEOPLE_TABLE).select('*'))
+      return Promise.resolve(bounded(c.from(PEOPLE_TABLE).select(COLS.people)))
         .then(function (res) {
           if (res && res.error) throw res.error;
           var rows = (res && res.data) || [];
           rows.forEach(mergePerson);          // server wins for directory fields
           status.offline = false; status.synced = true;
+          peopleCache.client = c;             // directory loaded for this session's client
           return peopleStore();
         })
         .catch(function (e) {
@@ -344,7 +369,7 @@
       var c = client();
       if (!c) { status.offline = false; return Promise.resolve(growthStore()); }
       status.loading = true; status.lastError = null;
-      return Promise.resolve(c.from(GROWTH_TABLE).select('*'))
+      return Promise.resolve(bounded(c.from(GROWTH_TABLE).select(COLS.growth)))
         .then(function (res) {
           if (res && res.error) throw res.error;
           ((res && res.data) || []).forEach(mergeGrowth);
@@ -365,8 +390,8 @@
     get: function (personId) {
       var c = client();
       if (!c) return Promise.resolve(growthStore()[personId] || null);
-      var q = c.from(GROWTH_TABLE).select('*');
-      if (q.eq) q = q.eq('person_id', personId);
+      var q = c.from(GROWTH_TABLE).select(COLS.growth);
+      if (q.eq) q = q.eq('person_id', personId);   // fetch one record server-side, not all
       return Promise.resolve(q)
         .then(function (res) {
           if (res && res.error) throw res.error;
@@ -390,6 +415,6 @@
     _eventToRow: eventToRow,
     _personRowToFields: personRowToFields,  // tests
     _growthRowToRec: growthRowToRec,        // tests
-    _resetImport: function () { importDone = false; }  // tests
+    _resetImport: function () { importDone = false; peopleCache.client = null; }  // tests
   };
 })(window.WP = window.WP || {});
