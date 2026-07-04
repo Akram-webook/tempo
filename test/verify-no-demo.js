@@ -107,6 +107,18 @@ try {
   N.state.lang = 'ar';
   assert(/بانتظار/.test(N.i18n.t('noWorkloadYet')), 'no-demo: AR empty-state string present');
 
+  // ── FOOTER: the credit signature carries real personal names ("M. Akram" /
+  //    "Ahmed Othman") which are part of the DEMO seed. In no-demo mode the bundle
+  //    must not present real names — the footer falls back to a neutral ops line. ──
+  N.state.lang = 'en'; assert(/Webook Operations/.test(N.i18n.t('sigOps')), 'no-demo: neutral footer line present (EN)');
+  N.state.lang = 'ar'; assert(/عمليات ويبوك/.test(N.i18n.t('sigOps')), 'no-demo: neutral footer line present (AR)');
+  const appJs = fs.readFileSync(path.join(root, 'src/js/app.js'), 'utf8');
+  const sigFn = (appJs.match(/function renderSignatureBar[\s\S]*?\n  }\n/) || [''])[0];
+  assert(/if\s*\(\s*!WP\.demo\(\)\s*\)/.test(sigFn), 'footer: personal credit is gated behind WP.demo()');
+  assert(/t\('sigOps'\)/.test(sigFn), 'footer: no-demo branch renders the neutral sigOps line');
+  const noDemoBranch = (sigFn.match(/if\s*\(\s*!WP\.demo\(\)\s*\)\s*\{[\s\S]*?return;\s*\}/) || [''])[0];
+  assert(!/M\. ?Akram|Ahmed Othman/.test(noDemoBranch), 'footer: no real personal names in the no-demo branch');
+
   finish();
 } catch (e) { errors.push('[fatal] ' + (e && e.stack || e)); finish(); }
 })();

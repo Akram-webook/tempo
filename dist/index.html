@@ -3654,6 +3654,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
     sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
     sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
+    sigOps:         { en: 'Webook Operations', ar: 'عمليات ويبوك' },
     // ─────────── Wave 3.002 Eval-Prep keys (Builder A) — keep fenced together for clean rebase ───────────
     epTitle:        { en: 'Evaluation prep · evidence', ar: 'تحضير التقييم · الأدلة' },
     epIntro:        { en: 'The evidence already on record — sourced, not invented. Prep only: no score, no verdict. You decide.', ar: 'الأدلة المسجّلة فعلاً — بمصادرها، لا مُختلقة. تحضير فقط: بلا درجة ولا حكم. القرار لك.' },
@@ -13832,12 +13833,26 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   // Signature / credits bar — a thin decorative footer across the bottom of the authed
   // app (department + the two credit signatures). Credit-only: no data, no logic. Hidden
-  // on the sign-in screen. Names are proper nouns, kept verbatim in both languages.
+  // on the sign-in screen. The personal credit names are part of the DEMO seed — in
+  // no-demo mode we must not bake real personal names into the bundle (a name-free empty
+  // state + the "no real names in the bundle" rule), so we fall back to a neutral
+  // department line. Names are proper nouns, kept verbatim in both languages.
   function renderSignatureBar() {
     const host = document.getElementById('sig-bar');
     if (!host) return;
     if (!WP.state.authed) { host.innerHTML = ''; return; }
     const t = WP.i18n.t;
+    if (!WP.demo()) {
+      host.innerHTML =
+        '<div class="sig-bar">' +
+          '<div class="sig-dept">' + t('sigDept') + '</div>' +
+          '<div class="sig-sep"></div>' +
+          '<div class="sig-credit">' +
+            '<div class="sig-name sig-name--accent">' + t('sigOps') + '</div>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
     host.innerHTML =
       '<div class="sig-bar">' +
         '<div class="sig-dept">' + t('sigDept') + '</div>' +
