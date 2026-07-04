@@ -459,6 +459,18 @@ h1, h2, h3, h4,
 @media (prefers-reduced-motion: reduce) { .btn.primary::after { display: none; } }
 
 main { padding: 22px; max-width: 1180px; margin: 0 auto; }
+/* People & Workload (org tree/map) goes FULL-BLEED so a wide branch fills the screen
+   instead of stranding in a 1180 box with a dead right-side gutter. Only this view
+   opts in (class toggled per-route in app.js) — text/data pages keep the readable cap.
+   Padding + margin:auto stay (harmless once the cap is off). */
+main.full-bleed { max-width: none; }
+/* …but on a WIDE screen the KPI cards shouldn't sprawl into 4 sparse ultra-wide blocks.
+   Cap each card and align the row to the content start; the tree itself still centres/fills.
+   Gated ≥1181px: below the old cap full-bleed is inert, so the normal responsive .metrics
+   rules (incl. the 2-col mobile breakpoint) must win — otherwise 4×180px overflows narrow. */
+@media (min-width: 1181px) {
+  main.full-bleed .metrics { grid-template-columns: repeat(4, minmax(180px, 300px)); justify-content: start; }
+}
 
 /* ---- app shell: top bar + collapsible drawer ---- */
 .appbar {
