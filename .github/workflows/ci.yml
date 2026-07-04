@@ -1,0 +1,38 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+permissions:
+  contents: read
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm ci
+      - name: Build from source
+        run: node build.js
+      - name: Dist-drift gate (committed dist must equal the rebuild)
+        run: |
+          if ! git diff --quiet -- dist/; then
+            echo "::error::dist/ is not the from-source rebuild. Run 'node build.js' and commit dist."
+            git --no-pager diff --stat -- dist/
+            exit 1
+          fi
+          echo "dist matches source rebuild"
+      - name: Test suite
+        run: npm test
+      - name: Scope guard (no stray files / secret VALUES)
+        run: |
+          if git ls-files | grep -E '(^|/)node_modules/|(^|/)[.]env$'; then
+            echo "::error::node_modules or .env is tracked"; exit 1; fi
+          if git grep -nE 'sb_secret_[A-Za-z0-9]{8}|eyJ[A-Za-z0-9_-]{24,}[.][A-Za-z0-9_-]{16,}[.][A-Za-z0-9_-]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY-----' -- . ':!*.md' ':!docs/**'; then
+            echo "::error::possible secret VALUE committed"; exit 1; fi
+          echo "scope guard passed"
