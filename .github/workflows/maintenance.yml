@@ -1,0 +1,32 @@
+name: maintenance
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.STEWARD_PAT }}
+          prompt: |
+            You are Tempo's nightly maintenance agent. Audit the repo against docs/ (System Design Standard, ethics invariants, finish-gate).
+            Pick the TOP 1-3 SAFE issues ONLY: small, reversible, covered by or accompanied by a test, and NOT touching
+            src/js/data/**, supabase/*.sql, auth/RLS, .github/**, or package dependencies.
+            For each: create branch auto/fix-<slug>, make the minimal fix, run `node build.js` and `npm test`, and open ONE small PR
+            labeled 'auto-fix' and 'needs-human-review' describing the issue, the fix, and the test.
+            Rules: do NOT merge; do NOT batch unrelated changes; never commit secrets or real personal data;
+            if an issue is risky/real-data/auth -> open an ISSUE instead of a PR. Every PR must pass ci.yml before it can land.
+          claude_args: "--max-turns 20"
