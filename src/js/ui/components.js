@@ -38,6 +38,9 @@
     const db = WP.db;
     const live = db && db.usingBackend && db.usingBackend() && db.status && db.status.synced;
     if (live) return '';
+    // no-demo mode carries no sample data → never show the "Sample data" badge
+    // (it is a demo affordance). Screens show honest empty states instead.
+    if (WP.demo && !WP.demo()) return '';
     return '<div class="provenance-note" title="' + t('sampleDataHint') + '">' +
       WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>';
   }

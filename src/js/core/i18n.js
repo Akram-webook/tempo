@@ -139,6 +139,7 @@
     healthyZone:    { en: 'in healthy zone (41–75%)', ar: 'في النطاق الصحي (٤١-٧٥٪)' },
     healthyBandSplit:{ en: '{h} of {n} in healthy band (41–75%)', ar: '{h} من {n} في النطاق الصحي (٤١-٧٥٪)' },
     noDataYet:      { en: 'No data yet', ar: 'لا توجد بيانات بعد' },
+    noWorkloadYet:  { en: 'No workload data yet — awaiting input', ar: 'لا توجد بيانات أعباء بعد — بانتظار الإدخال' },
     ofPeople:       { en: 'of {n} people', ar: 'من {n} أشخاص' },
     nearCapSub:     { en: 'at 76%+ load', ar: 'بحمل ٧٦٪ فأكثر' },
     tlTitle:        { en: 'Evidence timeline', ar: 'سجل الأدلة' },

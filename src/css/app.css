@@ -547,6 +547,7 @@ main.full-bleed { max-width: none; }
 
 /* ---- metric cards ---- */
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.metrics.metrics-empty { display: block; border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px 16px; }
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);

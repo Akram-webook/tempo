@@ -35,6 +35,12 @@
 
   // For anyone without explicit data, derive a gentle default from their work.
   function get(personId) {
+    // no-demo mode: no synthetic engagement. Return a neutral empty record so
+    // the "My progress" view renders its honest empty states (no fake streak).
+    if (WP.demo && !WP.demo()) {
+      return { streak: 0, freeze: 0, daysActive: 0, weekGoal: 0, weekDone: 0,
+        level: '—', levelNo: 0, levelPct: 0, doneToday: [], kudos: [] };
+    }
     if (ENGAGE[personId]) return ENGAGE[personId];
     const p = WP.access.byId(personId);
     const done = (p && p.dailyCheckin && p.dailyCheckin.done && p.dailyCheckin.done !== '—') ? [p.dailyCheckin.done] : [];
