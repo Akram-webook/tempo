@@ -37,11 +37,17 @@ try {
   assert(intervals.filter(Boolean).length >= 1, 'auto-refresh timer was scheduled on the map');
   const cb = intervals.filter(Boolean).slice(-1)[0];
 
+  // Layout: the People & Workload map goes full-bleed (kills the wide-screen dead space).
+  const viewMain = window.document.querySelector('.view-main');
+  assert(viewMain && viewMain.classList.contains('full-bleed'), 'map view sets .view-main.full-bleed (no 1180 cap)');
+
   // Navigate to Evaluations.
   WP.state.route = 'evaluations';
   WP.render();
   const hadEvalMarker = !view.querySelector('.controlbar');  // map toolbar gone
   assert(hadEvalMarker, 'evaluations replaced the map content');
+  // …and the cap is restored for a text/data page (only the map is full-bleed).
+  assert(!viewMain.classList.contains('full-bleed'), 'navigating away restores the readable cap (full-bleed removed)');
   const snapshot = view.innerHTML;
 
   // Fire the stale workload timer callback — it must NOT repaint the map.

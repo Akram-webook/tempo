@@ -218,6 +218,12 @@
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
     else WP.ui.workloadMap.render(root);
 
+    // Full-bleed ONLY the People & Workload map (route 'map') so the org tree fills a
+    // wide screen; every other view keeps `main`'s readable 1180 cap. Toggle (not add)
+    // so navigating away restores the cap.
+    var viewMain = document.querySelector('.view-main');
+    if (viewMain) viewMain.classList.toggle('full-bleed', WP.state.route === 'map');
+
     // Breadcrumb links (WP.ui.breadcrumb) — wired once, centrally, for every screen.
     root.querySelectorAll('[data-bc-go]').forEach(function (a) {
       a.onclick = function (e) { e.preventDefault(); WP.setState({ route: a.dataset.bcGo, selectedId: null }); };
