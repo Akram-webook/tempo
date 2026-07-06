@@ -27,7 +27,13 @@
   if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
   // — Auth provider selector (DECOUPLED from the Supabase DATA layer above). —
   // Supabase stays connected for WP.db (people/evaluations) no matter what this is;
-  // this ONLY chooses how people sign IN. Values: 'google' | 'verified-link' | 'directory'.
+  // this ONLY chooses how people sign IN.
+  // Values: 'password' | 'google' | 'verified-link' | 'directory'.
+  //
+  // 'password' (strongest, identity-proof) — email + password via Supabase
+  // signInWithPassword. The VERIFIED SESSION email is the only identity: there is
+  // no account picker and no way to become another person by typing their email.
+  // Requires Akram to enable Email+Password in Supabase Auth and invite the users.
   //
   // TEMPORARY STOPGAP — set to 'directory' to unblock everyone TODAY. Supabase's
   // built-in email sender is rate-limited ("Could not send the code"), so the
