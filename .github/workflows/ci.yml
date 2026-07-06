@@ -29,6 +29,8 @@ jobs:
           echo "dist matches source rebuild"
       - name: Test suite
         run: npm test
+      - name: Dist boot smoke (shipped bundle boots, login gate renders, router lands)
+        run: node test/verify-dist.js && node test/verify-smoke.js
       - name: Scope guard (no stray files / secret VALUES)
         run: |
           if git ls-files | grep -E '(^|/)node_modules/|(^|/)[.]env$'; then
