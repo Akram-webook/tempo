@@ -42,13 +42,14 @@
   // Supabase stays wired for data.
   function mode() {
     var m = WP.config && WP.config.authMode;
-    if (m === 'google' || m === 'verified-link' || m === 'directory') return m;
+    if (m === 'password' || m === 'google' || m === 'verified-link' || m === 'directory') return m;
     if (dbConfigured()) return 'verified-link';
     if (googleConfigured()) return 'google';
     return 'directory';
   }
   function modeVerifiedLink() { return mode() === 'verified-link'; }
   function modeGoogle() { return mode() === 'google'; }
+  function modePassword() { return mode() === 'password'; }
   function redirectUrl() { return location.origin + location.pathname; }
 
   function signIn(personId) {
@@ -108,7 +109,10 @@
     if (!dbConfigured()) return;
     sbClient(function (sb) {
       if (!sb) return;
-      if (!modeVerifiedLink()) return;   // client is up for WP.db; no email-link auth to wire
+      // Password mode also restores a persisted session ("stay signed in") and
+      // consumes a recovery/verify token from the URL — identity still comes ONLY
+      // from the verified session email (handleSession), never a typed value.
+      if (!modeVerifiedLink() && !modePassword()) return;   // client is up for WP.db; no session auth to wire
       try {
         sb.auth.onAuthStateChange(function (_evt, session) { if (session && !WP.state.authed) handleSession(session); });
         sb.auth.getSession().then(function (res) {
@@ -130,6 +134,53 @@
           rerender();
         })
         .catch(function () { WP._login = { step: 'email', email: email, err: 'errSendCode' }; rerender(); });
+    });
+  }
+
+  /* ---------- Password sign-in (Supabase email + password) ----------
+   * ANTI-IMPERSONATION: we send the typed email/password to Supabase, but the
+   * identity we act on is ONLY session.user.email returned by the verified
+   * session — never the string the user typed. So a session for email X can
+   * never resolve to a different person Y, and there is no account picker. */
+  function signInWithPassword(email, password) {
+    WP._login = { step: 'password', email: email, signing: true }; rerender();
+    sbClient(function (sb) {
+      if (!sb) { WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); return; }
+      sb.auth.signInWithPassword({ email: email, password: password })
+        .then(function (res) {
+          var session = res && res.data ? res.data.session : null;
+          // Wrong email OR wrong password → one generic message (don't reveal which).
+          if ((res && res.error) || !session) {
+            WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); return;
+          }
+          // Identity = the VERIFIED session email, not the typed field.
+          var em = session.user && session.user.email ? String(session.user.email).toLowerCase() : '';
+          var r = findByEmail(em);
+          if (r.error || !r.person) {
+            try { sb.auth.signOut(); } catch (e) {}
+            WP._login = { step: 'password', email: email, err: 'errNoAccount' }; rerender(); return;
+          }
+          if (!WP.access.hasAccess(r.person.id)) {
+            try { sb.auth.signOut(); } catch (e) {}
+            WP._denied = r.person; WP._login = null; rerender(); return;
+          }
+          signIn(r.person.id);
+        })
+        .catch(function () { WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); });
+    });
+  }
+
+  // Forgot / set password — emails a reset link. We never reveal whether the
+  // account exists (anti-enumeration): always show the same confirmation.
+  function resetPassword(email) {
+    if (!email) { WP._login = { step: 'password', email: email, err: 'errNoAccount' }; rerender(); return; }
+    WP._login = { step: 'password', email: email, resetting: true }; rerender();
+    sbClient(function (sb) {
+      if (!sb) { WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); return; }
+      function done() { WP._login = { step: 'password', email: email, resetSent: true }; rerender(); }
+      try {
+        sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() }).then(done).catch(done);
+      } catch (e) { done(); }
     });
   }
 
@@ -199,6 +250,25 @@
           '<span class="login-dot">·</span>' +
           '<button class="linkbtn" id="change-email">' + t('changeEmail') + '</button>' +
         '</div>';
+    } else if (modePassword()) {
+      const resetMsg = st.resetSent ? '<div class="login-note">' + WP.ui.icon('mail', 13) + ' ' + t('resetSent') + '</div>' : '';
+      body =
+        '<label class="login-lbl" for="login-email">' + t('emailLabel') + '</label>' +
+        '<form id="login-form" class="login-row" style="flex-direction:column;align-items:stretch;">' +
+          '<input id="login-email" class="login-input" type="email" inputmode="email" autocomplete="email" ' +
+            'placeholder="' + t('emailPh') + '" value="' + ui.esc(st.email || '') + '" aria-label="' + t('emailLabel') + '" />' +
+          '<input id="login-password" class="login-input" type="password" autocomplete="current-password" ' +
+            'placeholder="' + t('passwordPh') + '" aria-label="' + t('passwordLabel') + '" />' +
+          '<button class="btn primary" type="submit" ' + (st.signing ? 'disabled' : '') + '>' +
+            (st.signing ? t('verifying') : t('signInBtn')) + '</button>' +
+        '</form>' +
+        '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
+        resetMsg +
+        '<div class="login-actions">' +
+          '<button class="linkbtn" id="forgot-pw" ' + (st.resetting ? 'disabled' : '') + '>' +
+            (st.resetting ? t('sendingCode') : t('forgotPw')) + '</button>' +
+        '</div>' +
+        '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('passwordNote') + '</div>';
     } else {
       const primaryLabel = modeVerifiedLink() ? t('sendLink') : t('continueBtn');
       let note;
@@ -232,12 +302,23 @@
     const form = root.querySelector('#login-form');
     if (form) form.onsubmit = function (e) {
       e.preventDefault();
+      if (modePassword()) {
+        const em = String(root.querySelector('#login-email').value || '').trim().toLowerCase();
+        const pwEl = root.querySelector('#login-password');
+        signInWithPassword(em, pwEl ? pwEl.value : '');
+        return;
+      }
       const v = root.querySelector('#login-email').value;
       const r = findByEmail(v);
       if (r.error) { WP._login = { step: 'email', email: v, err: r.error }; render(root); return; }
       if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; render(root); return; }
       if (modeVerifiedLink()) { sendLink(r.person.email); }   // email a verified sign-in link
       else { signIn(r.person.id); }                            // Google pre-check / demo gate
+    };
+    const forgot = root.querySelector('#forgot-pw');
+    if (forgot) forgot.onclick = function () {
+      const em = String(root.querySelector('#login-email').value || '').trim().toLowerCase();
+      resetPassword(em);
     };
     const resend = root.querySelector('#resend-link');
     if (resend) resend.onclick = function () { sendLink(st.email); };
@@ -254,6 +335,7 @@
     domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
+    signInWithPassword: signInWithPassword, resetPassword: resetPassword,
     mode: mode
   };
   WP.ui.login = { render: render };

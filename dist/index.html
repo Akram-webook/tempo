@@ -2836,7 +2836,13 @@ main.full-bleed { max-width: none; }
   if (WP.config.googleClientId === undefined)  WP.config.googleClientId = '';
   // — Auth provider selector (DECOUPLED from the Supabase DATA layer above). —
   // Supabase stays connected for WP.db (people/evaluations) no matter what this is;
-  // this ONLY chooses how people sign IN. Values: 'google' | 'verified-link' | 'directory'.
+  // this ONLY chooses how people sign IN.
+  // Values: 'password' | 'google' | 'verified-link' | 'directory'.
+  //
+  // 'password' (strongest, identity-proof) — email + password via Supabase
+  // signInWithPassword. The VERIFIED SESSION email is the only identity: there is
+  // no account picker and no way to become another person by typing their email.
+  // Requires Akram to enable Email+Password in Supabase Auth and invite the users.
   //
   // TEMPORARY STOPGAP — set to 'directory' to unblock everyone TODAY. Supabase's
   // built-in email sender is rate-limited ("Could not send the code"), so the
@@ -3319,6 +3325,14 @@ main.full-bleed { max-width: none; }
     openLinkHint:   { en: 'Open that email on this device and tap the link to finish. The link only works from your inbox.', ar: 'افتح ذلك الإيميل على هذا الجهاز واضغط الرابط لإكمال الدخول. الرابط يعمل فقط من بريدك.' },
     resendLink:     { en: 'Resend link', ar: 'إعادة إرسال الرابط' },
     verifiedNoteLink:{ en: 'Verified sign-in — we email a one-time link to your @webook.com inbox. Only you can open it.', ar: 'دخول موثّق — نرسل رابطاً لمرة واحدة إلى بريد @webook.com الخاص بك. أنت وحدك تفتحه.' },
+    // — password sign-in (Supabase email + password) —
+    signInBtn:      { en: 'Sign in', ar: 'تسجيل الدخول' },
+    passwordLabel:  { en: 'Password', ar: 'كلمة المرور' },
+    passwordPh:     { en: 'Your password', ar: 'كلمة المرور' },
+    forgotPw:       { en: 'Forgot or set password', ar: 'نسيت أو تعيين كلمة المرور' },
+    resetSent:      { en: "If that account exists, we emailed a link to set your password. Open it from your inbox.", ar: 'إن كان الحساب موجوداً، أرسلنا رابطاً لتعيين كلمة المرور. افتحه من بريدك.' },
+    errBadCreds:    { en: 'Email or password is incorrect.', ar: 'الإيميل أو كلمة المرور غير صحيحة.' },
+    passwordNote:   { en: 'Sign in with your @webook.com email and password. Your verified session is your identity — you can only enter your own account.', ar: 'سجّل الدخول بإيميل @webook.com وكلمة المرور. جلستك الموثّقة هي هويتك — لا يمكنك الدخول إلا إلى حسابك.' },
     verifyingSession:{ en: 'Verifying your sign-in…', ar: 'جارٍ التحقق من دخولك…' },
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     account:        { en: 'Account', ar: 'الحساب' },
@@ -6753,13 +6767,14 @@ main.full-bleed { max-width: none; }
   // Supabase stays wired for data.
   function mode() {
     var m = WP.config && WP.config.authMode;
-    if (m === 'google' || m === 'verified-link' || m === 'directory') return m;
+    if (m === 'password' || m === 'google' || m === 'verified-link' || m === 'directory') return m;
     if (dbConfigured()) return 'verified-link';
     if (googleConfigured()) return 'google';
     return 'directory';
   }
   function modeVerifiedLink() { return mode() === 'verified-link'; }
   function modeGoogle() { return mode() === 'google'; }
+  function modePassword() { return mode() === 'password'; }
   function redirectUrl() { return location.origin + location.pathname; }
 
   function signIn(personId) {
@@ -6819,7 +6834,10 @@ main.full-bleed { max-width: none; }
     if (!dbConfigured()) return;
     sbClient(function (sb) {
       if (!sb) return;
-      if (!modeVerifiedLink()) return;   // client is up for WP.db; no email-link auth to wire
+      // Password mode also restores a persisted session ("stay signed in") and
+      // consumes a recovery/verify token from the URL — identity still comes ONLY
+      // from the verified session email (handleSession), never a typed value.
+      if (!modeVerifiedLink() && !modePassword()) return;   // client is up for WP.db; no session auth to wire
       try {
         sb.auth.onAuthStateChange(function (_evt, session) { if (session && !WP.state.authed) handleSession(session); });
         sb.auth.getSession().then(function (res) {
@@ -6841,6 +6859,53 @@ main.full-bleed { max-width: none; }
           rerender();
         })
         .catch(function () { WP._login = { step: 'email', email: email, err: 'errSendCode' }; rerender(); });
+    });
+  }
+
+  /* ---------- Password sign-in (Supabase email + password) ----------
+   * ANTI-IMPERSONATION: we send the typed email/password to Supabase, but the
+   * identity we act on is ONLY session.user.email returned by the verified
+   * session — never the string the user typed. So a session for email X can
+   * never resolve to a different person Y, and there is no account picker. */
+  function signInWithPassword(email, password) {
+    WP._login = { step: 'password', email: email, signing: true }; rerender();
+    sbClient(function (sb) {
+      if (!sb) { WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); return; }
+      sb.auth.signInWithPassword({ email: email, password: password })
+        .then(function (res) {
+          var session = res && res.data ? res.data.session : null;
+          // Wrong email OR wrong password → one generic message (don't reveal which).
+          if ((res && res.error) || !session) {
+            WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); return;
+          }
+          // Identity = the VERIFIED session email, not the typed field.
+          var em = session.user && session.user.email ? String(session.user.email).toLowerCase() : '';
+          var r = findByEmail(em);
+          if (r.error || !r.person) {
+            try { sb.auth.signOut(); } catch (e) {}
+            WP._login = { step: 'password', email: email, err: 'errNoAccount' }; rerender(); return;
+          }
+          if (!WP.access.hasAccess(r.person.id)) {
+            try { sb.auth.signOut(); } catch (e) {}
+            WP._denied = r.person; WP._login = null; rerender(); return;
+          }
+          signIn(r.person.id);
+        })
+        .catch(function () { WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); });
+    });
+  }
+
+  // Forgot / set password — emails a reset link. We never reveal whether the
+  // account exists (anti-enumeration): always show the same confirmation.
+  function resetPassword(email) {
+    if (!email) { WP._login = { step: 'password', email: email, err: 'errNoAccount' }; rerender(); return; }
+    WP._login = { step: 'password', email: email, resetting: true }; rerender();
+    sbClient(function (sb) {
+      if (!sb) { WP._login = { step: 'password', email: email, err: 'errBadCreds' }; rerender(); return; }
+      function done() { WP._login = { step: 'password', email: email, resetSent: true }; rerender(); }
+      try {
+        sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() }).then(done).catch(done);
+      } catch (e) { done(); }
     });
   }
 
@@ -6910,6 +6975,25 @@ main.full-bleed { max-width: none; }
           '<span class="login-dot">·</span>' +
           '<button class="linkbtn" id="change-email">' + t('changeEmail') + '</button>' +
         '</div>';
+    } else if (modePassword()) {
+      const resetMsg = st.resetSent ? '<div class="login-note">' + WP.ui.icon('mail', 13) + ' ' + t('resetSent') + '</div>' : '';
+      body =
+        '<label class="login-lbl" for="login-email">' + t('emailLabel') + '</label>' +
+        '<form id="login-form" class="login-row" style="flex-direction:column;align-items:stretch;">' +
+          '<input id="login-email" class="login-input" type="email" inputmode="email" autocomplete="email" ' +
+            'placeholder="' + t('emailPh') + '" value="' + ui.esc(st.email || '') + '" aria-label="' + t('emailLabel') + '" />' +
+          '<input id="login-password" class="login-input" type="password" autocomplete="current-password" ' +
+            'placeholder="' + t('passwordPh') + '" aria-label="' + t('passwordLabel') + '" />' +
+          '<button class="btn primary" type="submit" ' + (st.signing ? 'disabled' : '') + '>' +
+            (st.signing ? t('verifying') : t('signInBtn')) + '</button>' +
+        '</form>' +
+        '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
+        resetMsg +
+        '<div class="login-actions">' +
+          '<button class="linkbtn" id="forgot-pw" ' + (st.resetting ? 'disabled' : '') + '>' +
+            (st.resetting ? t('sendingCode') : t('forgotPw')) + '</button>' +
+        '</div>' +
+        '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('passwordNote') + '</div>';
     } else {
       const primaryLabel = modeVerifiedLink() ? t('sendLink') : t('continueBtn');
       let note;
@@ -6943,12 +7027,23 @@ main.full-bleed { max-width: none; }
     const form = root.querySelector('#login-form');
     if (form) form.onsubmit = function (e) {
       e.preventDefault();
+      if (modePassword()) {
+        const em = String(root.querySelector('#login-email').value || '').trim().toLowerCase();
+        const pwEl = root.querySelector('#login-password');
+        signInWithPassword(em, pwEl ? pwEl.value : '');
+        return;
+      }
       const v = root.querySelector('#login-email').value;
       const r = findByEmail(v);
       if (r.error) { WP._login = { step: 'email', email: v, err: r.error }; render(root); return; }
       if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; render(root); return; }
       if (modeVerifiedLink()) { sendLink(r.person.email); }   // email a verified sign-in link
       else { signIn(r.person.id); }                            // Google pre-check / demo gate
+    };
+    const forgot = root.querySelector('#forgot-pw');
+    if (forgot) forgot.onclick = function () {
+      const em = String(root.querySelector('#login-email').value || '').trim().toLowerCase();
+      resetPassword(em);
     };
     const resend = root.querySelector('#resend-link');
     if (resend) resend.onclick = function () { sendLink(st.email); };
@@ -6965,6 +7060,7 @@ main.full-bleed { max-width: none; }
     domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
+    signInWithPassword: signInWithPassword, resetPassword: resetPassword,
     mode: mode
   };
   WP.ui.login = { render: render };
