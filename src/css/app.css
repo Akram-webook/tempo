@@ -842,9 +842,10 @@ main.full-bleed { max-width: none; }
 /* fill the canvas: a small/collapsed chart centers in the viewport instead of
    stranding in the corner; a large chart grows and scrolls from the start */
 .tree-scroll {
-  overflow-x: auto; text-align: center; padding: 4px 0 12px; cursor: grab;
+  overflow: auto; text-align: center; padding: 4px 0 12px; cursor: grab;   /* was overflow-x — now scrolls vertically too (fixes full-screen "can't scroll down") */
   min-height: max(380px, calc(100vh - 270px));
-  display: flex; align-items: center; justify-content: safe center;
+  max-height: calc(100vh - 96px);   /* bound the height so a tall/expanded tree scrolls instead of clipping */
+  display: flex; align-items: safe center; justify-content: safe center;    /* safe center → top stays reachable when the tree overflows */
 }
 .tree-scroll.panning { cursor: grabbing; }                       /* active pan = closed fist */
 .tree-scroll.panning, .tree-scroll.panning * { cursor: grabbing !important; user-select: none; }
