@@ -114,7 +114,13 @@
       // from the verified session email (handleSession), never a typed value.
       if (!modeVerifiedLink() && !modePassword()) return;   // client is up for WP.db; no session auth to wire
       try {
-        sb.auth.onAuthStateChange(function (_evt, session) { if (session && !WP.state.authed) handleSession(session); });
+        sb.auth.onAuthStateChange(function (_evt, session) {
+          // A reset/set-password link lands here as PASSWORD_RECOVERY: divert to the
+          // set-new-password screen instead of signing in. Identity still comes ONLY
+          // from the verified session email, and only AFTER the new password is set.
+          if (_evt === 'PASSWORD_RECOVERY' && session) { WP._recovery = session; WP._login = { step: 'setpw', email: session.user && session.user.email ? session.user.email : '' }; rerender(); return; }
+          if (session && !WP.state.authed) handleSession(session);
+        });
         sb.auth.getSession().then(function (res) {
           const session = res && res.data ? res.data.session : null;
           if (session && !WP.state.authed) handleSession(session);
@@ -184,6 +190,33 @@
     });
   }
 
+  /* ---------- Set a new password (recovery-return) ----------
+   * After a reset link, Supabase fires PASSWORD_RECOVERY and we show this screen.
+   * Validate client-side (length + match), then updateUser({password}); on success
+   * the verified session (its email is the ONLY identity) signs the person in via
+   * handleSession — a recovery link can never sign you in as someone else. */
+  function updateNewPassword(pw, pw2) {
+    var email = (WP._login && WP._login.email) || '';
+    if (!pw || String(pw).length < 8) { WP._login = { step: 'setpw', email: email, err: 'pwTooShort' }; rerender(); return; }
+    if (pw !== pw2) { WP._login = { step: 'setpw', email: email, err: 'pwMismatch' }; rerender(); return; }
+    WP._login = { step: 'setpw', email: email, saving: true }; rerender();
+    sbClient(function (sb) {
+      if (!sb) { WP._login = { step: 'setpw', email: email, err: 'errSetPw' }; rerender(); return; }
+      function fail() { WP._login = { step: 'setpw', email: email, err: 'errSetPw' }; rerender(); }
+      try {
+        sb.auth.updateUser({ password: pw }).then(function (res) {
+          if (res && res.error) { fail(); return; }
+          WP._recovery = null;
+          // Sign in from the VERIFIED session (identity = session email), never a typed value.
+          sb.auth.getSession().then(function (r) {
+            var session = r && r.data ? r.data.session : null;
+            if (session) handleSession(session); else fail();
+          }).catch(fail);
+        }).catch(fail);
+      } catch (e) { fail(); }
+    });
+  }
+
   /* ---------- Google Identity Services ---------- */
   function decodeJwt(tok) {
     try {
@@ -240,6 +273,19 @@
           '<div class="g-denied-h">' + t('accessDenied') + '</div>' +
           '<div class="g-denied-sub">' + ui.esc(emailOf(d)) + ' — ' + t('accessDeniedSub') + '</div>' +
           '<button class="g-back" id="g-denied-back">' + t('useAnother') + '</button></div>';
+    } else if (st.step === 'setpw') {
+      body =
+        '<div class="g-denied-h">' + t('setPwTitle') + '</div>' +
+        '<p class="login-sub">' + t('setPwSub') + (st.email ? ' <strong>' + ui.esc(st.email) + '</strong>' : '') + '</p>' +
+        '<form id="setpw-form" class="login-row" style="flex-direction:column;align-items:stretch;">' +
+          '<label class="login-lbl" for="setpw-new">' + t('newPasswordLabel') + '</label>' +
+          '<input id="setpw-new" class="login-input" type="password" autocomplete="new-password" placeholder="' + t('newPasswordPh') + '" aria-label="' + t('newPasswordLabel') + '" />' +
+          '<label class="login-lbl" for="setpw-confirm">' + t('confirmPasswordLabel') + '</label>' +
+          '<input id="setpw-confirm" class="login-input" type="password" autocomplete="new-password" placeholder="' + t('confirmPasswordPh') + '" aria-label="' + t('confirmPasswordLabel') + '" />' +
+          '<button class="btn primary" type="submit" ' + (st.saving ? 'disabled' : '') + '>' + (st.saving ? t('verifying') : t('setPwBtn')) + '</button>' +
+        '</form>' +
+        '<div class="login-err">' + (st.err ? t(st.err) : '') + '</div>' +
+        '<div class="login-note">' + WP.ui.icon('lock', 13) + ' ' + t('setPwNote') + '</div>';
     } else if (st.step === 'sent') {
       body =
         '<div class="login-codeto">' + WP.ui.icon('mail', 15) + ' ' + t('linkSentTo') + ' <strong>' + ui.esc(st.email) + '</strong></div>' +
@@ -315,6 +361,12 @@
       if (modeVerifiedLink()) { sendLink(r.person.email); }   // email a verified sign-in link
       else { signIn(r.person.id); }                            // Google pre-check / demo gate
     };
+    const setpwForm = root.querySelector('#setpw-form');
+    if (setpwForm) setpwForm.onsubmit = function (e) {
+      e.preventDefault();
+      var a = root.querySelector('#setpw-new'), b = root.querySelector('#setpw-confirm');
+      updateNewPassword(a ? a.value : '', b ? b.value : '');
+    };
     const forgot = root.querySelector('#forgot-pw');
     if (forgot) forgot.onclick = function () {
       const em = String(root.querySelector('#login-email').value || '').trim().toLowerCase();
@@ -335,7 +387,7 @@
     domain: DOMAIN, emailOf: emailOf, findByEmail: findByEmail,
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
-    signInWithPassword: signInWithPassword, resetPassword: resetPassword,
+    signInWithPassword: signInWithPassword, resetPassword: resetPassword, updateNewPassword: updateNewPassword,
     mode: mode
   };
   WP.ui.login = { render: render };
