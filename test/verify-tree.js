@@ -58,7 +58,7 @@ try {
 
   const nodes = el.querySelectorAll('.tree .node');
   assert(nodes.length > 0, 'tree rendered some nodes (' + nodes.length + ')');
-  assert(el.querySelector('.node-ava[data-profile]'), 'avatar profile target present');
+  assert(el.querySelector('.node-ava') && !el.querySelector('.node-ava[data-profile]'), 'avatar renders and is NOT a profile-open target (clicking a name never opens a profile)');
 
   // --- COMPACT is the default + the workload COLOR is always shown ---------------
   assert(el.querySelector('.node-compact'), 'compact density is the default (node-compact present)');
@@ -76,13 +76,13 @@ try {
   assert(stacks[0].querySelector(':scope > li .node'), 'stacked reports are full cards under their manager');
 
   // --- DETAIL on peek: the popover reuses WP.ui.peek (no new popover built) ----------
-  assert(typeof WP.ui.peek === 'function', 'node-peek popover available (reused)');
-  const ava = el.querySelector('.node-ava[data-profile]');
+  assert(typeof WP.ui.peek === 'function', 'node-peek popover util still exists (used elsewhere)');
   let peeked = false; const realPeek = WP.ui.peek;
   WP.ui.peek = function (id) { peeked = !!id; };
-  ava.click();
+  const leaf = el.querySelector('.tree .node:not(.has-kids)[data-id]');
+  if (leaf) leaf.click();
   WP.ui.peek = realPeek;
-  assert(peeked, 'clicking a card avatar opens the node-peek detail');
+  assert(!peeked, 'clicking a person in the map does NOT open a profile (no profile-on-click)');
 
   // --- DETAILED density restores the full card (title + employment labels) ----------
   WP.ui.workloadMap.render(el);   // re-render fresh

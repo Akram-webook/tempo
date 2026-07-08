@@ -21,13 +21,9 @@
         '<span class="oc-sample" title="' + t('sampleDataHint') + '">' + ic('alert', 13) + ' ' + t('sampleData') + '</span>' +
       '</div>' +
       '<div class="oc-bar-r">' +
-        '<button type="button" class="btn" id="oc-expand">' + ic('plus', 14) + ' ' + t('ocExpandAll') + '</button>' +
-        '<button type="button" class="btn" id="oc-collapse">' + ic('minus', 14) + ' ' + t('ocCollapseAll') + '</button>' +
         '<button type="button" class="btn icon-btn" id="oc-lang" aria-label="' + t('prefsLang') + '" title="' + t('prefsLang') + '">' + (WP.state.lang === 'ar' ? 'EN' : 'ع') + '</button>' +
         '<button type="button" class="btn icon-btn" id="oc-theme" aria-label="' + t('prefsTheme') + '" title="' + t('prefsTheme') + '">' + ic(WP.state.theme === 'light' ? 'moon' : 'sun', 16) + '</button>' +
       '</div>';
-    el.querySelector('#oc-expand').onclick = function () { WP.ui.workloadMap.expandAll(); };
-    el.querySelector('#oc-collapse').onclick = function () { WP.ui.workloadMap.collapseAll(); };
     el.querySelector('#oc-lang').onclick = function () { WP.setState({ lang: WP.state.lang === 'ar' ? 'en' : 'ar' }); };
     el.querySelector('#oc-theme').onclick = function () { WP.setState({ theme: WP.state.theme === 'light' ? 'dark' : 'light' }); };
   }

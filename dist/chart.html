@@ -1059,9 +1059,10 @@ main.full-bleed { max-width: none; }
 /* fill the canvas: a small/collapsed chart centers in the viewport instead of
    stranding in the corner; a large chart grows and scrolls from the start */
 .tree-scroll {
-  overflow-x: auto; text-align: center; padding: 4px 0 12px; cursor: grab;
+  overflow: auto; text-align: center; padding: 4px 0 12px; cursor: grab;   /* was overflow-x — now scrolls vertically too (fixes full-screen "can't scroll down") */
   min-height: max(380px, calc(100vh - 270px));
-  display: flex; align-items: center; justify-content: safe center;
+  max-height: calc(100vh - 96px);   /* bound the height so a tall/expanded tree scrolls instead of clipping */
+  display: flex; align-items: safe center; justify-content: safe center;    /* safe center → top stays reachable when the tree overflows */
 }
 .tree-scroll.panning { cursor: grabbing; }                       /* active pan = closed fist */
 .tree-scroll.panning, .tree-scroll.panning * { cursor: grabbing !important; user-select: none; }
@@ -5495,8 +5496,9 @@ main.full-bleed { max-width: none; }
     people.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
     const c = {};
     people.forEach(function (p) {
-      // a "team lead" carries a team label; collapse their subtree by default
-      if (hasKids[p.id] && p.team) c[p.id] = true;
+      // Collapse EVERY branch by default → only the top (C-level) shows; each level
+      // reveals its reports when clicked. Seniors stay hidden until the top is opened.
+      if (hasKids[p.id]) c[p.id] = true;
     });
     return c;
   }
@@ -5511,10 +5513,10 @@ main.full-bleed { max-width: none; }
     const healthSplit = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
     return WP.ui.provenanceNote() +
       '<div class="metrics">' +
-      card(t('teamHealth'), m.teamHealth + '%', healthSplit) +
-      card(t('available'), m.counts.available, t('available')) +
-      card(t('nearCapacity'), m.nearOrOver, t('nearCapacity')) +
-      card(t('earlyWarnings'), m.earlyWarnings, t('burnoutFlag').split('—')[0]) +
+      card(t('teamHealth'), m.teamHealth + '%', '') +
+      card(t('available'), m.counts.available, '') +
+      card(t('nearCapacity'), m.nearOrOver, '') +
+      card(t('earlyWarnings'), m.earlyWarnings, '') +
       '</div>';
   }
 
@@ -5605,8 +5607,7 @@ main.full-bleed { max-width: none; }
       ? '<button class="node-focus" data-focus="' + person.id + '" aria-label="' + t('focusTeam') + '" title="' + t('focusTeam') + '">' + WP.ui.icon('target', 13) + '</button>'
       : '';
     // The workload color/status dot is ALWAYS shown (the key signal) — even in compact.
-    const ava = '<span class="node-ava" data-profile="' + person.id + '" role="button" tabindex="0"' +
-        ' aria-label="' + ui.esc(WP.i18n.name(person)) + ' — ' + t('openProfile') + '">' + ui.avatar(person, accent) + '</span>';
+    const ava = '<span class="node-ava">' + ui.avatar(person, accent) + '</span>';
     const nm = '<div class="nm">' + ui.esc(WP.i18n.name(person)) + '</div>';
 
     // COMPACT card: photo + name + small workload indicator + color/status. Full detail
@@ -5615,7 +5616,7 @@ main.full-bleed { max-width: none; }
     const cls = 'node' + (person.tbc ? ' is-tbc' : '') + (kidCount ? ' has-kids' : '') + (compact ? ' node-compact' : '');
     if (compact) {
       return '<div class="' + cls + '" data-id="' + person.id + '" style="--node-accent:' + accent + '"' +
-          ' title="' + (kidCount ? (isCol ? t('clickShowTeam') : t('clickHideTeam')) : t('openProfile')) + '">' +
+          ' title="' + (kidCount ? (isCol ? t('clickShowTeam') : t('clickHideTeam')) : '') + '">' +
         flame + focusBtn + ava + nm +
         (person.tbc ? statusLine(person) : loadBar(snap)) +
         caret +
@@ -5921,14 +5922,7 @@ main.full-bleed { max-width: none; }
       dateNav(win, WP.state.refDate) +
     '</div>';
 
-    const legend = '<div class="legend">' + WP.data.STATES.map(function (s) {
-      return '<span class="legend-item"><span class="dot" style="background:' + ui.stateColor(s) + '"></span>' +
-        ui.esc(WP.i18n.stateLabel(s)) + ' <em>' + s.min + '–' + (s.max > 100 ? '100+' : s.max) + '%</em></span>';
-    }).join('') +
-      '<span class="legend-sep" aria-hidden="true"></span>' +
-      '<span class="legend-item"><span class="emp emp-ft">' + t('fullTime') + '</span></span>' +
-      '<span class="legend-item"><span class="emp emp-free">' + t('freelance') + '</span></span>' +
-      '</div>';
+    const legend = '';   // capacity-band legend removed (kept simple, per the tree redesign)
 
     const animCls = animateNext ? ' tree-anim' : '';
     animateNext = false;
@@ -5981,10 +5975,11 @@ main.full-bleed { max-width: none; }
     // Cards with no reports just open the profile.
     root.querySelectorAll('.tree .node[data-id]').forEach(function (el) {
       el.onclick = function (e) {
-        if (e.target.closest('[data-caret]') || e.target.closest('[data-profile]')) return;
+        if (e.target.closest('[data-caret]')) return;
         const id = el.dataset.id;
+        // Clicking a person never opens a profile now — a branch expands/collapses;
+        // a leaf card does nothing. Keeps the tree simple.
         if (el.classList.contains('has-kids')) { collapsed[id] = !collapsed[id]; render(root); }
-        else WP.ui.peek(id);
       };
     });
     // Directory table (list mode) — WBK PRO parity: search + filter-by-state +
@@ -6903,13 +6898,9 @@ main.full-bleed { max-width: none; }
         '<span class="oc-sample" title="' + t('sampleDataHint') + '">' + ic('alert', 13) + ' ' + t('sampleData') + '</span>' +
       '</div>' +
       '<div class="oc-bar-r">' +
-        '<button type="button" class="btn" id="oc-expand">' + ic('plus', 14) + ' ' + t('ocExpandAll') + '</button>' +
-        '<button type="button" class="btn" id="oc-collapse">' + ic('minus', 14) + ' ' + t('ocCollapseAll') + '</button>' +
         '<button type="button" class="btn icon-btn" id="oc-lang" aria-label="' + t('prefsLang') + '" title="' + t('prefsLang') + '">' + (WP.state.lang === 'ar' ? 'EN' : 'ع') + '</button>' +
         '<button type="button" class="btn icon-btn" id="oc-theme" aria-label="' + t('prefsTheme') + '" title="' + t('prefsTheme') + '">' + ic(WP.state.theme === 'light' ? 'moon' : 'sun', 16) + '</button>' +
       '</div>';
-    el.querySelector('#oc-expand').onclick = function () { WP.ui.workloadMap.expandAll(); };
-    el.querySelector('#oc-collapse').onclick = function () { WP.ui.workloadMap.collapseAll(); };
     el.querySelector('#oc-lang').onclick = function () { WP.setState({ lang: WP.state.lang === 'ar' ? 'en' : 'ar' }); };
     el.querySelector('#oc-theme').onclick = function () { WP.setState({ theme: WP.state.theme === 'light' ? 'dark' : 'light' }); };
   }

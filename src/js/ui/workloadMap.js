@@ -37,8 +37,9 @@
     people.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
     const c = {};
     people.forEach(function (p) {
-      // a "team lead" carries a team label; collapse their subtree by default
-      if (hasKids[p.id] && p.team) c[p.id] = true;
+      // Collapse EVERY branch by default → only the top (C-level) shows; each level
+      // reveals its reports when clicked. Seniors stay hidden until the top is opened.
+      if (hasKids[p.id]) c[p.id] = true;
     });
     return c;
   }
@@ -53,10 +54,10 @@
     const healthSplit = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
     return WP.ui.provenanceNote() +
       '<div class="metrics">' +
-      card(t('teamHealth'), m.teamHealth + '%', healthSplit) +
-      card(t('available'), m.counts.available, t('available')) +
-      card(t('nearCapacity'), m.nearOrOver, t('nearCapacity')) +
-      card(t('earlyWarnings'), m.earlyWarnings, t('burnoutFlag').split('—')[0]) +
+      card(t('teamHealth'), m.teamHealth + '%', '') +
+      card(t('available'), m.counts.available, '') +
+      card(t('nearCapacity'), m.nearOrOver, '') +
+      card(t('earlyWarnings'), m.earlyWarnings, '') +
       '</div>';
   }
 
@@ -147,8 +148,7 @@
       ? '<button class="node-focus" data-focus="' + person.id + '" aria-label="' + t('focusTeam') + '" title="' + t('focusTeam') + '">' + WP.ui.icon('target', 13) + '</button>'
       : '';
     // The workload color/status dot is ALWAYS shown (the key signal) — even in compact.
-    const ava = '<span class="node-ava" data-profile="' + person.id + '" role="button" tabindex="0"' +
-        ' aria-label="' + ui.esc(WP.i18n.name(person)) + ' — ' + t('openProfile') + '">' + ui.avatar(person, accent) + '</span>';
+    const ava = '<span class="node-ava">' + ui.avatar(person, accent) + '</span>';
     const nm = '<div class="nm">' + ui.esc(WP.i18n.name(person)) + '</div>';
 
     // COMPACT card: photo + name + small workload indicator + color/status. Full detail
@@ -157,7 +157,7 @@
     const cls = 'node' + (person.tbc ? ' is-tbc' : '') + (kidCount ? ' has-kids' : '') + (compact ? ' node-compact' : '');
     if (compact) {
       return '<div class="' + cls + '" data-id="' + person.id + '" style="--node-accent:' + accent + '"' +
-          ' title="' + (kidCount ? (isCol ? t('clickShowTeam') : t('clickHideTeam')) : t('openProfile')) + '">' +
+          ' title="' + (kidCount ? (isCol ? t('clickShowTeam') : t('clickHideTeam')) : '') + '">' +
         flame + focusBtn + ava + nm +
         (person.tbc ? statusLine(person) : loadBar(snap)) +
         caret +
@@ -463,14 +463,7 @@
       dateNav(win, WP.state.refDate) +
     '</div>';
 
-    const legend = '<div class="legend">' + WP.data.STATES.map(function (s) {
-      return '<span class="legend-item"><span class="dot" style="background:' + ui.stateColor(s) + '"></span>' +
-        ui.esc(WP.i18n.stateLabel(s)) + ' <em>' + s.min + '–' + (s.max > 100 ? '100+' : s.max) + '%</em></span>';
-    }).join('') +
-      '<span class="legend-sep" aria-hidden="true"></span>' +
-      '<span class="legend-item"><span class="emp emp-ft">' + t('fullTime') + '</span></span>' +
-      '<span class="legend-item"><span class="emp emp-free">' + t('freelance') + '</span></span>' +
-      '</div>';
+    const legend = '';   // capacity-band legend removed (kept simple, per the tree redesign)
 
     const animCls = animateNext ? ' tree-anim' : '';
     animateNext = false;
@@ -523,10 +516,11 @@
     // Cards with no reports just open the profile.
     root.querySelectorAll('.tree .node[data-id]').forEach(function (el) {
       el.onclick = function (e) {
-        if (e.target.closest('[data-caret]') || e.target.closest('[data-profile]')) return;
+        if (e.target.closest('[data-caret]')) return;
         const id = el.dataset.id;
+        // Clicking a person never opens a profile now — a branch expands/collapses;
+        // a leaf card does nothing. Keeps the tree simple.
         if (el.classList.contains('has-kids')) { collapsed[id] = !collapsed[id]; render(root); }
-        else WP.ui.peek(id);
       };
     });
     // Directory table (list mode) — WBK PRO parity: search + filter-by-state +
