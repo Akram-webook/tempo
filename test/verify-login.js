@@ -37,8 +37,11 @@ try{
     p_meshalA:'alsmari@webook.com',p_raghdaa:'raghdaa@webook.com'};
   Object.keys(PHASE_B).forEach(function(id){
     assert(f(PHASE_B[id]).person && f(PHASE_B[id]).person.id===id, PHASE_B[id]+' → '+id);
-    assert(WP.access.hasAccess(id)===true, id+' passes the access gate (non-tbc)');
+    assert(WP.access.hasAccess(id)===(id==='p_farah'), id+' access matches the 2026-07 allowlist (only Farah allowed among phase B)');
   });
+  // ACCESS LOCKDOWN (2026-07): only akram / ahmed / farah / motaa may enter; all others blocked.
+  ['p_akram','p_ahmed','p_farah','p_motaa'].forEach(function(id){ assert(WP.access.hasAccess(id)===true, id+' is on the allowlist'); });
+  ['p_hamdi','p_zaidan','p_raghdaa','p_idris','p_osama'].forEach(function(id){ assert(WP.access.hasAccess(id)===false, id+' is blocked (not on the allowlist)'); });
   // Only the 3 TBC vacancies stay account-less (no email mapped).
   ['p_tbc_af_spec','p_tbc_af_coord','p_tbc_sports'].forEach(function(id){
     assert(!WP.access.byId(id) || !WP.access.byId(id).email, id+' (TBC vacancy) has no login');
@@ -67,13 +70,13 @@ try{
   assert(!view.querySelector('.g-accts'),'no pick-anyone list');
 
   // submit a valid account → emails a link to the REAL mailbox, does NOT sign in yet
-  submitEmail(view,'talal.samir.c@webook.com');
-  assert(sentTo==='talal.samir.c@webook.com','sign-in link requested for the real mailbox');
+  submitEmail(view,'ahmed.othman@webook.com');
+  assert(sentTo==='ahmed.othman@webook.com','sign-in link requested for the real mailbox');
   assert(WP.state.authed===false,'not signed in just by submitting an email');
 
   // simulate the user opening the link → Supabase returns a verified session
-  WP.auth.handleSession({user:{email:'talal.samir.c@webook.com'}});
-  assert(WP.state.authed===true && WP.state.viewerId==='p_talal','opening the verified link signs the right user in');
+  WP.auth.handleSession({user:{email:'ahmed.othman@webook.com'}});
+  assert(WP.state.authed===true && WP.state.viewerId==='p_ahmed','opening the verified link signs the right user in');
 
   // a session for a NON-account email must NOT sign in
   WP.state.authed=false; WP.state.viewerId=null;

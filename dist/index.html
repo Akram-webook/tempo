@@ -4051,8 +4051,13 @@ main.full-bleed { max-width: none; }
    * can revoke/grant from the Permissions screen. NOTE: this is the APP-LEVEL gate
    * — on a public static host it deters but does not truly lock (see SECURITY.md);
    * the real lock is an edge gate (Cloudflare Access) or a server backend. */
+  // ACCESS ALLOWLIST (2026-07 lockdown) — only these people may enter the app; everyone
+  // else hits the "no access" screen. Add ids here (or via the admin access screen) as
+  // people are onboarded. Fully reversible: widen the list or restore the old
+  // "all non-tbc granted" line. Domain (@webook.com) + identity are still enforced separately.
+  const ALLOWLIST = { p_akram: true, p_ahmed: true, p_farah: true, p_motaa: true };
   const GRANTED = {};
-  WP.data.PEOPLE.forEach(function (p) { if (!p.tbc) GRANTED[p.id] = true; });
+  WP.data.PEOPLE.forEach(function (p) { if (!p.tbc && ALLOWLIST[p.id]) GRANTED[p.id] = true; });
   function hasAccess(id) { return !!GRANTED[id]; }
   function grantAccess(id, on) {
     GRANTED[id] = !!on;
