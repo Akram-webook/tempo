@@ -10,10 +10,18 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  id-token: write          # claude-code-action fetches an OIDC token; without this it errors
 jobs:
   review:
-    if: ${{ github.event_name == 'pull_request' || contains(github.event.comment.body, '@claude') }}
+    # Only run when explicitly enabled AND a key is configured. Without the ANTHROPIC_API_KEY
+    # secret the action can never succeed, so gating here keeps PRs GREEN instead of a red X
+    # for a feature that isn't set up. To turn it on: set the repo secret ANTHROPIC_API_KEY
+    # and the repo variable ENABLE_CLAUDE_REVIEW=true.
+    if: >-
+      ${{ (github.event_name == 'pull_request' || contains(github.event.comment.body, '@claude'))
+          && vars.ENABLE_CLAUDE_REVIEW == 'true' }}
     runs-on: ubuntu-latest
+    continue-on-error: true   # a review hiccup must never block a mergeable PR
     steps:
       - uses: actions/checkout@v4
         with:
