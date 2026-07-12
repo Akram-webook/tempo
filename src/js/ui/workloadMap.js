@@ -29,17 +29,23 @@
   // (e.g. a transform-scaled viewport + minimap) — the data + render stay; only the
   // viewport wrapper changes. Revisit only at that scale.
 
-  // Progressive disclosure: keep the leadership spine open (director + the team-lead
-  // row) so the first view actually fills the canvas, and collapse only each team's
-  // internals. One click on a team card then drills in.
+  // Progressive disclosure: open the LEADERSHIP SPINE by default — C-level → Director →
+  // Sr. Managers are all visible on first load, and each Sr. Manager's team (managers,
+  // specialists, open roles) stays collapsed until clicked. That gives an at-a-glance org
+  // structure without the canvas filling with every specialist. Rule: a node is collapsed
+  // only if its OWN level is Sr. Manager (rank 1) or below — so its reports (rank >= 2)
+  // stay hidden; anyone above Sr. Manager (Director / C-level) renders expanded.
   function defaultCollapsed(people) {
     const hasKids = {};
     people.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
+    const LV = WP.data.LEVELS;
+    const rankOf = function (p) { return (LV[p.level] && LV[p.level].rank != null) ? LV[p.level].rank : 9; };
+    const SR_MANAGER_RANK = (LV.sr_manager && LV.sr_manager.rank != null) ? LV.sr_manager.rank : 1;
     const c = {};
     people.forEach(function (p) {
-      // Collapse EVERY branch by default → only the top (C-level) shows; each level
-      // reveals its reports when clicked. Seniors stay hidden until the top is opened.
-      if (hasKids[p.id]) c[p.id] = true;
+      // Collapse a branch when the node itself is at/below Sr. Manager → its reports are
+      // hidden. Director/C-level (rank < Sr. Manager) stay open, so the spine is visible.
+      if (hasKids[p.id] && rankOf(p) >= SR_MANAGER_RANK) c[p.id] = true;
     });
     return c;
   }
@@ -150,15 +156,18 @@
     // The workload color/status dot is ALWAYS shown (the key signal) — even in compact.
     const ava = '<span class="node-ava">' + ui.avatar(person, accent) + '</span>';
     const nm = '<div class="nm">' + ui.esc(WP.i18n.name(person)) + '</div>';
+    // Quiet one-line role title — the single most useful org-chart fact after the name
+    // (it's what separates CCO / Director / Sr. Manager). Kept muted so the name still leads.
+    const ttl = '<div class="ttl ttl-quiet">' + ui.esc(WP.i18n.title(person)) + '</div>';
 
-    // COMPACT card: photo + name + small workload indicator + color/status. Full detail
-    // is one click away via the existing node-peek popover (the avatar opens it). Open
-    // roles (tbc) have no load → show the status line instead so they still read clearly.
+    // COMPACT card: photo + name + role title + a small workload indicator (color/status).
+    // Full detail is one click away via the existing node-peek popover (the avatar opens it).
+    // Open roles (tbc) have no load → show the status line instead so they still read clearly.
     const cls = 'node' + (person.tbc ? ' is-tbc' : '') + (kidCount ? ' has-kids' : '') + (compact ? ' node-compact' : '');
     if (compact) {
       return '<div class="' + cls + '" data-id="' + person.id + '" style="--node-accent:' + accent + '"' +
           ' title="' + (kidCount ? (isCol ? t('clickShowTeam') : t('clickHideTeam')) : '') + '">' +
-        flame + focusBtn + ava + nm +
+        flame + focusBtn + ava + nm + ttl +
         (person.tbc ? statusLine(person) : loadBar(snap)) +
         caret +
       '</div>';

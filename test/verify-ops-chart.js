@@ -53,11 +53,16 @@ try{
   ['#oc-theme','#oc-lang'].forEach(function(s){ assert(doc.querySelector(s),'control '+s+' present'); });
   assert(doc.querySelector('#map-search'),'chart has a search box (reused finder)');
 
-  // ── tree starts collapsed (only the top shows); clicking a branch reveals its reports ──
+  // ── leadership spine open by default (C-level→Director→Sr.Manager); a collapsed
+  //    Sr.Manager branch reveals its team when clicked ──
   const shownAtStart=view.querySelectorAll('.tree .node[data-id]').length;
-  const branch=view.querySelector('.tree .node.has-kids[data-id]');
-  assert(branch,'the top branch node renders (collapsed by default)');
-  if(branch){ branch.click(); const afterExpand=view.querySelectorAll('.tree .node[data-id]').length; assert(afterExpand>=shownAtStart,'clicking a branch reveals its reports'); }
+  assert(view.querySelector('.tree .node.has-kids[data-id]'),'branch nodes render');
+  // Target a COLLAPSED branch (its caret shows is-col) — the default-open leadership nodes
+  // would instead COLLAPSE on click, so we pick a node that is currently collapsed.
+  const colCaret=view.querySelector('.tree .node.has-kids .node-caret.is-col');
+  const collapsedBranch=colCaret&&colCaret.closest('.node[data-id]');
+  assert(collapsedBranch,'a collapsed branch (Sr. Manager team) exists by default');
+  if(collapsedBranch){ collapsedBranch.click(); const afterExpand=view.querySelectorAll('.tree .node[data-id]').length; assert(afterExpand>shownAtStart,'clicking a collapsed branch reveals its reports'); }
 
   // ── theme toggle flips the document theme ──
   const before=WP.state.theme;
