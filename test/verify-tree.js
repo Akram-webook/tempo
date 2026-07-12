@@ -58,12 +58,38 @@ try {
 
   const nodes = el.querySelectorAll('.tree .node');
   assert(nodes.length > 0, 'tree rendered some nodes (' + nodes.length + ')');
+
+  // --- DEFAULT OPEN STATE: the leadership spine (C-level → Director → Sr. Manager) is
+  //     visible on first load; each Sr. Manager's team stays collapsed until clicked. -----
+  const shown = {};
+  el.querySelectorAll('.tree .node[data-id]').forEach(function (n) { shown[n.dataset.id] = true; });
+  const LV = WP.data.LEVELS;
+  const P = WP.data.PEOPLE;
+  // Every Sr. Manager (and the Directors/C-level above) should be rendered by default.
+  const srMgrs = P.filter(function (p) { return p.level === 'sr_manager'; });
+  assert(srMgrs.length > 0 && srMgrs.every(function (p) { return shown[p.id]; }),
+    'all Sr. Managers are visible on first load (leadership spine open by default)');
+  const dirs = P.filter(function (p) { return p.level === 'director'; });
+  assert(dirs.every(function (p) { return shown[p.id]; }), 'Directors / C-level visible by default');
+  // A Sr. Manager with reports starts COLLAPSED — its caret shows "is-col" and its direct
+  // reports are NOT yet in the DOM (their team is hidden until the Sr. Manager is clicked).
+  const srWithKids = srMgrs.find(function (p) { return P.some(function (c) { return c.managerId === p.id; }); });
+  if (srWithKids) {
+    const kid = P.find(function (c) { return c.managerId === srWithKids.id; });
+    assert(kid && !shown[kid.id], 'a Sr. Manager\'s team is collapsed by default (reports hidden until clicked)');
+    const caret = el.querySelector('.node[data-id="' + srWithKids.id + '"] .node-caret.is-col');
+    assert(caret, 'the collapsed Sr. Manager shows an expandable (is-col) caret');
+  }
   assert(el.querySelector('.node-ava') && !el.querySelector('.node-ava[data-profile]'), 'avatar renders and is NOT a profile-open target (clicking a name never opens a profile)');
 
   // --- COMPACT is the default + the workload COLOR is always shown ---------------
   assert(el.querySelector('.node-compact'), 'compact density is the default (node-compact present)');
   assert(el.querySelector('.loadbar .loadbar-pct'), 'workload color/status indicator present in compact');
-  assert(!el.querySelector('.tree .node .ttl'), 'compact hides the detail (no title line) by default');
+  // Compact shows the person's NAME + a quiet role TITLE (the key org-chart facts) but not
+  // the heavy detail (account line / employment pills) — that stays for Detailed density.
+  assert(el.querySelector('.node-compact .ttl-quiet'), 'compact shows a quiet role title (org-chart context)');
+  assert(!el.querySelector('.node-compact .acctline') && !el.querySelector('.node-compact .emp'),
+    'compact still omits the heavy detail (account line / employment pills)');
 
   // --- VERTICAL STACK: an expanded manager lays reports DOWN (ul.stack), not across ---
   expandAll(el);
