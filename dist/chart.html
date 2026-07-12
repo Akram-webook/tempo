@@ -2034,6 +2034,31 @@ main.full-bleed { max-width: none; }
 .kpi-delta--bad { color: var(--state-overloaded); }
 .kpi-delta.is-down svg { transform: rotate(180deg); }
 
+/* ── Admins page (create + invite admin accounts) ───────────────────────── */
+.adm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 10px 0 4px; }
+@media (max-width: 640px) { .adm-grid { grid-template-columns: 1fr; } }
+.adm-field { display: flex; flex-direction: column; gap: 5px; }
+.adm-field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.adm-req { color: var(--state-overloaded); }
+.adm-field input, .adm-field select {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm); padding: 9px 10px;
+  font-family: inherit; font-size: 14px; }
+.adm-field input:focus, .adm-field select:focus {
+  outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 20%, transparent); }
+.adm-field input.invalid, .adm-field select.invalid { border-color: var(--state-overloaded); }
+.adm-err { min-height: 15px; font-size: 12px; color: var(--state-overloaded); }
+.adm-note { display: flex; align-items: center; gap: 8px; font-size: 12.5px;
+  color: var(--text-muted); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; margin: 6px 0 14px; line-height: 1.5; }
+.adm-note svg { flex: none; color: var(--brand); }
+.adm-import { margin-bottom: 12px; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+.adm-import summary { cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.adm-import textarea { width: 100%; margin: 8px 0; background: var(--surface-2);
+  border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm);
+  padding: 9px 10px; font-family: inherit; font-size: 13px; resize: vertical; }
+.btn.small { padding: 5px 10px; font-size: 12px; }
+
 </style>
   <style>
     /* Standalone export chrome — slim header, no sidebar. Tokens only. */
@@ -3405,6 +3430,52 @@ const EMAIL_HASHES = {};
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
     close:          { en: 'Close', ar: 'إغلاق' },
+    // — Admins page (invite-based admin management) —
+    adminsTitle:    { en: 'Admins', ar: 'المشرفون' },
+    adminsSub:      { en: 'Create admin accounts and invite them by email. Each admin sets their own password from a secure link — you never handle passwords.', ar: 'أنشئ حسابات المشرفين وادعهم عبر الإيميل. كل مشرف يضبط كلمة مروره بنفسه من رابط آمن — أنت لا تتعامل مع كلمات المرور إطلاقاً.' },
+    adminNew:       { en: 'New admin', ar: 'مشرف جديد' },
+    adminFirstName: { en: 'First name', ar: 'الاسم الأول' },
+    adminLastName:  { en: 'Last name', ar: 'اسم العائلة' },
+    adminEmail:     { en: 'Email', ar: 'الإيميل' },
+    adminPhone:     { en: 'Phone', ar: 'الجوال' },
+    adminGender:    { en: 'Gender', ar: 'الجنس' },
+    adminMale:      { en: 'Male', ar: 'ذكر' },
+    adminFemale:    { en: 'Female', ar: 'أنثى' },
+    adminBirth:     { en: 'Birth date', ar: 'تاريخ الميلاد' },
+    adminCountry:   { en: 'Country', ar: 'الدولة' },
+    adminCity:      { en: 'City', ar: 'المدينة' },
+    adminStatus:    { en: 'Status', ar: 'الحالة' },
+    adminActive:    { en: 'Active', ar: 'نشط' },
+    adminInactive:  { en: 'Inactive', ar: 'غير نشط' },
+    adminOrg:       { en: 'Organization', ar: 'المنظمة' },
+    adminOrgSelect: { en: 'Please select', ar: 'الرجاء الاختيار' },
+    adminSendInvite:{ en: 'Create & send invite', ar: 'إنشاء وإرسال الدعوة' },
+    adminResend:    { en: 'Resend invite', ar: 'إعادة إرسال الدعوة' },
+    adminList:      { en: 'Admins', ar: 'المشرفون' },
+    adminNone:      { en: 'No admins yet. Create one above.', ar: 'لا يوجد مشرفون بعد. أنشئ واحداً بالأعلى.' },
+    adminInvitePending: { en: 'Invite pending', ar: 'الدعوة قيد الانتظار' },
+    // Neutral (anti-enumeration) confirmation — same whether or not the email exists.
+    adminInviteSent:{ en: 'If that email is valid, an invite link is on its way. The admin sets their own password from it.', ar: 'إذا كان الإيميل صحيحاً، رابط الدعوة في طريقه. المشرف يضبط كلمة مروره منه.' },
+    adminSaved:     { en: 'Admin record saved.', ar: 'تم حفظ سجل المشرف.' },
+    adminInviteNoEmail: { en: 'Saved. Enable the invite email in Supabase to send the set-password link.', ar: 'تم الحفظ. فعّل إيميل الدعوة في Supabase لإرسال رابط ضبط كلمة المرور.' },
+    // Jisr import
+    adminImport:    { en: 'Import from Jisr', ar: 'استيراد من جسر' },
+    adminImportHint:{ en: 'Paste rows from Jisr (one per line): First, Last, Email, Phone. We pre-fill records for you to review before inviting.', ar: 'الصق صفوفاً من جسر (سطر لكل شخص): الأول، العائلة، الإيميل، الجوال. نملأ السجلات لمراجعتها قبل الدعوة.' },
+    adminImportBtn: { en: 'Parse rows', ar: 'تحليل الصفوف' },
+    adminImportEmpty: { en: 'Nothing to import — paste some rows first.', ar: 'لا شيء للاستيراد — الصق صفوفاً أولاً.' },
+    adminImportParsed: { en: 'row(s) ready to review', ar: 'صف/صفوف جاهزة للمراجعة' },
+    // validation
+    valFirstName:   { en: 'Please enter admin first name.', ar: 'الرجاء إدخال الاسم الأول للمشرف.' },
+    valLastName:    { en: 'Please enter admin last name.', ar: 'الرجاء إدخال اسم عائلة المشرف.' },
+    valEmail:       { en: 'Please enter a valid email.', ar: 'الرجاء إدخال إيميل صحيح.' },
+    valPhone:       { en: 'Please enter a valid phone.', ar: 'الرجاء إدخال جوال صحيح.' },
+    valGender:      { en: 'Please select gender.', ar: 'الرجاء اختيار الجنس.' },
+    valBirth:       { en: 'Please pick birth date.', ar: 'الرجاء اختيار تاريخ الميلاد.' },
+    valCountry:     { en: "Please enter admin's country.", ar: 'الرجاء إدخال دولة المشرف.' },
+    valCity:        { en: "Please enter admin's city.", ar: 'الرجاء إدخال مدينة المشرف.' },
+    valStatus:      { en: "Please select admin's status.", ar: 'الرجاء اختيار حالة المشرف.' },
+    valOrg:         { en: "Please select admin's organization.", ar: 'الرجاء اختيار منظمة المشرف.' },
+    navAdmins:      { en: 'Admins', ar: 'المشرفون' },
     checkinSlackNote:{ en: 'Saved to your progress and to Slack #daily-checkin (created automatically if it doesn’t exist). No task to fill — skip anytime.', ar: 'يُحفظ في تقدّمك وفي سلاك #daily-checkin (يُنشأ تلقائياً لو مو موجود). لا مهمة تعبّيها — تقدر تتخطّى.' },
     yesterdaySummary:{ en: 'What you did yesterday', ar: 'اللي سويته أمس' },
     nothingYesterday:{ en: 'Nothing logged yesterday — that’s okay.', ar: 'ما سُجّل شي أمس — عادي.' },
@@ -4015,6 +4086,7 @@ const EMAIL_HASHES = {};
       case 'viewSensitive': return targetId ? canSeeSensitive(viewer, targetId) : (role === 'director' || role === 'admin');
       case 'writeEval':     return targetId ? canSeeSensitive(viewer, targetId) : canAct(viewer);
       case 'manageAccess':  return role === 'admin' || role === 'director';
+      case 'manageAdmins':  return role === 'admin';   // create/invite admin accounts — Super Admin only
       case 'resetPassword': return role === 'admin';
       case 'manageRoles':   return role === 'admin';
       case 'editSettings':  return role === 'admin';
