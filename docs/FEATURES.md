@@ -37,23 +37,33 @@ Access tiers are grounded in `src/js/core/access.js` and `docs/ACCESS-MODEL.md`:
 ## 1. Access & Auth
 
 ### Sign-in
-- **What it is:** Sign-in screen with three configurable auth modes: Verified Link (Supabase OTP
-  email), Google Identity Services (@webook.com validated), and Directory Gate (exact email match,
-  demo only). Maps a verified session to a registered Tempo account; denies non-registered emails.
+- **What it is:** Sign-in screen with four configurable auth modes: Verified Link (Supabase OTP
+  email), **Password** (Supabase email + password, with "stay signed in" and a **recovery /
+  set-new-password** flow via `PASSWORD_RECOVERY`), Google Identity Services (@webook.com validated),
+  and Directory Gate (exact email match, demo only). Maps a **verified session email** to a
+  registered Tempo account; denies non-registered emails. Anti-impersonation: identity is always
+  `session.user.email`, never the typed field; wrong email/password returns one generic error.
 - **Inputs:** `WP.config.supabaseUrl` / `supabaseAnonKey` / `googleClientId` / `authMode`,
   `WP.data.PEOPLE` (registered accounts), `WP.state.lang` / `theme`.
 - **Decision it supports:** Whether a person is allowed into the app at all (the access gate).
-- **Access tier:** Public entry point; post-validation gated by `WP.access.hasAccess(personId)` —
-  false → "accessDenied" + sign-out. Super Admin = akram@webook.com.
+- **Access tier:** Public entry point; post-validation gated by the **2026-07 allow-list**
+  `WP.access.hasAccess(personId)` (locked to akram/ahmed/farah/motaa) — false → "accessDenied" +
+  sign-out. Super Admin = akram@webook.com. See [`SECURITY.md`](SECURITY.md) for why this deters but
+  does not truly lock (F3 Cloudflare Access edge gate pending).
 - **Key files:** `src/js/ui/login.js` (session mapping in `WP.auth.initSession` / `app.js`).
 
 ### Role & permission model
 - **What it is:** The RBAC + ReBAC engine: who sees which people (rows) and which fields (columns).
+  Full tier matrix + predicate reference in [`ROLES.md`](ROLES.md).
 - **Inputs:** `WP.data.PEOPLE` (org tree via `managerId`), viewer `level` / `superAdmin`.
 - **Decision it supports:** Every "can this viewer see/act on this?" question across the app.
-- **Access tier:** Defines the tiers. Key predicates: `visiblePeople`, `teamOf`, `canSee`, `canAct`
-  (managers+), `canManage` (director/admin), `isSuperAdmin`, `canSeeSensitive`, `canSeeUpward`,
-  `canSeeComp`, `relationshipTo`, `hasAccess` allow-list.
+- **Access tier:** Defines the four roles (Member / Manager / Director / Admin — see `ROLES.md`).
+  The single UI gate is **`WP.can(cap, targetId?)`** (`roleOf` + an 8-capability matrix:
+  `viewOrg`, `viewSensitive`, `writeEval`, `manageAccess`, `resetPassword`, `manageRoles`,
+  `editSettings`, `viewSettings`). It composes the predicates `visiblePeople`, `teamOf`, `canSee`,
+  `canAct`, `canManage`, `isSuperAdmin`, `canSeeSensitive`, `canSeeUpward`, `canSeeComp`,
+  `relationshipTo`, plus the `hasAccess` allow-list. A denied button is also a denied query (RLS
+  mirrors the same rules).
 - **Key files:** `src/js/core/access.js`.
 
 ### Dashboard (role-adaptive home)
