@@ -28,7 +28,7 @@
       return '<option value="' + k + '">' + (WP.state.lang === 'ar' ? ti.labelAr : ti.labelEn) + ' · ' + ti.weight + '%</option>';
     }).join('');
     host.innerHTML = '<div class="overlay"><div class="drawer">' +
-      '<button class="btn icon-btn" id="close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<button class="btn icon-btn" id="close" style="margin-bottom:14px" aria-label="' + WP.i18n.t('close') + '">' + WP.ui.icon('x', 14) + '</button>' +
       '<h3>' + WP.ui.icon('plus', 16) + ' ' + t('newRequest') + '</h3>' +
       '<div class="sub" style="margin-bottom:14px">' + t('newRequestNote') + '</div>' +
       '<label class="req-l">' + t('reqTitle') + '</label><input id="r-title" class="req-i" placeholder="e.g. Pop-up Concert" />' +
@@ -75,7 +75,7 @@
 
     const host = document.getElementById('overlay-host');
     host.innerHTML = '<div class="overlay"><div class="drawer">' +
-      '<button class="btn icon-btn" id="close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<button class="btn icon-btn" id="close" style="margin-bottom:14px" aria-label="' + WP.i18n.t('close') + '">' + WP.ui.icon('x', 14) + '</button>' +
       '<h3>' + WP.i18n.t('assign') + ': ' + ui.esc(WP.i18n.eventName(ev)) +
         ' <span class="tier-chip" style="background:' + ui.tierColor(ev.tier) + '">T' + ev.tier + '</span></h3>' +
       '<div class="sub" style="margin-bottom:12px">' + WP.i18n.t('candidates') + '</div>' +

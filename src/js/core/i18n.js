@@ -393,6 +393,7 @@
     checkinPh:      { en: 'Write freely — one line per thing you got done…', ar: 'اكتب بحرية — سطر لكل شي أنجزته…' },
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
+    close:          { en: 'Close', ar: 'إغلاق' },
     checkinSlackNote:{ en: 'Saved to your progress and to Slack #daily-checkin (created automatically if it doesn’t exist). No task to fill — skip anytime.', ar: 'يُحفظ في تقدّمك وفي سلاك #daily-checkin (يُنشأ تلقائياً لو مو موجود). لا مهمة تعبّيها — تقدر تتخطّى.' },
     yesterdaySummary:{ en: 'What you did yesterday', ar: 'اللي سويته أمس' },
     nothingYesterday:{ en: 'Nothing logged yesterday — that’s okay.', ar: 'ما سُجّل شي أمس — عادي.' },

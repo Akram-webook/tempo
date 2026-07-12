@@ -71,8 +71,9 @@
       const evDays = dayCountInclusive(evStart, evEnd);
       const ov = overlapDays(evStart, evEnd, win.start, win.end);
       if (ov === 0 || evDays === 0) return;
-      const weight = TIERS[ev.tier].weight;
-      total += (weight * (ov / evDays)) / win.divisor;
+      const tier = TIERS[ev.tier];
+      if (!tier) return;                 // unknown/missing tier → adds no load (fail-safe, never throw)
+      total += (tier.weight * (ov / evDays)) / win.divisor;
     });
     return Math.round(total);
   }
@@ -91,7 +92,9 @@
       const evDays = dayCountInclusive(evStart, evEnd);
       const ov = overlapDays(evStart, evEnd, win.start, win.end);
       if (ov === 0 || evDays === 0) return;
-      const pct = Math.round((TIERS[ev.tier].weight * (ov / evDays)) / win.divisor);
+      const tier = TIERS[ev.tier];
+      if (!tier) return;                 // unknown/missing tier → skip (fail-safe, never throw)
+      const pct = Math.round((tier.weight * (ov / evDays)) / win.divisor);
       if (pct > 0) parts.push({ id: ev.id, tier: ev.tier, pct: pct });
     });
     return parts.sort(function (a, b) { return b.pct - a.pct; });

@@ -58,7 +58,7 @@
     var host = document.getElementById('overlay-host');
     if (!host) return;
     host.innerHTML = '<div class="overlay"><div class="drawer">' +
-      '<button class="btn icon-btn" id="ev-close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<button class="btn icon-btn" id="ev-close" style="margin-bottom:14px" aria-label="' + t('close') + '">' + WP.ui.icon('x', 14) + '</button>' +
       '<h3>' + WP.ui.icon('eye', 16) + ' ' + t('sbEvTitle') + '</h3>' +
       '<div class="disclaimer">' + t('sbEvIntro') + '</div>' +
       (items.length

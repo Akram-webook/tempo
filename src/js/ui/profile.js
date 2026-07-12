@@ -30,7 +30,7 @@
     const c = ui.stateColor(snap.state);
     const host = document.getElementById('overlay-host');
     host.innerHTML = '<div class="overlay"><div class="popover">' +
-      '<button class="popover-close" id="peek-close" aria-label="Close">' + ui.icon('x', 14) + '</button>' +
+      '<button class="popover-close" id="peek-close" aria-label="' + WP.i18n.t('close') + '">' + ui.icon('x', 14) + '</button>' +
       '<div class="profile-head">' + ui.avatar(p, c) +
         '<div><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
         '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div>' +
