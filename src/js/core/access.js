@@ -128,6 +128,7 @@
       case 'viewSensitive': return targetId ? canSeeSensitive(viewer, targetId) : (role === 'director' || role === 'admin');
       case 'writeEval':     return targetId ? canSeeSensitive(viewer, targetId) : canAct(viewer);
       case 'manageAccess':  return role === 'admin' || role === 'director';
+      case 'manageAdmins':  return role === 'admin';   // create/invite admin accounts — Super Admin only
       case 'resetPassword': return role === 'admin';
       case 'manageRoles':   return role === 'admin';
       case 'editSettings':  return role === 'admin';

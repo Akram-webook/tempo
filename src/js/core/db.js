@@ -403,6 +403,78 @@
     }
   };
 
+  /* ---- admins : create admin records + invite them to set their own password ----
+   * SECURITY (see .claude/skills/tempo-secure-data §0/§1): the front-end NEVER sets
+   * or stores a password. Creating an admin does two independent things:
+   *   1. write the admin record to public.people (RLS: admin-only insert),
+   *   2. call sb.auth.resetPasswordForEmail(email) — Supabase emails the admin a
+   *      set-your-own-password link. We never see the password.
+   * Signed-out / no backend / a call throws -> the record is kept locally (so the
+   * pilot keeps working) and invite is reported pending. Never throws to the UI. */
+  var ADMINS_LOCAL = [];   // local mirror when backend is absent (pilot / tests)
+  function adminRecToRow(a) {
+    return {
+      person_id: a.id, name: (a.firstName + ' ' + a.lastName).trim(), title: 'Admin',
+      level: 'admin', manager_id: null, employment: 'fulltime',
+      initials: ((a.firstName[0] || '') + (a.lastName[0] || '')).toUpperCase(),
+      active: a.status === 'active'
+      // NOTE: email/phone/birthDate are PII — they live in Supabase columns under RLS,
+      // never in the bundle. We send them in the insert but never read them back into
+      // WP.data (which ships public). No password field exists anywhere.
+    };
+  }
+  function redirectUrl() {
+    try { return location.origin + location.pathname; } catch (e) { return ''; }
+  }
+  var admins = {
+    // Local mirror (list). Real listing reads public.people where level='admin' via RLS.
+    list: function () { return ADMINS_LOCAL.slice(); },
+
+    /* Create an admin record AND send the set-password invite. Returns a promise
+     * of { ok, invited, offline, id }. `invited` is true only when Supabase auth
+     * accepted the reset/invite email request. */
+    create: function (a) {
+      var id = a.id || ('a_' + String(a.email || '').toLowerCase().replace(/[^a-z0-9]+/g, '_'));
+      a.id = id;
+      ADMINS_LOCAL.push({ id: id, firstName: a.firstName, lastName: a.lastName,
+        email: a.email, status: a.status, org: a.org, invited: false });
+      var mirror = ADMINS_LOCAL[ADMINS_LOCAL.length - 1];
+      var c = client();
+      // 1) persist the record (best-effort; local mirror already holds it)
+      var wrote = Promise.resolve(true);
+      if (c) {
+        var q = c.from(PEOPLE_TABLE).upsert ? c.from(PEOPLE_TABLE).upsert(adminRecToRow(a))
+                                            : c.from(PEOPLE_TABLE).insert(adminRecToRow(a));
+        wrote = Promise.resolve(q)
+          .then(function (res) { if (res && res.error) throw res.error; status.offline = false; return true; })
+          .catch(function (e) { status.offline = true; status.lastError = e; return false; });
+      }
+      // 2) send the invite (resetPasswordForEmail) — only if we have an auth client.
+      return wrote.then(function (saved) {
+        var sb = WP._sb;
+        if (!sb || !sb.auth || typeof sb.auth.resetPasswordForEmail !== 'function') {
+          return { ok: saved, invited: false, offline: !c, id: id };
+        }
+        return Promise.resolve(sb.auth.resetPasswordForEmail(a.email, { redirectTo: redirectUrl() }))
+          // Anti-enumeration: treat success/failure the same to the UI, but track truthfully.
+          .then(function () { mirror.invited = true; return { ok: saved, invited: true, offline: false, id: id }; })
+          .catch(function (e) { status.lastError = e; return { ok: saved, invited: false, offline: true, id: id }; });
+      });
+    },
+
+    // Resend the set-password link for an existing admin. Never reveals existence.
+    invite: function (email) {
+      var sb = WP._sb;
+      if (!sb || !sb.auth || typeof sb.auth.resetPasswordForEmail !== 'function') {
+        return Promise.resolve({ ok: false, invited: false });
+      }
+      return Promise.resolve(sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() }))
+        .then(function () { return { ok: true, invited: true }; })
+        .catch(function () { return { ok: true, invited: false }; });   // neutral
+    },
+    _reset: function () { ADMINS_LOCAL.length = 0; }   // tests
+  };
+
   WP.db = {
     status: status,
     usingBackend: usingBackend,
@@ -410,6 +482,7 @@
     events: events,
     people: people,
     growth: growth,
+    admins: admins,
     _recToRow: recToRow,        // exposed for tests
     _rowToRec: rowToRec,
     _eventToRow: eventToRow,

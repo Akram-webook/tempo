@@ -61,6 +61,8 @@
       // view re-checks the gate (defence in depth). Never people, never a ranking.
       nav.push({ id: 'org', routes: ['org'], icon: 'tree', label: t('navOrg') });
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
+      // Admins — create + invite admin accounts. Super Admin only (manageAdmins cap).
+      if (WP.can('manageAdmins')) nav.push({ id: 'admins', routes: ['admins'], icon: 'users', label: t('navAdmins') });
       nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
     }
     // MVP flag: drop the deferred nav entries (library/weekly/wellbeing/
@@ -216,6 +218,7 @@
     else if (WP.state.route === 'weekly') WP.ui.weeklyReport.render(root);
     else if (WP.state.route === 'org') WP.ui.readiness.orgRender(root);
     else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
+    else if (WP.state.route === 'admins') { if (WP.can('manageAdmins')) WP.ui.admins.render(root); else WP.setState({ route: 'map' }); }
     else WP.ui.workloadMap.render(root);
 
     // Full-bleed ONLY the People & Workload map (route 'map') so the org tree fills a
