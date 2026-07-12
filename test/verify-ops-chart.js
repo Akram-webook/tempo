@@ -37,7 +37,9 @@ try{
     // must not survive. (Remaining @webook.com hits are i18n login copy / comments naming the
     // domain — not personal data, so they're allowed; emptying EMAILS is the privacy fix.)
     assert(!/p_\w+\s*:\s*'[^']+@webook\.com'/.test(built),'built dist/chart.html ships NO real directory emails');
-    assert(/const EMAILS = \{\};/.test(built),'EMAILS map is emptied in the public chart bundle');
+    // Privacy fix: build.js replaces the plaintext EMAILS literal with a hash map; the chart
+    // needs no directory at all, so its map is empty.
+    assert(/const EMAIL_HASHES = \{\s*\};/.test(built),'directory map is emptied in the public chart bundle');
   }
 
   // ── lands directly on the chart (boot ran on load) ──

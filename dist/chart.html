@@ -2140,6 +2140,84 @@ main.full-bleed { max-width: none; }
 </script>
   <script>
 /* ============================================================
+ * Tempo — synchronous SHA-256  (WP.sha256)
+ * ------------------------------------------------------------
+ * Why this exists: directory sign-in must match a typed email WITHOUT shipping a
+ * harvestable plaintext list of real @webook.com addresses in the public bundle.
+ * build.js replaces the plaintext EMAILS map with SALTED SHA-256 hashes; the client
+ * hashes the typed input the same way and compares. Web Crypto's subtle.digest is
+ * async, which would force the whole sign-in path async — this small, dependency-free,
+ * SYNChronous impl keeps auth simple and byte-identical to the Node-side build hash.
+ *
+ * Standard SHA-256 (FIPS 180-4), UTF-8 input, lowercase-hex output. Stateless per call.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  const K = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+
+  function ror(x, n) { return (x >>> n) | (x << (32 - n)); }
+
+  function sha256(str) {
+    // UTF-8 encode to bytes.
+    const utf8 = unescape(encodeURIComponent(str));
+    const bytes = [];
+    for (let i = 0; i < utf8.length; i++) bytes.push(utf8.charCodeAt(i) & 0xff);
+
+    const bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    // 64-bit big-endian length (high 32 bits are 0 for our short inputs).
+    for (let i = 7; i >= 0; i--) bytes.push((i < 4) ? (bitLen >>> (i * 8)) & 0xff : 0);
+
+    const h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    const w = new Array(64);
+
+    for (let off = 0; off < bytes.length; off += 64) {
+      for (let i = 0; i < 16; i++) {
+        w[i] = (bytes[off + i * 4] << 24) | (bytes[off + i * 4 + 1] << 16) |
+               (bytes[off + i * 4 + 2] << 8) | (bytes[off + i * 4 + 3]);
+      }
+      for (let i = 16; i < 64; i++) {
+        const s0 = ror(w[i - 15], 7) ^ ror(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+        const s1 = ror(w[i - 2], 17) ^ ror(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+
+      let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+      for (let i = 0; i < 64; i++) {
+        const S1 = ror(e, 6) ^ ror(e, 11) ^ ror(e, 25);
+        const ch = (e & f) ^ (~e & g);
+        const t1 = (hh + S1 + ch + K[i] + w[i]) | 0;
+        const S0 = ror(a, 2) ^ ror(a, 13) ^ ror(a, 22);
+        const maj = (a & b) ^ (a & c) ^ (b & c);
+        const t2 = (S0 + maj) | 0;
+        hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
+      h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+    }
+
+    let hex = '';
+    for (let i = 0; i < 8; i++) hex += ('00000000' + (h[i] >>> 0).toString(16)).slice(-8);
+    return hex;
+  }
+
+  WP.sha256 = sha256;
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * Webook Workload — Mock Data  (REAL Saudi Event-Operations team)
  * ------------------------------------------------------------
  * Names, titles, hierarchy and PHOTOS are the real team from Slack,
@@ -2252,11 +2330,42 @@ main.full-bleed { max-width: none; }
   // ---- Real account directory (verified @webook.com emails) ----
   // Sign-in is keyed on these EXACT emails: one email → one account, no cross-login.
   // akram is the Super Admin (can View-as / open any account + manage access).
-  const EMAILS = {};
+  //
+  // PRIVACY: this plaintext map is the DEV source of truth only. build.js does NOT ship it
+  // to the public bundle — it strips this literal and injects a SALTED-SHA256 hash map named
+  // EMAIL_HASHES instead. The resolver below matches by hashing the typed email when only
+  // hashes are present, so no harvestable list of real addresses is exposed on GitHub Pages.
+  // Unbuilt/dev runs + tests still use the plaintext map. EMAIL_SALT is a per-project constant
+  // (not a secret — it only defeats generic rainbow tables). Keep it in sync with build.js.
+  const EMAIL_SALT = 'tempo:webook:v1';
+const EMAIL_HASHES = {};
+  // build.js injects `const EMAIL_HASHES = {...}` and removes the EMAILS literal for the
+  // public bundle. In dev/tests EMAILS is present and EMAIL_HASHES is absent; guard both.
+  const HAS_PLAINTEXT = typeof EMAILS !== 'undefined';
+  const HASHES = (typeof EMAIL_HASHES !== 'undefined') ? EMAIL_HASHES : null;
   PEOPLE.forEach(function (p) {
-    if (EMAILS[p.id]) p.email = EMAILS[p.id];
+    // Only attach the plaintext address in dev/unbuilt runs. The public bundle ships hashes
+    // only, so p.email stays undefined there — sign-in resolves via emailToId() (hash match).
+    if (HAS_PLAINTEXT && EMAILS[p.id]) p.email = EMAILS[p.id];
     if (p.id === 'p_akram') p.superAdmin = true;   // Mohammed Akram — Super Admin
   });
+
+  // Resolve a normalized (lowercased, trimmed) email to a person id, WITHOUT exposing the
+  // address list. Prefers a direct plaintext match (dev); else hashes the input with the
+  // per-project salt and matches the shipped EMAIL_HASHES (public bundle). Returns null if
+  // no match. This is the single source of email→id resolution used by sign-in.
+  function emailToId(email) {
+    const e = String(email || '').trim().toLowerCase();
+    if (!e) return null;
+    if (HAS_PLAINTEXT) {
+      for (const id in EMAILS) { if (EMAILS[id].toLowerCase() === e) return id; }
+    }
+    if (HASHES && WP.sha256) {
+      const h = WP.sha256(EMAIL_SALT + e);
+      for (const id in HASHES) { if (HASHES[id] === h) return id; }
+    }
+    return null;
+  }
 
   /* Tenure & role history (mocked). Osama = flight-risk story; Idris = new hire. */
   const TENURE = {
@@ -2292,7 +2401,7 @@ main.full-bleed { max-width: none; }
   PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
 
   const CEILING = 100;
-  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING };
+  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING, emailToId: emailToId };
 })(window.WP = window.WP || {});
 
 </script>

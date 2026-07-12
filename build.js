@@ -53,11 +53,34 @@ function inlineShell(srcFile) {
   return html;
 }
 
+// PRIVACY: never ship the plaintext @webook.com directory to a public page. Replace the
+// `const EMAILS = {...}` source literal with a SALTED-SHA256 map `const EMAIL_HASHES = {...}`.
+// Directory sign-in then matches by hashing the typed email (data/mock-data.js emailToId),
+// so the harvestable list of real addresses never leaves the source tree. The salt MUST
+// equal EMAIL_SALT in mock-data.js. The chart bundle needs no directory at all → empty map.
+const crypto = require('crypto');
+const EMAIL_SALT = 'tempo:webook:v1';                       // keep in sync with mock-data.js
+function hashEmail(email) { return crypto.createHash('sha256').update(EMAIL_SALT + String(email).trim().toLowerCase(), 'utf8').digest('hex'); }
+function hashEmailsBlock(html, mode) {
+  // Anchor to the start of a line (m flag) so we match the real STATEMENT, never a mention
+  // of "const EMAILS = {...}" inside a comment. The literal is the only line-leading
+  // `  const EMAILS = {` in the source.
+  const m = html.match(/^[ \t]*const EMAILS = \{([\s\S]*?)\};/m);
+  if (!m) return html;                                      // nothing to strip
+  let hashMap = '{}';
+  if (mode !== 'strip') {
+    const pairs = [...m[1].matchAll(/(\w+)\s*:\s*'([^']+)'/g)]
+      .map(x => x[1] + ": '" + hashEmail(x[2]) + "'");
+    hashMap = '{ ' + pairs.join(', ') + ' }';
+  }
+  // Remove the plaintext literal entirely and define the hash map in its place.
+  return html.replace(m[0], 'const EMAIL_HASHES = ' + hashMap + ';');
+}
+
 function buildPage(srcFile, outFile, opts) {
   let html = inlineShell(srcFile);
-  // The public chart never authenticates and never reads EMAILS — so don't ship the
-  // real @webook.com directory into a harvestable public page. Empty the map for it.
-  if (opts && opts.stripEmails) html = html.replace(/const EMAILS = \{[^}]*\};/, 'const EMAILS = {};');
+  // App page → hash the directory (sign-in matches on hash). Chart page → empty map (no auth).
+  html = hashEmailsBlock(html, (opts && opts.stripEmails) ? 'strip' : 'hash');
   fs.writeFileSync(path.join(root, 'dist', outFile), html);
   const kb = (Buffer.byteLength(html, 'utf8') / 1024).toFixed(0);
   const leftJs = (html.match(/<script\s+src="src\//g) || []).length;
