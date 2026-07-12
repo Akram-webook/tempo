@@ -111,6 +111,14 @@
   // ---- Real account directory (verified @webook.com emails) ----
   // Sign-in is keyed on these EXACT emails: one email → one account, no cross-login.
   // akram is the Super Admin (can View-as / open any account + manage access).
+  //
+  // PRIVACY: this plaintext map is the DEV source of truth only. build.js does NOT ship it
+  // to the public bundle — it strips this literal and injects a SALTED-SHA256 hash map named
+  // EMAIL_HASHES instead. The resolver below matches by hashing the typed email when only
+  // hashes are present, so no harvestable list of real addresses is exposed on GitHub Pages.
+  // Unbuilt/dev runs + tests still use the plaintext map. EMAIL_SALT is a per-project constant
+  // (not a secret — it only defeats generic rainbow tables). Keep it in sync with build.js.
+  const EMAIL_SALT = 'tempo:webook:v1';
   const EMAILS = {
     p_akram: 'akram@webook.com', p_abdulrahman: 'maksousa@webook.com', p_osama: 'o.taher.c@webook.com',
     p_gamal: 'm.ali.c@webook.com', p_talal: 'talal.samir.c@webook.com', p_ahmed: 'ahmed.othman@webook.com',
@@ -126,10 +134,33 @@
     p_rana: 'alsalem@webook.com', p_rosa: 'rosa@webook.com', p_altahini: 'altahini@webook.com',
     p_meshalA: 'alsmari@webook.com', p_raghdaa: 'raghdaa@webook.com',
   };
+  // build.js injects `const EMAIL_HASHES = {...}` and removes the EMAILS literal for the
+  // public bundle. In dev/tests EMAILS is present and EMAIL_HASHES is absent; guard both.
+  const HAS_PLAINTEXT = typeof EMAILS !== 'undefined';
+  const HASHES = (typeof EMAIL_HASHES !== 'undefined') ? EMAIL_HASHES : null;
   PEOPLE.forEach(function (p) {
-    if (EMAILS[p.id]) p.email = EMAILS[p.id];
+    // Only attach the plaintext address in dev/unbuilt runs. The public bundle ships hashes
+    // only, so p.email stays undefined there — sign-in resolves via emailToId() (hash match).
+    if (HAS_PLAINTEXT && EMAILS[p.id]) p.email = EMAILS[p.id];
     if (p.id === 'p_akram') p.superAdmin = true;   // Mohammed Akram — Super Admin
   });
+
+  // Resolve a normalized (lowercased, trimmed) email to a person id, WITHOUT exposing the
+  // address list. Prefers a direct plaintext match (dev); else hashes the input with the
+  // per-project salt and matches the shipped EMAIL_HASHES (public bundle). Returns null if
+  // no match. This is the single source of email→id resolution used by sign-in.
+  function emailToId(email) {
+    const e = String(email || '').trim().toLowerCase();
+    if (!e) return null;
+    if (HAS_PLAINTEXT) {
+      for (const id in EMAILS) { if (EMAILS[id].toLowerCase() === e) return id; }
+    }
+    if (HASHES && WP.sha256) {
+      const h = WP.sha256(EMAIL_SALT + e);
+      for (const id in HASHES) { if (HASHES[id] === h) return id; }
+    }
+    return null;
+  }
 
   /* Tenure & role history (mocked). Osama = flight-risk story; Idris = new hire. */
   const TENURE = {
@@ -165,5 +196,5 @@
   PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
 
   const CEILING = 100;
-  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING };
+  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING, emailToId: emailToId };
 })(window.WP = window.WP || {});

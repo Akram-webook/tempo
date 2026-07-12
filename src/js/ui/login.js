@@ -28,7 +28,12 @@
     if (email.indexOf('@') < 0) email += '@' + DOMAIN;
     const domain = email.slice(email.indexOf('@') + 1);
     if (domain !== DOMAIN) return { error: 'errBadDomain' };
-    const p = WP.data.PEOPLE.find(function (x) { return x.email && x.email.toLowerCase() === email; });
+    // Resolve via the data layer, which matches plaintext (dev) OR salted hashes (public
+    // bundle) — so no real address list ships in dist. Falls back to a p.email scan only if
+    // the resolver is unavailable (older data module).
+    let id = (WP.data.emailToId && WP.data.emailToId(email)) || null;
+    let p = id ? WP.data.PEOPLE.find(function (x) { return x.id === id; }) : null;
+    if (!p) p = WP.data.PEOPLE.find(function (x) { return x.email && x.email.toLowerCase() === email; });
     return p ? { person: p } : { error: 'errNoAccount' };
   }
 
