@@ -339,14 +339,14 @@
 
     root.innerHTML =
       '<div class="login-wrap"><div class="login-card">' +
-        '<img class="login-logo" src="' + logo + '" alt="Webook" />' +
+        '<img class="login-logo" src="' + logo + '" alt="webook.com" />' +
         '<h1 class="login-title">' + t('signInTitle') + '</h1>' +
         '<p class="login-sub">' + t('signInSub') + '</p>' +
         body +
       '</div>' +
       '<div class="login-controls">' +
         '<button class="btn" id="login-lang">' + t('lang') + '</button>' +
-        '<button class="btn icon-btn" id="login-theme" aria-label="theme" title="' + t('prefsTheme') + '">' +
+        '<button class="btn icon-btn" id="login-theme" aria-label="' + t('prefsTheme') + '" title="' + t('prefsTheme') + '">' +
           WP.ui.icon(WP.state.theme === 'light' ? 'moon' : 'sun') + '</button>' +
       '</div></div>';
 

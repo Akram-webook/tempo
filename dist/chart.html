@@ -3404,6 +3404,7 @@ const EMAIL_HASHES = {};
     checkinPh:      { en: 'Write freely — one line per thing you got done…', ar: 'اكتب بحرية — سطر لكل شي أنجزته…' },
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
+    close:          { en: 'Close', ar: 'إغلاق' },
     checkinSlackNote:{ en: 'Saved to your progress and to Slack #daily-checkin (created automatically if it doesn’t exist). No task to fill — skip anytime.', ar: 'يُحفظ في تقدّمك وفي سلاك #daily-checkin (يُنشأ تلقائياً لو مو موجود). لا مهمة تعبّيها — تقدر تتخطّى.' },
     yesterdaySummary:{ en: 'What you did yesterday', ar: 'اللي سويته أمس' },
     nothingYesterday:{ en: 'Nothing logged yesterday — that’s okay.', ar: 'ما سُجّل شي أمس — عادي.' },
@@ -4131,8 +4132,9 @@ const EMAIL_HASHES = {};
       const evDays = dayCountInclusive(evStart, evEnd);
       const ov = overlapDays(evStart, evEnd, win.start, win.end);
       if (ov === 0 || evDays === 0) return;
-      const weight = TIERS[ev.tier].weight;
-      total += (weight * (ov / evDays)) / win.divisor;
+      const tier = TIERS[ev.tier];
+      if (!tier) return;                 // unknown/missing tier → adds no load (fail-safe, never throw)
+      total += (tier.weight * (ov / evDays)) / win.divisor;
     });
     return Math.round(total);
   }
@@ -4151,7 +4153,9 @@ const EMAIL_HASHES = {};
       const evDays = dayCountInclusive(evStart, evEnd);
       const ov = overlapDays(evStart, evEnd, win.start, win.end);
       if (ov === 0 || evDays === 0) return;
-      const pct = Math.round((TIERS[ev.tier].weight * (ov / evDays)) / win.divisor);
+      const tier = TIERS[ev.tier];
+      if (!tier) return;                 // unknown/missing tier → skip (fail-safe, never throw)
+      const pct = Math.round((tier.weight * (ov / evDays)) / win.divisor);
       if (pct > 0) parts.push({ id: ev.id, tier: ev.tier, pct: pct });
     });
     return parts.sort(function (a, b) { return b.pct - a.pct; });
@@ -6510,7 +6514,7 @@ const EMAIL_HASHES = {};
     const c = ui.stateColor(snap.state);
     const host = document.getElementById('overlay-host');
     host.innerHTML = '<div class="overlay"><div class="popover">' +
-      '<button class="popover-close" id="peek-close" aria-label="Close">' + ui.icon('x', 14) + '</button>' +
+      '<button class="popover-close" id="peek-close" aria-label="' + WP.i18n.t('close') + '">' + ui.icon('x', 14) + '</button>' +
       '<div class="profile-head">' + ui.avatar(p, c) +
         '<div><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
         '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div>' +
@@ -6868,7 +6872,7 @@ const EMAIL_HASHES = {};
     if (!host) return;
     var list = (items || []).filter(Boolean);
     host.innerHTML = '<div class="overlay"><div class="drawer">' +
-      '<button class="btn icon-btn" id="rd-ev-close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<button class="btn icon-btn" id="rd-ev-close" style="margin-bottom:14px" aria-label="' + t('close') + '">' + WP.ui.icon('x', 14) + '</button>' +
       '<h3>' + WP.ui.icon('eye', 16) + ' ' + t('rdEvTitle') + '</h3>' +
       '<div class="disclaimer">' + t('rdEvIntro') + '</div>' +
       (list.length

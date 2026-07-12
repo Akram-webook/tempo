@@ -41,8 +41,8 @@
     }
 
     host.innerHTML = '<div class="overlay"><div class="popover" style="width:420px;max-width:92vw">' +
-      '<button class="popover-close" id="chk-x" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
-      '<h3 style="margin:0 0 2px">' + t('hi') + ', ' + ui.esc(WP.i18n.name(me).split(' ')[0]) + ' 👋</h3>' +
+      '<button class="popover-close" id="chk-x" aria-label="' + t('close') + '">' + WP.ui.icon('x', 14) + '</button>' +
+      '<h3 style="margin:0 0 2px">' + t('hi') + ', ' + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</h3>' +
       '<div class="sub" style="margin-bottom:12px">' + t('checkinTitle') + '</div>' +
       tabs + body +
       '<div class="disclaimer">' + t('checkinSlackNote') + '</div>' +

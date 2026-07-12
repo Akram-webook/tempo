@@ -54,7 +54,7 @@
     if (!host) return;
     var list = (items || []).filter(Boolean);
     host.innerHTML = '<div class="overlay"><div class="drawer">' +
-      '<button class="btn icon-btn" id="rd-ev-close" style="margin-bottom:14px" aria-label="Close">' + WP.ui.icon('x', 14) + '</button>' +
+      '<button class="btn icon-btn" id="rd-ev-close" style="margin-bottom:14px" aria-label="' + t('close') + '">' + WP.ui.icon('x', 14) + '</button>' +
       '<h3>' + WP.ui.icon('eye', 16) + ' ' + t('rdEvTitle') + '</h3>' +
       '<div class="disclaimer">' + t('rdEvIntro') + '</div>' +
       (list.length

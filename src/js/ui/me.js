@@ -40,7 +40,7 @@
       : '<div class="sub">' + t('noKudos') + '</div>';
 
     root.innerHTML =
-      '<div class="me-hi">' + t('hi') + ', ' + ui.esc(WP.i18n.name(me).split(' ')[0]) + ' 👋</div>' +
+      '<div class="me-hi">' + t('hi') + ', ' + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</div>' +
       '<div class="sub" style="margin-bottom:10px">' + t('meSub') + '</div>' +
       '<button class="btn primary" id="checkin-btn" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('dailyCheckinBtn') + '</button>' +
 
@@ -48,7 +48,7 @@
       (!loggedToday ? '<div class="banner-info">' + WP.ui.icon('clock',15) + ' ' + t('logReminder') + '</div>' : '') +
 
       // milestone celebration (gentle, only when a milestone is reached)
-      (justHit ? '<div class="banner-info">🎉 ' + t('milestoneHit').replace('{n}', e.streak) + '</div>' : '') +
+      (justHit ? '<div class="banner-info">' + WP.ui.icon('sparkles', 15) + ' ' + t('milestoneHit').replace('{n}', e.streak) + '</div>' : '') +
 
       // habit meter — the journey to ~66 days (the science, not "21 days")
       '<div class="section"><h3>' + WP.ui.icon('sprout',15) + ' ' + t('habitForming') + '</h3>' +

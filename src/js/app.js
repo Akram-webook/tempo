@@ -111,7 +111,7 @@
         ' aria-label="' + (navClosed ? t('expandNav') : t('collapseNav')) + '"' +
         ' title="' + (navClosed ? t('expandNav') : t('collapseNav')) + '">' + ic('panel') + '</button>' +
       '<button class="appbar-brand" id="brand-home" aria-label="' + t('goHome') + '">' +
-        '<img class="brand-logo" src="src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg') + '" alt="Webook" />' +
+        '<img class="brand-logo" src="src/assets/' + (WP.state.theme === 'dark' ? 'wbk-white.svg' : 'wbk-pink.svg') + '" alt="webook.com" />' +
         '<span class="brand-sub">' + t('subtitle') + '</span>' +
       '</button>' +
       '<div class="spacer"></div>' +
