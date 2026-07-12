@@ -106,6 +106,36 @@
     return rel === 'self' || rel === 'manager' || rel === 'director';
   }
 
+  /* ---- Normalized ROLES + capability resolver (2026-07) ----
+   * The four roles derive from the existing `level` + superAdmin flag; WP.can(cap, target)
+   * is the single gate the UI checks. It delegates to the helpers above (which the DB RLS
+   * mirrors) so a hidden/denied button is also a denied query — not security-by-hiding.
+   *   roles: admin (superAdmin) > director > manager (sr_manager|manager) > member (spec|sr_spec)
+   *   caps:  viewOrg, viewSensitive, writeEval, manageAccess, resetPassword, manageRoles,
+   *          editSettings, viewSettings.  `target` = a person id for relationship-scoped caps. */
+  function roleOf(viewer) {
+    if (!viewer) return 'member';
+    if (viewer.superAdmin || viewer.level === 'admin') return 'admin';
+    if (viewer.level === 'director') return 'director';
+    if (viewer.level === 'sr_manager' || viewer.level === 'manager') return 'manager';
+    return 'member';
+  }
+  function can(cap, viewer, targetId) {
+    if (!viewer) viewer = byId(WP.state && WP.state.viewerId);
+    const role = roleOf(viewer);
+    switch (cap) {
+      case 'viewOrg':       return !!viewer;
+      case 'viewSensitive': return targetId ? canSeeSensitive(viewer, targetId) : (role === 'director' || role === 'admin');
+      case 'writeEval':     return targetId ? canSeeSensitive(viewer, targetId) : canAct(viewer);
+      case 'manageAccess':  return role === 'admin' || role === 'director';
+      case 'resetPassword': return role === 'admin';
+      case 'manageRoles':   return role === 'admin';
+      case 'editSettings':  return role === 'admin';
+      case 'viewSettings':  return role === 'admin' || role === 'director';
+      default: return false;
+    }
+  }
+
   /* ---- Access allow-list (separate from role) ----
    * "Has this person been granted entry to the app at all?" Domain is enforced
    * separately (must be @webook.com). Default: current team is granted; an admin
@@ -134,5 +164,8 @@
 
   WP.access = { byId, directReports, teamOf, visiblePeople, canSee, canAct, canManage, isSuperAdmin,
                 managerChainOf, relationshipTo, canSeeSensitive, canSeeUpward, canSeeComp,
-                hasAccess: hasAccess, grantAccess: grantAccess, listAccess: listAccess, setAccess: setAccess };
+                hasAccess: hasAccess, grantAccess: grantAccess, listAccess: listAccess, setAccess: setAccess,
+                roleOf: roleOf, can: can };
+  WP.roleOf = function (viewer) { return roleOf(viewer || byId(WP.state && WP.state.viewerId)); };
+  WP.can = function (cap, targetId) { return can(cap, byId(WP.state && WP.state.viewerId), targetId); };
 })(window.WP = window.WP || {});
