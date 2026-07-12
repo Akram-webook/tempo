@@ -50,12 +50,16 @@ try{
   WP.setState({route:'evaluation',selectedId:rep.id,evalOrigin:'profile'});
   const backProf=window.document.getElementById('back');
   assert(backProf && /Back to profile/.test(backProf.textContent),'S4-1 — back button says "Back to profile" when opened from a profile');
-  // finder team rows: render map, focus finder, check team rows say "Led by" and use avatars
+  // finder team rows: render map, TYPE a team query (search is clean-by-default — empty box
+  // shows nothing; results appear only once you search), check team rows say "Led by" + avatar
   WP.state.route='map'; WP.render();
-  const input=window.document.querySelector('#map-search'); input.value=''; input.onfocus();
+  const input=window.document.querySelector('#map-search');
   const dd=window.document.querySelector('#map-suggest');
+  input.value=''; if(input.onfocus) input.onfocus();
+  assert(!dd.classList.contains('open') && !dd.querySelector('.predict-row'),'empty search shows NOTHING (clean by default)');
+  input.value='auto'; input.oninput();      // "Automation & Execution"
   const teamRow=dd.querySelector('.pr-team');
-  assert(teamRow,'finder lists team rows');
+  assert(teamRow,'typing a team name lists team rows');
   if(teamRow){ assert(/Led by/.test(teamRow.textContent),'team row shows "Led by <lead>"');
     assert(teamRow.querySelector('.avatar'),'team row uses the lead avatar (photo/initials), not a generic icon');
     assert(/View team/.test(teamRow.textContent),'team row has a View team action'); }

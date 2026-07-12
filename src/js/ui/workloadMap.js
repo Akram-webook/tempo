@@ -220,14 +220,15 @@
       const label = WP.state.lang === 'ar' ? (p.teamAr || p.team) : p.team;
       return '<div class="team-tag">' + ui.esc(label) + '</div>';
     }
-    // depth 0 = root(s); depth 1 = the top-level departments (kept laid out
-    // HORIZONTALLY, as today). At depth >= 1 a manager's reports render as a VERTICAL
-    // stacked list (ul.stack) instead of a horizontal row — so expanding a team grows
-    // the page DOWN, not sideways, and horizontal scroll disappears.
+    // The LEADERSHIP SPINE stays horizontal so it reads as a real org chart:
+    //   depth 0 = C-level, depth 1 = the Sr. Manager / department row — both side-by-side.
+    // Only depth >= 2 (a Sr. Manager's own team internals, revealed on drill-in) switches to
+    // a VERTICAL stacked list (ul.stack), so a big team grows the page DOWN instead of blowing
+    // it out sideways with horizontal scroll.
     function li(p, depth) {
       const kids = childrenOf(p.id);
       const isCol = !!colMap[p.id];
-      const stack = depth >= 1 ? ' class="stack"' : '';
+      const stack = depth >= 2 ? ' class="stack"' : '';
       const childUl = (kids.length && !isCol)
         ? '<ul' + stack + '>' + kids.map(function (k) { return li(k, depth + 1); }).join('') + '</ul>'
         : '';
@@ -788,13 +789,19 @@
 
     function build() {
       const q = input.value.trim().toLowerCase();
+      // Clean-by-default: with an empty box, show NOTHING and keep the menu closed. Results
+      // (teams + people) only appear once the user actually types — a search box, not a
+      // browse list. The exception is the "show all teams" reset row while a team is focused,
+      // which is a navigation affordance, not a search result.
+      if (!q && !focusId) { closeDd(); return; }
       let html = '';
       if (focusId) html += '<div class="predict-row pr-clear" role="option" data-team=""><span class="pr-ico">' + WP.ui.icon('users', 15) + '</span><span class="predict-meta"><span class="nm">' + t('allTeams') + '</span></span></div>';
-      const mTeams = teams.filter(function (p) { return !q || teamLabel(p).toLowerCase().indexOf(q) >= 0 || hay(p).indexOf(q) >= 0; });
+      const mTeams = q ? teams.filter(function (p) { return teamLabel(p).toLowerCase().indexOf(q) >= 0 || hay(p).indexOf(q) >= 0; }) : [];
       const mPeople = q ? base.filter(function (p) { return hay(p).indexOf(q) >= 0; }).slice(0, 8) : [];
       if (mTeams.length) html += '<div class="predict-group">' + t('teams') + '</div>' + mTeams.map(function (p) { return teamRow(p, q); }).join('');
       if (mPeople.length) html += '<div class="predict-group">' + t('people') + '</div>' + mPeople.map(function (p) { return personRow(p, q); }).join('');
-      if (!html) html = '<div class="predict-empty">' + t('noResults') + '</div>';
+      if (q && !mTeams.length && !mPeople.length) html += '<div class="predict-empty">' + t('noResults') + '</div>';
+      if (!html) { closeDd(); return; }
       dd.innerHTML = html;
       finder.classList.add('open'); dd.classList.add('open'); input.setAttribute('aria-expanded', 'true');
       rows = [].slice.call(dd.querySelectorAll('.predict-row')); active = -1;
