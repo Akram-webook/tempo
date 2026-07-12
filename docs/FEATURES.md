@@ -98,7 +98,8 @@ Access tiers are grounded in `src/js/core/access.js` and `docs/ACCESS-MODEL.md`:
 ### Workload map (org chart)
 - **What it is:** Org chart + metrics view with tree/list toggle, density control, date navigation,
   unified people/team search, focus mode, and node-peek profiles. Shows hierarchy, account
-  assignments, and workload state per person.
+  assignments, and workload state per person. Design rationale + the standalone `chart.html` export
+  are documented in [`MAP-REDESIGN.md`](MAP-REDESIGN.md).
 - **Inputs:** `WP.access.visiblePeople`, `WP.capacity.teamMetrics`, `WP.data.EVENTS` / `STATES` /
   `LEVELS`, `WP.state.window` / `refDate`, `WP.growth` signals, density pref in localStorage.
 - **Decision it supports:** Explore org structure, discover who is available / near / overloaded, map
