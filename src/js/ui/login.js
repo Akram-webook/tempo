@@ -286,7 +286,12 @@
         if (!(window.google && window.google.accounts && window.google.accounts.id)) return;
         window.google.accounts.id.initialize({ client_id: WP.config.googleClientId, callback: onGoogleCredential, hd: DOMAIN });
         const host = root.querySelector('#g-btn-host');
-        if (host) window.google.accounts.id.renderButton(host, { theme: 'outline', size: 'large', width: 320, text: 'continue_with' });
+        // Fit the button to the card so it never overflows on narrow phones
+        // (Google clamps the width to 200–400).
+        if (host) {
+          var w = Math.max(200, Math.min(400, host.clientWidth || 320));
+          window.google.accounts.id.renderButton(host, { theme: 'outline', size: 'large', width: w, text: 'continue_with' });
+        }
       } catch (e) {}
     }
     if (window.google && window.google.accounts && window.google.accounts.id) { setup(); return; }

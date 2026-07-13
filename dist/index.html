@@ -60,15 +60,17 @@
 
   /* text / content */
   --text:          #071437; /* Content-Primary (navy) */
-  --text-muted:    #78829D; /* Content-Secondary */
-  --text-tertiary: #99A1B7; /* Content-Tertiary */
+  --text-muted:    #5C6470; /* Content-Secondary — darkened for WCAG 4.5:1 on white (was #78829D ~3.8:1) */
+  --text-tertiary: #6B7280; /* Content-Tertiary — darkened for 4.5:1 as text (was #99A1B7); decorative use only if lighter needed */
   --text-disabled: rgba(7,20,55,.30); /* Content-Disabled (#0714374D) */
 
-  /* brand (Webook magenta) */
-  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand */
+  /* brand (Webook magenta) — #FF2C79 stays for FILLS/borders/dots; a darker shade
+     is used wherever the brand color is TEXT (links, chips) so it clears 4.5:1. */
+  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand (fills) */
+  --brand-text:    #C81E5E; /* brand as TEXT on light — 4.5:1 on white */
   --brand-soft:    color-mix(in srgb, var(--brand) 12%, transparent); /* tinted brand wash (hovers, marks) */
-  --brand-contrast:#F9F9F9; /* CTA text · Content-Primary-Inverse */
-  --link:          #FF2C79; /* Content-Link */
+  --brand-contrast:#FFFFFF; /* CTA text · Content-Primary-Inverse (white clears 4.5:1 on --brand-text fills) */
+  --link:          #C81E5E; /* Content-Link — text-safe on white */
   --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
 
   /* inverse — Primary button (navy) + on-dark content */
@@ -167,14 +169,15 @@
   --border-primary: #FFFFFF;
 
   --text:          #E4E4E7; /* Content-Primary */
-  --text-muted:    #A1A1AA; /* Content-Secondary */
-  --text-tertiary: #71717A; /* Content-Tertiary */
+  --text-muted:    #A1A1AA; /* Content-Secondary — ~4.6:1 on dark surface, OK */
+  --text-tertiary: #8B9099; /* Content-Tertiary — lightened for 4.5:1 as text on dark (was #71717A ~3.5:1) */
   --text-disabled: rgba(255,255,255,.32);
 
-  --brand:         #FF2C79;
+  --brand:         #FF2C79;                /* fills */
+  --brand-text:    #FF6FA3;                /* brand as TEXT on dark — brighter for 4.5:1 */
   --brand-soft:    color-mix(in srgb, var(--brand) 20%, transparent); /* slightly stronger on dark */
-  --brand-contrast:#F9F9F9;
-  --link:          #FF2C79;
+  --brand-contrast:#FFFFFF;
+  --link:          #FF6FA3;                /* Content-Link — text-safe on dark */
   --brand-disabled-bg: #4A1428;
 
   --inverse-bg:    #F9F9F9; /* inverse flips on dark */
@@ -802,7 +805,10 @@ main.full-bleed { max-width: none; }
   background: var(--surface-2); color: var(--text);
 }
 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--node-accent); }
-.flame { position: absolute; top: 8px; inset-inline-end: 10px; line-height: 0; color: var(--state-overloaded); }
+.flame { position: absolute; top: 8px; inset-inline-end: 10px; line-height: 0; color: var(--state-overloaded);
+  border: 0; background: transparent; padding: 4px; margin: -4px; cursor: pointer; border-radius: var(--radius-sm); }
+button.flame:hover { background: var(--state-overloaded-bg); }
+button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline-offset: 1px; }
 
 /* Employment / status chip — clear, scannable Full-time vs Freelance (+ open/joining) */
 .emp {
@@ -1295,6 +1301,17 @@ main.full-bleed { max-width: none; }
 .popover-close { position: absolute; top: 10px; inset-inline-end: 10px; border: 0; background: var(--surface-2); color: var(--text-muted); width: 26px; height: 26px; border-radius: 50%; font-size: 13px; }
 .popover-close:hover { color: var(--text); }
 .drawer { position: fixed; top: 0; inset-inline-end: 0; height: 100%; width: 380px; background: var(--surface); border-inline-start: 1px solid var(--border); padding: 20px; overflow:auto; box-shadow: var(--shadow); }
+/* Centered themed modal (reuses .overlay + .drawer base but pins to center) —
+   the reusable WP.ui.confirm/prompt dialog. */
+.drawer.dlg { position: relative; inset: auto; top: auto; height: auto; width: min(440px, 92vw);
+  max-height: 86vh; border: 1px solid var(--border); border-radius: var(--radius); }
+.dlg .dlg-title { margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.dlg .dlg-body { font-size: 14px; color: var(--text); margin-bottom: 12px; }
+.dlg .dlg-input { width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 14px; resize: vertical; }
+.dlg .dlg-input:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.dlg .dlg-err { color: var(--state-overloaded); font-size: 12px; margin-top: 6px; }
+.dlg .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .req-l { display: block; font-size: 12px; color: var(--text-muted); margin: 12px 0 4px; }
 .req-i { width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 9px 10px; font-family: inherit; font-size: 14px; }
 
@@ -3203,6 +3220,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     noResults:      { en: 'No matches found',       ar: 'لا توجد نتائج' },
     emptyTeam:      { en: 'No one to show here yet.', ar: 'لا أحد لعرضه هنا بعد.' },
     confirmRole:    { en: 'Change {n}’s role to {r}? This changes what they can access immediately.', ar: 'تغيير دور {n} إلى {r}؟ هذا يغيّر صلاحيات وصوله فوراً.' },
+    roleChangeTitle:{ en: 'Change access role', ar: 'تغيير دور الوصول' },
     viewAs:         { en: 'View as',                ar: 'العرض بدور' },
     director:       { en: 'Director',               ar: 'مدير' },
     manager:        { en: 'Manager',                ar: 'مدير فريق' },
@@ -3223,10 +3241,15 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     strengths:      { en: 'Strengths',              ar: 'نقاط القوة' },
     growthAreas:    { en: 'Growth areas',           ar: 'مجالات التطوير' },
     burnoutFlag:    { en: 'Early burnout signal — overlapping events', ar: 'إشارة إرهاق مبكرة — فعاليات متداخلة' },
+    burnoutExplain: { en: 'Early burnout signal — open wellbeing to see why and how to relieve it', ar: 'إشارة إرهاق مبكرة — افتح الرفاهية لمعرفة السبب وكيفية التخفيف' },
     assign:         { en: 'Assign work',            ar: 'إسناد عمل' },
     candidates:     { en: 'Best candidates (closest, then lowest load)', ar: 'أفضل المرشحين (الأقرب ثم الأقل حملاً)' },
     projected:      { en: 'Projected load',         ar: 'الحمل المتوقع' },
     softLocked:     { en: 'Soft-locked · override required', ar: 'مقفل مبدئياً · يتطلب تجاوزاً' },
+    overrideTitle:  { en: 'Override assignment', ar: 'تجاوز الإسناد' },
+    overrideReasonLabel: { en: 'This person is soft-locked. A reason is logged for accountability.', ar: 'هذا الشخص مقفل مبدئياً. يُسجَّل السبب للمساءلة.' },
+    overrideReasonPlaceholder: { en: 'Why is this override necessary?', ar: 'لماذا هذا التجاوز ضروري؟' },
+    overrideConfirm: { en: 'Confirm override', ar: 'تأكيد التجاوز' },
     theme:          { en: 'Theme',                  ar: 'السمة' },
     lang:           { en: 'العربية',                ar: 'English' },
     healthyZone:    { en: 'in healthy zone (41–75%)', ar: 'في النطاق الصحي (٤١-٧٥٪)' },
@@ -3382,7 +3405,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     feedbackQs:     { en: 'Feedback questions', ar: 'أسئلة التقييم' },
     approve:        { en: 'Approve evaluation', ar: 'اعتماد التقييم' },
     approved:       { en: 'Approved', ar: 'معتمد' },
+    approveTitle:   { en: 'Approve & lock this evaluation?', ar: 'اعتماد وقفل هذا التقييم؟' },
+    approveBody:    { en: 'Approving locks the review at {n}/5. You can reopen it later, which is logged.', ar: 'الاعتماد يقفل التقييم عند {n}/5. يمكنك إعادة فتحه لاحقاً، ويُسجَّل ذلك.' },
+    approveUnscored:{ en: 'Some criteria are still unscored. Approve anyway?', ar: 'بعض المعايير لم تُقيَّم بعد. الاعتماد على أي حال؟' },
     downloadReport: { en: 'Download report', ar: 'تنزيل التقرير' },
+    downloadSoon:   { en: 'Report export is coming soon.', ar: 'تصدير التقرير قريباً.' },
     evalSyncing:    { en: 'Syncing evaluations…',                       ar: 'جارٍ مزامنة التقييمات…' },
     evalSynced:     { en: 'Synced',                                     ar: 'تمت المزامنة' },
     evalSavedLocal: { en: 'Saved locally — will sync when back online', ar: 'تم الحفظ محليًا — ستتم المزامنة عند عودة الاتصال' },
@@ -3445,6 +3472,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     selfRating:     { en: 'employee self-rating', ar: 'التقييم الذاتي للموظف' },
     newCycle:       { en: 'New cycle', ar: 'دورة جديدة' },
     newCyclePrompt: { en: 'Name the new evaluation cycle (e.g., Q3 2025):', ar: 'اسم دورة التقييم الجديدة (مثال: الربع الثالث ٢٠٢٥):' },
+    newCycleTitle:  { en: 'New evaluation cycle', ar: 'دورة تقييم جديدة' },
+    newCycleRequired:{ en: 'Give the cycle a name.', ar: 'أعطِ الدورة اسماً.' },
+    newCycleCreate: { en: 'Create cycle', ar: 'إنشاء الدورة' },
     inProgressL:    { en: 'in progress', ar: 'قيد التنفيذ' },
     notStartedL:    { en: 'not started', ar: 'لم تبدأ' },
     employees:      { en: 'Employees', ar: 'الموظفون' },
@@ -3494,6 +3524,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
     close:          { en: 'Close', ar: 'إغلاق' },
+    confirm:        { en: 'Confirm', ar: 'تأكيد' },
+    cancel:         { en: 'Cancel', ar: 'إلغاء' },
+    fieldRequired:  { en: 'This field is required.', ar: 'هذا الحقل مطلوب.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },
@@ -7041,6 +7074,82 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     } catch (e) {}
   }
 
+  /* ---------- Reusable themed dialog (confirm / prompt) ----------------------
+   * Replaces native prompt()/confirm() — which are unstyled, English-only, and
+   * un-testable — with an in-app modal on the shared overlay-host. Keyboard
+   * accessible (Esc cancels, Enter confirms, focus moves in, backdrop cancels),
+   * localized, and Promise-based so callers can `await`. Never throws. */
+  function dialog(opts) {
+    opts = opts || {};
+    var t = WP.i18n.t;
+    return new Promise(function (resolve) {
+      var host = document.getElementById('overlay-host');
+      if (!host) { resolve(opts.prompt ? null : false); return; }
+      var isPrompt = !!opts.prompt;
+      var confirmLabel = opts.confirmLabel || t('confirm');
+      var cancelLabel = opts.cancelLabel || t('cancel');
+      var danger = !!opts.danger;
+      var prevFocus = document.activeElement;
+
+      var field = isPrompt
+        ? '<textarea class="dlg-input" id="dlg-input" rows="' + (opts.rows || 3) + '" ' +
+            'placeholder="' + esc(opts.placeholder || '') + '">' + esc(opts.value || '') + '</textarea>' +
+          '<div class="dlg-err" id="dlg-err" hidden></div>'
+        : '';
+
+      host.innerHTML =
+        '<div class="overlay" role="presentation"><div class="drawer dlg" role="dialog" aria-modal="true" ' +
+            'aria-label="' + esc(opts.title || confirmLabel) + '">' +
+          '<h3 class="dlg-title">' + (opts.icon ? WP.ui.icon(opts.icon, 16) + ' ' : '') + esc(opts.title || '') + '</h3>' +
+          (opts.body ? '<div class="dlg-body">' + opts.body + '</div>' : '') +
+          field +
+          '<div class="dlg-actions">' +
+            '<button class="btn" id="dlg-cancel">' + esc(cancelLabel) + '</button>' +
+            '<button class="btn ' + (danger ? 'danger' : 'primary') + '" id="dlg-ok">' + esc(confirmLabel) + '</button>' +
+          '</div>' +
+        '</div></div>';
+
+      var overlay = host.querySelector('.overlay');
+      var input = host.querySelector('#dlg-input');
+      var errEl = host.querySelector('#dlg-err');
+
+      function close(result) {
+        document.removeEventListener('keydown', onKey, true);
+        host.innerHTML = '';
+        try { if (prevFocus && prevFocus.focus) prevFocus.focus(); } catch (e) {}
+        resolve(result);
+      }
+      function submit() {
+        if (isPrompt) {
+          var v = (input && input.value || '').trim();
+          if (opts.required && !v) {
+            if (errEl) { errEl.textContent = opts.requiredMsg || t('fieldRequired'); errEl.hidden = false; }
+            if (input) input.focus();
+            return;
+          }
+          close(v);
+        } else { close(true); }
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(isPrompt ? null : false); }
+        else if (e.key === 'Enter' && (!isPrompt || (e.metaKey || e.ctrlKey))) { e.preventDefault(); submit(); }
+      }
+      document.addEventListener('keydown', onKey, true);
+      host.querySelector('#dlg-ok').onclick = submit;
+      host.querySelector('#dlg-cancel').onclick = function () { close(isPrompt ? null : false); };
+      overlay.onclick = function (e) { if (e.target === overlay) close(isPrompt ? null : false); };
+      // move focus in: the input on a prompt, else the primary action
+      var toFocus = input || host.querySelector('#dlg-ok');
+      if (toFocus) try { toFocus.focus(); } catch (e) {}
+    });
+  }
+  // Convenience wrappers.
+  function confirmDialog(o) { return dialog(Object.assign({}, o, { prompt: false })); }
+  function promptDialog(o) { return dialog(Object.assign({}, o, { prompt: true })); }
+
+  WP.ui.dialog = dialog;
+  WP.ui.confirm = confirmDialog;
+  WP.ui.prompt = promptDialog;
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;
@@ -7410,7 +7519,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         if (!(window.google && window.google.accounts && window.google.accounts.id)) return;
         window.google.accounts.id.initialize({ client_id: WP.config.googleClientId, callback: onGoogleCredential, hd: DOMAIN });
         const host = root.querySelector('#g-btn-host');
-        if (host) window.google.accounts.id.renderButton(host, { theme: 'outline', size: 'large', width: 320, text: 'continue_with' });
+        // Fit the button to the card so it never overflows on narrow phones
+        // (Google clamps the width to 200–400).
+        if (host) {
+          var w = Math.max(200, Math.min(400, host.clientWidth || 320));
+          window.google.accounts.id.renderButton(host, { theme: 'outline', size: 'large', width: w, text: 'continue_with' });
+        }
       } catch (e) {}
     }
     if (window.google && window.google.accounts && window.google.accounts.id) { setup(); return; }
@@ -7937,7 +8051,15 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const t = WP.i18n.t;
     const accent = ui.stateColor(snap.state);
     const compact = density === 'compact';
-    const flame = snap.burnout ? '<div class="flame" title="' + t('burnoutFlag') + '">' + WP.ui.icon('flame', 15) + '</div>' : '';
+    // Burnout is shown as an EXPLAINABLE affordance, not a bare per-person label
+    // (Constitution: measure work, not surveil people). Clicking opens the wellbeing
+    // view — the factors behind it + the relief action — instead of just flagging.
+    // Only rendered for viewers allowed to see wellbeing; otherwise no flag at all.
+    const canWell = WP.wellbeing && WP.wellbeing.canView(WP.viewer && WP.viewer());
+    const flame = (snap.burnout && canWell)
+      ? '<button class="flame" data-wellbeing="' + person.id + '" title="' + t('burnoutExplain') + '"' +
+          ' aria-label="' + t('burnoutExplain') + '">' + WP.ui.icon('flame', 15) + '</button>'
+      : '';
     // Caret keeps the report COUNT visible and acts as a secondary toggle; the whole
     // card is also clickable to expand (see render). aria-expanded for screen readers.
     const caret = kidCount
@@ -8319,11 +8441,15 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       el.onclick = function (e) { e.stopPropagation(); WP.ui.peek(el.dataset.profile); };
       el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); WP.ui.peek(el.dataset.profile); } };
     });
+    // burnout flag → open the wellbeing view (the WHY + relief action), never a bare label.
+    root.querySelectorAll('[data-wellbeing]').forEach(function (el) {
+      el.onclick = function (e) { e.stopPropagation(); WP.setState({ route: 'wellbeing', selectedId: el.dataset.wellbeing }); };
+    });
     // TREE card: click the body to show/hide the team (one click, no hunting for arrows).
     // Cards with no reports just open the profile.
     root.querySelectorAll('.tree .node[data-id]').forEach(function (el) {
       el.onclick = function (e) {
-        if (e.target.closest('[data-caret]')) return;
+        if (e.target.closest('[data-caret]') || e.target.closest('[data-wellbeing]')) return;
         const id = el.dataset.id;
         // Clicking a person never opens a profile now — a branch expands/collapses;
         // a leaf card does nothing. Keeps the tree simple.
@@ -9091,8 +9217,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     });
     host.querySelectorAll('[data-override]').forEach(function (b) {
       b.onclick = function () {
-        const why = prompt('Override reason (logged):');
-        if (why) { doAssign(eventId, b.dataset.override, true, why, aiSuggested); host.innerHTML = ''; }
+        const t = WP.i18n.t, pid = b.dataset.override;
+        WP.ui.prompt({
+          title: t('overrideTitle'), icon: 'alert',
+          body: t('overrideReasonLabel'),
+          placeholder: t('overrideReasonPlaceholder'),
+          required: true, danger: true,
+          confirmLabel: t('overrideConfirm'), cancelLabel: t('cancel')
+        }).then(function (why) {
+          if (why) { doAssign(eventId, pid, true, why, aiSuggested); host.innerHTML = ''; }
+        });
       };
     });
   }
@@ -9579,19 +9713,24 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       sel.onchange = function () {
         const p = WP.access.byId(sel.dataset.role);
         const oldLevel = p.level;
+        const newLevel = sel.value;
         // safety: don't let an admin demote their own access and lock themselves out
-        if (p.id === WP.state.viewerId && !WP.access.canManage(Object.assign({}, p, { level: sel.value }))) {
-          window.alert(WP.i18n.t('cantDemoteSelf'));
+        if (p.id === WP.state.viewerId && !WP.access.canManage(Object.assign({}, p, { level: newLevel }))) {
+          WP.ui.toast(WP.i18n.t('cantDemoteSelf'), 'warn');
           sel.value = oldLevel; return;
         }
         // governance + risk mitigation: confirm before changing someone's access
-        const ok = window.confirm(WP.i18n.t('confirmRole')
-          .replace('{n}', WP.i18n.name(p)).replace('{r}', roleLabel(sel.value)));
-        if (!ok) { sel.value = oldLevel; return; }
-        p.level = sel.value;
-        WP.logEvent({ type: 'role-change', by: WP.state.viewerId, target: p.id,
-                      reason: roleLabel(oldLevel) + ' → ' + roleLabel(p.level) });
-        WP.setState({});
+        WP.ui.confirm({
+          title: WP.i18n.t('roleChangeTitle'), icon: 'key', danger: true,
+          body: WP.i18n.t('confirmRole').replace('{n}', WP.ui.esc(WP.i18n.name(p))).replace('{r}', WP.ui.esc(roleLabel(newLevel))),
+          confirmLabel: WP.i18n.t('confirm'), cancelLabel: WP.i18n.t('cancel')
+        }).then(function (ok) {
+          if (!ok) { sel.value = oldLevel; return; }
+          p.level = newLevel;
+          WP.logEvent({ type: 'role-change', by: WP.state.viewerId, target: p.id,
+                        reason: roleLabel(oldLevel) + ' → ' + roleLabel(p.level) });
+          WP.setState({});
+        });
       };
     });
   }
@@ -10178,21 +10317,33 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       ta.onchange = function () { ev.feedback[ta.dataset.q] = ta.value; saveEval(); };
     });
     const ap = root.querySelector('#approve');
-    if (ap) ap.onclick = function () {
-      ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
+    if (ap && ev.status !== 'Completed') ap.onclick = function () {
       const overall = WP.evaluation.overall(ev);
-      const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
-      // Accepted = the human's final overall landed inside the AI-suggested band.
-      // Only when a suggestion was actually shown (enoughEvidence); else no flag.
-      if (aiSuggestion && typeof overall === 'number') {
-        entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
-      }
-      WP.logEvent(entry);
-      saveEval();
-      WP.setState({});
+      // Warn when required criteria are still unscored.
+      const total = WP.data.EVAL_CRITERIA.length;
+      const scored = WP.data.EVAL_CRITERIA.filter(function (c) { return typeof ev.scores[c.id] === 'number'; }).length;
+      const body = (scored < total ? t('approveUnscored') + '<br><br>' : '') +
+        t('approveBody').replace('{n}', overall || '–');
+      WP.ui.confirm({
+        title: t('approveTitle'), icon: 'check', body: body,
+        confirmLabel: t('approve'), cancelLabel: t('cancel')
+      }).then(function (ok) {
+        if (!ok) return;
+        ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
+        const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
+        // Accepted = the human's final overall landed inside the AI-suggested band.
+        // Only when a suggestion was actually shown (enoughEvidence); else no flag.
+        if (aiSuggestion && typeof overall === 'number') {
+          entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
+        }
+        WP.logEvent(entry);
+        saveEval();
+        WP.setState({});
+      });
     };
     const dl = root.querySelector('#dl');
-    if (dl) dl.onclick = function () { dl.textContent = t('downloadReport') + ' ' + WP.ui.icon('check',14) + ''; };
+    // Honest: export isn't built yet — say so instead of faking a success checkmark.
+    if (dl) dl.onclick = function () { WP.ui.toast(t('downloadSoon'), 'info'); };
   }
 
   WP.ui.evaluation = { render: render };
@@ -10517,12 +10668,18 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     root.querySelector('#cycle').onchange = function (e) { WP.evaluation.setActiveCycle(e.target.value); WP.setState({}); };
     const nc = root.querySelector('#new-cycle');
     if (nc) nc.onclick = function () {
-      const name = prompt(t('newCyclePrompt'));
-      if (!name) return;
-      const id = 'c_' + Date.now();
-      WP.evaluation.addCycle({ id: id, name: name, type: 'Quarterly', start: '—', end: '—', status: 'Active' });
-      WP.logEvent({ type: 'cycle-created', by: WP.state.viewerId, target: name });
-      WP.setState({});
+      WP.ui.prompt({
+        title: t('newCycleTitle'), icon: 'clipboard',
+        placeholder: t('newCyclePrompt'), rows: 1,
+        required: true, requiredMsg: t('newCycleRequired'),
+        confirmLabel: t('newCycleCreate'), cancelLabel: t('cancel')
+      }).then(function (name) {
+        if (!name) return;
+        const id = 'c_' + Date.now();
+        WP.evaluation.addCycle({ id: id, name: name, type: 'Quarterly', start: '—', end: '—', status: 'Active' });
+        WP.logEvent({ type: 'cycle-created', by: WP.state.viewerId, target: name });
+        WP.setState({});
+      });
     };
   }
 
@@ -10776,7 +10933,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       : '<div class="sub">' + t('noKudos') + '</div>';
 
     root.innerHTML =
-      '<div class="me-hi">' + t('hi') + ', ' + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</div>' +
+      '<div class="me-hi">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</div>' +
       '<div class="sub" style="margin-bottom:10px">' + t('meSub') + '</div>' +
       '<button class="btn primary" id="checkin-btn" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('dailyCheckinBtn') + '</button>' +
 

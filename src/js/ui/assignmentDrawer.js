@@ -102,8 +102,16 @@
     });
     host.querySelectorAll('[data-override]').forEach(function (b) {
       b.onclick = function () {
-        const why = prompt('Override reason (logged):');
-        if (why) { doAssign(eventId, b.dataset.override, true, why, aiSuggested); host.innerHTML = ''; }
+        const t = WP.i18n.t, pid = b.dataset.override;
+        WP.ui.prompt({
+          title: t('overrideTitle'), icon: 'alert',
+          body: t('overrideReasonLabel'),
+          placeholder: t('overrideReasonPlaceholder'),
+          required: true, danger: true,
+          confirmLabel: t('overrideConfirm'), cancelLabel: t('cancel')
+        }).then(function (why) {
+          if (why) { doAssign(eventId, pid, true, why, aiSuggested); host.innerHTML = ''; }
+        });
       };
     });
   }

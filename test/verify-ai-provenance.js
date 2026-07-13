@@ -18,7 +18,7 @@ const dom = new JSDOM('<!doctype html><html><body><div id="view"></div><div id="
 const { window } = dom;
 window.HTMLElement.prototype.scrollIntoView = function () {};
 window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
-window.prompt = () => 'capacity balance';   // override-reason prompt → non-empty
+const tick = () => new Promise(r => setTimeout(r, 0));
 const errors = [];
 for (const s of srcs) { try { new window.Function(fs.readFileSync(path.join(root, s), 'utf8')).call(window); } catch (e) { errors.push('[load ' + s + '] ' + e.message); } }
 const WP = window.WP;
@@ -77,7 +77,13 @@ function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
       const r = openRows(eid);
       const ov = host.querySelector('[data-override]');
       if (ov) {
-        ov.click(); // window.prompt stubbed → reason supplied → doAssign(override=true)
+        ov.click();                       // opens the themed WP.ui.prompt dialog
+        await tick();
+        const input = host.querySelector('#dlg-input');
+        assert(input, 'override opens the themed reason dialog (no native prompt)');
+        input.value = 'capacity balance';  // supply the required reason
+        host.querySelector('#dlg-ok').click();
+        await tick();
         const e = WP.activityLog[0];
         assert(e.type === 'override-assign' && e.aiAccepted === false, 'override stamps aiAccepted:false (override is not acceptance)');
         overrodeOnce = true;

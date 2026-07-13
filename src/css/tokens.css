@@ -42,15 +42,17 @@
 
   /* text / content */
   --text:          #071437; /* Content-Primary (navy) */
-  --text-muted:    #78829D; /* Content-Secondary */
-  --text-tertiary: #99A1B7; /* Content-Tertiary */
+  --text-muted:    #5C6470; /* Content-Secondary — darkened for WCAG 4.5:1 on white (was #78829D ~3.8:1) */
+  --text-tertiary: #6B7280; /* Content-Tertiary — darkened for 4.5:1 as text (was #99A1B7); decorative use only if lighter needed */
   --text-disabled: rgba(7,20,55,.30); /* Content-Disabled (#0714374D) */
 
-  /* brand (Webook magenta) */
-  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand */
+  /* brand (Webook magenta) — #FF2C79 stays for FILLS/borders/dots; a darker shade
+     is used wherever the brand color is TEXT (links, chips) so it clears 4.5:1. */
+  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand (fills) */
+  --brand-text:    #C81E5E; /* brand as TEXT on light — 4.5:1 on white */
   --brand-soft:    color-mix(in srgb, var(--brand) 12%, transparent); /* tinted brand wash (hovers, marks) */
-  --brand-contrast:#F9F9F9; /* CTA text · Content-Primary-Inverse */
-  --link:          #FF2C79; /* Content-Link */
+  --brand-contrast:#FFFFFF; /* CTA text · Content-Primary-Inverse (white clears 4.5:1 on --brand-text fills) */
+  --link:          #C81E5E; /* Content-Link — text-safe on white */
   --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
 
   /* inverse — Primary button (navy) + on-dark content */
@@ -149,14 +151,15 @@
   --border-primary: #FFFFFF;
 
   --text:          #E4E4E7; /* Content-Primary */
-  --text-muted:    #A1A1AA; /* Content-Secondary */
-  --text-tertiary: #71717A; /* Content-Tertiary */
+  --text-muted:    #A1A1AA; /* Content-Secondary — ~4.6:1 on dark surface, OK */
+  --text-tertiary: #8B9099; /* Content-Tertiary — lightened for 4.5:1 as text on dark (was #71717A ~3.5:1) */
   --text-disabled: rgba(255,255,255,.32);
 
-  --brand:         #FF2C79;
+  --brand:         #FF2C79;                /* fills */
+  --brand-text:    #FF6FA3;                /* brand as TEXT on dark — brighter for 4.5:1 */
   --brand-soft:    color-mix(in srgb, var(--brand) 20%, transparent); /* slightly stronger on dark */
-  --brand-contrast:#F9F9F9;
-  --link:          #FF2C79;
+  --brand-contrast:#FFFFFF;
+  --link:          #FF6FA3;                /* Content-Link — text-safe on dark */
   --brand-disabled-bg: #4A1428;
 
   --inverse-bg:    #F9F9F9; /* inverse flips on dark */

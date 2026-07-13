@@ -140,7 +140,15 @@
     const t = WP.i18n.t;
     const accent = ui.stateColor(snap.state);
     const compact = density === 'compact';
-    const flame = snap.burnout ? '<div class="flame" title="' + t('burnoutFlag') + '">' + WP.ui.icon('flame', 15) + '</div>' : '';
+    // Burnout is shown as an EXPLAINABLE affordance, not a bare per-person label
+    // (Constitution: measure work, not surveil people). Clicking opens the wellbeing
+    // view — the factors behind it + the relief action — instead of just flagging.
+    // Only rendered for viewers allowed to see wellbeing; otherwise no flag at all.
+    const canWell = WP.wellbeing && WP.wellbeing.canView(WP.viewer && WP.viewer());
+    const flame = (snap.burnout && canWell)
+      ? '<button class="flame" data-wellbeing="' + person.id + '" title="' + t('burnoutExplain') + '"' +
+          ' aria-label="' + t('burnoutExplain') + '">' + WP.ui.icon('flame', 15) + '</button>'
+      : '';
     // Caret keeps the report COUNT visible and acts as a secondary toggle; the whole
     // card is also clickable to expand (see render). aria-expanded for screen readers.
     const caret = kidCount
@@ -522,11 +530,15 @@
       el.onclick = function (e) { e.stopPropagation(); WP.ui.peek(el.dataset.profile); };
       el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); WP.ui.peek(el.dataset.profile); } };
     });
+    // burnout flag → open the wellbeing view (the WHY + relief action), never a bare label.
+    root.querySelectorAll('[data-wellbeing]').forEach(function (el) {
+      el.onclick = function (e) { e.stopPropagation(); WP.setState({ route: 'wellbeing', selectedId: el.dataset.wellbeing }); };
+    });
     // TREE card: click the body to show/hide the team (one click, no hunting for arrows).
     // Cards with no reports just open the profile.
     root.querySelectorAll('.tree .node[data-id]').forEach(function (el) {
       el.onclick = function (e) {
-        if (e.target.closest('[data-caret]')) return;
+        if (e.target.closest('[data-caret]') || e.target.closest('[data-wellbeing]')) return;
         const id = el.dataset.id;
         // Clicking a person never opens a profile now — a branch expands/collapses;
         // a leaf card does nothing. Keeps the tree simple.

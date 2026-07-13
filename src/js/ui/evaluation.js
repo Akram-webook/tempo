@@ -340,21 +340,33 @@
       ta.onchange = function () { ev.feedback[ta.dataset.q] = ta.value; saveEval(); };
     });
     const ap = root.querySelector('#approve');
-    if (ap) ap.onclick = function () {
-      ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
+    if (ap && ev.status !== 'Completed') ap.onclick = function () {
       const overall = WP.evaluation.overall(ev);
-      const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
-      // Accepted = the human's final overall landed inside the AI-suggested band.
-      // Only when a suggestion was actually shown (enoughEvidence); else no flag.
-      if (aiSuggestion && typeof overall === 'number') {
-        entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
-      }
-      WP.logEvent(entry);
-      saveEval();
-      WP.setState({});
+      // Warn when required criteria are still unscored.
+      const total = WP.data.EVAL_CRITERIA.length;
+      const scored = WP.data.EVAL_CRITERIA.filter(function (c) { return typeof ev.scores[c.id] === 'number'; }).length;
+      const body = (scored < total ? t('approveUnscored') + '<br><br>' : '') +
+        t('approveBody').replace('{n}', overall || '–');
+      WP.ui.confirm({
+        title: t('approveTitle'), icon: 'check', body: body,
+        confirmLabel: t('approve'), cancelLabel: t('cancel')
+      }).then(function (ok) {
+        if (!ok) return;
+        ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
+        const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
+        // Accepted = the human's final overall landed inside the AI-suggested band.
+        // Only when a suggestion was actually shown (enoughEvidence); else no flag.
+        if (aiSuggestion && typeof overall === 'number') {
+          entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
+        }
+        WP.logEvent(entry);
+        saveEval();
+        WP.setState({});
+      });
     };
     const dl = root.querySelector('#dl');
-    if (dl) dl.onclick = function () { dl.textContent = t('downloadReport') + ' ' + WP.ui.icon('check',14) + ''; };
+    // Honest: export isn't built yet — say so instead of faking a success checkmark.
+    if (dl) dl.onclick = function () { WP.ui.toast(t('downloadSoon'), 'info'); };
   }
 
   WP.ui.evaluation = { render: render };

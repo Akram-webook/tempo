@@ -226,12 +226,18 @@
     root.querySelector('#cycle').onchange = function (e) { WP.evaluation.setActiveCycle(e.target.value); WP.setState({}); };
     const nc = root.querySelector('#new-cycle');
     if (nc) nc.onclick = function () {
-      const name = prompt(t('newCyclePrompt'));
-      if (!name) return;
-      const id = 'c_' + Date.now();
-      WP.evaluation.addCycle({ id: id, name: name, type: 'Quarterly', start: '—', end: '—', status: 'Active' });
-      WP.logEvent({ type: 'cycle-created', by: WP.state.viewerId, target: name });
-      WP.setState({});
+      WP.ui.prompt({
+        title: t('newCycleTitle'), icon: 'clipboard',
+        placeholder: t('newCyclePrompt'), rows: 1,
+        required: true, requiredMsg: t('newCycleRequired'),
+        confirmLabel: t('newCycleCreate'), cancelLabel: t('cancel')
+      }).then(function (name) {
+        if (!name) return;
+        const id = 'c_' + Date.now();
+        WP.evaluation.addCycle({ id: id, name: name, type: 'Quarterly', start: '—', end: '—', status: 'Active' });
+        WP.logEvent({ type: 'cycle-created', by: WP.state.viewerId, target: name });
+        WP.setState({});
+      });
     };
   }
 

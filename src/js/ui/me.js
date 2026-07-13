@@ -40,7 +40,7 @@
       : '<div class="sub">' + t('noKudos') + '</div>';
 
     root.innerHTML =
-      '<div class="me-hi">' + t('hi') + ', ' + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</div>' +
+      '<div class="me-hi">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</div>' +
       '<div class="sub" style="margin-bottom:10px">' + t('meSub') + '</div>' +
       '<button class="btn primary" id="checkin-btn" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('dailyCheckinBtn') + '</button>' +
 
