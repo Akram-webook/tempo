@@ -278,12 +278,119 @@
     if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
   }
 
-  /* ── Workspace (admin) tab — the original org-config sections ──────────────── */
+  /* ── Workspace: Members & Access ──────────────────────────────────────────
+   * The single place to see WHO can enter Tempo and their role — the "app-level
+   * gate" (allowlist) that used to be editable only in access.js code. Grant/revoke
+   * flows through WP.access.grantAccess (which logs) + WP.setState (which persists
+   * the granted set). Role CHANGING stays in the dedicated permissions screen (we
+   * link to it) so we don't duplicate that confirm flow. Gated to editSettings. */
+  const LEVEL_LABEL = {
+    admin:      { en: 'Super Admin',      ar: 'مدير صلاحيات' },
+    director:   { en: 'Director',         ar: 'دايركتر' },
+    sr_manager: { en: 'Senior Manager',   ar: 'مدير أول' },
+    manager:    { en: 'Manager',          ar: 'مدير' },
+    sr_spec:    { en: 'Senior Specialist',ar: 'أخصائي أول' },
+    spec:       { en: 'Specialist',       ar: 'أخصائي' }
+  };
+  function levelLabel(level) {
+    const o = LEVEL_LABEL[level];
+    return o ? (WP.state.lang === 'ar' ? o.ar : o.en) : (level || '—');
+  }
+
+  function memberRows(query) {
+    const t = WP.i18n.t, q = (query || '').trim().toLowerCase();
+    const people = WP.data.PEOPLE.slice()
+      .filter(function (p) { return !p.tbc; })   // real people only (open roles aren't members)
+      .filter(function (p) {
+        if (!q) return true;
+        return (WP.i18n.name(p) + ' ' + (p.email || '') + ' ' + WP.i18n.title(p)).toLowerCase().indexOf(q) > -1;
+      })
+      .sort(function (a, b) { return WP.i18n.name(a).localeCompare(WP.i18n.name(b), WP.state.lang === 'ar' ? 'ar' : 'en'); });
+    if (!people.length) return '<div class="log-empty">' + t('membersEmpty') + '</div>';
+    return people.map(function (p) {
+      const on = WP.access.hasAccess(p.id);
+      return '<div class="mbr-row">' +
+        ui.avatar(p, 'var(--brand)') +
+        '<div class="mbr-id"><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
+          '<div class="ttl">' + ui.esc(p.email || WP.i18n.title(p)) + '</div></div>' +
+        '<span class="mbr-role tag">' + ui.esc(levelLabel(p.level)) + '</span>' +
+        '<span class="mbr-access ' + (on ? 'is-on' : 'is-off') + '">' +
+          '<span class="dot" style="background:' + (on ? 'var(--state-available)' : 'var(--text-muted)') + '"></span>' +
+          (on ? t('accessOn') : t('accessOff')) + '</span>' +
+        toggle('acc-' + p.id, on, (on ? t('revokeConfirmTitle') : t('grantConfirmTitle')) + ' — ' + WP.i18n.name(p)) +
+      '</div>';
+    }).join('');
+  }
+
+  function membersView() {
+    const t = WP.i18n.t;
+    const q = WP._membersQuery || '';
+    const n = WP.access.listAccess().length;
+    return '<div class="section"><div class="page-head" style="margin-bottom:6px"><div class="ph-titles">' +
+        '<h3 style="margin:0">' + t('membersTitle') + '</h3>' +
+        '<div class="sub">' + t('membersCount').replace('{n}', n) + '</div></div>' +
+      '<div class="ph-actions">' +
+        (WP.can('manageAdmins') ? '<button class="btn" id="mbr-invite">' + ui.icon('link', 14) + ' ' + t('membersInvite') + '</button>' : '') +
+        '<button class="btn" id="mbr-roles">' + ui.icon('key', 14) + ' ' + t('membersManageRoles') + '</button>' +
+      '</div></div>' +
+      '<div class="sub" style="margin:2px 0 12px">' + t('membersNote') + '</div>' +
+      '<input class="mbr-search" id="mbr-search" type="search" value="' + ui.esc(q) + '" placeholder="' + t('membersSearch') + '" aria-label="' + t('membersSearch') + '" />' +
+      '<div class="mbr-list" id="mbr-list">' + memberRows(q) + '</div></div>';
+  }
+
+  // Wire Members & Access controls (search re-renders only the list; toggles confirm).
+  function wireMembers(root) {
+    const t = WP.i18n.t;
+    const inv = root.querySelector('#mbr-invite');
+    if (inv) inv.onclick = function () { WP.setState({ route: 'admins' }); };
+    const rl = root.querySelector('#mbr-roles');
+    if (rl) rl.onclick = function () { WP.setState({ route: 'permissions' }); };
+
+    const search = root.querySelector('#mbr-search');
+    const list = root.querySelector('#mbr-list');
+    if (search && list) {
+      search.oninput = function () {
+        WP._membersQuery = search.value;
+        list.innerHTML = memberRows(search.value);   // re-render ONLY the list (keeps focus)
+        wireToggles(root);
+      };
+    }
+    wireToggles(root);
+  }
+  function wireToggles(root) {
+    const t = WP.i18n.t;
+    root.querySelectorAll('[id^="acc-"]').forEach(function (el) {
+      el.onchange = function () {
+        const id = el.id.slice(4);
+        const p = WP.access.byId(id);
+        if (!p) return;
+        const turningOn = el.checked;
+        // guard: never let an admin revoke their own entry
+        if (!turningOn && id === WP.state.viewerId) {
+          WP.ui.toast(t('cantRevokeSelf'), 'warn'); el.checked = true; return;
+        }
+        WP.ui.confirm({
+          title: turningOn ? t('grantConfirmTitle') : t('revokeConfirmTitle'),
+          icon: turningOn ? 'check' : 'lock', danger: !turningOn,
+          body: (turningOn ? t('grantConfirmBody') : t('revokeConfirmBody')).replace('{n}', ui.esc(WP.i18n.name(p))),
+          confirmLabel: t('confirm'), cancelLabel: t('cancel')
+        }).then(function (ok) {
+          if (!ok) { el.checked = !turningOn; return; }   // revert the visual toggle on cancel
+          WP.access.grantAccess(id, turningOn);           // logs access-grant/revoke
+          WP.ui.toast(turningOn ? t('accessGranted') : t('accessRevoked'), turningOn ? 'success' : 'info');
+          WP.setState({});                                // persists the granted set + re-renders
+        });
+      };
+    });
+  }
+
+  /* ── Workspace (admin) tab — Members & Access + the org-config sections ────── */
   function workspaceView() {
     const t = WP.i18n.t;
     return '<div class="page-head" style="margin-bottom:12px"><div class="ph-titles">' +
         '<div class="sub">' + t('setWsSub') + '</div></div>' +
       '<div class="ph-actions"><button class="btn" id="go-activity">' + ui.icon('list', 15) + ' ' + t('activityLog') + '</button></div></div>' +
+      membersView() +
       '<div class="grid-2">' + tierEditor() + statesView() + '</div>' +
       rolesPanel() +
       slackLinking();
@@ -320,6 +427,7 @@
     if (tab === 'mine') { wirePersonal(root); return; }
 
     // ── workspace wiring (unchanged admin behavior) ──
+    wireMembers(root);   // Members & Access (search + grant/revoke toggles + links)
     const ga = root.querySelector('#go-activity');
     if (ga) ga.onclick = function () { WP.setState({ route: 'activity' }); };
     root.querySelectorAll('[data-tier]').forEach(function (inp) {

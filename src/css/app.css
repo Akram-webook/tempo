@@ -1207,6 +1207,24 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .tgl input:checked + .tgl-track .tgl-thumb { background: #fff; transform: translateX(18px); }
 [dir="rtl"] .tgl input:checked + .tgl-track .tgl-thumb { transform: translateX(-18px); }
 .tgl input:focus-visible + .tgl-track { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* ── Members & Access roster ──────────────────────────────────────────────── */
+.mbr-search { width: 100%; box-sizing: border-box; margin: 4px 0 12px; background: var(--surface-2);
+  border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 9px 12px; font-family: inherit; font-size: 13px; }
+.mbr-search:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.mbr-list { display: flex; flex-direction: column; }
+.mbr-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.mbr-row:last-child { border-bottom: 0; }
+.mbr-id { flex: 1; min-width: 0; }
+.mbr-id .nm { font-weight: 600; font-size: 14px; }
+.mbr-id .ttl { font-size: 12px; }
+.mbr-role { flex: none; }
+.mbr-access { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); min-width: 92px; }
+.mbr-access.is-on { color: var(--state-available); }
+@media (max-width: 560px) {
+  .mbr-row { flex-wrap: wrap; }
+  .mbr-access { min-width: 0; }
+}
 .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .role-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
 .role-name { font-weight: 700; font-size: 15px; }

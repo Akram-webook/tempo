@@ -34,5 +34,21 @@ Tab state is `WP._settingsTab` (remembered across re-renders). A non-admin who f
 ## When you split/rename a page into tabs
 Grep the tests FIRST for anything that renders it: `grep -rn "WP.ui.<view>.render" test/`. A test that asserts markup now behind a non-default tab must set the tab (`WP._settingsTab='workspace'`) before asserting. Add a new `verify-*.js` covering: gating (who sees which tab), each control renders, a change persists, i18n EN+AR, AR/dark render. Register it in `package.json`.
 
+## Building a "manage X" admin section (Members & Access pattern)
+Before building any admin/config screen, **grep for an existing headless engine** — the
+capability is often already there and just needs a UI:
+`grep -n "function .*[Gg]rant\|setAccess\|listAccess\|addCycle\|grantAccess" src/js/core/*.js`.
+- Members & Access reused `WP.access.grantAccess/listAccess/hasAccess` (allowlist) and
+  *linked* to the existing `permissions.js` role screen rather than rebuilding role-change.
+- **Persist after every mutation:** helpers like `grantAccess()` LOG but do not persist —
+  call `WP.setState({})` after so `persist.saveData()` writes the `granted` set. A logging
+  mutation ≠ a persisting one.
+- **Roster hygiene:** exclude `p.tbc` (open/unfilled roles) — not real members.
+- **Self-protection:** block an admin from revoking their own access / demoting themselves.
+- **Search that keeps focus:** re-render ONLY the list subtree on input (`list.innerHTML = rows(q)`
+  then re-wire), never the whole section — otherwise the search input loses focus each keystroke.
+- Gate the section by capability: roster/grant = `viewSettings`; invite = `manageAdmins`
+  (hide the invite button for a director who can view but not create admins).
+
 ## Grounded in
 Nicelydone (workspace/account/notification-settings patterns), memorable.design (SaaS settings 2026), Equal.design (in-app notification best practice: group by channel, allow frequency + mute). Tempo CLAUDE.md golden rules + `tempo-frontend-craft`.
