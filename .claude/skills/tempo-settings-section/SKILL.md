@@ -50,5 +50,25 @@ capability is often already there and just needs a UI:
 - Gate the section by capability: roster/grant = `viewSettings`; invite = `manageAdmins`
   (hide the invite button for a director who can view but not create admins).
 
+## Security section (password / sessions / 2FA)
+- **Change password while signed in** = email the secure reset link to the user's OWN verified
+  email (`WP.auth.requestPasswordChange` → `resetPasswordForEmail`). NEVER take the old password
+  in the client or call `updateUser({password})` from a settings button.
+- **Sign out everywhere** = `WP.auth.signOutEverywhere()` (`signOut({scope:'global'})`) + always end
+  the LOCAL session too.
+- **Never call `sbClient()` (CDN-injecting) from a UI action** — it can hang forever if the CDN
+  doesn't load. Use the already-live `WP._sb`; if absent, report offline immediately and re-enable
+  the button. A settings button must never stick on "Sending…".
+- **Be honest about gaps:** no per-device session list yet (needs the sessions service) and no 2FA —
+  render "coming soon" placeholders, not fake controls.
+- **Distinct concern → distinct CSS class.** Don't reuse `.mbr-row` for a Security device row; it
+  couples unrelated features to each other's tests. Use a dedicated class (e.g. `.sec-device`).
+
+## Test hygiene
+A `verify-*.js` that exits 0 with **no PASS line printed** is FAILING silently (usually an async
+promise that never resolves — e.g. a CDN-injecting helper in jsdom). Always confirm the PASS string
+prints, not just the exit code. For events that don't survive a state reset (sign-out clears
+`activityLog`), assert via a `WP.logEvent` spy, not the post-action array.
+
 ## Grounded in
 Nicelydone (workspace/account/notification-settings patterns), memorable.design (SaaS settings 2026), Equal.design (in-app notification best practice: group by channel, allow frequency + mute). Tempo CLAUDE.md golden rules + `tempo-frontend-craft`.

@@ -68,6 +68,52 @@
     try { if (WP._sb && WP._sb.auth) WP._sb.auth.signOut(); } catch (e) {}
     WP.setState({ authed: false, selectedId: null });
   }
+
+  /* ---- Signed-in Security helpers (Settings → My settings → Security) ------- */
+  // Change password WHILE signed in = email the SAME secure reset link to the
+  // user's own verified email. We never take the old password in the client
+  // (world-class: password changes happen on Supabase's hosted flow). Returns a
+  // promise resolving {ok} — neutral either way (anti-enumeration not needed here
+  // since it's the authenticated user's own email, but we still fail safe).
+  function requestPasswordChange() {
+    return new Promise(function (resolve) {
+      var v = WP.viewer && WP.viewer();
+      var email = v && v.email ? String(v.email).toLowerCase() : '';
+      if (!email) { resolve({ ok: false }); return; }
+      // Use the ALREADY-live client (it exists whenever Supabase is configured and the
+      // user is signed in). We do NOT trigger a CDN load from a settings button — if the
+      // client isn't up, report offline immediately rather than hang on "Sending…".
+      var sb = WP._sb;
+      if (!sb || !sb.auth || !sb.auth.resetPasswordForEmail) { resolve({ ok: false, offline: true }); return; }
+      try {
+        sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() })
+          .then(function () { WP.logEvent && WP.logEvent({ type: 'password-change-requested', by: WP.state.viewerId, target: WP.state.viewerId }); resolve({ ok: true }); })
+          .catch(function () { resolve({ ok: false }); });
+      } catch (e) { resolve({ ok: false }); }
+    });
+  }
+  // Sign out of ALL devices/sessions (Supabase global scope), then end the local
+  // session too. Falls back to a plain local sign-out if the client is offline.
+  function signOutEverywhere() {
+    return new Promise(function (resolve) {
+      WP.logEvent && WP.logEvent({ type: 'sign-out-all', by: WP.state.viewerId, target: WP.state.viewerId });
+      function finish() { WP._login = null; WP.setState({ authed: false, selectedId: null }); resolve({ ok: true }); }
+      var sb = WP._sb;   // use the live client; always end the LOCAL session regardless
+      if (!sb || !sb.auth || !sb.auth.signOut) { finish(); return; }
+      try {
+        var p = sb.auth.signOut({ scope: 'global' });
+        if (p && p.then) p.then(finish).catch(finish); else finish();
+      } catch (e) { finish(); }
+    });
+  }
+  // Best-effort last sign-in time from the live session (honest null if unknown).
+  function lastSignInAt() {
+    try {
+      var u = WP._session && WP._session.user ? WP._session.user : null;
+      return (u && (u.last_sign_in_at || (u.user_metadata && u.user_metadata.last_sign_in_at))) || null;
+    } catch (e) { return null; }
+  }
+
   function rerender() { const v = document.getElementById('view'); if (v && !WP.state.authed) render(v); }
 
   /* ---------- Supabase client (verified sign-in link) ---------- */
@@ -136,6 +182,7 @@
     const r = findByEmail(em);
     if (r.error || !r.person) { try { WP._sb.auth.signOut(); } catch (e) {} return; }
     if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; rerender(); try { WP._sb.auth.signOut(); } catch (e) {} return; }
+    WP._session = session;   // keep the verified session (Security → last sign-in)
     signIn(r.person.id);
   }
 
@@ -433,6 +480,7 @@
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
     signInWithPassword: signInWithPassword, resetPassword: resetPassword, updateNewPassword: updateNewPassword,
+    requestPasswordChange: requestPasswordChange, signOutEverywhere: signOutEverywhere, lastSignInAt: lastSignInAt,
     mode: mode
   };
   WP.ui.login = { render: render };
