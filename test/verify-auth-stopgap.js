@@ -1,10 +1,10 @@
-/* TEMPORARY sign-in stopgap — directory gate active to unblock everyone while
- * Google (PR #51) waits on the OAuth Client ID. Proves: with config.authMode
- * defaulting to 'directory' the app uses the instant directory gate EVEN THOUGH
- * Supabase is configured (so WP.db data layer stays live), a registered @webook.com
- * email signs straight in with NO email-send / OTP path invoked, unknown/wrong-domain
- * are still rejected, and the provider switch is reversible (→ google when the id lands).
- * jsdom; no network. */
+/* Directory gate — retained as a REVERSIBLE option, no longer the default.
+ * As of Jul-2026 the default authMode is 'password' (Akram: password-only sign-in).
+ * This suite proves the directory gate STILL works correctly when explicitly set
+ * (WP.config.authMode='directory'): Supabase stays wired for WP.db, a registered
+ * @webook.com email signs straight in with NO email-send/OTP path, unknown/wrong-domain
+ * are rejected, and the switch is reversible. It also pins that the DEFAULT is now
+ * password, not directory. jsdom; no network. */
 const fs=require('fs'),path=require('path');const {JSDOM}=require('jsdom');
 const root=path.join(__dirname,'..');const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const srcs=[...html.matchAll(/src="([^"]+\.js)"/g)].map(m=>m[1]);
@@ -17,11 +17,13 @@ window.addEventListener('error',e=>{if(!benign.test(String(e.message)))errors.pu
 for(const s of srcs){try{new window.Function(fs.readFileSync(path.join(root,s),'utf8')).call(window);}catch(e){errors.push('[load '+s+'] '+e.message);}}
 const WP=window.WP;function assert(c,m){if(!c)errors.push('[assert] '+m);}
 try{
-  // ── directory gate is active EVEN THOUGH Supabase is configured (decoupled) ──
-  assert(WP.config.authMode==='directory','stopgap default authMode = directory');
+  // ── the DEFAULT is now password-only (directory is no longer the default) ──
+  assert(WP.config.authMode==='password','default authMode is now password (directory retired as default)');
+  // Explicitly select the directory gate to test it still works as a reversible option.
+  WP.config.authMode='directory';
   assert(WP.config.supabaseUrl && WP.config.supabaseUrl.indexOf('supabase.co')>0,'Supabase URL still configured (WP.db data layer)');
   assert(WP.config.supabaseAnonKey && WP.config.supabaseAnonKey.indexOf('sb_publishable_')===0,'Supabase publishable key still configured');
-  assert(WP.auth.mode()==='directory','auth mode resolves to DIRECTORY even with Supabase keys present');
+  assert(WP.auth.mode()==='directory','auth mode resolves to DIRECTORY when explicitly set (with Supabase keys present)');
 
   // ── login screen = the email gate, NO "link sent" copy, no pick-anyone list ──
   WP.state.authed=false;const view=window.document.getElementById('view');WP.ui.login.render(view);
@@ -51,7 +53,7 @@ try{
   // ── reversible: flips back to Google (the intended final state) cleanly ──
   WP.config.authMode='google';assert(WP.auth.mode()==='google','authMode flips to google when the Client ID lands');
   WP.config.authMode='verified-link';assert(WP.auth.mode()==='verified-link','authMode flips to verified-link cleanly');
-  WP.config.authMode='directory';
+  WP.config.authMode='password';   // restore the real default
 }catch(e){errors.push('[run] '+e.message+'\n'+e.stack);}
 if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}
 console.log('PASS — auth stopgap: directory gate is active while Supabase stays wired for DATA; a registered @webook.com email signs in instantly with NO email-send path; unknown/wrong-domain rejected; EN+AR both themes; reversible to google/verified-link.');

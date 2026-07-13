@@ -3057,7 +3057,11 @@ const EMAIL_HASHES = {};
   // anyone who types a known @webook.com email gets in. Acceptable short-term for
   // an internal pilot on an obscure URL; flip back to 'google' the moment the
   // Client ID is wired.
-  if (WP.config.authMode === undefined)        WP.config.authMode = 'directory';
+  // PASSWORD-ONLY (Akram, Jul 2026): the ONLY way in is a Supabase email+password.
+  // A leftover Google/OAuth session is rejected at the session level (handleSession
+  // → providerAllowedForMode). Nobody signs in without a password set via the
+  // invite/reset link. Reversible: change this one word back to 'google'/'directory'.
+  if (WP.config.authMode === undefined)        WP.config.authMode = 'password';
 
   /* ----------------------------------------------------------------
    * MVP FLAG (reversible, one line) — what the org SEES in v1.

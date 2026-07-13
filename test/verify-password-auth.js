@@ -109,6 +109,30 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
   WP.state.lang='en';WP.state.theme='light';WP.ui.login.render(view);
   assert(view.querySelector('#login-email')&&view.querySelector('#login-password'),'password gate renders under EN/light');
 
+  // ── ANTI-IMPERSONATION #2: a leftover GOOGLE/OAuth session must NOT sign anyone
+  //    in when the app is password-only. This is the "I can re-enter with Google" fix. ──
+  function stubSbWithSession(sessionEmail, provider, opts){
+    opts=opts||{};
+    return {auth:{
+      signOut:function(){opts.signOutCalled&&opts.signOutCalled();return Promise.resolve({});},
+      getSession:function(){return Promise.resolve({data:{session:mkSession(sessionEmail,provider)}});},
+      onAuthStateChange:function(){return {data:{subscription:{unsubscribe(){}}}};}
+    }};
+  }
+  function mkSession(email, provider){ return {user:{email:email, app_metadata:{provider:provider}, identities:[{provider:provider}]}}; }
+
+  // Google session for a fully-valid, access-having person → still rejected in password mode.
+  let googOut=false; WP.state.authed=false; WP._login=null; WP._denied=null;
+  WP._sb=stubSbWithSession('motaa@webook.com','google',{signOutCalled:()=>{googOut=true;}});
+  WP.auth.handleSession(mkSession('motaa@webook.com','google'));
+  assert(WP.state.authed===false,'password mode: a Google/OAuth session does NOT sign in (re-entry-with-Google fixed)');
+  assert(googOut===true,'password mode: the rejected Google session is signed out of Supabase');
+
+  // Control: an EMAIL/password-provider session for the same person IS accepted.
+  WP.state.authed=false; WP._login=null; WP._denied=null; WP._sb=stubSbWithSession('motaa@webook.com','email');
+  WP.auth.handleSession(mkSession('motaa@webook.com','email'));
+  assert(WP.state.authed===true && WP.state.viewerId===X.person.id,'password mode: an email/password-provider session IS accepted');
+
   // ── reversible: flips cleanly back to the other providers ──
   WP.config.authMode='directory';assert(WP.auth.mode()==='directory','reversible → directory');
   WP.config.authMode='google';assert(WP.auth.mode()==='google','reversible → google');
