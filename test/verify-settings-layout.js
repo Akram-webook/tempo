@@ -43,7 +43,10 @@ const html1 = root_el.innerHTML;
 assert(/log-table|log-empty/.test(html1), 'activity page renders a table (or empty state)');
 assert(!/<input|<button[^>]*data-/.test(html1.replace(/id="back"|id="log-more"/g, '')), 'activity page is read-only (no data-editing inputs)');
 
-// ---- 2) Tier editor: routine tag + live counts ---------------------------
+// ---- 2) Tier editor: routine tag + live counts (under the WORKSPACE tab) --
+// Settings v2 splits into My settings / Workspace. Admin org-config lives under
+// Workspace, so switch to it first (default tab is personal "mine").
+WP._settingsTab = 'workspace';
 WP.ui.settings.render(root_el);
 const shtml = root_el.innerHTML;
 assert(/tier-routine/.test(shtml), 'a tier is marked as the routine baseline');

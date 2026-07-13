@@ -26,7 +26,42 @@
     route: 'dashboard',    // current screen
     selectedId: null,      // person whose profile is open
     refDate: new Date().toISOString().slice(0, 10), // default to TODAY (current period active)
+    prefs: null,           // personal settings (set below from DEFAULT_PREFS); per-user persisted
   };
+
+  /* Personal preferences (Settings v2 → "My settings"). Per-user, local, reversible.
+   * theme + lang stay top-level (already persisted + drive doc attrs); these are the
+   * additional personal choices. Notifications model = delivery channel × category, plus
+   * a daily digest and quiet-hours mute (grounded in SaaS notification best practice:
+   * group by channel, allow frequency + mute — Nicelydone / Equal.design). */
+  var DEFAULT_PREFS = {
+    density: 'comfortable',      // 'comfortable' | 'compact' — whole-app spacing
+    dateFormat: 'auto',          // 'auto' (locale) | 'dmy' | 'mdy' | 'iso'
+    notif: {
+      channels: { email: true, slack: true, inapp: true },
+      categories: {              // per-event opt-in
+        assignments: true,       // work assigned/overridden to me
+        mentions: true,          // I'm mentioned / asked
+        evaluations: true,       // my review is ready / due
+        digest: true             // daily summary
+      },
+      quietHours: { on: false, start: '19:00', end: '08:00' }  // mute in-app pings in this window
+    }
+  };
+  // Deep-merge saved prefs over defaults so newly-added keys never come back undefined.
+  function mergePrefs(saved) {
+    var base = JSON.parse(JSON.stringify(DEFAULT_PREFS));
+    if (!saved || typeof saved !== 'object') return base;
+    if (saved.density) base.density = saved.density;
+    if (saved.dateFormat) base.dateFormat = saved.dateFormat;
+    if (saved.notif) {
+      if (saved.notif.channels) Object.assign(base.notif.channels, saved.notif.channels);
+      if (saved.notif.categories) Object.assign(base.notif.categories, saved.notif.categories);
+      if (saved.notif.quietHours) Object.assign(base.notif.quietHours, saved.notif.quietHours);
+    }
+    return base;
+  }
+  WP.state.prefs = mergePrefs(null);   // defaults now; restore() overlays saved below
 
   /* ── F7: per-USER local cache isolation ────────────────────────────────────
    * tempo_session / tempo_data / tempo_events were GLOBAL browser keys, so on a
@@ -99,7 +134,7 @@
   // Persist the session so a reload keeps you signed in and on the same page
   // (no re-login after every update). Safe if storage is unavailable.
   // NOTE: refDate is intentionally NOT saved — every load defaults to TODAY (active by default).
-  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId'];
+  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId', 'prefs'];
   const NEEDS_SELECTION = { profile: 1, evaluation: 1, upward: 1 };
   (function restore() {
     try {
@@ -108,6 +143,8 @@
       if (!raw) return;
       const s = JSON.parse(raw);
       SAVE_KEYS.forEach(function (k) { if (s[k] !== undefined) WP.state[k] = s[k]; });
+      // prefs get the default-merge (so new pref keys are never undefined on old saves)
+      WP.state.prefs = mergePrefs(WP.state.prefs);
       // guard: a detail route with no selection → land on dashboard
       if (NEEDS_SELECTION[WP.state.route] && !WP.state.selectedId) WP.state.route = 'dashboard';
     } catch (e) {}
@@ -153,5 +190,44 @@
     document.documentElement.lang = WP.state.lang;
     document.documentElement.dir = WP.i18n.isRTL() ? 'rtl' : 'ltr';
     document.documentElement.setAttribute('data-theme', WP.state.theme);
+    // whole-app density (Settings v2 → Preferences). Default comfortable.
+    var d = (WP.state.prefs && WP.state.prefs.density) || 'comfortable';
+    document.documentElement.setAttribute('data-density', d);
+  };
+
+  /* ── Personal preferences helper (Settings v2) ──────────────────────────────
+   * get(path)      → read a dotted path, e.g. WP.prefs.get('notif.channels.email')
+   * set(path, val) → set it + persist + re-render (goes through setState so it saves)
+   * defaults()     → a fresh copy of the defaults (for a "reset to defaults" action) */
+  WP.prefs = {
+    get: function (path) {
+      var o = WP.state.prefs, parts = String(path).split('.');
+      for (var i = 0; i < parts.length; i++) { if (o == null) return undefined; o = o[parts[i]]; }
+      return o;
+    },
+    set: function (path, val) {
+      var parts = String(path).split('.'), o = WP.state.prefs;
+      for (var i = 0; i < parts.length - 1; i++) { if (o[parts[i]] == null) o[parts[i]] = {}; o = o[parts[i]]; }
+      o[parts[parts.length - 1]] = val;
+      WP.setState({});   // persists prefs (in SAVE_KEYS) + re-renders
+    },
+    defaults: function () { return JSON.parse(JSON.stringify(DEFAULT_PREFS)); }
+  };
+
+  /* Date formatting that honors the personal dateFormat pref. 'auto' = locale of the
+   * current language; dmy/mdy/iso are explicit. Never throws on a bad date. */
+  WP.fmt = {
+    date: function (value) {
+      try {
+        var dt = (value instanceof Date) ? value : new Date(value);
+        if (isNaN(dt.getTime())) return '';
+        var f = (WP.state.prefs && WP.state.prefs.dateFormat) || 'auto';
+        var y = dt.getFullYear(), m = ('0' + (dt.getMonth() + 1)).slice(-2), d = ('0' + dt.getDate()).slice(-2);
+        if (f === 'iso') return y + '-' + m + '-' + d;
+        if (f === 'dmy') return d + '/' + m + '/' + y;
+        if (f === 'mdy') return m + '/' + d + '/' + y;
+        return dt.toLocaleDateString(WP.state.lang === 'ar' ? 'ar' : 'en-GB');   // auto
+      } catch (e) { return ''; }
+    }
   };
 })(window.WP = window.WP || {});
