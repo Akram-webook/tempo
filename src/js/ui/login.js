@@ -95,8 +95,43 @@
     }
   }
 
+  // Which provider authenticated this session? Supabase records it on the user:
+  // 'email' for password/OTP-link, 'google' (etc.) for OAuth. Fail closed to '' .
+  function sessionProvider(session) {
+    try {
+      var u = session && session.user;
+      if (!u) return '';
+      if (u.app_metadata && u.app_metadata.provider) return String(u.app_metadata.provider);
+      // Fallback: identities[].provider if app_metadata is absent.
+      if (Array.isArray(u.identities) && u.identities[0] && u.identities[0].provider) return String(u.identities[0].provider);
+      return '';
+    } catch (e) { return ''; }
+  }
+
+  // Does the session's provider satisfy the CONFIGURED auth mode? The mode is not
+  // just which button we show — it is which credential we ACCEPT. We REJECT only a
+  // provider we can positively identify as disallowed (fail-safe: an absent/unknown
+  // provider is NOT rejected here — the email→person→hasAccess gate still applies).
+  // Password + magic-link both surface as the 'email' provider in Supabase; OAuth
+  // providers (google, azure, github, …) are anything that is not 'email'.
+  function providerAllowedForMode(session) {
+    var prov = sessionProvider(session);
+    if (!prov) return true;                                  // unknown provider → defer to the identity gate
+    if (modePassword() || modeVerifiedLink()) {
+      // Email-credential modes: reject a KNOWN OAuth provider (this blocks the
+      // "re-enter with Google" path). 'email' is the only accepted provider string.
+      return prov === 'email';
+    }
+    return true;                                             // google/directory modes: no extra provider gate here
+  }
+
   // Map a verified Supabase session to a Tempo account and sign in (or deny).
   function handleSession(session) {
+    // Enforce the auth mode at the SESSION level: an OAuth (Google) session must
+    // never sign a person in when the app is configured password-only. This is the
+    // fix for "I can re-enter with Google" — a persisted Google session used to be
+    // silently accepted here.
+    if (!providerAllowedForMode(session)) { try { WP._sb.auth.signOut(); } catch (e) {} return; }
     const em = session && session.user && session.user.email ? String(session.user.email).toLowerCase() : '';
     const r = findByEmail(em);
     if (r.error || !r.person) { try { WP._sb.auth.signOut(); } catch (e) {} return; }
