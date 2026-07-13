@@ -60,15 +60,17 @@
 
   /* text / content */
   --text:          #071437; /* Content-Primary (navy) */
-  --text-muted:    #78829D; /* Content-Secondary */
-  --text-tertiary: #99A1B7; /* Content-Tertiary */
+  --text-muted:    #5C6470; /* Content-Secondary — darkened for WCAG 4.5:1 on white (was #78829D ~3.8:1) */
+  --text-tertiary: #6B7280; /* Content-Tertiary — darkened for 4.5:1 as text (was #99A1B7); decorative use only if lighter needed */
   --text-disabled: rgba(7,20,55,.30); /* Content-Disabled (#0714374D) */
 
-  /* brand (Webook magenta) */
-  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand */
+  /* brand (Webook magenta) — #FF2C79 stays for FILLS/borders/dots; a darker shade
+     is used wherever the brand color is TEXT (links, chips) so it clears 4.5:1. */
+  --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand (fills) */
+  --brand-text:    #C81E5E; /* brand as TEXT on light — 4.5:1 on white */
   --brand-soft:    color-mix(in srgb, var(--brand) 12%, transparent); /* tinted brand wash (hovers, marks) */
-  --brand-contrast:#F9F9F9; /* CTA text · Content-Primary-Inverse */
-  --link:          #FF2C79; /* Content-Link */
+  --brand-contrast:#FFFFFF; /* CTA text · Content-Primary-Inverse (white clears 4.5:1 on --brand-text fills) */
+  --link:          #C81E5E; /* Content-Link — text-safe on white */
   --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
 
   /* inverse — Primary button (navy) + on-dark content */
@@ -167,14 +169,15 @@
   --border-primary: #FFFFFF;
 
   --text:          #E4E4E7; /* Content-Primary */
-  --text-muted:    #A1A1AA; /* Content-Secondary */
-  --text-tertiary: #71717A; /* Content-Tertiary */
+  --text-muted:    #A1A1AA; /* Content-Secondary — ~4.6:1 on dark surface, OK */
+  --text-tertiary: #8B9099; /* Content-Tertiary — lightened for 4.5:1 as text on dark (was #71717A ~3.5:1) */
   --text-disabled: rgba(255,255,255,.32);
 
-  --brand:         #FF2C79;
+  --brand:         #FF2C79;                /* fills */
+  --brand-text:    #FF6FA3;                /* brand as TEXT on dark — brighter for 4.5:1 */
   --brand-soft:    color-mix(in srgb, var(--brand) 20%, transparent); /* slightly stronger on dark */
-  --brand-contrast:#F9F9F9;
-  --link:          #FF2C79;
+  --brand-contrast:#FFFFFF;
+  --link:          #FF6FA3;                /* Content-Link — text-safe on dark */
   --brand-disabled-bg: #4A1428;
 
   --inverse-bg:    #F9F9F9; /* inverse flips on dark */
@@ -1295,6 +1298,17 @@ main.full-bleed { max-width: none; }
 .popover-close { position: absolute; top: 10px; inset-inline-end: 10px; border: 0; background: var(--surface-2); color: var(--text-muted); width: 26px; height: 26px; border-radius: 50%; font-size: 13px; }
 .popover-close:hover { color: var(--text); }
 .drawer { position: fixed; top: 0; inset-inline-end: 0; height: 100%; width: 380px; background: var(--surface); border-inline-start: 1px solid var(--border); padding: 20px; overflow:auto; box-shadow: var(--shadow); }
+/* Centered themed modal (reuses .overlay + .drawer base but pins to center) —
+   the reusable WP.ui.confirm/prompt dialog. */
+.drawer.dlg { position: relative; inset: auto; top: auto; height: auto; width: min(440px, 92vw);
+  max-height: 86vh; border: 1px solid var(--border); border-radius: var(--radius); }
+.dlg .dlg-title { margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.dlg .dlg-body { font-size: 14px; color: var(--text); margin-bottom: 12px; }
+.dlg .dlg-input { width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 14px; resize: vertical; }
+.dlg .dlg-input:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.dlg .dlg-err { color: var(--state-overloaded); font-size: 12px; margin-top: 6px; }
+.dlg .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .req-l { display: block; font-size: 12px; color: var(--text-muted); margin: 12px 0 4px; }
 .req-i { width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 9px 10px; font-family: inherit; font-size: 14px; }
 
@@ -3494,6 +3508,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
     close:          { en: 'Close', ar: 'إغلاق' },
+    confirm:        { en: 'Confirm', ar: 'تأكيد' },
+    cancel:         { en: 'Cancel', ar: 'إلغاء' },
+    fieldRequired:  { en: 'This field is required.', ar: 'هذا الحقل مطلوب.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },
@@ -7041,6 +7058,82 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     } catch (e) {}
   }
 
+  /* ---------- Reusable themed dialog (confirm / prompt) ----------------------
+   * Replaces native prompt()/confirm() — which are unstyled, English-only, and
+   * un-testable — with an in-app modal on the shared overlay-host. Keyboard
+   * accessible (Esc cancels, Enter confirms, focus moves in, backdrop cancels),
+   * localized, and Promise-based so callers can `await`. Never throws. */
+  function dialog(opts) {
+    opts = opts || {};
+    var t = WP.i18n.t;
+    return new Promise(function (resolve) {
+      var host = document.getElementById('overlay-host');
+      if (!host) { resolve(opts.prompt ? null : false); return; }
+      var isPrompt = !!opts.prompt;
+      var confirmLabel = opts.confirmLabel || t('confirm');
+      var cancelLabel = opts.cancelLabel || t('cancel');
+      var danger = !!opts.danger;
+      var prevFocus = document.activeElement;
+
+      var field = isPrompt
+        ? '<textarea class="dlg-input" id="dlg-input" rows="' + (opts.rows || 3) + '" ' +
+            'placeholder="' + esc(opts.placeholder || '') + '">' + esc(opts.value || '') + '</textarea>' +
+          '<div class="dlg-err" id="dlg-err" hidden></div>'
+        : '';
+
+      host.innerHTML =
+        '<div class="overlay" role="presentation"><div class="drawer dlg" role="dialog" aria-modal="true" ' +
+            'aria-label="' + esc(opts.title || confirmLabel) + '">' +
+          '<h3 class="dlg-title">' + (opts.icon ? WP.ui.icon(opts.icon, 16) + ' ' : '') + esc(opts.title || '') + '</h3>' +
+          (opts.body ? '<div class="dlg-body">' + opts.body + '</div>' : '') +
+          field +
+          '<div class="dlg-actions">' +
+            '<button class="btn" id="dlg-cancel">' + esc(cancelLabel) + '</button>' +
+            '<button class="btn ' + (danger ? 'danger' : 'primary') + '" id="dlg-ok">' + esc(confirmLabel) + '</button>' +
+          '</div>' +
+        '</div></div>';
+
+      var overlay = host.querySelector('.overlay');
+      var input = host.querySelector('#dlg-input');
+      var errEl = host.querySelector('#dlg-err');
+
+      function close(result) {
+        document.removeEventListener('keydown', onKey, true);
+        host.innerHTML = '';
+        try { if (prevFocus && prevFocus.focus) prevFocus.focus(); } catch (e) {}
+        resolve(result);
+      }
+      function submit() {
+        if (isPrompt) {
+          var v = (input && input.value || '').trim();
+          if (opts.required && !v) {
+            if (errEl) { errEl.textContent = opts.requiredMsg || t('fieldRequired'); errEl.hidden = false; }
+            if (input) input.focus();
+            return;
+          }
+          close(v);
+        } else { close(true); }
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(isPrompt ? null : false); }
+        else if (e.key === 'Enter' && (!isPrompt || (e.metaKey || e.ctrlKey))) { e.preventDefault(); submit(); }
+      }
+      document.addEventListener('keydown', onKey, true);
+      host.querySelector('#dlg-ok').onclick = submit;
+      host.querySelector('#dlg-cancel').onclick = function () { close(isPrompt ? null : false); };
+      overlay.onclick = function (e) { if (e.target === overlay) close(isPrompt ? null : false); };
+      // move focus in: the input on a prompt, else the primary action
+      var toFocus = input || host.querySelector('#dlg-ok');
+      if (toFocus) try { toFocus.focus(); } catch (e) {}
+    });
+  }
+  // Convenience wrappers.
+  function confirmDialog(o) { return dialog(Object.assign({}, o, { prompt: false })); }
+  function promptDialog(o) { return dialog(Object.assign({}, o, { prompt: true })); }
+
+  WP.ui.dialog = dialog;
+  WP.ui.confirm = confirmDialog;
+  WP.ui.prompt = promptDialog;
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;

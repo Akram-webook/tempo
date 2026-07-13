@@ -395,6 +395,9 @@
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
     close:          { en: 'Close', ar: 'إغلاق' },
+    confirm:        { en: 'Confirm', ar: 'تأكيد' },
+    cancel:         { en: 'Cancel', ar: 'إلغاء' },
+    fieldRequired:  { en: 'This field is required.', ar: 'هذا الحقل مطلوب.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },

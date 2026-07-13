@@ -55,7 +55,11 @@ try{
   const tk=fs.readFileSync(path.join(root,'src/css/tokens.css'),'utf8');
   assert(/--text:\s*#071437/i.test(tk),'V3 Content-Primary navy #071437 wired (light base)');
   assert(/--surface:\s*#FFFFFF/i.test(tk),'V3 Bg-Primary pure white #FFFFFF wired');
-  assert(/--text-muted:\s*#78829D/i.test(tk),'V3 Content-Secondary #78829D wired');
+  // Content-Secondary: the raw WBK V3 token is #78829D, but that is ~3.8:1 on white
+  // and fails WCAG 1.4.3 for body text. Per Akram (Jul-2026 audit) + CLAUDE.md (WCAG
+  // is non-negotiable), we override to a darker #5C6470 that clears 4.5:1. Fills/dots
+  // still use the state/brand tokens; this override is text-only.
+  assert(/--text-muted:\s*#5C6470/i.test(tk),'Content-Secondary overridden to #5C6470 for WCAG 4.5:1 (raw DS #78829D fails)');
   assert(/--state-positive:\s*#17C653/i.test(tk),'V3 Success (Positive) #17C653 wired');
   assert(/--state-negative:\s*#F8285A/i.test(tk),'V3 Content-Danger (Negative) #F8285A wired');
   assert(/--state-negative-active:\s*#D81A48/i.test(tk),'V3 Content-Danger-Active #D81A48 wired');

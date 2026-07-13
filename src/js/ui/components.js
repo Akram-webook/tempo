@@ -240,6 +240,82 @@
     } catch (e) {}
   }
 
+  /* ---------- Reusable themed dialog (confirm / prompt) ----------------------
+   * Replaces native prompt()/confirm() — which are unstyled, English-only, and
+   * un-testable — with an in-app modal on the shared overlay-host. Keyboard
+   * accessible (Esc cancels, Enter confirms, focus moves in, backdrop cancels),
+   * localized, and Promise-based so callers can `await`. Never throws. */
+  function dialog(opts) {
+    opts = opts || {};
+    var t = WP.i18n.t;
+    return new Promise(function (resolve) {
+      var host = document.getElementById('overlay-host');
+      if (!host) { resolve(opts.prompt ? null : false); return; }
+      var isPrompt = !!opts.prompt;
+      var confirmLabel = opts.confirmLabel || t('confirm');
+      var cancelLabel = opts.cancelLabel || t('cancel');
+      var danger = !!opts.danger;
+      var prevFocus = document.activeElement;
+
+      var field = isPrompt
+        ? '<textarea class="dlg-input" id="dlg-input" rows="' + (opts.rows || 3) + '" ' +
+            'placeholder="' + esc(opts.placeholder || '') + '">' + esc(opts.value || '') + '</textarea>' +
+          '<div class="dlg-err" id="dlg-err" hidden></div>'
+        : '';
+
+      host.innerHTML =
+        '<div class="overlay" role="presentation"><div class="drawer dlg" role="dialog" aria-modal="true" ' +
+            'aria-label="' + esc(opts.title || confirmLabel) + '">' +
+          '<h3 class="dlg-title">' + (opts.icon ? WP.ui.icon(opts.icon, 16) + ' ' : '') + esc(opts.title || '') + '</h3>' +
+          (opts.body ? '<div class="dlg-body">' + opts.body + '</div>' : '') +
+          field +
+          '<div class="dlg-actions">' +
+            '<button class="btn" id="dlg-cancel">' + esc(cancelLabel) + '</button>' +
+            '<button class="btn ' + (danger ? 'danger' : 'primary') + '" id="dlg-ok">' + esc(confirmLabel) + '</button>' +
+          '</div>' +
+        '</div></div>';
+
+      var overlay = host.querySelector('.overlay');
+      var input = host.querySelector('#dlg-input');
+      var errEl = host.querySelector('#dlg-err');
+
+      function close(result) {
+        document.removeEventListener('keydown', onKey, true);
+        host.innerHTML = '';
+        try { if (prevFocus && prevFocus.focus) prevFocus.focus(); } catch (e) {}
+        resolve(result);
+      }
+      function submit() {
+        if (isPrompt) {
+          var v = (input && input.value || '').trim();
+          if (opts.required && !v) {
+            if (errEl) { errEl.textContent = opts.requiredMsg || t('fieldRequired'); errEl.hidden = false; }
+            if (input) input.focus();
+            return;
+          }
+          close(v);
+        } else { close(true); }
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(isPrompt ? null : false); }
+        else if (e.key === 'Enter' && (!isPrompt || (e.metaKey || e.ctrlKey))) { e.preventDefault(); submit(); }
+      }
+      document.addEventListener('keydown', onKey, true);
+      host.querySelector('#dlg-ok').onclick = submit;
+      host.querySelector('#dlg-cancel').onclick = function () { close(isPrompt ? null : false); };
+      overlay.onclick = function (e) { if (e.target === overlay) close(isPrompt ? null : false); };
+      // move focus in: the input on a prompt, else the primary action
+      var toFocus = input || host.querySelector('#dlg-ok');
+      if (toFocus) try { toFocus.focus(); } catch (e) {}
+    });
+  }
+  // Convenience wrappers.
+  function confirmDialog(o) { return dialog(Object.assign({}, o, { prompt: false })); }
+  function promptDialog(o) { return dialog(Object.assign({}, o, { prompt: true })); }
+
+  WP.ui.dialog = dialog;
+  WP.ui.confirm = confirmDialog;
+  WP.ui.prompt = promptDialog;
   WP.ui.esc = esc;
   WP.ui.stateColor = stateColor;
   WP.ui.tierColor = tierColor;
