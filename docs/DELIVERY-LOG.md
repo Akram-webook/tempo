@@ -9,7 +9,7 @@ Value (why it matters) · Status · PR · Live?
 
 | Date | Type | Title | What changed | Value | Status | PR | Live |
 |------|------|-------|--------------|-------|--------|----|------|
-| 2026-07-14 | Feature | Settings → Security | Change your password (secure emailed link — we never see it), see your last sign-in, and "sign out everywhere" (all devices at once). 2FA marked coming-soon. | Users control their own account security; a lost/shared device can be cut off instantly. | Shipped | #TBD | ⏳ |
+| 2026-07-14 | Feature | Settings → Security | Change your password (secure emailed link — we never see it), see your last sign-in, and "sign out everywhere" (all devices at once). 2FA marked coming-soon. | Users control their own account security; a lost/shared device can be cut off instantly. | Shipped | #84 | ✅ |
 | 2026-07-14 | Feature | Settings → Members & Access | Manage who can sign in (the access allowlist) + see each person's role, from the UI. Was editable only in code before. | Admins control access without a developer; every change is logged. | Shipped | #82 | ✅ |
 | 2026-07-14 | Feature | Settings v2 (personal + workspace) | Split Settings into "My settings" (account, appearance, language, density, date format, notifications) for everyone, and "Workspace" (org config) for admins. | Every user can manage themselves; admin config no longer clutters everyone's view. | Shipped | #81 | ✅ |
 | 2026-07-13 | Improvement | QA/UX-UI audit fixes | Reusable in-app dialogs (no more raw browser popups), WCAG contrast fixes, explainable burnout flag, mobile sign-in button, Arabic greeting. | Cleaner, more accessible, more professional across the app. | Shipped | #80 | ✅ |
