@@ -276,6 +276,64 @@
     var qs = root.querySelector('#q-start'), qe = root.querySelector('#q-end');
     if (qs) qs.onchange = function () { WP.prefs.set('notif.quietHours.start', qs.value); };
     if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
+    wireSecurity(root);
+  }
+
+  /* ── Personal: Security (password · devices · last sign-in) ────────────────
+   * Change password = email a secure reset link to the user's own verified email
+   * (we never handle the old password client-side). "Sign out everywhere" uses
+   * Supabase global sign-out. A full per-device list needs the sessions service,
+   * so we're honest about that instead of faking rows. */
+  function securityView() {
+    const t = WP.i18n.t;
+    const last = WP.auth && WP.auth.lastSignInAt && WP.auth.lastSignInAt();
+    const lastStr = last ? WP.fmt.date(last) : t('secLastLoginUnknown');
+    return '<div class="section"><h3>' + t('secTitle') + '</h3>' +
+      '<div class="sub" style="margin:-4px 0 12px">' + t('secSub') + '</div>' +
+
+      // Password
+      settingRow(t('secPassword'), t('secPasswordNote'),
+        '<button class="btn" id="sec-changepw">' + ui.icon('key', 14) + ' ' + t('secChangePw') + '</button>') +
+      // Last sign-in
+      settingRow(t('secLastLogin'), '', '<span class="ttl">' + ui.esc(lastStr) + '</span>') +
+
+      // Devices / sessions
+      '<div class="mini-label" style="margin-top:14px">' + t('secSessions') + '</div>' +
+      '<div class="set-item-note" style="margin-bottom:10px">' + t('secSessionsNote') + '</div>' +
+      '<div class="sec-device"><span class="dot" style="background:var(--state-available)"></span>' +
+        '<div class="sec-device-id"><div class="nm">' + t('secThisDevice') + '</div>' +
+        '<div class="ttl">' + t('secActive') + '</div></div></div>' +
+      '<div style="margin-top:12px"><button class="btn danger" id="sec-signout-all">' +
+        ui.icon('logout', 14) + ' ' + t('secSignOutAll') + '</button></div>' +
+
+      // 2FA (coming soon — honest placeholder, not a fake control)
+      settingRow(t('sec2fa'), t('sec2faNote'),
+        '<span class="tag">' + t('comingSoon') + '</span>') +
+      '</div>';
+  }
+
+  function wireSecurity(root) {
+    const t = WP.i18n.t;
+    const cp = root.querySelector('#sec-changepw');
+    if (cp) cp.onclick = function () {
+      const label = cp.innerHTML;
+      cp.disabled = true; cp.textContent = t('secPwSending');
+      WP.auth.requestPasswordChange().then(function (res) {
+        cp.disabled = false; cp.innerHTML = label;
+        WP.ui.toast(res && res.ok ? t('secPwSent') : t('secPwError'), res && res.ok ? 'success' : 'error');
+      });
+    };
+    const so = root.querySelector('#sec-signout-all');
+    if (so) so.onclick = function () {
+      WP.ui.confirm({
+        title: t('secSignOutAllConfirmTitle'), icon: 'logout', danger: true,
+        body: t('secSignOutAllConfirmBody'),
+        confirmLabel: t('secSignOutAll'), cancelLabel: t('cancel')
+      }).then(function (ok) {
+        if (!ok) return;
+        WP.auth.signOutEverywhere();   // ends local session too → app returns to login
+      });
+    };
   }
 
   /* ── Workspace: Members & Access ──────────────────────────────────────────
@@ -408,7 +466,7 @@
 
     const body = tab === 'workspace'
       ? workspaceView()
-      : (accountView() + preferencesView() + notificationsView());
+      : (accountView() + preferencesView() + notificationsView() + securityView());
 
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +

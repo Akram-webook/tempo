@@ -1447,6 +1447,10 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .mbr-role { flex: none; }
 .mbr-access { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); min-width: 92px; }
 .mbr-access.is-on { color: var(--state-available); }
+/* Security → "this device" row (distinct from member rows) */
+.sec-device { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.sec-device-id .nm { font-weight: 600; font-size: 14px; }
+.sec-device-id .ttl { font-size: 12px; }
 @media (max-width: 560px) {
   .mbr-row { flex-wrap: wrap; }
   .mbr-access { min-width: 0; }
@@ -3754,6 +3758,27 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     acctEmail:      { en: 'Email', ar: 'البريد الإلكتروني' },
     acctRole:       { en: 'Role', ar: 'الدور' },
     acctReadonly:   { en: 'Managed by your admin. Contact them to change these.', ar: 'يديرها المشرف. تواصل معه للتعديل.' },
+    // ── Security (My settings) ──
+    secTitle:       { en: 'Security', ar: 'الأمان' },
+    secSub:         { en: 'Your password and where you’re signed in.', ar: 'كلمة مرورك وأين سجّلت الدخول.' },
+    secPassword:    { en: 'Password', ar: 'كلمة المرور' },
+    secPasswordNote:{ en: 'We email a secure link to set a new password — we never see or store it.', ar: 'نرسل رابطاً آمناً لتعيين كلمة مرور جديدة — لا نراها ولا نخزّنها أبداً.' },
+    secChangePw:    { en: 'Change password', ar: 'تغيير كلمة المرور' },
+    secPwSending:   { en: 'Sending…', ar: 'جارٍ الإرسال…' },
+    secPwSent:      { en: 'Check your email for a secure link to set a new password.', ar: 'تحقّق من بريدك لرابط آمن لتعيين كلمة مرور جديدة.' },
+    secPwError:     { en: 'Could not send the link right now — please try again.', ar: 'تعذّر إرسال الرابط الآن — يرجى المحاولة مرة أخرى.' },
+    secLastLogin:   { en: 'Last sign-in', ar: 'آخر تسجيل دخول' },
+    secLastLoginUnknown:{ en: 'Not available', ar: 'غير متاح' },
+    secSessions:    { en: 'Signed-in devices', ar: 'الأجهزة المسجّلة' },
+    secSessionsNote:{ en: 'For your security, you can sign out of every device at once. A full per-device list needs the sessions service (coming soon).', ar: 'لأمانك، يمكنك تسجيل الخروج من كل الأجهزة دفعة واحدة. قائمة كل جهاز على حدة تحتاج خدمة الجلسات (قريباً).' },
+    secThisDevice:  { en: 'This device', ar: 'هذا الجهاز' },
+    secActive:      { en: 'Active now', ar: 'نشط الآن' },
+    secSignOutAll:  { en: 'Sign out everywhere', ar: 'تسجيل الخروج من كل مكان' },
+    secSignOutAllConfirmTitle:{ en: 'Sign out of all devices?', ar: 'تسجيل الخروج من كل الأجهزة؟' },
+    secSignOutAllConfirmBody:{ en: 'You’ll be signed out here and on every other device. You’ll need to sign in again.', ar: 'ستُسجَّل خروجك هنا ومن كل جهاز آخر. ستحتاج لتسجيل الدخول من جديد.' },
+    sec2fa:         { en: 'Two-factor authentication', ar: 'المصادقة الثنائية' },
+    sec2faNote:     { en: 'Coming soon — an extra code at sign-in for stronger protection.', ar: 'قريباً — رمز إضافي عند الدخول لحماية أقوى.' },
+    comingSoon:     { en: 'Coming soon', ar: 'قريباً' },
     // ── Members & Access (Workspace) ──
     membersTitle:   { en: 'Members & Access', ar: 'الأعضاء والوصول' },
     membersNote:    { en: 'Who can enter Tempo and what role they hold. Grant is the app-level gate — off means they cannot sign in at all.', ar: 'من يدخل تيمبو وأي دور يحمل. المنح هو بوابة الدخول للتطبيق — الإيقاف يعني عدم القدرة على تسجيل الدخول إطلاقاً.' },
@@ -7494,6 +7519,52 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     try { if (WP._sb && WP._sb.auth) WP._sb.auth.signOut(); } catch (e) {}
     WP.setState({ authed: false, selectedId: null });
   }
+
+  /* ---- Signed-in Security helpers (Settings → My settings → Security) ------- */
+  // Change password WHILE signed in = email the SAME secure reset link to the
+  // user's own verified email. We never take the old password in the client
+  // (world-class: password changes happen on Supabase's hosted flow). Returns a
+  // promise resolving {ok} — neutral either way (anti-enumeration not needed here
+  // since it's the authenticated user's own email, but we still fail safe).
+  function requestPasswordChange() {
+    return new Promise(function (resolve) {
+      var v = WP.viewer && WP.viewer();
+      var email = v && v.email ? String(v.email).toLowerCase() : '';
+      if (!email) { resolve({ ok: false }); return; }
+      // Use the ALREADY-live client (it exists whenever Supabase is configured and the
+      // user is signed in). We do NOT trigger a CDN load from a settings button — if the
+      // client isn't up, report offline immediately rather than hang on "Sending…".
+      var sb = WP._sb;
+      if (!sb || !sb.auth || !sb.auth.resetPasswordForEmail) { resolve({ ok: false, offline: true }); return; }
+      try {
+        sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() })
+          .then(function () { WP.logEvent && WP.logEvent({ type: 'password-change-requested', by: WP.state.viewerId, target: WP.state.viewerId }); resolve({ ok: true }); })
+          .catch(function () { resolve({ ok: false }); });
+      } catch (e) { resolve({ ok: false }); }
+    });
+  }
+  // Sign out of ALL devices/sessions (Supabase global scope), then end the local
+  // session too. Falls back to a plain local sign-out if the client is offline.
+  function signOutEverywhere() {
+    return new Promise(function (resolve) {
+      WP.logEvent && WP.logEvent({ type: 'sign-out-all', by: WP.state.viewerId, target: WP.state.viewerId });
+      function finish() { WP._login = null; WP.setState({ authed: false, selectedId: null }); resolve({ ok: true }); }
+      var sb = WP._sb;   // use the live client; always end the LOCAL session regardless
+      if (!sb || !sb.auth || !sb.auth.signOut) { finish(); return; }
+      try {
+        var p = sb.auth.signOut({ scope: 'global' });
+        if (p && p.then) p.then(finish).catch(finish); else finish();
+      } catch (e) { finish(); }
+    });
+  }
+  // Best-effort last sign-in time from the live session (honest null if unknown).
+  function lastSignInAt() {
+    try {
+      var u = WP._session && WP._session.user ? WP._session.user : null;
+      return (u && (u.last_sign_in_at || (u.user_metadata && u.user_metadata.last_sign_in_at))) || null;
+    } catch (e) { return null; }
+  }
+
   function rerender() { const v = document.getElementById('view'); if (v && !WP.state.authed) render(v); }
 
   /* ---------- Supabase client (verified sign-in link) ---------- */
@@ -7562,6 +7633,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const r = findByEmail(em);
     if (r.error || !r.person) { try { WP._sb.auth.signOut(); } catch (e) {} return; }
     if (!WP.access.hasAccess(r.person.id)) { WP._denied = r.person; WP._login = null; rerender(); try { WP._sb.auth.signOut(); } catch (e) {} return; }
+    WP._session = session;   // keep the verified session (Security → last sign-in)
     signIn(r.person.id);
   }
 
@@ -7859,6 +7931,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     signIn: signIn, signOut: signOut,
     sendLink: sendLink, initSession: initSession, handleSession: handleSession,
     signInWithPassword: signInWithPassword, resetPassword: resetPassword, updateNewPassword: updateNewPassword,
+    requestPasswordChange: requestPasswordChange, signOutEverywhere: signOutEverywhere, lastSignInAt: lastSignInAt,
     mode: mode
   };
   WP.ui.login = { render: render };
@@ -9723,6 +9796,64 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     var qs = root.querySelector('#q-start'), qe = root.querySelector('#q-end');
     if (qs) qs.onchange = function () { WP.prefs.set('notif.quietHours.start', qs.value); };
     if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
+    wireSecurity(root);
+  }
+
+  /* ── Personal: Security (password · devices · last sign-in) ────────────────
+   * Change password = email a secure reset link to the user's own verified email
+   * (we never handle the old password client-side). "Sign out everywhere" uses
+   * Supabase global sign-out. A full per-device list needs the sessions service,
+   * so we're honest about that instead of faking rows. */
+  function securityView() {
+    const t = WP.i18n.t;
+    const last = WP.auth && WP.auth.lastSignInAt && WP.auth.lastSignInAt();
+    const lastStr = last ? WP.fmt.date(last) : t('secLastLoginUnknown');
+    return '<div class="section"><h3>' + t('secTitle') + '</h3>' +
+      '<div class="sub" style="margin:-4px 0 12px">' + t('secSub') + '</div>' +
+
+      // Password
+      settingRow(t('secPassword'), t('secPasswordNote'),
+        '<button class="btn" id="sec-changepw">' + ui.icon('key', 14) + ' ' + t('secChangePw') + '</button>') +
+      // Last sign-in
+      settingRow(t('secLastLogin'), '', '<span class="ttl">' + ui.esc(lastStr) + '</span>') +
+
+      // Devices / sessions
+      '<div class="mini-label" style="margin-top:14px">' + t('secSessions') + '</div>' +
+      '<div class="set-item-note" style="margin-bottom:10px">' + t('secSessionsNote') + '</div>' +
+      '<div class="sec-device"><span class="dot" style="background:var(--state-available)"></span>' +
+        '<div class="sec-device-id"><div class="nm">' + t('secThisDevice') + '</div>' +
+        '<div class="ttl">' + t('secActive') + '</div></div></div>' +
+      '<div style="margin-top:12px"><button class="btn danger" id="sec-signout-all">' +
+        ui.icon('logout', 14) + ' ' + t('secSignOutAll') + '</button></div>' +
+
+      // 2FA (coming soon — honest placeholder, not a fake control)
+      settingRow(t('sec2fa'), t('sec2faNote'),
+        '<span class="tag">' + t('comingSoon') + '</span>') +
+      '</div>';
+  }
+
+  function wireSecurity(root) {
+    const t = WP.i18n.t;
+    const cp = root.querySelector('#sec-changepw');
+    if (cp) cp.onclick = function () {
+      const label = cp.innerHTML;
+      cp.disabled = true; cp.textContent = t('secPwSending');
+      WP.auth.requestPasswordChange().then(function (res) {
+        cp.disabled = false; cp.innerHTML = label;
+        WP.ui.toast(res && res.ok ? t('secPwSent') : t('secPwError'), res && res.ok ? 'success' : 'error');
+      });
+    };
+    const so = root.querySelector('#sec-signout-all');
+    if (so) so.onclick = function () {
+      WP.ui.confirm({
+        title: t('secSignOutAllConfirmTitle'), icon: 'logout', danger: true,
+        body: t('secSignOutAllConfirmBody'),
+        confirmLabel: t('secSignOutAll'), cancelLabel: t('cancel')
+      }).then(function (ok) {
+        if (!ok) return;
+        WP.auth.signOutEverywhere();   // ends local session too → app returns to login
+      });
+    };
   }
 
   /* ── Workspace: Members & Access ──────────────────────────────────────────
@@ -9855,7 +9986,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
     const body = tab === 'workspace'
       ? workspaceView()
-      : (accountView() + preferencesView() + notificationsView());
+      : (accountView() + preferencesView() + notificationsView() + securityView());
 
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +

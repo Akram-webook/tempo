@@ -1221,6 +1221,10 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .mbr-role { flex: none; }
 .mbr-access { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); min-width: 92px; }
 .mbr-access.is-on { color: var(--state-available); }
+/* Security → "this device" row (distinct from member rows) */
+.sec-device { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.sec-device-id .nm { font-weight: 600; font-size: 14px; }
+.sec-device-id .ttl { font-size: 12px; }
 @media (max-width: 560px) {
   .mbr-row { flex-wrap: wrap; }
   .mbr-access { min-width: 0; }
