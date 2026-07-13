@@ -75,19 +75,24 @@
       sel.onchange = function () {
         const p = WP.access.byId(sel.dataset.role);
         const oldLevel = p.level;
+        const newLevel = sel.value;
         // safety: don't let an admin demote their own access and lock themselves out
-        if (p.id === WP.state.viewerId && !WP.access.canManage(Object.assign({}, p, { level: sel.value }))) {
-          window.alert(WP.i18n.t('cantDemoteSelf'));
+        if (p.id === WP.state.viewerId && !WP.access.canManage(Object.assign({}, p, { level: newLevel }))) {
+          WP.ui.toast(WP.i18n.t('cantDemoteSelf'), 'warn');
           sel.value = oldLevel; return;
         }
         // governance + risk mitigation: confirm before changing someone's access
-        const ok = window.confirm(WP.i18n.t('confirmRole')
-          .replace('{n}', WP.i18n.name(p)).replace('{r}', roleLabel(sel.value)));
-        if (!ok) { sel.value = oldLevel; return; }
-        p.level = sel.value;
-        WP.logEvent({ type: 'role-change', by: WP.state.viewerId, target: p.id,
-                      reason: roleLabel(oldLevel) + ' → ' + roleLabel(p.level) });
-        WP.setState({});
+        WP.ui.confirm({
+          title: WP.i18n.t('roleChangeTitle'), icon: 'key', danger: true,
+          body: WP.i18n.t('confirmRole').replace('{n}', WP.ui.esc(WP.i18n.name(p))).replace('{r}', WP.ui.esc(roleLabel(newLevel))),
+          confirmLabel: WP.i18n.t('confirm'), cancelLabel: WP.i18n.t('cancel')
+        }).then(function (ok) {
+          if (!ok) { sel.value = oldLevel; return; }
+          p.level = newLevel;
+          WP.logEvent({ type: 'role-change', by: WP.state.viewerId, target: p.id,
+                        reason: roleLabel(oldLevel) + ' → ' + roleLabel(p.level) });
+          WP.setState({});
+        });
       };
     });
   }

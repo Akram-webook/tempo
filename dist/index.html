@@ -3217,6 +3217,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     noResults:      { en: 'No matches found',       ar: 'لا توجد نتائج' },
     emptyTeam:      { en: 'No one to show here yet.', ar: 'لا أحد لعرضه هنا بعد.' },
     confirmRole:    { en: 'Change {n}’s role to {r}? This changes what they can access immediately.', ar: 'تغيير دور {n} إلى {r}؟ هذا يغيّر صلاحيات وصوله فوراً.' },
+    roleChangeTitle:{ en: 'Change access role', ar: 'تغيير دور الوصول' },
     viewAs:         { en: 'View as',                ar: 'العرض بدور' },
     director:       { en: 'Director',               ar: 'مدير' },
     manager:        { en: 'Manager',                ar: 'مدير فريق' },
@@ -3241,6 +3242,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     candidates:     { en: 'Best candidates (closest, then lowest load)', ar: 'أفضل المرشحين (الأقرب ثم الأقل حملاً)' },
     projected:      { en: 'Projected load',         ar: 'الحمل المتوقع' },
     softLocked:     { en: 'Soft-locked · override required', ar: 'مقفل مبدئياً · يتطلب تجاوزاً' },
+    overrideTitle:  { en: 'Override assignment', ar: 'تجاوز الإسناد' },
+    overrideReasonLabel: { en: 'This person is soft-locked. A reason is logged for accountability.', ar: 'هذا الشخص مقفل مبدئياً. يُسجَّل السبب للمساءلة.' },
+    overrideReasonPlaceholder: { en: 'Why is this override necessary?', ar: 'لماذا هذا التجاوز ضروري؟' },
+    overrideConfirm: { en: 'Confirm override', ar: 'تأكيد التجاوز' },
     theme:          { en: 'Theme',                  ar: 'السمة' },
     lang:           { en: 'العربية',                ar: 'English' },
     healthyZone:    { en: 'in healthy zone (41–75%)', ar: 'في النطاق الصحي (٤١-٧٥٪)' },
@@ -3396,7 +3401,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     feedbackQs:     { en: 'Feedback questions', ar: 'أسئلة التقييم' },
     approve:        { en: 'Approve evaluation', ar: 'اعتماد التقييم' },
     approved:       { en: 'Approved', ar: 'معتمد' },
+    approveTitle:   { en: 'Approve & lock this evaluation?', ar: 'اعتماد وقفل هذا التقييم؟' },
+    approveBody:    { en: 'Approving locks the review at {n}/5. You can reopen it later, which is logged.', ar: 'الاعتماد يقفل التقييم عند {n}/5. يمكنك إعادة فتحه لاحقاً، ويُسجَّل ذلك.' },
+    approveUnscored:{ en: 'Some criteria are still unscored. Approve anyway?', ar: 'بعض المعايير لم تُقيَّم بعد. الاعتماد على أي حال؟' },
     downloadReport: { en: 'Download report', ar: 'تنزيل التقرير' },
+    downloadSoon:   { en: 'Report export is coming soon.', ar: 'تصدير التقرير قريباً.' },
     evalSyncing:    { en: 'Syncing evaluations…',                       ar: 'جارٍ مزامنة التقييمات…' },
     evalSynced:     { en: 'Synced',                                     ar: 'تمت المزامنة' },
     evalSavedLocal: { en: 'Saved locally — will sync when back online', ar: 'تم الحفظ محليًا — ستتم المزامنة عند عودة الاتصال' },
@@ -3459,6 +3468,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     selfRating:     { en: 'employee self-rating', ar: 'التقييم الذاتي للموظف' },
     newCycle:       { en: 'New cycle', ar: 'دورة جديدة' },
     newCyclePrompt: { en: 'Name the new evaluation cycle (e.g., Q3 2025):', ar: 'اسم دورة التقييم الجديدة (مثال: الربع الثالث ٢٠٢٥):' },
+    newCycleTitle:  { en: 'New evaluation cycle', ar: 'دورة تقييم جديدة' },
+    newCycleRequired:{ en: 'Give the cycle a name.', ar: 'أعطِ الدورة اسماً.' },
+    newCycleCreate: { en: 'Create cycle', ar: 'إنشاء الدورة' },
     inProgressL:    { en: 'in progress', ar: 'قيد التنفيذ' },
     notStartedL:    { en: 'not started', ar: 'لم تبدأ' },
     employees:      { en: 'Employees', ar: 'الموظفون' },
@@ -9184,8 +9196,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     });
     host.querySelectorAll('[data-override]').forEach(function (b) {
       b.onclick = function () {
-        const why = prompt('Override reason (logged):');
-        if (why) { doAssign(eventId, b.dataset.override, true, why, aiSuggested); host.innerHTML = ''; }
+        const t = WP.i18n.t, pid = b.dataset.override;
+        WP.ui.prompt({
+          title: t('overrideTitle'), icon: 'alert',
+          body: t('overrideReasonLabel'),
+          placeholder: t('overrideReasonPlaceholder'),
+          required: true, danger: true,
+          confirmLabel: t('overrideConfirm'), cancelLabel: t('cancel')
+        }).then(function (why) {
+          if (why) { doAssign(eventId, pid, true, why, aiSuggested); host.innerHTML = ''; }
+        });
       };
     });
   }
@@ -9672,19 +9692,24 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       sel.onchange = function () {
         const p = WP.access.byId(sel.dataset.role);
         const oldLevel = p.level;
+        const newLevel = sel.value;
         // safety: don't let an admin demote their own access and lock themselves out
-        if (p.id === WP.state.viewerId && !WP.access.canManage(Object.assign({}, p, { level: sel.value }))) {
-          window.alert(WP.i18n.t('cantDemoteSelf'));
+        if (p.id === WP.state.viewerId && !WP.access.canManage(Object.assign({}, p, { level: newLevel }))) {
+          WP.ui.toast(WP.i18n.t('cantDemoteSelf'), 'warn');
           sel.value = oldLevel; return;
         }
         // governance + risk mitigation: confirm before changing someone's access
-        const ok = window.confirm(WP.i18n.t('confirmRole')
-          .replace('{n}', WP.i18n.name(p)).replace('{r}', roleLabel(sel.value)));
-        if (!ok) { sel.value = oldLevel; return; }
-        p.level = sel.value;
-        WP.logEvent({ type: 'role-change', by: WP.state.viewerId, target: p.id,
-                      reason: roleLabel(oldLevel) + ' → ' + roleLabel(p.level) });
-        WP.setState({});
+        WP.ui.confirm({
+          title: WP.i18n.t('roleChangeTitle'), icon: 'key', danger: true,
+          body: WP.i18n.t('confirmRole').replace('{n}', WP.ui.esc(WP.i18n.name(p))).replace('{r}', WP.ui.esc(roleLabel(newLevel))),
+          confirmLabel: WP.i18n.t('confirm'), cancelLabel: WP.i18n.t('cancel')
+        }).then(function (ok) {
+          if (!ok) { sel.value = oldLevel; return; }
+          p.level = newLevel;
+          WP.logEvent({ type: 'role-change', by: WP.state.viewerId, target: p.id,
+                        reason: roleLabel(oldLevel) + ' → ' + roleLabel(p.level) });
+          WP.setState({});
+        });
       };
     });
   }
@@ -10271,21 +10296,33 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       ta.onchange = function () { ev.feedback[ta.dataset.q] = ta.value; saveEval(); };
     });
     const ap = root.querySelector('#approve');
-    if (ap) ap.onclick = function () {
-      ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
+    if (ap && ev.status !== 'Completed') ap.onclick = function () {
       const overall = WP.evaluation.overall(ev);
-      const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
-      // Accepted = the human's final overall landed inside the AI-suggested band.
-      // Only when a suggestion was actually shown (enoughEvidence); else no flag.
-      if (aiSuggestion && typeof overall === 'number') {
-        entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
-      }
-      WP.logEvent(entry);
-      saveEval();
-      WP.setState({});
+      // Warn when required criteria are still unscored.
+      const total = WP.data.EVAL_CRITERIA.length;
+      const scored = WP.data.EVAL_CRITERIA.filter(function (c) { return typeof ev.scores[c.id] === 'number'; }).length;
+      const body = (scored < total ? t('approveUnscored') + '<br><br>' : '') +
+        t('approveBody').replace('{n}', overall || '–');
+      WP.ui.confirm({
+        title: t('approveTitle'), icon: 'check', body: body,
+        confirmLabel: t('approve'), cancelLabel: t('cancel')
+      }).then(function (ok) {
+        if (!ok) return;
+        ev.status = 'Completed'; ev.evaluatorId = ev.evaluatorId || WP.state.viewerId;
+        const entry = { type: 'evaluation', by: WP.state.viewerId, target: p.id, reason: 'approved · ' + (overall || '–') + '/5' };
+        // Accepted = the human's final overall landed inside the AI-suggested band.
+        // Only when a suggestion was actually shown (enoughEvidence); else no flag.
+        if (aiSuggestion && typeof overall === 'number') {
+          entry.aiAccepted = (overall >= aiSuggestion.range[0] && overall <= aiSuggestion.range[1]);
+        }
+        WP.logEvent(entry);
+        saveEval();
+        WP.setState({});
+      });
     };
     const dl = root.querySelector('#dl');
-    if (dl) dl.onclick = function () { dl.textContent = t('downloadReport') + ' ' + WP.ui.icon('check',14) + ''; };
+    // Honest: export isn't built yet — say so instead of faking a success checkmark.
+    if (dl) dl.onclick = function () { WP.ui.toast(t('downloadSoon'), 'info'); };
   }
 
   WP.ui.evaluation = { render: render };
@@ -10610,12 +10647,18 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     root.querySelector('#cycle').onchange = function (e) { WP.evaluation.setActiveCycle(e.target.value); WP.setState({}); };
     const nc = root.querySelector('#new-cycle');
     if (nc) nc.onclick = function () {
-      const name = prompt(t('newCyclePrompt'));
-      if (!name) return;
-      const id = 'c_' + Date.now();
-      WP.evaluation.addCycle({ id: id, name: name, type: 'Quarterly', start: '—', end: '—', status: 'Active' });
-      WP.logEvent({ type: 'cycle-created', by: WP.state.viewerId, target: name });
-      WP.setState({});
+      WP.ui.prompt({
+        title: t('newCycleTitle'), icon: 'clipboard',
+        placeholder: t('newCyclePrompt'), rows: 1,
+        required: true, requiredMsg: t('newCycleRequired'),
+        confirmLabel: t('newCycleCreate'), cancelLabel: t('cancel')
+      }).then(function (name) {
+        if (!name) return;
+        const id = 'c_' + Date.now();
+        WP.evaluation.addCycle({ id: id, name: name, type: 'Quarterly', start: '—', end: '—', status: 'Active' });
+        WP.logEvent({ type: 'cycle-created', by: WP.state.viewerId, target: name });
+        WP.setState({});
+      });
     };
   }
 
