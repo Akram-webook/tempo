@@ -76,7 +76,7 @@
         '<b style="font-size:12px">' + v + '/5</b></div>';
     }).join('');
 
-    const q = g.quarterly[0];
+    const q = (g.quarterly && g.quarterly[0]) || null;
     const managerLens =
       '<div class="section"><h3>' + t('managerLens') + '</h3>' +
         '<div class="mini-label">' + t('strengths') + '</div>' +
@@ -92,7 +92,7 @@
         '<div class="mini-label" style="margin-top:8px">' + t('suggestion') + '</div><div style="font-size:13px">' + ui.esc(g.directorNote.suggestion) + '</div>' +
       '</div>';
 
-    const quarterly = '<div class="section"><h3>' + t('quarterly') +
+    const quarterly = q ? '<div class="section"><h3>' + t('quarterly') +
       ' <span class="rating ' + q.rating + '">' + q.q + ' · ' + q.rating + '</span></h3>' +
       '<div style="font-size:13px;margin-bottom:8px">' + ui.esc(q.summary) + '</div>' +
       '<div class="mini-label">' + t('improved') + '</div><div>' +
@@ -103,7 +103,7 @@
         '<div class="mini-label">' + t('reliability') + '</div>' +
         '<div class="kv" style="margin-top:4px"><div class="k">' + t('attendanceL') + '</div><div>' + ui.esc(q.reliability.attendance) + '</div>' +
         '<div class="k">' + t('engagementL') + '</div><div>' + ui.esc(q.reliability.engagement) + '</div></div>' +
-      '</div></div>';
+      '</div></div>' : '';
 
     const skills = '<div class="section"><h3>' + t('skills') + '</h3>' +
       g.skills.map(skillRow).join('') +
@@ -118,8 +118,8 @@
       '</div></div>';
 
     const ws = g.workStyle;
-    const st = ws ? WP.data.WORK_STAGES[ws.stage] : null;
-    const workStyle = ws ? '<div class="section"><h3>' + t('workStyle') +
+    const st = ws ? (WP.data.WORK_STAGES[ws.stage] || null) : null;
+    const workStyle = (ws && st) ? '<div class="section"><h3>' + t('workStyle') +
       (ws.followUp ? ' <span class="rating Developing">' + t('needsFollowUp') + '</span>' : '') + '</h3>' +
       '<div style="font-size:15px;font-weight:600">' + (ar ? st.ar : st.en) + '</div>' +
       '<div class="mini-label" style="margin-top:8px">' + t('howToManage') + '</div>' +

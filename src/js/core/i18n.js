@@ -324,6 +324,7 @@
     upwardThanks:   { en: 'Thank you', ar: 'شكراً لك' },
     upwardThanksNote:{ en: 'Your feedback was sent anonymously to {x}.', ar: 'أُرسل تقييمك بشكل سرّي إلى {x}.' },
     upwardOnlyOwn:  { en: 'You can only give upward feedback about your own manager.', ar: 'يمكنك إعطاء تقييم صاعد لمديرك المباشر فقط.' },
+    upwardIncomplete:{ en: 'Please rate at least one behavior before submitting.', ar: 'يرجى تقييم سلوك واحد على الأقل قبل الإرسال.' },
     upwardReceived: { en: 'Upward feedback (from their team)', ar: 'تقييم صاعد (من فريقهم)' },
     upwardReceivedNote:{ en: 'Aggregated & anonymous · routed up to you, not shown to them. Coach through them, not around them.', ar: 'مجمّع وسرّي · موجّه لك، لا يظهر لهم. وجّه من خلالهم لا حولهم.' },
     upwardSuppressed:{ en: 'Hidden — needs at least {k} responses to stay anonymous (currently {n}).', ar: 'مخفي — يحتاج {k} ردود على الأقل للحفاظ على السرّية (حالياً {n}).' },
@@ -441,6 +442,8 @@
     // Neutral (anti-enumeration) confirmation — same whether or not the email exists.
     adminInviteSent:{ en: 'If that email is valid, an invite link is on its way. The admin sets their own password from it.', ar: 'إذا كان الإيميل صحيحاً، رابط الدعوة في طريقه. المشرف يضبط كلمة مروره منه.' },
     adminSaved:     { en: 'Admin record saved.', ar: 'تم حفظ سجل المشرف.' },
+    adminSaveError: { en: 'Could not save right now — please try again.', ar: 'تعذّر الحفظ الآن — يرجى المحاولة مرة أخرى.' },
+    adminSending:   { en: 'Sending…', ar: 'جارٍ الإرسال…' },
     adminInviteNoEmail: { en: 'Saved. Enable the invite email in Supabase to send the set-password link.', ar: 'تم الحفظ. فعّل إيميل الدعوة في Supabase لإرسال رابط ضبط كلمة المرور.' },
     // Jisr import
     adminImport:    { en: 'Import from Jisr', ar: 'استيراد من جسر' },

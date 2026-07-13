@@ -34,10 +34,15 @@
     const draft = (WP._upwardDraft = WP._upwardDraft || { scores: {}, feedback: {} });
     const crit = WP.data.UPWARD_CRITERIA.map(function (c) {
       const cur = draft.scores[c.id];
+      const cName = ar ? c.ar : c.en;
       const scale = [1, 2, 3, 4, 5].map(function (n) {
-        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
+        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" role="radio"' +
+          ' aria-checked="' + (cur === n ? 'true' : 'false') + '"' +
+          ' aria-label="' + ui.esc(cName) + ' — ' + n + ' / 5"' +
+          ' data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
       }).join('');
-      return '<div class="crit-row"><div class="crit-name">' + (ar ? c.ar : c.en) + '</div><div class="scale">' + scale + '</div></div>';
+      return '<div class="crit-row"><div class="crit-name">' + cName + '</div>' +
+        '<div class="scale" role="radiogroup" aria-label="' + ui.esc(cName) + '">' + scale + '</div></div>';
     }).join('');
     const qs = WP.data.UPWARD_QUESTIONS.map(function (q) {
       return '<div class="eval-q"><div class="mini-label">' + (ar ? q.ar : q.en) + '</div>' +
@@ -63,6 +68,10 @@
       ta.onchange = function () { draft.feedback[ta.dataset.q] = ta.value; };
     });
     root.querySelector('#submit').onclick = function () {
+      // Don't log an empty anonymous review — require at least one behavior score.
+      const anyScore = Object.keys(draft.scores).length > 0;
+      const anyText = Object.keys(draft.feedback).some(function (k) { return (draft.feedback[k] || '').trim(); });
+      if (!anyScore && !anyText) { WP.ui.toast(t('upwardIncomplete'), 'warn'); return; }
       WP.logEvent({ type: 'upward-feedback', by: viewer.id, target: manager.id, reason: 'routed to ' + recipientLabel(manager) + ' · anonymous' });
       WP._upwardDraft = null;
       const host = document.getElementById('view');

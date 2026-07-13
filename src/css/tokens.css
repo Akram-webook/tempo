@@ -48,6 +48,7 @@
 
   /* brand (Webook magenta) */
   --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand */
+  --brand-soft:    color-mix(in srgb, var(--brand) 12%, transparent); /* tinted brand wash (hovers, marks) */
   --brand-contrast:#F9F9F9; /* CTA text · Content-Primary-Inverse */
   --link:          #FF2C79; /* Content-Link */
   --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
@@ -153,6 +154,7 @@
   --text-disabled: rgba(255,255,255,.32);
 
   --brand:         #FF2C79;
+  --brand-soft:    color-mix(in srgb, var(--brand) 20%, transparent); /* slightly stronger on dark */
   --brand-contrast:#F9F9F9;
   --link:          #FF2C79;
   --brand-disabled-bg: #4A1428;

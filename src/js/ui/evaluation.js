@@ -215,15 +215,19 @@
 
     const criteria = WP.data.EVAL_CRITERIA.map(function (c, i) {
       const cur = ev.scores[c.id];
+      const cName = ar ? c.ar : c.en;
       const scale = [1, 2, 3, 4, 5].map(function (n) {
-        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
+        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" role="radio"' +
+          ' aria-checked="' + (cur === n ? 'true' : 'false') + '"' +
+          ' aria-label="' + WP.ui.esc(cName) + ' — ' + n + ' / 5"' +
+          ' data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
       }).join('');
       const selfBadge = (selfCmp && typeof selfCmp.scores[c.id] === 'number')
         ? '<span class="self-badge" title="self-rating">' + WP.ui.icon('user',13) + ' ' + selfCmp.scores[c.id] + '</span>' : '';
       return '<div class="crit-row">' +
-        '<div class="crit-name"><span class="crit-num">' + (i + 1) + '</span> ' + (ar ? c.ar : c.en) +
+        '<div class="crit-name"><span class="crit-num">' + (i + 1) + '</span> ' + cName +
           '<span class="crit-w">' + c.weight + '%</span>' + selfBadge + '</div>' +
-        '<div class="scale">' + scale + '</div></div>';
+        '<div class="scale" role="radiogroup" aria-label="' + WP.ui.esc(cName) + '">' + scale + '</div></div>';
     }).join('');
 
     const questions = WP.data.EVAL_QUESTIONS
