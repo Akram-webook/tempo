@@ -2,6 +2,12 @@
 
 A running log of what worked, what nearly broke, and the rule to remember. Append newest at the top.
 
+## 2026-07-14 — Members & Access (allowlist becomes a screen)
+- **What worked:** Read the access engine FIRST and found `grantAccess/listAccess/setAccess` already existed and already persisted (via `persist.js` `granted`), plus a whole `permissions.js` role screen. So the "big gap" was only surfacing the allowlist in Settings — I built the roster + grant/revoke toggle and *linked* to the existing role screen instead of rebuilding role-change logic. Less code, no duplication.
+- **What nearly broke / the gotcha:** `grantAccess()` logs but does NOT persist on its own — the caller must `WP.setState({})` or the revoke is lost on reload. Also the roster must exclude `tbc` (open/unfilled roles) — they're not real members and would show fake toggles. And self-revoke had to be blocked or an admin could lock themselves out.
+- **What I'd do differently next time:** Before building any "manage X" screen, grep for an existing engine/API (`grep -n "function .*[Gg]rant\|setAccess\|listAccess"`) — the capability often already exists headless and just needs a UI. Don't assume it must be built from scratch because it "lives in code today."
+- **Rule to remember:** A mutation helper that logs is not the same as one that persists. After any `WP.access.*`/data mutation from the UI, call `WP.setState({})` so `persist.saveData()` runs. Reuse + link beats rebuild.
+
 ## 2026-07-14 — Settings v2 (personal / workspace split, preferences, notifications)
 - **What worked:** Researched world-class settings IA first (Nicelydone / memorable.design / Equal.design) instead of guessing — confirmed the personal-vs-workspace split, "microcopy under every control", and the notifications model (channel × category + digest + quiet-hours). Reused existing components (`.seg`, `ui.subTabs`, `overlay-host`) rather than inventing new ones, so the new UI inherited house styling for free. Added `WP.prefs` with a `mergePrefs()` deep-merge so new pref keys never come back undefined on an old saved session.
 - **What nearly broke / the gotcha:** Moving admin org-config under a "Workspace" tab silently broke `verify-settings-layout.js`, which rendered Settings and looked for tier/Slack markup that is now behind a non-default tab. Fix: the test sets `WP._settingsTab = 'workspace'` before asserting. Also the `__admin__` sentinel viewer has no `email`/`byId` row — the Account section had to guard (`WP.viewer()` + optional `roleLabel`) or it would throw.
