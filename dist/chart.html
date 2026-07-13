@@ -1312,7 +1312,7 @@ main.full-bleed { max-width: none; }
 .warn-banner { background: var(--state-near-bg); border: 1px solid var(--state-near); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; margin-bottom: 14px; }
 
 /* ---- growth / skills / reviews ---- */
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* .grid-2 is defined authoritatively near the settings block (responsive two-up). */
 .disclaimer { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
 .mini-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
 
@@ -2071,7 +2071,14 @@ main.full-bleed { max-width: none; }
 .page-head .ph-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 /* full-width sections should truly fill the container (kills asymmetric gutter) */
 .section { width: 100%; box-sizing: border-box; }
-.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+/* Two-up on desktop, one full-width column below the breakpoint. We do NOT use
+   auto-fit/minmax here: with a short second cell (states) auto-fit collapses to a
+   single 320px track that refuses to stretch, leaving a dead right-hand strip
+   (the "Grid Auto-Expansion / wasted canvas" defect). Explicit tracks guarantee
+   the row either fills as two columns or the survivor spans the whole width. */
+.grid-2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: start; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+.grid-2 > * { min-width: 0; }
 
 /* ── Tier weights, redesigned so a director SEES the routine tier ───────── */
 .tier-list { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 6px; }
