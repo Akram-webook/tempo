@@ -394,6 +394,26 @@
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
     close:          { en: 'Close', ar: 'إغلاق' },
+    // — Tier weights (routine tier + live counts) —
+    tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
+    tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },
+    // — Slack linking (editable IDs) —
+    slackIdPlaceholder: { en: 'Add Slack ID', ar: 'أضف معرّف سلاك' },
+    slackMissingNote:   { en: 'people have no Slack ID yet — add them to enable check-in linking.', ar: 'أشخاص بدون معرّف سلاك — أضِفه لتفعيل ربط التحديثات.' },
+    // — Activity & override log (own page) —
+    activitySub:    { en: 'Who did what, when, and why — the provenance record.', ar: 'مَن فعل ماذا ومتى ولماذا — سجل التتبّع.' },
+    logEntries:     { en: 'entries', ar: 'سجلات' },
+    logColAction:   { en: 'Action', ar: 'الإجراء' },
+    logColDetail:   { en: 'Detail', ar: 'التفاصيل' },
+    logColWhen:     { en: 'When', ar: 'الوقت' },
+    logLoadMore:    { en: 'Load more', ar: 'تحميل المزيد' },
+    logView:        { en: 'Viewed as', ar: 'عرض كـ' },
+    logOverride:    { en: 'Override', ar: 'تجاوز' },
+    logAssign:      { en: 'Assigned', ar: 'إسناد' },
+    logConfig:      { en: 'Config', ar: 'إعداد' },
+    logInvite:      { en: 'Invite', ar: 'دعوة' },
+    logGrant:       { en: 'Access granted', ar: 'مُنح الوصول' },
+    logRevoke:      { en: 'Access revoked', ar: 'سُحب الوصول' },
     // — Admins page (invite-based admin management) —
     adminsTitle:    { en: 'Admins', ar: 'المشرفون' },
     adminsSub:      { en: 'Create admin accounts and invite them by email. Each admin sets their own password from a secure link — you never handle passwords.', ar: 'أنشئ حسابات المشرفين وادعهم عبر الإيميل. كل مشرف يضبط كلمة مروره بنفسه من رابط آمن — أنت لا تتعامل مع كلمات المرور إطلاقاً.' },

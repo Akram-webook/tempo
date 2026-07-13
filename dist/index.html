@@ -679,7 +679,11 @@ h1, h2, h3, h4,
 .btn.primary:hover::after { transform: translateX(160%); transition: transform .6s cubic-bezier(.22,.61,.36,1); }
 @media (prefers-reduced-motion: reduce) { .btn.primary::after { display: none; } }
 
-main { padding: 22px; max-width: 1180px; margin: 0 auto; }
+/* Page container. Cap keeps long-form text readable but is wide enough that data
+   pages (tables, multi-column settings) fill a modern monitor instead of stranding
+   in a narrow column with dead side-canvas. Gutter scales with viewport (clamp) so
+   there's breathing room on wide screens and tight margins on small ones. */
+main { padding: 24px clamp(16px, 4vw, 40px); max-width: 1320px; margin: 0 auto; width: 100%; }
 /* People & Workload (org tree/map) goes FULL-BLEED so a wide branch fills the screen
    instead of stranding in a 1180 box with a dead right-side gutter. Only this view
    opts in (class toggled per-route in app.js) — text/data pages keep the readable cap.
@@ -2063,6 +2067,51 @@ main.full-bleed { max-width: none; }
   padding: 9px 10px; font-family: inherit; font-size: 13px; resize: vertical; }
 .btn.small { padding: 5px 10px; font-size: 12px; }
 
+/* ── Shared page scaffold (consistent across every route) ───────────────── */
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 18px; }
+.page-head .ph-titles { min-width: 0; }
+.page-head h2 { margin: 0 0 4px; }
+.page-head .sub { margin: 0; }
+.page-head .ph-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* full-width sections should truly fill the container (kills asymmetric gutter) */
+.section { width: 100%; box-sizing: border-box; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+
+/* ── Tier weights, redesigned so a director SEES the routine tier ───────── */
+.tier-list { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 6px; }
+.tier-card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.tier-card .tier-dot { width: 10px; height: 10px; border-radius: 50%; }
+.tier-card .tier-main { min-width: 0; }
+.tier-card .tier-name { font-weight: 600; font-size: 14px; }
+.tier-card .tier-mean { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+.tier-card .tier-count { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.tier-card .tier-count b { color: var(--text); }
+.tier-card .tier-weight { display: flex; align-items: center; gap: 6px; }
+.tier-card .tier-weight input { width: 66px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--radius-sm); padding: 7px 8px; font-family: inherit; font-size: 14px; text-align: right; }
+.tier-routine { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+  color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent);
+  border-radius: 100px; padding: 2px 8px; margin-inline-start: 8px; }
+
+/* ── Activity & override log as a real, scannable page ──────────────────── */
+.log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.log-table th { text-align: start; font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.log-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.log-table tr:last-child td { border-bottom: 0; }
+.log-table .lg-when { color: var(--text-muted); white-space: nowrap; }
+.log-table .lg-badge { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 100px; padding: 2px 9px;
+  background: var(--surface-2); border: 1px solid var(--border); }
+.log-empty { padding: 28px; text-align: center; color: var(--text-muted); }
+.log-more { margin: 14px auto 0; display: block; }
+
+/* Editable Slack ID field in Settings */
+.slack-edit { width: 150px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-sm); padding: 6px 8px; font-family: inherit; font-size: 12.5px; text-align: end; }
+.slack-edit::placeholder { color: var(--text-muted); }
+.slack-missing { color: var(--state-caution); }
+
 </style>
 </head>
 <body>
@@ -3423,6 +3472,26 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     save:           { en: 'Save', ar: 'حفظ' },
     skip:           { en: 'Skip', ar: 'تخطّي' },
     close:          { en: 'Close', ar: 'إغلاق' },
+    // — Tier weights (routine tier + live counts) —
+    tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
+    tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },
+    // — Slack linking (editable IDs) —
+    slackIdPlaceholder: { en: 'Add Slack ID', ar: 'أضف معرّف سلاك' },
+    slackMissingNote:   { en: 'people have no Slack ID yet — add them to enable check-in linking.', ar: 'أشخاص بدون معرّف سلاك — أضِفه لتفعيل ربط التحديثات.' },
+    // — Activity & override log (own page) —
+    activitySub:    { en: 'Who did what, when, and why — the provenance record.', ar: 'مَن فعل ماذا ومتى ولماذا — سجل التتبّع.' },
+    logEntries:     { en: 'entries', ar: 'سجلات' },
+    logColAction:   { en: 'Action', ar: 'الإجراء' },
+    logColDetail:   { en: 'Detail', ar: 'التفاصيل' },
+    logColWhen:     { en: 'When', ar: 'الوقت' },
+    logLoadMore:    { en: 'Load more', ar: 'تحميل المزيد' },
+    logView:        { en: 'Viewed as', ar: 'عرض كـ' },
+    logOverride:    { en: 'Override', ar: 'تجاوز' },
+    logAssign:      { en: 'Assigned', ar: 'إسناد' },
+    logConfig:      { en: 'Config', ar: 'إعداد' },
+    logInvite:      { en: 'Invite', ar: 'دعوة' },
+    logGrant:       { en: 'Access granted', ar: 'مُنح الوصول' },
+    logRevoke:      { en: 'Access revoked', ar: 'سُحب الوصول' },
     // — Admins page (invite-based admin management) —
     adminsTitle:    { en: 'Admins', ar: 'المشرفون' },
     adminsSub:      { en: 'Create admin accounts and invite them by email. Each admin sets their own password from a secure link — you never handle passwords.', ar: 'أنشئ حسابات المشرفين وادعهم عبر الإيميل. كل مشرف يضبط كلمة مروره بنفسه من رابط آمن — أنت لا تتعامل مع كلمات المرور إطلاقاً.' },
@@ -9001,15 +9070,52 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   'use strict';
   const ui = WP.ui;
 
+  // Per-tier "what it means" + whether it's the ROUTINE/recurring baseline. Standard
+  // (Tier 3) is the day-to-day routine work a director assigns against most often; the
+  // heavier tiers are the exceptional pushes. This gives the number a decision meaning
+  // (Constitution: Evidence — no metric without the decision it serves).
+  const TIER_MEANING = {
+    mega:     { en: 'Flagship / mega events — rare, all-hands pushes.',        ar: 'الفعاليات الكبرى — نادرة وتتطلب الجميع.',        routine: false },
+    medium:   { en: 'Mid-size events — recurring but planned ahead.',          ar: 'فعاليات متوسطة — متكررة لكن مخطط لها مسبقاً.',    routine: false },
+    standard: { en: 'Standard / routine work — the day-to-day baseline load.', ar: 'العمل القياسي / الروتيني — الحمل اليومي الأساسي.', routine: true }
+  };
+
+  // Live count of events currently sitting on each tier (so the director sees where
+  // the actual work is, not just an abstract weight).
+  function tierEventCounts() {
+    const counts = {};
+    const ev = WP.data.EVENTS || {};
+    Object.keys(ev).forEach(function (id) {
+      const tid = ev[id].tier;
+      counts[tid] = (counts[tid] || 0) + 1;
+    });
+    return counts;
+  }
+
   function tierEditor() {
     const t = WP.i18n.t;
-    const rows = Object.keys(WP.data.TIERS).map(function (k) {
+    const ar = WP.state.lang === 'ar';
+    const counts = tierEventCounts();
+    const cards = Object.keys(WP.data.TIERS).map(function (k) {
       const tier = WP.data.TIERS[k];
-      const label = WP.state.lang === 'ar' ? tier.labelAr : tier.labelEn;
-      return '<div class="set-row"><label>' + ui.esc(label) + '</label>' +
-        '<input type="number" min="0" max="100" value="' + tier.weight + '" data-tier="' + k + '" /> %</div>';
+      const label = ar ? tier.labelAr : tier.labelEn;
+      const mean = TIER_MEANING[tier.key] || { en: '', ar: '', routine: false };
+      const routineTag = mean.routine
+        ? '<span class="tier-routine">' + ui.icon('clock', 12) + ' ' + t('tierRoutine') + '</span>' : '';
+      const n = counts[tier.id] || 0;
+      const dotColor = tier.key === 'mega' ? 'var(--state-overloaded)' : tier.key === 'medium' ? 'var(--state-near)' : 'var(--state-available)';
+      return '<div class="tier-card">' +
+        '<span class="tier-dot" style="background:' + dotColor + '"></span>' +
+        '<div class="tier-main">' +
+          '<div class="tier-name">' + ui.esc(label) + routineTag + '</div>' +
+          '<div class="tier-mean">' + ui.esc(ar ? mean.ar : mean.en) + '</div>' +
+          '<div class="tier-count"><b>' + n + '</b> ' + t('tierEventsNow') + '</div>' +
+        '</div>' +
+        '<div class="tier-weight"><input type="number" min="0" max="100" value="' + tier.weight + '" data-tier="' + k + '" aria-label="' + ui.esc(label) + '" /> %</div>' +
+      '</div>';
     }).join('');
-    return '<div class="section"><h3>' + t('tierWeights') + '</h3>' + rows +
+    return '<div class="section"><h3>' + t('tierWeights') + '</h3>' +
+      '<div class="tier-list">' + cards + '</div>' +
       '<div class="set-row"><label>' + t('capacityCeiling') + '</label>' +
       '<input type="number" min="50" max="200" value="' + WP.data.CEILING + '" id="ceiling" /> %</div>' +
       '<div class="disclaimer">' + t('settingsNote') + '</div></div>';
@@ -9028,12 +9134,22 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   function slackLinking() {
     const t = WP.i18n.t;
-    const rows = WP.data.PEOPLE.map(function (p) {
+    // Alphabetical by display name (senior BA: a directory you scan should be sorted).
+    const people = WP.data.PEOPLE.slice().sort(function (a, b) {
+      return WP.i18n.name(a).localeCompare(WP.i18n.name(b), WP.state.lang === 'ar' ? 'ar' : 'en');
+    });
+    const missing = people.filter(function (p) { return !p.slackId; }).length;
+    const rows = people.map(function (p) {
+      const has = !!p.slackId;
       return '<div class="set-row" style="gap:10px">' + ui.avatar(p, 'var(--brand)') +
         '<span style="flex:1">' + ui.esc(WP.i18n.name(p)) + '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></span>' +
-        '<span class="tag" style="color:var(--state-available)">● ' + (p.slackId || '—') + '</span></div>';
+        (has ? '<span class="dot" style="background:var(--state-available)"></span>' : '<span class="dot slack-missing" style="background:var(--state-caution)"></span>') +
+        '<input class="slack-edit' + (has ? '' : ' slack-missing') + '" data-slack="' + p.id + '" value="' + ui.esc(p.slackId || '') + '" placeholder="' + t('slackIdPlaceholder') + '" aria-label="Slack ID ' + ui.esc(WP.i18n.name(p)) + '" />' +
+      '</div>';
     }).join('');
-    return '<div class="section"><h3>' + t('slackLinking') + '</h3>' + rows +
+    const banner = missing
+      ? '<div class="disclaimer slack-missing">' + missing + ' ' + t('slackMissingNote') + '</div>' : '';
+    return '<div class="section"><h3>' + t('slackLinking') + '</h3>' + banner + rows +
       '<div class="disclaimer">' + t('slackNote') + '</div></div>';
   }
 
@@ -9105,20 +9221,36 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const t = WP.i18n.t;
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
-      '<h2 style="margin:0 0 4px">' + t('settings') + '</h2>' +
-      '<div class="sub" style="margin-bottom:16px">' + t('orgStructure') + '</div>' +
+      '<div class="page-head"><div class="ph-titles">' +
+        '<h2>' + t('settings') + '</h2>' +
+        '<div class="sub">' + t('orgStructure') + '</div>' +
+      '</div><div class="ph-actions">' +
+        '<button class="btn" id="go-activity">' + ui.icon('list', 15) + ' ' + t('activityLog') + '</button>' +
+      '</div></div>' +
       '<div class="grid-2">' + tierEditor() + statesView() + '</div>' +
       rolesPanel() +
-      slackLinking() +
-      activityLog();
+      slackLinking();
 
     root.querySelector('#back').onclick = function () { WP.setState({ route: 'map' }); };
+    root.querySelector('#go-activity').onclick = function () { WP.setState({ route: 'activity' }); };
     root.querySelectorAll('[data-tier]').forEach(function (inp) {
       inp.onchange = function () {
         const v = Math.max(0, Math.min(100, parseInt(inp.value, 10) || 0));
         WP.data.TIERS[inp.dataset.tier].weight = v;
         WP.logEvent({ type: 'config', by: WP.state.viewerId, target: 'tier ' + inp.dataset.tier + ' = ' + v + '%' });
         WP.setState({});
+      };
+    });
+    // Editable Slack ID — save inline (identity mapping only; never changes hierarchy).
+    root.querySelectorAll('[data-slack]').forEach(function (inp) {
+      inp.onchange = function () {
+        const p = WP.access.byId(inp.dataset.slack);
+        if (!p) return;
+        const val = inp.value.trim();
+        if (p.slackId === val) return;
+        p.slackId = val;
+        WP.logEvent({ type: 'config', by: WP.state.viewerId, target: 'slackId ' + p.id + ' = ' + (val || '(cleared)') });
+        WP.setState({});   // persists + re-renders (missing-count banner updates)
       };
     });
     const ceil = root.querySelector('#ceiling');
@@ -9129,6 +9261,81 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   }
 
   WP.ui.settings = { render: render };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Activity & override log (its own page)
+ * ------------------------------------------------------------
+ * The activity/override log used to live cramped at the foot of Settings. It is
+ * a provenance record (who did what, when, why) — a director/admin scans it, so
+ * it deserves a real, scannable, paginated table page.
+ *
+ * Gated to director/admin (WP.can('viewSettings')); re-checked here (defence in
+ * depth). Read-only. Newest first, load-more paging.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  const ui = WP.ui;
+  const PAGE = 25;
+  let shown = PAGE;   // how many rows are currently expanded
+
+  function who(id) { const p = WP.access.byId(id); return p ? WP.i18n.name(p) : (id || '—'); }
+
+  // Human line + a short action badge for each event type.
+  function describe(e) {
+    const t = WP.i18n.t;
+    if (e.type === 'view-as')          return { badge: t('logView'),   text: who(e.by) + ' → ' + who(e.target) };
+    if (e.type === 'override-assign')  return { badge: t('logOverride'), text: who(e.by) + ' → ' + who(e.target) + (e.reason ? ' · “' + ui.esc(e.reason) + '”' : '') };
+    if (e.type === 'assign')           return { badge: t('logAssign'),  text: who(e.by) + ' → ' + who(e.target) };
+    if (e.type === 'config')           return { badge: t('logConfig'),  text: who(e.by) + ' · ' + ui.esc(e.target || '') };
+    if (e.type === 'admin-invite')     return { badge: t('logInvite'),  text: who(e.by) + ' → ' + ui.esc(e.target || '') };
+    if (e.type === 'access-grant' || e.type === 'access-revoke')
+      return { badge: e.type === 'access-grant' ? t('logGrant') : t('logRevoke'), text: who(e.by) + ' → ' + who(e.target) };
+    return { badge: e.type, text: [who(e.by), who(e.target)].filter(Boolean).join(' → ') };
+  }
+
+  function render(root) {
+    const t = WP.i18n.t;
+    if (!WP.can('viewSettings')) { WP.setState({ route: 'map' }); return; }
+    const all = (WP.activityLog || []).slice();   // already newest-first
+
+    const head =
+      '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
+      '<div class="page-head"><div class="ph-titles">' +
+        '<h2>' + t('activityLog') + '</h2>' +
+        '<div class="sub">' + t('activitySub') + '</div>' +
+      '</div><div class="ph-actions"><span class="tag">' + all.length + ' ' + t('logEntries') + '</span></div></div>';
+
+    let body;
+    if (!all.length) {
+      body = '<div class="section"><div class="log-empty">' + ui.icon('clock', 22) + '<div style="margin-top:8px">' + t('noActivity') + '</div></div></div>';
+    } else {
+      const rows = all.slice(0, shown).map(function (e) {
+        const d = describe(e);
+        const when = e.at ? new Date(e.at).toLocaleString() : '—';
+        return '<tr>' +
+          '<td><span class="lg-badge">' + ui.esc(d.badge) + '</span></td>' +
+          '<td>' + d.text + '</td>' +
+          '<td class="lg-when">' + ui.esc(when) + '</td>' +
+        '</tr>';
+      }).join('');
+      body = '<div class="section" style="overflow-x:auto"><table class="log-table">' +
+        '<thead><tr><th>' + t('logColAction') + '</th><th>' + t('logColDetail') + '</th><th>' + t('logColWhen') + '</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table>' +
+        (all.length > shown ? '<button class="btn log-more" id="log-more">' + t('logLoadMore') + '</button>' : '') +
+      '</div>';
+    }
+
+    root.innerHTML = head + body;
+    root.querySelector('#back').onclick = function () { WP.setState({ route: 'settings' }); };
+    const more = root.querySelector('#log-more');
+    if (more) more.onclick = function () { shown += PAGE; render(root); };
+  }
+
+  // Reset paging when leaving the page so a re-entry starts fresh.
+  WP.ui.activity = { render: render, _reset: function () { shown = PAGE; } };
 })(window.WP = window.WP || {});
 
 </script>
@@ -11700,6 +11907,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
     else if (WP.state.route === 'settings') WP.ui.settings.render(root);
+    else if (WP.state.route === 'activity') { if (WP.can('viewSettings')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
     else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);
     else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);
