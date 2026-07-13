@@ -207,6 +207,7 @@
     if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
     else if (WP.state.route === 'settings') WP.ui.settings.render(root);
+    else if (WP.state.route === 'activity') { if (WP.can('viewSettings')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
     else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);
     else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);

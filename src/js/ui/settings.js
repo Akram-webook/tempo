@@ -11,15 +11,52 @@
   'use strict';
   const ui = WP.ui;
 
+  // Per-tier "what it means" + whether it's the ROUTINE/recurring baseline. Standard
+  // (Tier 3) is the day-to-day routine work a director assigns against most often; the
+  // heavier tiers are the exceptional pushes. This gives the number a decision meaning
+  // (Constitution: Evidence — no metric without the decision it serves).
+  const TIER_MEANING = {
+    mega:     { en: 'Flagship / mega events — rare, all-hands pushes.',        ar: 'الفعاليات الكبرى — نادرة وتتطلب الجميع.',        routine: false },
+    medium:   { en: 'Mid-size events — recurring but planned ahead.',          ar: 'فعاليات متوسطة — متكررة لكن مخطط لها مسبقاً.',    routine: false },
+    standard: { en: 'Standard / routine work — the day-to-day baseline load.', ar: 'العمل القياسي / الروتيني — الحمل اليومي الأساسي.', routine: true }
+  };
+
+  // Live count of events currently sitting on each tier (so the director sees where
+  // the actual work is, not just an abstract weight).
+  function tierEventCounts() {
+    const counts = {};
+    const ev = WP.data.EVENTS || {};
+    Object.keys(ev).forEach(function (id) {
+      const tid = ev[id].tier;
+      counts[tid] = (counts[tid] || 0) + 1;
+    });
+    return counts;
+  }
+
   function tierEditor() {
     const t = WP.i18n.t;
-    const rows = Object.keys(WP.data.TIERS).map(function (k) {
+    const ar = WP.state.lang === 'ar';
+    const counts = tierEventCounts();
+    const cards = Object.keys(WP.data.TIERS).map(function (k) {
       const tier = WP.data.TIERS[k];
-      const label = WP.state.lang === 'ar' ? tier.labelAr : tier.labelEn;
-      return '<div class="set-row"><label>' + ui.esc(label) + '</label>' +
-        '<input type="number" min="0" max="100" value="' + tier.weight + '" data-tier="' + k + '" /> %</div>';
+      const label = ar ? tier.labelAr : tier.labelEn;
+      const mean = TIER_MEANING[tier.key] || { en: '', ar: '', routine: false };
+      const routineTag = mean.routine
+        ? '<span class="tier-routine">' + ui.icon('clock', 12) + ' ' + t('tierRoutine') + '</span>' : '';
+      const n = counts[tier.id] || 0;
+      const dotColor = tier.key === 'mega' ? 'var(--state-overloaded)' : tier.key === 'medium' ? 'var(--state-near)' : 'var(--state-available)';
+      return '<div class="tier-card">' +
+        '<span class="tier-dot" style="background:' + dotColor + '"></span>' +
+        '<div class="tier-main">' +
+          '<div class="tier-name">' + ui.esc(label) + routineTag + '</div>' +
+          '<div class="tier-mean">' + ui.esc(ar ? mean.ar : mean.en) + '</div>' +
+          '<div class="tier-count"><b>' + n + '</b> ' + t('tierEventsNow') + '</div>' +
+        '</div>' +
+        '<div class="tier-weight"><input type="number" min="0" max="100" value="' + tier.weight + '" data-tier="' + k + '" aria-label="' + ui.esc(label) + '" /> %</div>' +
+      '</div>';
     }).join('');
-    return '<div class="section"><h3>' + t('tierWeights') + '</h3>' + rows +
+    return '<div class="section"><h3>' + t('tierWeights') + '</h3>' +
+      '<div class="tier-list">' + cards + '</div>' +
       '<div class="set-row"><label>' + t('capacityCeiling') + '</label>' +
       '<input type="number" min="50" max="200" value="' + WP.data.CEILING + '" id="ceiling" /> %</div>' +
       '<div class="disclaimer">' + t('settingsNote') + '</div></div>';
@@ -38,12 +75,22 @@
 
   function slackLinking() {
     const t = WP.i18n.t;
-    const rows = WP.data.PEOPLE.map(function (p) {
+    // Alphabetical by display name (senior BA: a directory you scan should be sorted).
+    const people = WP.data.PEOPLE.slice().sort(function (a, b) {
+      return WP.i18n.name(a).localeCompare(WP.i18n.name(b), WP.state.lang === 'ar' ? 'ar' : 'en');
+    });
+    const missing = people.filter(function (p) { return !p.slackId; }).length;
+    const rows = people.map(function (p) {
+      const has = !!p.slackId;
       return '<div class="set-row" style="gap:10px">' + ui.avatar(p, 'var(--brand)') +
         '<span style="flex:1">' + ui.esc(WP.i18n.name(p)) + '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></span>' +
-        '<span class="tag" style="color:var(--state-available)">● ' + (p.slackId || '—') + '</span></div>';
+        (has ? '<span class="dot" style="background:var(--state-available)"></span>' : '<span class="dot slack-missing" style="background:var(--state-caution)"></span>') +
+        '<input class="slack-edit' + (has ? '' : ' slack-missing') + '" data-slack="' + p.id + '" value="' + ui.esc(p.slackId || '') + '" placeholder="' + t('slackIdPlaceholder') + '" aria-label="Slack ID ' + ui.esc(WP.i18n.name(p)) + '" />' +
+      '</div>';
     }).join('');
-    return '<div class="section"><h3>' + t('slackLinking') + '</h3>' + rows +
+    const banner = missing
+      ? '<div class="disclaimer slack-missing">' + missing + ' ' + t('slackMissingNote') + '</div>' : '';
+    return '<div class="section"><h3>' + t('slackLinking') + '</h3>' + banner + rows +
       '<div class="disclaimer">' + t('slackNote') + '</div></div>';
   }
 
@@ -115,20 +162,36 @@
     const t = WP.i18n.t;
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
-      '<h2 style="margin:0 0 4px">' + t('settings') + '</h2>' +
-      '<div class="sub" style="margin-bottom:16px">' + t('orgStructure') + '</div>' +
+      '<div class="page-head"><div class="ph-titles">' +
+        '<h2>' + t('settings') + '</h2>' +
+        '<div class="sub">' + t('orgStructure') + '</div>' +
+      '</div><div class="ph-actions">' +
+        '<button class="btn" id="go-activity">' + ui.icon('list', 15) + ' ' + t('activityLog') + '</button>' +
+      '</div></div>' +
       '<div class="grid-2">' + tierEditor() + statesView() + '</div>' +
       rolesPanel() +
-      slackLinking() +
-      activityLog();
+      slackLinking();
 
     root.querySelector('#back').onclick = function () { WP.setState({ route: 'map' }); };
+    root.querySelector('#go-activity').onclick = function () { WP.setState({ route: 'activity' }); };
     root.querySelectorAll('[data-tier]').forEach(function (inp) {
       inp.onchange = function () {
         const v = Math.max(0, Math.min(100, parseInt(inp.value, 10) || 0));
         WP.data.TIERS[inp.dataset.tier].weight = v;
         WP.logEvent({ type: 'config', by: WP.state.viewerId, target: 'tier ' + inp.dataset.tier + ' = ' + v + '%' });
         WP.setState({});
+      };
+    });
+    // Editable Slack ID — save inline (identity mapping only; never changes hierarchy).
+    root.querySelectorAll('[data-slack]').forEach(function (inp) {
+      inp.onchange = function () {
+        const p = WP.access.byId(inp.dataset.slack);
+        if (!p) return;
+        const val = inp.value.trim();
+        if (p.slackId === val) return;
+        p.slackId = val;
+        WP.logEvent({ type: 'config', by: WP.state.viewerId, target: 'slackId ' + p.id + ' = ' + (val || '(cleared)') });
+        WP.setState({});   // persists + re-renders (missing-count banner updates)
       };
     });
     const ceil = root.querySelector('#ceiling');
