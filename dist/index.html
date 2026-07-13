@@ -7519,7 +7519,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         if (!(window.google && window.google.accounts && window.google.accounts.id)) return;
         window.google.accounts.id.initialize({ client_id: WP.config.googleClientId, callback: onGoogleCredential, hd: DOMAIN });
         const host = root.querySelector('#g-btn-host');
-        if (host) window.google.accounts.id.renderButton(host, { theme: 'outline', size: 'large', width: 320, text: 'continue_with' });
+        // Fit the button to the card so it never overflows on narrow phones
+        // (Google clamps the width to 200–400).
+        if (host) {
+          var w = Math.max(200, Math.min(400, host.clientWidth || 320));
+          window.google.accounts.id.renderButton(host, { theme: 'outline', size: 'large', width: w, text: 'continue_with' });
+        }
       } catch (e) {}
     }
     if (window.google && window.google.accounts && window.google.accounts.id) { setup(); return; }
@@ -10928,7 +10933,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       : '<div class="sub">' + t('noKudos') + '</div>';
 
     root.innerHTML =
-      '<div class="me-hi">' + t('hi') + ', ' + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</div>' +
+      '<div class="me-hi">' + t('hi') + (WP.state.lang === 'ar' ? '، ' : ', ') + ui.esc(WP.i18n.name(me).split(' ')[0]) + '</div>' +
       '<div class="sub" style="margin-bottom:10px">' + t('meSub') + '</div>' +
       '<button class="btn primary" id="checkin-btn" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('dailyCheckinBtn') + '</button>' +
 
