@@ -1531,8 +1531,9 @@ main.full-bleed { max-width: none; }
 .account { position: relative; }
 .account-btn {
   display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  min-height: 40px;   /* comfortable click target on desktop; 44px on touch (see mobile block) */
   border: 1px solid var(--border); background: var(--surface); color: var(--text);
-  padding: 4px 10px 4px 4px; border-radius: 999px; transition: border-color .18s ease, box-shadow .18s ease;
+  padding: 4px 12px 4px 4px; border-radius: 999px; transition: border-color .18s ease, box-shadow .18s ease;
 }
 .account-btn:hover { border-color: var(--brand); }
 .account-btn .avatar { width: 30px; height: 30px; margin: 0; box-shadow: 0 0 0 2px var(--border); }
@@ -1569,6 +1570,12 @@ main.full-bleed { max-width: none; }
 @media (max-width: 860px) {
   .nav-item span { display: none; }     /* icon-only nav on small screens */
   .account-nm { display: none; }
+  /* With the name hidden the pill collapsed to a ~38px sliver — under the WCAG 2.2
+     (2.5.8) 44px minimum, so it was hard to tap. Give it a real target: a square
+     pill sized to the avatar with symmetric padding, and keep the caret visible. */
+  .account-btn { min-height: 44px; min-width: 44px; justify-content: center; padding: 4px; gap: 4px; }
+  .account-btn .avatar { width: 32px; height: 32px; }
+  .account-btn .ar-dn { opacity: .8; }
 }
 
 /* ============================================================
