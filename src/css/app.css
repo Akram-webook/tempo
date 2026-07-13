@@ -579,7 +579,10 @@ main.full-bleed { max-width: none; }
   background: var(--surface-2); color: var(--text);
 }
 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--node-accent); }
-.flame { position: absolute; top: 8px; inset-inline-end: 10px; line-height: 0; color: var(--state-overloaded); }
+.flame { position: absolute; top: 8px; inset-inline-end: 10px; line-height: 0; color: var(--state-overloaded);
+  border: 0; background: transparent; padding: 4px; margin: -4px; cursor: pointer; border-radius: var(--radius-sm); }
+button.flame:hover { background: var(--state-overloaded-bg); }
+button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline-offset: 1px; }
 
 /* Employment / status chip — clear, scannable Full-time vs Freelance (+ open/joining) */
 .emp {

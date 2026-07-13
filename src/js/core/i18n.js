@@ -125,6 +125,7 @@
     strengths:      { en: 'Strengths',              ar: 'نقاط القوة' },
     growthAreas:    { en: 'Growth areas',           ar: 'مجالات التطوير' },
     burnoutFlag:    { en: 'Early burnout signal — overlapping events', ar: 'إشارة إرهاق مبكرة — فعاليات متداخلة' },
+    burnoutExplain: { en: 'Early burnout signal — open wellbeing to see why and how to relieve it', ar: 'إشارة إرهاق مبكرة — افتح الرفاهية لمعرفة السبب وكيفية التخفيف' },
     assign:         { en: 'Assign work',            ar: 'إسناد عمل' },
     candidates:     { en: 'Best candidates (closest, then lowest load)', ar: 'أفضل المرشحين (الأقرب ثم الأقل حملاً)' },
     projected:      { en: 'Projected load',         ar: 'الحمل المتوقع' },
