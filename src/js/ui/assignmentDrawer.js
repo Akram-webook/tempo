@@ -110,6 +110,8 @@
 
   function doAssign(eventId, personId, override, why, aiSuggested) {
     const p = WP.access.byId(personId);
+    if (!p) return;
+    p.assignedEvents = p.assignedEvents || [];
     if (!p.assignedEvents.includes(eventId)) p.assignedEvents.push(eventId);
     const entry = {
       type: override ? 'override-assign' : 'assign',

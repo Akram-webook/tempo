@@ -66,6 +66,7 @@
 
   /* brand (Webook magenta) */
   --brand:         #FF2C79; /* Bg-Brand / Content-Brand / Border-Brand */
+  --brand-soft:    color-mix(in srgb, var(--brand) 12%, transparent); /* tinted brand wash (hovers, marks) */
   --brand-contrast:#F9F9F9; /* CTA text · Content-Primary-Inverse */
   --link:          #FF2C79; /* Content-Link */
   --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
@@ -171,6 +172,7 @@
   --text-disabled: rgba(255,255,255,.32);
 
   --brand:         #FF2C79;
+  --brand-soft:    color-mix(in srgb, var(--brand) 20%, transparent); /* slightly stronger on dark */
   --brand-contrast:#F9F9F9;
   --link:          #FF2C79;
   --brand-disabled-bg: #4A1428;
@@ -875,7 +877,7 @@ main.full-bleed { max-width: none; }
 .scope.active .scope-btn { border-color: var(--brand); color: var(--brand); }
 .scope.active .scope-btn .icn, .scope.active .scope-caret { color: var(--brand); }
 
-.scope-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 230px;
+.scope-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 230px; max-width: calc(100vw - 24px);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: 0 14px 34px rgba(0,0,0,.2); padding: 6px; z-index: 40; max-height: 320px; overflow-y: auto;
   opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top;
@@ -979,6 +981,7 @@ main.full-bleed { max-width: none; }
 .search input:placeholder-shown ~ .search-clear { display: none; }
 .predict {
   position: absolute; top: calc(100% + 6px); inset-inline-start: 0; width: 100%; min-width: 240px;
+  max-width: calc(100vw - 24px);   /* never overflow the viewport on narrow phones */
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: 0 14px 34px rgba(0,0,0,.20); padding: 6px; z-index: 40;
   opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top center;
@@ -1014,7 +1017,7 @@ main.full-bleed { max-width: none; }
 .dd-caret { color: var(--text-muted); display: inline-flex; transition: transform .18s ease; }
 .dd.open .dd-caret { transform: rotate(180deg); }
 .dd.open .dd-btn { background: var(--surface); border-color: var(--border); }
-.dd-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 180px;
+.dd-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 180px; max-width: calc(100vw - 24px);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: 0 14px 34px rgba(0,0,0,.2); padding: 6px; z-index: 40;
   opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top;
@@ -1288,7 +1291,7 @@ main.full-bleed { max-width: none; }
 
 /* ---- popover / drawer ---- */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 40; display: grid; place-items: center; }
-.popover { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; width: 340px; box-shadow: var(--shadow); position: relative; }
+.popover { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; width: min(340px, 92vw); box-shadow: var(--shadow); position: relative; }
 .popover-close { position: absolute; top: 10px; inset-inline-end: 10px; border: 0; background: var(--surface-2); color: var(--text-muted); width: 26px; height: 26px; border-radius: 50%; font-size: 13px; }
 .popover-close:hover { color: var(--text); }
 .drawer { position: fixed; top: 0; inset-inline-end: 0; height: 100%; width: 380px; background: var(--surface); border-inline-start: 1px solid var(--border); padding: 20px; overflow:auto; box-shadow: var(--shadow); }
@@ -2103,7 +2106,7 @@ main.full-bleed { max-width: none; }
 .tier-card .tier-count b { color: var(--text); }
 .tier-card .tier-weight { display: flex; align-items: center; gap: 6px; }
 .tier-card .tier-weight input { width: 66px; background: var(--surface); border: 1px solid var(--border);
-  color: var(--text); border-radius: var(--radius-sm); padding: 7px 8px; font-family: inherit; font-size: 14px; text-align: right; }
+  color: var(--text); border-radius: var(--radius-sm); padding: 7px 8px; font-family: inherit; font-size: 14px; text-align: end; }
 .tier-routine { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
   color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent);
   border-radius: 100px; padding: 2px 8px; margin-inline-start: 8px; }
@@ -2124,7 +2127,7 @@ main.full-bleed { max-width: none; }
 .slack-edit { width: 150px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
   border-radius: var(--radius-sm); padding: 6px 8px; font-family: inherit; font-size: 12.5px; text-align: end; }
 .slack-edit::placeholder { color: var(--text-muted); }
-.slack-missing { color: var(--state-caution); }
+.slack-missing { color: var(--state-near); }
 
 </style>
 </head>
@@ -3416,6 +3419,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     upwardThanks:   { en: 'Thank you', ar: 'شكراً لك' },
     upwardThanksNote:{ en: 'Your feedback was sent anonymously to {x}.', ar: 'أُرسل تقييمك بشكل سرّي إلى {x}.' },
     upwardOnlyOwn:  { en: 'You can only give upward feedback about your own manager.', ar: 'يمكنك إعطاء تقييم صاعد لمديرك المباشر فقط.' },
+    upwardIncomplete:{ en: 'Please rate at least one behavior before submitting.', ar: 'يرجى تقييم سلوك واحد على الأقل قبل الإرسال.' },
     upwardReceived: { en: 'Upward feedback (from their team)', ar: 'تقييم صاعد (من فريقهم)' },
     upwardReceivedNote:{ en: 'Aggregated & anonymous · routed up to you, not shown to them. Coach through them, not around them.', ar: 'مجمّع وسرّي · موجّه لك، لا يظهر لهم. وجّه من خلالهم لا حولهم.' },
     upwardSuppressed:{ en: 'Hidden — needs at least {k} responses to stay anonymous (currently {n}).', ar: 'مخفي — يحتاج {k} ردود على الأقل للحفاظ على السرّية (حالياً {n}).' },
@@ -3533,6 +3537,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // Neutral (anti-enumeration) confirmation — same whether or not the email exists.
     adminInviteSent:{ en: 'If that email is valid, an invite link is on its way. The admin sets their own password from it.', ar: 'إذا كان الإيميل صحيحاً، رابط الدعوة في طريقه. المشرف يضبط كلمة مروره منه.' },
     adminSaved:     { en: 'Admin record saved.', ar: 'تم حفظ سجل المشرف.' },
+    adminSaveError: { en: 'Could not save right now — please try again.', ar: 'تعذّر الحفظ الآن — يرجى المحاولة مرة أخرى.' },
+    adminSending:   { en: 'Sending…', ar: 'جارٍ الإرسال…' },
     adminInviteNoEmail: { en: 'Saved. Enable the invite email in Supabase to send the set-password link.', ar: 'تم الحفظ. فعّل إيميل الدعوة في Supabase لإرسال رابط ضبط كلمة المرور.' },
     // Jisr import
     adminImport:    { en: 'Import from Jisr', ar: 'استيراد من جسر' },
@@ -8686,7 +8692,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         '<b style="font-size:12px">' + v + '/5</b></div>';
     }).join('');
 
-    const q = g.quarterly[0];
+    const q = (g.quarterly && g.quarterly[0]) || null;
     const managerLens =
       '<div class="section"><h3>' + t('managerLens') + '</h3>' +
         '<div class="mini-label">' + t('strengths') + '</div>' +
@@ -8702,7 +8708,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         '<div class="mini-label" style="margin-top:8px">' + t('suggestion') + '</div><div style="font-size:13px">' + ui.esc(g.directorNote.suggestion) + '</div>' +
       '</div>';
 
-    const quarterly = '<div class="section"><h3>' + t('quarterly') +
+    const quarterly = q ? '<div class="section"><h3>' + t('quarterly') +
       ' <span class="rating ' + q.rating + '">' + q.q + ' · ' + q.rating + '</span></h3>' +
       '<div style="font-size:13px;margin-bottom:8px">' + ui.esc(q.summary) + '</div>' +
       '<div class="mini-label">' + t('improved') + '</div><div>' +
@@ -8713,7 +8719,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         '<div class="mini-label">' + t('reliability') + '</div>' +
         '<div class="kv" style="margin-top:4px"><div class="k">' + t('attendanceL') + '</div><div>' + ui.esc(q.reliability.attendance) + '</div>' +
         '<div class="k">' + t('engagementL') + '</div><div>' + ui.esc(q.reliability.engagement) + '</div></div>' +
-      '</div></div>';
+      '</div></div>' : '';
 
     const skills = '<div class="section"><h3>' + t('skills') + '</h3>' +
       g.skills.map(skillRow).join('') +
@@ -8728,8 +8734,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       '</div></div>';
 
     const ws = g.workStyle;
-    const st = ws ? WP.data.WORK_STAGES[ws.stage] : null;
-    const workStyle = ws ? '<div class="section"><h3>' + t('workStyle') +
+    const st = ws ? (WP.data.WORK_STAGES[ws.stage] || null) : null;
+    const workStyle = (ws && st) ? '<div class="section"><h3>' + t('workStyle') +
       (ws.followUp ? ' <span class="rating Developing">' + t('needsFollowUp') + '</span>' : '') + '</h3>' +
       '<div style="font-size:15px;font-weight:600">' + (ar ? st.ar : st.en) + '</div>' +
       '<div class="mini-label" style="margin-top:8px">' + t('howToManage') + '</div>' +
@@ -9054,6 +9060,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   function doAssign(eventId, personId, override, why, aiSuggested) {
     const p = WP.access.byId(personId);
+    if (!p) return;
+    p.assignedEvents = p.assignedEvents || [];
     if (!p.assignedEvents.includes(eventId)) p.assignedEvents.push(eventId);
     const entry = {
       type: override ? 'override-assign' : 'assign',
@@ -9157,7 +9165,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       const has = !!p.slackId;
       return '<div class="set-row" style="gap:10px">' + ui.avatar(p, 'var(--brand)') +
         '<span style="flex:1">' + ui.esc(WP.i18n.name(p)) + '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></span>' +
-        (has ? '<span class="dot" style="background:var(--state-available)"></span>' : '<span class="dot slack-missing" style="background:var(--state-caution)"></span>') +
+        (has ? '<span class="dot" style="background:var(--state-available)"></span>' : '<span class="dot slack-missing" style="background:var(--state-near)"></span>') +
         '<input class="slack-edit' + (has ? '' : ' slack-missing') + '" data-slack="' + p.id + '" value="' + ui.esc(p.slackId || '') + '" placeholder="' + t('slackIdPlaceholder') + '" aria-label="Slack ID ' + ui.esc(WP.i18n.name(p)) + '" />' +
       '</div>';
     }).join('');
@@ -9433,13 +9441,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
       '<h2 style="margin:0 0 2px">' + t('dailyTasks') + '</h2>' +
       '<div class="sub" style="margin-bottom:14px">' + t('dailyTasksNote') + '</div>' +
-      '<div class="dt-summary">' +
-        stat('check', checkedIn, t('checkedIn'), 'ok') +
-        stat('flame', atRisk, t('earlyWarnings'), 'risk') +
-        stat('sprout', available, t('available'), 'ok') +
-        stat('clock', noCheckin, t('noCheckinShort'), 'mut') +
-      '</div>' +
-      '<div class="dt-grid">' + people.map(card).join('') + '</div>';
+      (people.length
+        ? '<div class="dt-summary">' +
+            stat('check', checkedIn, t('checkedIn'), 'ok') +
+            stat('flame', atRisk, t('earlyWarnings'), 'risk') +
+            stat('sprout', available, t('available'), 'ok') +
+            stat('clock', noCheckin, t('noCheckinShort'), 'mut') +
+          '</div>' +
+          '<div class="dt-grid">' + people.map(card).join('') + '</div>'
+        : '<div class="section" style="text-align:center;padding:36px;color:var(--text-muted)">' +
+            WP.ui.icon('clock', 22) + '<div style="margin-top:8px">' + t('emptyTeam') + '</div></div>');
 
     root.querySelector('#back').onclick = function () { WP.setState({ route: 'map' }); };
     root.querySelectorAll('[data-id]').forEach(function (el) {
@@ -9669,7 +9680,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       const nm = ui.esc((a.firstName + ' ' + a.lastName).trim());
       const badge = a.invited
         ? '<span class="tag" style="color:var(--state-available)">● ' + t('adminActive') + '</span>'
-        : '<span class="tag" style="color:var(--state-caution)">● ' + t('adminInvitePending') + '</span>';
+        : '<span class="tag" style="color:var(--state-near)">● ' + t('adminInvitePending') + '</span>';
       return '<div class="set-row" style="gap:10px">' +
         '<span style="flex:1">' + nm + '<div class="ttl">' + ui.esc(a.email) + (a.org ? ' · ' + ui.esc(a.org) : '') + '</div></span>' +
         badge +
@@ -9749,7 +9760,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       e.preventDefault();
       if (!validate(root)) return;
       const btn = root.querySelector('#adm-submit');
-      if (btn) { btn.disabled = true; }
+      const label = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = t('adminSending'); }
       WP.db.admins.create({
         firstName: draft.firstName.trim(), lastName: draft.lastName.trim(),
         email: draft.email.trim().toLowerCase(), phone: draft.phone.trim(),
@@ -9763,6 +9775,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         else ui.toast(t('adminSaved'), 'success');
         draft = blank();
         render(root);
+      }).catch(function () {
+        // Never leave the button stuck disabled on a thrown handler.
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+        ui.toast(t('adminSaveError'), 'error');
       });
     };
 
@@ -9998,15 +10014,19 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
     const criteria = WP.data.EVAL_CRITERIA.map(function (c, i) {
       const cur = ev.scores[c.id];
+      const cName = ar ? c.ar : c.en;
       const scale = [1, 2, 3, 4, 5].map(function (n) {
-        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
+        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" role="radio"' +
+          ' aria-checked="' + (cur === n ? 'true' : 'false') + '"' +
+          ' aria-label="' + WP.ui.esc(cName) + ' — ' + n + ' / 5"' +
+          ' data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
       }).join('');
       const selfBadge = (selfCmp && typeof selfCmp.scores[c.id] === 'number')
         ? '<span class="self-badge" title="self-rating">' + WP.ui.icon('user',13) + ' ' + selfCmp.scores[c.id] + '</span>' : '';
       return '<div class="crit-row">' +
-        '<div class="crit-name"><span class="crit-num">' + (i + 1) + '</span> ' + (ar ? c.ar : c.en) +
+        '<div class="crit-name"><span class="crit-num">' + (i + 1) + '</span> ' + cName +
           '<span class="crit-w">' + c.weight + '%</span>' + selfBadge + '</div>' +
-        '<div class="scale">' + scale + '</div></div>';
+        '<div class="scale" role="radiogroup" aria-label="' + WP.ui.esc(cName) + '">' + scale + '</div></div>';
     }).join('');
 
     const questions = WP.data.EVAL_QUESTIONS
@@ -10177,10 +10197,15 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const draft = (WP._upwardDraft = WP._upwardDraft || { scores: {}, feedback: {} });
     const crit = WP.data.UPWARD_CRITERIA.map(function (c) {
       const cur = draft.scores[c.id];
+      const cName = ar ? c.ar : c.en;
       const scale = [1, 2, 3, 4, 5].map(function (n) {
-        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
+        return '<button class="scale-btn' + (cur === n ? ' on' : '') + '" role="radio"' +
+          ' aria-checked="' + (cur === n ? 'true' : 'false') + '"' +
+          ' aria-label="' + ui.esc(cName) + ' — ' + n + ' / 5"' +
+          ' data-c="' + c.id + '" data-n="' + n + '">' + n + '</button>';
       }).join('');
-      return '<div class="crit-row"><div class="crit-name">' + (ar ? c.ar : c.en) + '</div><div class="scale">' + scale + '</div></div>';
+      return '<div class="crit-row"><div class="crit-name">' + cName + '</div>' +
+        '<div class="scale" role="radiogroup" aria-label="' + ui.esc(cName) + '">' + scale + '</div></div>';
     }).join('');
     const qs = WP.data.UPWARD_QUESTIONS.map(function (q) {
       return '<div class="eval-q"><div class="mini-label">' + (ar ? q.ar : q.en) + '</div>' +
@@ -10206,6 +10231,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       ta.onchange = function () { draft.feedback[ta.dataset.q] = ta.value; };
     });
     root.querySelector('#submit').onclick = function () {
+      // Don't log an empty anonymous review — require at least one behavior score.
+      const anyScore = Object.keys(draft.scores).length > 0;
+      const anyText = Object.keys(draft.feedback).some(function (k) { return (draft.feedback[k] || '').trim(); });
+      if (!anyScore && !anyText) { WP.ui.toast(t('upwardIncomplete'), 'warn'); return; }
       WP.logEvent({ type: 'upward-feedback', by: viewer.id, target: manager.id, reason: 'routed to ' + recipientLabel(manager) + ' · anonymous' });
       WP._upwardDraft = null;
       const host = document.getElementById('view');

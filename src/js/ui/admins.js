@@ -116,7 +116,7 @@
       const nm = ui.esc((a.firstName + ' ' + a.lastName).trim());
       const badge = a.invited
         ? '<span class="tag" style="color:var(--state-available)">● ' + t('adminActive') + '</span>'
-        : '<span class="tag" style="color:var(--state-caution)">● ' + t('adminInvitePending') + '</span>';
+        : '<span class="tag" style="color:var(--state-near)">● ' + t('adminInvitePending') + '</span>';
       return '<div class="set-row" style="gap:10px">' +
         '<span style="flex:1">' + nm + '<div class="ttl">' + ui.esc(a.email) + (a.org ? ' · ' + ui.esc(a.org) : '') + '</div></span>' +
         badge +
@@ -196,7 +196,8 @@
       e.preventDefault();
       if (!validate(root)) return;
       const btn = root.querySelector('#adm-submit');
-      if (btn) { btn.disabled = true; }
+      const label = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = t('adminSending'); }
       WP.db.admins.create({
         firstName: draft.firstName.trim(), lastName: draft.lastName.trim(),
         email: draft.email.trim().toLowerCase(), phone: draft.phone.trim(),
@@ -210,6 +211,10 @@
         else ui.toast(t('adminSaved'), 'success');
         draft = blank();
         render(root);
+      }).catch(function () {
+        // Never leave the button stuck disabled on a thrown handler.
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+        ui.toast(t('adminSaveError'), 'error');
       });
     };
 

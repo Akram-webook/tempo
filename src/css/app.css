@@ -654,7 +654,7 @@ main.full-bleed { max-width: none; }
 .scope.active .scope-btn { border-color: var(--brand); color: var(--brand); }
 .scope.active .scope-btn .icn, .scope.active .scope-caret { color: var(--brand); }
 
-.scope-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 230px;
+.scope-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 230px; max-width: calc(100vw - 24px);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: 0 14px 34px rgba(0,0,0,.2); padding: 6px; z-index: 40; max-height: 320px; overflow-y: auto;
   opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top;
@@ -758,6 +758,7 @@ main.full-bleed { max-width: none; }
 .search input:placeholder-shown ~ .search-clear { display: none; }
 .predict {
   position: absolute; top: calc(100% + 6px); inset-inline-start: 0; width: 100%; min-width: 240px;
+  max-width: calc(100vw - 24px);   /* never overflow the viewport on narrow phones */
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: 0 14px 34px rgba(0,0,0,.20); padding: 6px; z-index: 40;
   opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top center;
@@ -793,7 +794,7 @@ main.full-bleed { max-width: none; }
 .dd-caret { color: var(--text-muted); display: inline-flex; transition: transform .18s ease; }
 .dd.open .dd-caret { transform: rotate(180deg); }
 .dd.open .dd-btn { background: var(--surface); border-color: var(--border); }
-.dd-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 180px;
+.dd-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; min-width: 180px; max-width: calc(100vw - 24px);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: 0 14px 34px rgba(0,0,0,.2); padding: 6px; z-index: 40;
   opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top;
@@ -1067,7 +1068,7 @@ main.full-bleed { max-width: none; }
 
 /* ---- popover / drawer ---- */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 40; display: grid; place-items: center; }
-.popover { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; width: 340px; box-shadow: var(--shadow); position: relative; }
+.popover { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; width: min(340px, 92vw); box-shadow: var(--shadow); position: relative; }
 .popover-close { position: absolute; top: 10px; inset-inline-end: 10px; border: 0; background: var(--surface-2); color: var(--text-muted); width: 26px; height: 26px; border-radius: 50%; font-size: 13px; }
 .popover-close:hover { color: var(--text); }
 .drawer { position: fixed; top: 0; inset-inline-end: 0; height: 100%; width: 380px; background: var(--surface); border-inline-start: 1px solid var(--border); padding: 20px; overflow:auto; box-shadow: var(--shadow); }
@@ -1882,7 +1883,7 @@ main.full-bleed { max-width: none; }
 .tier-card .tier-count b { color: var(--text); }
 .tier-card .tier-weight { display: flex; align-items: center; gap: 6px; }
 .tier-card .tier-weight input { width: 66px; background: var(--surface); border: 1px solid var(--border);
-  color: var(--text); border-radius: var(--radius-sm); padding: 7px 8px; font-family: inherit; font-size: 14px; text-align: right; }
+  color: var(--text); border-radius: var(--radius-sm); padding: 7px 8px; font-family: inherit; font-size: 14px; text-align: end; }
 .tier-routine { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
   color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent);
   border-radius: 100px; padding: 2px 8px; margin-inline-start: 8px; }
@@ -1903,4 +1904,4 @@ main.full-bleed { max-width: none; }
 .slack-edit { width: 150px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
   border-radius: var(--radius-sm); padding: 6px 8px; font-family: inherit; font-size: 12.5px; text-align: end; }
 .slack-edit::placeholder { color: var(--text-muted); }
-.slack-missing { color: var(--state-caution); }
+.slack-missing { color: var(--state-near); }

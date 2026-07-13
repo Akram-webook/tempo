@@ -77,13 +77,16 @@
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
       '<h2 style="margin:0 0 2px">' + t('dailyTasks') + '</h2>' +
       '<div class="sub" style="margin-bottom:14px">' + t('dailyTasksNote') + '</div>' +
-      '<div class="dt-summary">' +
-        stat('check', checkedIn, t('checkedIn'), 'ok') +
-        stat('flame', atRisk, t('earlyWarnings'), 'risk') +
-        stat('sprout', available, t('available'), 'ok') +
-        stat('clock', noCheckin, t('noCheckinShort'), 'mut') +
-      '</div>' +
-      '<div class="dt-grid">' + people.map(card).join('') + '</div>';
+      (people.length
+        ? '<div class="dt-summary">' +
+            stat('check', checkedIn, t('checkedIn'), 'ok') +
+            stat('flame', atRisk, t('earlyWarnings'), 'risk') +
+            stat('sprout', available, t('available'), 'ok') +
+            stat('clock', noCheckin, t('noCheckinShort'), 'mut') +
+          '</div>' +
+          '<div class="dt-grid">' + people.map(card).join('') + '</div>'
+        : '<div class="section" style="text-align:center;padding:36px;color:var(--text-muted)">' +
+            WP.ui.icon('clock', 22) + '<div style="margin-top:8px">' + t('emptyTeam') + '</div></div>');
 
     root.querySelector('#back').onclick = function () { WP.setState({ route: 'map' }); };
     root.querySelectorAll('[data-id]').forEach(function (el) {

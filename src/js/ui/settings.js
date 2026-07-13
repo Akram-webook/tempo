@@ -84,7 +84,7 @@
       const has = !!p.slackId;
       return '<div class="set-row" style="gap:10px">' + ui.avatar(p, 'var(--brand)') +
         '<span style="flex:1">' + ui.esc(WP.i18n.name(p)) + '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></span>' +
-        (has ? '<span class="dot" style="background:var(--state-available)"></span>' : '<span class="dot slack-missing" style="background:var(--state-caution)"></span>') +
+        (has ? '<span class="dot" style="background:var(--state-available)"></span>' : '<span class="dot slack-missing" style="background:var(--state-near)"></span>') +
         '<input class="slack-edit' + (has ? '' : ' slack-missing') + '" data-slack="' + p.id + '" value="' + ui.esc(p.slackId || '') + '" placeholder="' + t('slackIdPlaceholder') + '" aria-label="Slack ID ' + ui.esc(WP.i18n.name(p)) + '" />' +
       '</div>';
     }).join('');
