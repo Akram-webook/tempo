@@ -30,7 +30,7 @@ Apply this to every task in this repo. It is behavioral, not optional.
 - **Momentum.** Ship something usable, then iterate. Don't over-plan.
 
 ## Part B — The finish ritual (run EVERY time you finish something)
-Three steps, in order, before you call anything done:
+Do ALL of these, in order, before you call anything done. Non-negotiable — even on small fixes.
 
 1. **Review & re-check** — re-open what you produced, read it with fresh eyes, re-verify against
    the goal, re-run tests / rebuild / check the live result. Hunt the edge cases you skipped
@@ -44,11 +44,22 @@ Three steps, in order, before you call anything done:
    - Rule to remember:
    ```
    Honest and specific — real gotchas, not fluff.
-3. **Distill a skill** — turn the repeatable part into `.claude/skills/<kebab-name>/SKILL.md`
+3. **Classify + log for the BA/Director** — decide **Feature vs Bug fix vs Improvement**
+   (Feature = new capability the user didn't have; Bug fix = something was broken/wrong and now
+   works; Improvement = existing thing made better/cleaner/faster/safer). Append a paste-ready row
+   to `docs/DELIVERY-LOG.md` with: Date · Type · Title · What changed (plain, non-technical) ·
+   Value (why it matters) · Status · PR · Live. This is what the BA copies into the tracking Excel
+   for the Director.
+4. **Distill a skill** — turn the repeatable part into `.claude/skills/<kebab-name>/SKILL.md`
    with `name` + `description` frontmatter and a tight, sourced playbook (when to use, steps,
    do/don't, skeletons/checklists). If one exists, IMPROVE it, don't duplicate.
 
-Then report: what you shipped · what you re-checked · the lesson logged · the skill made/updated.
+Then **report to Akram** with a short **"For the BA" block** he can forward as-is:
+- **Type:** Feature / Bug fix / Improvement
+- **What we shipped** (one plain sentence)
+- **Value** (why it matters, one line)
+- **Status + where we are** (Shipped/live · which roadmap item · what's next)
+Plus internally: what you re-checked · the lesson logged · the skill made/updated.
 
 ## Part C — Pre-ship test (think like Akram)
 Is it simple? Is it the world-class way (and can I cite why)? Verified against the real thing,
