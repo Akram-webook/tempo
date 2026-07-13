@@ -158,22 +158,170 @@
       '<div class="disclaimer">Role + relationship (manager-of). Sensitive detail opens only along the management line; everyone sees the aggregate situation, individual detail is gated.</div></div>';
   }
 
+  /* ── Settings v2 shared controls ─────────────────────────────────────────── */
+  // A labelled row with inline microcopy under the control (SaaS best practice:
+  // explain what every option does right beneath it).
+  function settingRow(label, note, controlHTML) {
+    return '<div class="set-item">' +
+      '<div class="set-item-main"><div class="set-item-label">' + ui.esc(label) + '</div>' +
+        (note ? '<div class="set-item-note">' + ui.esc(note) + '</div>' : '') + '</div>' +
+      '<div class="set-item-control">' + controlHTML + '</div></div>';
+  }
+  // Accessible toggle switch (checkbox under the hood).
+  function toggle(id, on, aria) {
+    return '<label class="tgl"><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') +
+      ' aria-label="' + ui.esc(aria || id) + '"><span class="tgl-track"><span class="tgl-thumb"></span></span></label>';
+  }
+  // Segmented radio group (theme/lang/density/date) — reuses the existing .seg component.
+  function segmented(name, options, val) {
+    return '<div class="seg" role="radiogroup">' + options.map(function (o) {
+      var on = o.val === val;
+      return '<button type="button" class="' + (on ? 'active' : '') + '" role="radio"' +
+        ' aria-checked="' + (on ? 'true' : 'false') + '" data-seg="' + name + '" data-val="' + ui.esc(o.val) + '">' +
+        ui.esc(o.label) + '</button>';
+    }).join('') + '</div>';
+  }
+
+  /* ── Personal: Account (read-only; managed by admin) ─────────────────────── */
+  function accountView() {
+    const t = WP.i18n.t, v = WP.viewer();
+    if (!v) return '';
+    function row(k, val) { return '<div class="set-row"><label>' + k + '</label><span>' + ui.esc(val || '—') + '</span></div>'; }
+    var roleLbl = WP.i18n.roleLabel ? WP.i18n.roleLabel(v) : (v.level || '');
+    return '<div class="section"><h3>' + t('acctTitle') + '</h3>' +
+      '<div class="acct-head" style="margin-bottom:10px">' + ui.avatar(v, 'var(--brand)') +
+        '<div><div class="acct-nm">' + ui.esc(WP.i18n.name(v)) + '</div>' +
+        '<div class="ttl">' + ui.esc(WP.i18n.title(v)) + '</div></div></div>' +
+      row(t('acctName'), WP.i18n.name(v)) +
+      row(t('acctTitleField'), WP.i18n.title(v)) +
+      row(t('acctEmail'), v.email) +
+      row(t('acctRole'), roleLbl) +
+      '<div class="disclaimer">' + ui.icon('lock', 12) + ' ' + t('acctReadonly') + '</div></div>';
+  }
+
+  /* ── Personal: Preferences (theme / language / density / date format) ─────── */
+  function preferencesView() {
+    const t = WP.i18n.t;
+    const df = WP.prefs.get('dateFormat') || 'auto';
+    // live sample so the date-format choice is concrete
+    const sample = { dmy: '31/12/2026', mdy: '12/31/2026', iso: '2026-12-31' };
+    return '<div class="section"><h3>' + t('prefsTitle') + '</h3>' +
+      settingRow(t('prefTheme'), t('prefThemeNote'),
+        segmented('theme', [{ val: 'light', label: t('prefThemeLight') }, { val: 'dark', label: t('prefThemeDark') }], WP.state.theme)) +
+      settingRow(t('prefLang'), t('prefLangNote'),
+        segmented('lang', [{ val: 'en', label: 'English' }, { val: 'ar', label: 'العربية' }], WP.state.lang)) +
+      settingRow(t('prefDensity'), t('prefDensityNote'),
+        segmented('density', [{ val: 'comfortable', label: t('prefComfortable') }, { val: 'compact', label: t('prefCompact') }], WP.prefs.get('density'))) +
+      settingRow(t('prefDateFmt'), t('prefDateFmtNote'),
+        segmented('dateFormat', [
+          { val: 'auto', label: t('prefDateAuto') },
+          { val: 'dmy', label: sample.dmy }, { val: 'mdy', label: sample.mdy }, { val: 'iso', label: sample.iso }
+        ], df)) +
+      '</div>';
+  }
+
+  /* ── Personal: Notifications (channels × categories + digest + quiet hours) ── */
+  function notificationsView() {
+    const t = WP.i18n.t;
+    const ch = WP.prefs.get('notif.channels') || {};
+    const cat = WP.prefs.get('notif.categories') || {};
+    const q = WP.prefs.get('notif.quietHours') || {};
+    return '<div class="section"><h3>' + t('notifTitle') + '</h3>' +
+      '<div class="sub" style="margin:-4px 0 12px">' + t('notifSub') + '</div>' +
+
+      '<div class="mini-label">' + t('notifChannels') + '</div>' +
+      '<div class="set-item-note" style="margin-bottom:8px">' + t('notifChannelsNote') + '</div>' +
+      settingRow(t('notifEmail'), '', toggle('nc-email', ch.email, t('notifEmail'))) +
+      settingRow(t('notifSlack'), '', toggle('nc-slack', ch.slack, t('notifSlack'))) +
+      settingRow(t('notifInapp'), '', toggle('nc-inapp', ch.inapp, t('notifInapp'))) +
+
+      '<div class="mini-label" style="margin-top:14px">' + t('notifWhat') + '</div>' +
+      settingRow(t('notifAssignments'), t('notifAssignmentsNote'), toggle('ct-assignments', cat.assignments, t('notifAssignments'))) +
+      settingRow(t('notifMentions'), t('notifMentionsNote'), toggle('ct-mentions', cat.mentions, t('notifMentions'))) +
+      settingRow(t('notifEvaluations'), t('notifEvaluationsNote'), toggle('ct-evaluations', cat.evaluations, t('notifEvaluations'))) +
+      settingRow(t('notifDigest'), t('notifDigestNote'), toggle('ct-digest', cat.digest, t('notifDigest'))) +
+
+      '<div class="mini-label" style="margin-top:14px">' + t('notifQuiet') + '</div>' +
+      settingRow(t('notifQuiet'), t('notifQuietNote'), toggle('q-on', q.on, t('notifQuiet'))) +
+      '<div class="set-row" id="q-times"' + (q.on ? '' : ' hidden') + '>' +
+        '<label>' + t('notifQuietFrom') + '</label><input type="time" id="q-start" value="' + ui.esc(q.start || '19:00') + '" />' +
+        '<label style="margin-inline-start:12px">' + t('notifQuietTo') + '</label><input type="time" id="q-end" value="' + ui.esc(q.end || '08:00') + '" />' +
+      '</div>' +
+      '<div class="disclaimer">' + ui.icon('info', 12) + ' ' + t('notifPrototype') + '</div></div>';
+  }
+
+  /* ── Wire the personal tab's controls (segmented + toggles + times) ────────── */
+  function wirePersonal(root) {
+    // segmented groups → theme/lang go to top-level state; density/dateFormat to prefs
+    root.querySelectorAll('[data-seg]').forEach(function (b) {
+      b.onclick = function () {
+        var group = b.dataset.seg, val = b.dataset.val;
+        if (group === 'theme') WP.setState({ theme: val });
+        else if (group === 'lang') WP.setState({ lang: val });
+        else WP.prefs.set(group, val);   // density | dateFormat
+        WP.ui.toast(WP.i18n.t('prefSaved'), 'success');
+      };
+    });
+    // channel toggles
+    [['nc-email', 'notif.channels.email'], ['nc-slack', 'notif.channels.slack'], ['nc-inapp', 'notif.channels.inapp'],
+     ['ct-assignments', 'notif.categories.assignments'], ['ct-mentions', 'notif.categories.mentions'],
+     ['ct-evaluations', 'notif.categories.evaluations'], ['ct-digest', 'notif.categories.digest']
+    ].forEach(function (pair) {
+      var el = root.querySelector('#' + pair[0]);
+      if (el) el.onchange = function () { WP.prefs.set(pair[1], el.checked); };
+    });
+    // quiet-hours toggle reveals the time inputs
+    var qon = root.querySelector('#q-on');
+    if (qon) qon.onchange = function () { WP.prefs.set('notif.quietHours.on', qon.checked); };
+    var qs = root.querySelector('#q-start'), qe = root.querySelector('#q-end');
+    if (qs) qs.onchange = function () { WP.prefs.set('notif.quietHours.start', qs.value); };
+    if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
+  }
+
+  /* ── Workspace (admin) tab — the original org-config sections ──────────────── */
+  function workspaceView() {
+    const t = WP.i18n.t;
+    return '<div class="page-head" style="margin-bottom:12px"><div class="ph-titles">' +
+        '<div class="sub">' + t('setWsSub') + '</div></div>' +
+      '<div class="ph-actions"><button class="btn" id="go-activity">' + ui.icon('list', 15) + ' ' + t('activityLog') + '</button></div></div>' +
+      '<div class="grid-2">' + tierEditor() + statesView() + '</div>' +
+      rolesPanel() +
+      slackLinking();
+  }
+
   function render(root) {
     const t = WP.i18n.t;
+    const canWs = WP.can('viewSettings');
+    // remembered tab (default: personal, since every user has it)
+    var tab = WP._settingsTab || 'mine';
+    if (tab === 'workspace' && !canWs) tab = 'mine';
+
+    const tabs = [{ val: 'mine', label: t('setTabMine') }];
+    if (canWs) tabs.push({ val: 'workspace', label: t('setTabWorkspace') });
+
+    const body = tab === 'workspace'
+      ? workspaceView()
+      : (accountView() + preferencesView() + notificationsView());
+
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
       '<div class="page-head"><div class="ph-titles">' +
         '<h2>' + t('settings') + '</h2>' +
-        '<div class="sub">' + t('orgStructure') + '</div>' +
-      '</div><div class="ph-actions">' +
-        '<button class="btn" id="go-activity">' + ui.icon('list', 15) + ' ' + t('activityLog') + '</button>' +
+        '<div class="sub">' + (tab === 'workspace' ? t('setWsSub') : t('setMineSub')) + '</div>' +
       '</div></div>' +
-      '<div class="grid-2">' + tierEditor() + statesView() + '</div>' +
-      rolesPanel() +
-      slackLinking();
+      (tabs.length > 1 ? ui.subTabs(tabs, tab) : '') +
+      '<div class="set-body">' + body + '</div>';
 
     root.querySelector('#back').onclick = function () { WP.setState({ route: 'map' }); };
-    root.querySelector('#go-activity').onclick = function () { WP.setState({ route: 'activity' }); };
+    root.querySelectorAll('[data-subtab]').forEach(function (b) {
+      b.onclick = function () { WP._settingsTab = b.dataset.subtab; render(root); };
+    });
+
+    if (tab === 'mine') { wirePersonal(root); return; }
+
+    // ── workspace wiring (unchanged admin behavior) ──
+    const ga = root.querySelector('#go-activity');
+    if (ga) ga.onclick = function () { WP.setState({ route: 'activity' }); };
     root.querySelectorAll('[data-tier]').forEach(function (inp) {
       inp.onchange = function () {
         const v = Math.max(0, Math.min(100, parseInt(inp.value, 10) || 0));

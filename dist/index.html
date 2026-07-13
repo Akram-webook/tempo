@@ -689,6 +689,12 @@ h1, h2, h3, h4,
    in a narrow column with dead side-canvas. Gutter scales with viewport (clamp) so
    there's breathing room on wide screens and tight margins on small ones. */
 main { padding: 24px clamp(16px, 4vw, 40px); max-width: 1320px; margin: 0 auto; width: 100%; }
+/* Compact density (Settings v2 → Preferences): tighten global rhythm a notch.
+   Deliberately conservative — pads + section gaps only — so no view's internal
+   layout can break; comfortable is the default (no rule needed). */
+:root[data-density="compact"] main { padding-top: 14px; padding-bottom: 14px; }
+:root[data-density="compact"] .section { padding: 12px; margin-bottom: 10px; }
+:root[data-density="compact"] .set-item { padding: 9px 0; }
 /* People & Workload (org tree/map) goes FULL-BLEED so a wide branch fills the screen
    instead of stranding in a 1180 box with a dead right-side gutter. Only this view
    opts in (class toggled per-route in app.js) — text/data pages keep the readable cap.
@@ -1403,6 +1409,30 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .set-row:last-child { border-bottom: 0; }
 .set-row label { flex: 1; }
 .set-row input { width: 70px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 6px 8px; font-family: inherit; }
+.set-row input[type="time"] { width: auto; }
+
+/* ── Settings v2: labelled item rows with inline microcopy + controls ──────── */
+.set-body { margin-top: 14px; }
+.set-item { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.set-item:last-child { border-bottom: 0; }
+.set-item-main { flex: 1; min-width: 0; }
+.set-item-label { font-size: 14px; font-weight: 600; }
+.set-item-note { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.45; }
+.set-item-control { flex: none; }
+/* wrap on narrow screens so the control drops under the label */
+@media (max-width: 560px) { .set-item { flex-direction: column; align-items: stretch; gap: 8px; } }
+
+/* Accessible toggle switch (checkbox under the hood) */
+.tgl { display: inline-flex; align-items: center; cursor: pointer; }
+.tgl input { position: absolute; opacity: 0; width: 0; height: 0; }
+.tgl-track { width: 42px; height: 24px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border);
+  position: relative; transition: background .16s ease, border-color .16s ease; }
+.tgl-thumb { position: absolute; top: 2px; inset-inline-start: 2px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--text-muted); transition: transform .16s ease, background .16s ease; }
+.tgl input:checked + .tgl-track { background: var(--brand); border-color: var(--brand); }
+.tgl input:checked + .tgl-track .tgl-thumb { background: #fff; transform: translateX(18px); }
+[dir="rtl"] .tgl input:checked + .tgl-track .tgl-thumb { transform: translateX(-18px); }
+.tgl input:focus-visible + .tgl-track { outline: 2px solid var(--brand); outline-offset: 2px; }
 .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .role-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
 .role-name { font-weight: 700; font-size: 15px; }
@@ -3656,6 +3686,56 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
     prefsLang:      { en: 'Language', ar: 'اللغة' },
     prefsTheme:     { en: 'Appearance', ar: 'المظهر' },
+    // ── Settings v2 ──
+    setTabMine:     { en: 'My settings', ar: 'إعداداتي' },
+    setTabWorkspace:{ en: 'Workspace', ar: 'مساحة العمل' },
+    setMineSub:     { en: 'Your account, preferences and notifications', ar: 'حسابك وتفضيلاتك وإشعاراتك' },
+    setWsSub:       { en: 'Org configuration — admins only', ar: 'إعداد المؤسسة — للمشرفين فقط' },
+    // Preferences
+    prefsTitle:     { en: 'Preferences', ar: 'التفضيلات' },
+    prefTheme:      { en: 'Appearance', ar: 'المظهر' },
+    prefThemeNote:  { en: 'Light or dark. Follows your choice on this device.', ar: 'فاتح أو داكن. يتبع اختيارك على هذا الجهاز.' },
+    prefThemeLight: { en: 'Light', ar: 'فاتح' },
+    prefThemeDark:  { en: 'Dark', ar: 'داكن' },
+    prefLang:       { en: 'Language', ar: 'اللغة' },
+    prefLangNote:   { en: 'Interface language. Arabic switches the layout to right-to-left.', ar: 'لغة الواجهة. العربية تحوّل الاتجاه من اليمين لليسار.' },
+    prefDensity:    { en: 'Density', ar: 'الكثافة' },
+    prefDensityNote:{ en: 'Comfortable gives more breathing room; compact fits more on screen.', ar: 'المريحة تعطي مساحة أوسع؛ المدمجة تعرض أكثر على الشاشة.' },
+    prefComfortable:{ en: 'Comfortable', ar: 'مريحة' },
+    prefCompact:    { en: 'Compact', ar: 'مدمجة' },
+    prefDateFmt:    { en: 'Date format', ar: 'صيغة التاريخ' },
+    prefDateFmtNote:{ en: 'How dates appear across Tempo.', ar: 'كيف تظهر التواريخ في تيمبو.' },
+    prefDateAuto:   { en: 'Automatic (by language)', ar: 'تلقائي (حسب اللغة)' },
+    prefSaved:      { en: 'Preference saved', ar: 'تم حفظ التفضيل' },
+    // Notifications
+    notifTitle:     { en: 'Notifications', ar: 'الإشعارات' },
+    notifSub:       { en: 'Choose how and what Tempo tells you. Off by default means never bothered.', ar: 'اختر كيف وماذا يخبرك تيمبو. الإيقاف يعني عدم الإزعاج.' },
+    notifChannels:  { en: 'How you’re notified', ar: 'طريقة الإشعار' },
+    notifChannelsNote:{ en: 'Turn a channel off to stop all Tempo messages there.', ar: 'أوقف قناة لإيقاف كل رسائل تيمبو فيها.' },
+    notifEmail:     { en: 'Email', ar: 'البريد' },
+    notifSlack:     { en: 'Slack', ar: 'سلاك' },
+    notifInapp:     { en: 'In-app', ar: 'داخل التطبيق' },
+    notifWhat:      { en: 'What you’re notified about', ar: 'مواضيع الإشعارات' },
+    notifAssignments:{ en: 'Work assigned to me', ar: 'العمل المُسنَد إليّ' },
+    notifAssignmentsNote:{ en: 'When an event or task is assigned or reassigned to you.', ar: 'عند إسناد أو إعادة إسناد فعالية أو مهمة إليك.' },
+    notifMentions:  { en: 'Mentions & requests', ar: 'الإشارات والطلبات' },
+    notifMentionsNote:{ en: 'When someone mentions you or sends you a request.', ar: 'عند الإشارة إليك أو إرسال طلب لك.' },
+    notifEvaluations:{ en: 'Evaluations', ar: 'التقييمات' },
+    notifEvaluationsNote:{ en: 'When a review of yours is due or ready.', ar: 'عند استحقاق أو جاهزية تقييم يخصّك.' },
+    notifDigest:    { en: 'Daily digest', ar: 'الملخص اليومي' },
+    notifDigestNote:{ en: 'One summary each morning instead of live pings.', ar: 'ملخص واحد كل صباح بدل التنبيهات الفورية.' },
+    notifQuiet:     { en: 'Quiet hours', ar: 'ساعات الهدوء' },
+    notifQuietNote: { en: 'Mute in-app pings during these hours (urgent items still reach you).', ar: 'كتم التنبيهات داخل التطبيق خلال هذه الساعات (العاجل يصلك دائماً).' },
+    notifQuietFrom: { en: 'From', ar: 'من' },
+    notifQuietTo:   { en: 'To', ar: 'إلى' },
+    notifPrototype: { en: 'Preferences are saved now; delivery wiring lands with the notifications service.', ar: 'تُحفظ التفضيلات الآن؛ ويُربط الإرسال مع خدمة الإشعارات لاحقاً.' },
+    // Account
+    acctTitle:      { en: 'Account', ar: 'الحساب' },
+    acctName:       { en: 'Name', ar: 'الاسم' },
+    acctTitleField: { en: 'Title', ar: 'المسمى' },
+    acctEmail:      { en: 'Email', ar: 'البريد الإلكتروني' },
+    acctRole:       { en: 'Role', ar: 'الدور' },
+    acctReadonly:   { en: 'Managed by your admin. Contact them to change these.', ar: 'يديرها المشرف. تواصل معه للتعديل.' },
     googleContinue: { en: 'Continue with Google', ar: 'المتابعة عبر Google' },
     chooseAccount:  { en: 'Choose an account', ar: 'اختر حساباً' },
     googleRestrict: { en: 'to continue to Webook Workload', ar: 'للمتابعة إلى Webook Workload' },
@@ -4109,7 +4189,42 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     route: 'dashboard',    // current screen
     selectedId: null,      // person whose profile is open
     refDate: new Date().toISOString().slice(0, 10), // default to TODAY (current period active)
+    prefs: null,           // personal settings (set below from DEFAULT_PREFS); per-user persisted
   };
+
+  /* Personal preferences (Settings v2 → "My settings"). Per-user, local, reversible.
+   * theme + lang stay top-level (already persisted + drive doc attrs); these are the
+   * additional personal choices. Notifications model = delivery channel × category, plus
+   * a daily digest and quiet-hours mute (grounded in SaaS notification best practice:
+   * group by channel, allow frequency + mute — Nicelydone / Equal.design). */
+  var DEFAULT_PREFS = {
+    density: 'comfortable',      // 'comfortable' | 'compact' — whole-app spacing
+    dateFormat: 'auto',          // 'auto' (locale) | 'dmy' | 'mdy' | 'iso'
+    notif: {
+      channels: { email: true, slack: true, inapp: true },
+      categories: {              // per-event opt-in
+        assignments: true,       // work assigned/overridden to me
+        mentions: true,          // I'm mentioned / asked
+        evaluations: true,       // my review is ready / due
+        digest: true             // daily summary
+      },
+      quietHours: { on: false, start: '19:00', end: '08:00' }  // mute in-app pings in this window
+    }
+  };
+  // Deep-merge saved prefs over defaults so newly-added keys never come back undefined.
+  function mergePrefs(saved) {
+    var base = JSON.parse(JSON.stringify(DEFAULT_PREFS));
+    if (!saved || typeof saved !== 'object') return base;
+    if (saved.density) base.density = saved.density;
+    if (saved.dateFormat) base.dateFormat = saved.dateFormat;
+    if (saved.notif) {
+      if (saved.notif.channels) Object.assign(base.notif.channels, saved.notif.channels);
+      if (saved.notif.categories) Object.assign(base.notif.categories, saved.notif.categories);
+      if (saved.notif.quietHours) Object.assign(base.notif.quietHours, saved.notif.quietHours);
+    }
+    return base;
+  }
+  WP.state.prefs = mergePrefs(null);   // defaults now; restore() overlays saved below
 
   /* ── F7: per-USER local cache isolation ────────────────────────────────────
    * tempo_session / tempo_data / tempo_events were GLOBAL browser keys, so on a
@@ -4182,7 +4297,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   // Persist the session so a reload keeps you signed in and on the same page
   // (no re-login after every update). Safe if storage is unavailable.
   // NOTE: refDate is intentionally NOT saved — every load defaults to TODAY (active by default).
-  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId'];
+  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId', 'prefs'];
   const NEEDS_SELECTION = { profile: 1, evaluation: 1, upward: 1 };
   (function restore() {
     try {
@@ -4191,6 +4306,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       if (!raw) return;
       const s = JSON.parse(raw);
       SAVE_KEYS.forEach(function (k) { if (s[k] !== undefined) WP.state[k] = s[k]; });
+      // prefs get the default-merge (so new pref keys are never undefined on old saves)
+      WP.state.prefs = mergePrefs(WP.state.prefs);
       // guard: a detail route with no selection → land on dashboard
       if (NEEDS_SELECTION[WP.state.route] && !WP.state.selectedId) WP.state.route = 'dashboard';
     } catch (e) {}
@@ -4236,6 +4353,45 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     document.documentElement.lang = WP.state.lang;
     document.documentElement.dir = WP.i18n.isRTL() ? 'rtl' : 'ltr';
     document.documentElement.setAttribute('data-theme', WP.state.theme);
+    // whole-app density (Settings v2 → Preferences). Default comfortable.
+    var d = (WP.state.prefs && WP.state.prefs.density) || 'comfortable';
+    document.documentElement.setAttribute('data-density', d);
+  };
+
+  /* ── Personal preferences helper (Settings v2) ──────────────────────────────
+   * get(path)      → read a dotted path, e.g. WP.prefs.get('notif.channels.email')
+   * set(path, val) → set it + persist + re-render (goes through setState so it saves)
+   * defaults()     → a fresh copy of the defaults (for a "reset to defaults" action) */
+  WP.prefs = {
+    get: function (path) {
+      var o = WP.state.prefs, parts = String(path).split('.');
+      for (var i = 0; i < parts.length; i++) { if (o == null) return undefined; o = o[parts[i]]; }
+      return o;
+    },
+    set: function (path, val) {
+      var parts = String(path).split('.'), o = WP.state.prefs;
+      for (var i = 0; i < parts.length - 1; i++) { if (o[parts[i]] == null) o[parts[i]] = {}; o = o[parts[i]]; }
+      o[parts[parts.length - 1]] = val;
+      WP.setState({});   // persists prefs (in SAVE_KEYS) + re-renders
+    },
+    defaults: function () { return JSON.parse(JSON.stringify(DEFAULT_PREFS)); }
+  };
+
+  /* Date formatting that honors the personal dateFormat pref. 'auto' = locale of the
+   * current language; dmy/mdy/iso are explicit. Never throws on a bad date. */
+  WP.fmt = {
+    date: function (value) {
+      try {
+        var dt = (value instanceof Date) ? value : new Date(value);
+        if (isNaN(dt.getTime())) return '';
+        var f = (WP.state.prefs && WP.state.prefs.dateFormat) || 'auto';
+        var y = dt.getFullYear(), m = ('0' + (dt.getMonth() + 1)).slice(-2), d = ('0' + dt.getDate()).slice(-2);
+        if (f === 'iso') return y + '-' + m + '-' + d;
+        if (f === 'dmy') return d + '/' + m + '/' + y;
+        if (f === 'mdy') return m + '/' + d + '/' + y;
+        return dt.toLocaleDateString(WP.state.lang === 'ar' ? 'ar' : 'en-GB');   // auto
+      } catch (e) { return ''; }
+    }
   };
 })(window.WP = window.WP || {});
 
@@ -9412,22 +9568,170 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       '<div class="disclaimer">Role + relationship (manager-of). Sensitive detail opens only along the management line; everyone sees the aggregate situation, individual detail is gated.</div></div>';
   }
 
+  /* ── Settings v2 shared controls ─────────────────────────────────────────── */
+  // A labelled row with inline microcopy under the control (SaaS best practice:
+  // explain what every option does right beneath it).
+  function settingRow(label, note, controlHTML) {
+    return '<div class="set-item">' +
+      '<div class="set-item-main"><div class="set-item-label">' + ui.esc(label) + '</div>' +
+        (note ? '<div class="set-item-note">' + ui.esc(note) + '</div>' : '') + '</div>' +
+      '<div class="set-item-control">' + controlHTML + '</div></div>';
+  }
+  // Accessible toggle switch (checkbox under the hood).
+  function toggle(id, on, aria) {
+    return '<label class="tgl"><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') +
+      ' aria-label="' + ui.esc(aria || id) + '"><span class="tgl-track"><span class="tgl-thumb"></span></span></label>';
+  }
+  // Segmented radio group (theme/lang/density/date) — reuses the existing .seg component.
+  function segmented(name, options, val) {
+    return '<div class="seg" role="radiogroup">' + options.map(function (o) {
+      var on = o.val === val;
+      return '<button type="button" class="' + (on ? 'active' : '') + '" role="radio"' +
+        ' aria-checked="' + (on ? 'true' : 'false') + '" data-seg="' + name + '" data-val="' + ui.esc(o.val) + '">' +
+        ui.esc(o.label) + '</button>';
+    }).join('') + '</div>';
+  }
+
+  /* ── Personal: Account (read-only; managed by admin) ─────────────────────── */
+  function accountView() {
+    const t = WP.i18n.t, v = WP.viewer();
+    if (!v) return '';
+    function row(k, val) { return '<div class="set-row"><label>' + k + '</label><span>' + ui.esc(val || '—') + '</span></div>'; }
+    var roleLbl = WP.i18n.roleLabel ? WP.i18n.roleLabel(v) : (v.level || '');
+    return '<div class="section"><h3>' + t('acctTitle') + '</h3>' +
+      '<div class="acct-head" style="margin-bottom:10px">' + ui.avatar(v, 'var(--brand)') +
+        '<div><div class="acct-nm">' + ui.esc(WP.i18n.name(v)) + '</div>' +
+        '<div class="ttl">' + ui.esc(WP.i18n.title(v)) + '</div></div></div>' +
+      row(t('acctName'), WP.i18n.name(v)) +
+      row(t('acctTitleField'), WP.i18n.title(v)) +
+      row(t('acctEmail'), v.email) +
+      row(t('acctRole'), roleLbl) +
+      '<div class="disclaimer">' + ui.icon('lock', 12) + ' ' + t('acctReadonly') + '</div></div>';
+  }
+
+  /* ── Personal: Preferences (theme / language / density / date format) ─────── */
+  function preferencesView() {
+    const t = WP.i18n.t;
+    const df = WP.prefs.get('dateFormat') || 'auto';
+    // live sample so the date-format choice is concrete
+    const sample = { dmy: '31/12/2026', mdy: '12/31/2026', iso: '2026-12-31' };
+    return '<div class="section"><h3>' + t('prefsTitle') + '</h3>' +
+      settingRow(t('prefTheme'), t('prefThemeNote'),
+        segmented('theme', [{ val: 'light', label: t('prefThemeLight') }, { val: 'dark', label: t('prefThemeDark') }], WP.state.theme)) +
+      settingRow(t('prefLang'), t('prefLangNote'),
+        segmented('lang', [{ val: 'en', label: 'English' }, { val: 'ar', label: 'العربية' }], WP.state.lang)) +
+      settingRow(t('prefDensity'), t('prefDensityNote'),
+        segmented('density', [{ val: 'comfortable', label: t('prefComfortable') }, { val: 'compact', label: t('prefCompact') }], WP.prefs.get('density'))) +
+      settingRow(t('prefDateFmt'), t('prefDateFmtNote'),
+        segmented('dateFormat', [
+          { val: 'auto', label: t('prefDateAuto') },
+          { val: 'dmy', label: sample.dmy }, { val: 'mdy', label: sample.mdy }, { val: 'iso', label: sample.iso }
+        ], df)) +
+      '</div>';
+  }
+
+  /* ── Personal: Notifications (channels × categories + digest + quiet hours) ── */
+  function notificationsView() {
+    const t = WP.i18n.t;
+    const ch = WP.prefs.get('notif.channels') || {};
+    const cat = WP.prefs.get('notif.categories') || {};
+    const q = WP.prefs.get('notif.quietHours') || {};
+    return '<div class="section"><h3>' + t('notifTitle') + '</h3>' +
+      '<div class="sub" style="margin:-4px 0 12px">' + t('notifSub') + '</div>' +
+
+      '<div class="mini-label">' + t('notifChannels') + '</div>' +
+      '<div class="set-item-note" style="margin-bottom:8px">' + t('notifChannelsNote') + '</div>' +
+      settingRow(t('notifEmail'), '', toggle('nc-email', ch.email, t('notifEmail'))) +
+      settingRow(t('notifSlack'), '', toggle('nc-slack', ch.slack, t('notifSlack'))) +
+      settingRow(t('notifInapp'), '', toggle('nc-inapp', ch.inapp, t('notifInapp'))) +
+
+      '<div class="mini-label" style="margin-top:14px">' + t('notifWhat') + '</div>' +
+      settingRow(t('notifAssignments'), t('notifAssignmentsNote'), toggle('ct-assignments', cat.assignments, t('notifAssignments'))) +
+      settingRow(t('notifMentions'), t('notifMentionsNote'), toggle('ct-mentions', cat.mentions, t('notifMentions'))) +
+      settingRow(t('notifEvaluations'), t('notifEvaluationsNote'), toggle('ct-evaluations', cat.evaluations, t('notifEvaluations'))) +
+      settingRow(t('notifDigest'), t('notifDigestNote'), toggle('ct-digest', cat.digest, t('notifDigest'))) +
+
+      '<div class="mini-label" style="margin-top:14px">' + t('notifQuiet') + '</div>' +
+      settingRow(t('notifQuiet'), t('notifQuietNote'), toggle('q-on', q.on, t('notifQuiet'))) +
+      '<div class="set-row" id="q-times"' + (q.on ? '' : ' hidden') + '>' +
+        '<label>' + t('notifQuietFrom') + '</label><input type="time" id="q-start" value="' + ui.esc(q.start || '19:00') + '" />' +
+        '<label style="margin-inline-start:12px">' + t('notifQuietTo') + '</label><input type="time" id="q-end" value="' + ui.esc(q.end || '08:00') + '" />' +
+      '</div>' +
+      '<div class="disclaimer">' + ui.icon('info', 12) + ' ' + t('notifPrototype') + '</div></div>';
+  }
+
+  /* ── Wire the personal tab's controls (segmented + toggles + times) ────────── */
+  function wirePersonal(root) {
+    // segmented groups → theme/lang go to top-level state; density/dateFormat to prefs
+    root.querySelectorAll('[data-seg]').forEach(function (b) {
+      b.onclick = function () {
+        var group = b.dataset.seg, val = b.dataset.val;
+        if (group === 'theme') WP.setState({ theme: val });
+        else if (group === 'lang') WP.setState({ lang: val });
+        else WP.prefs.set(group, val);   // density | dateFormat
+        WP.ui.toast(WP.i18n.t('prefSaved'), 'success');
+      };
+    });
+    // channel toggles
+    [['nc-email', 'notif.channels.email'], ['nc-slack', 'notif.channels.slack'], ['nc-inapp', 'notif.channels.inapp'],
+     ['ct-assignments', 'notif.categories.assignments'], ['ct-mentions', 'notif.categories.mentions'],
+     ['ct-evaluations', 'notif.categories.evaluations'], ['ct-digest', 'notif.categories.digest']
+    ].forEach(function (pair) {
+      var el = root.querySelector('#' + pair[0]);
+      if (el) el.onchange = function () { WP.prefs.set(pair[1], el.checked); };
+    });
+    // quiet-hours toggle reveals the time inputs
+    var qon = root.querySelector('#q-on');
+    if (qon) qon.onchange = function () { WP.prefs.set('notif.quietHours.on', qon.checked); };
+    var qs = root.querySelector('#q-start'), qe = root.querySelector('#q-end');
+    if (qs) qs.onchange = function () { WP.prefs.set('notif.quietHours.start', qs.value); };
+    if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
+  }
+
+  /* ── Workspace (admin) tab — the original org-config sections ──────────────── */
+  function workspaceView() {
+    const t = WP.i18n.t;
+    return '<div class="page-head" style="margin-bottom:12px"><div class="ph-titles">' +
+        '<div class="sub">' + t('setWsSub') + '</div></div>' +
+      '<div class="ph-actions"><button class="btn" id="go-activity">' + ui.icon('list', 15) + ' ' + t('activityLog') + '</button></div></div>' +
+      '<div class="grid-2">' + tierEditor() + statesView() + '</div>' +
+      rolesPanel() +
+      slackLinking();
+  }
+
   function render(root) {
     const t = WP.i18n.t;
+    const canWs = WP.can('viewSettings');
+    // remembered tab (default: personal, since every user has it)
+    var tab = WP._settingsTab || 'mine';
+    if (tab === 'workspace' && !canWs) tab = 'mine';
+
+    const tabs = [{ val: 'mine', label: t('setTabMine') }];
+    if (canWs) tabs.push({ val: 'workspace', label: t('setTabWorkspace') });
+
+    const body = tab === 'workspace'
+      ? workspaceView()
+      : (accountView() + preferencesView() + notificationsView());
+
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
       '<div class="page-head"><div class="ph-titles">' +
         '<h2>' + t('settings') + '</h2>' +
-        '<div class="sub">' + t('orgStructure') + '</div>' +
-      '</div><div class="ph-actions">' +
-        '<button class="btn" id="go-activity">' + ui.icon('list', 15) + ' ' + t('activityLog') + '</button>' +
+        '<div class="sub">' + (tab === 'workspace' ? t('setWsSub') : t('setMineSub')) + '</div>' +
       '</div></div>' +
-      '<div class="grid-2">' + tierEditor() + statesView() + '</div>' +
-      rolesPanel() +
-      slackLinking();
+      (tabs.length > 1 ? ui.subTabs(tabs, tab) : '') +
+      '<div class="set-body">' + body + '</div>';
 
     root.querySelector('#back').onclick = function () { WP.setState({ route: 'map' }); };
-    root.querySelector('#go-activity').onclick = function () { WP.setState({ route: 'activity' }); };
+    root.querySelectorAll('[data-subtab]').forEach(function (b) {
+      b.onclick = function () { WP._settingsTab = b.dataset.subtab; render(root); };
+    });
+
+    if (tab === 'mine') { wirePersonal(root); return; }
+
+    // ── workspace wiring (unchanged admin behavior) ──
+    const ga = root.querySelector('#go-activity');
+    if (ga) ga.onclick = function () { WP.setState({ route: 'activity' }); };
     root.querySelectorAll('[data-tier]').forEach(function (inp) {
       inp.onchange = function () {
         const v = Math.max(0, Math.min(100, parseInt(inp.value, 10) || 0));

@@ -463,6 +463,12 @@ h1, h2, h3, h4,
    in a narrow column with dead side-canvas. Gutter scales with viewport (clamp) so
    there's breathing room on wide screens and tight margins on small ones. */
 main { padding: 24px clamp(16px, 4vw, 40px); max-width: 1320px; margin: 0 auto; width: 100%; }
+/* Compact density (Settings v2 → Preferences): tighten global rhythm a notch.
+   Deliberately conservative — pads + section gaps only — so no view's internal
+   layout can break; comfortable is the default (no rule needed). */
+:root[data-density="compact"] main { padding-top: 14px; padding-bottom: 14px; }
+:root[data-density="compact"] .section { padding: 12px; margin-bottom: 10px; }
+:root[data-density="compact"] .set-item { padding: 9px 0; }
 /* People & Workload (org tree/map) goes FULL-BLEED so a wide branch fills the screen
    instead of stranding in a 1180 box with a dead right-side gutter. Only this view
    opts in (class toggled per-route in app.js) — text/data pages keep the readable cap.
@@ -1177,6 +1183,30 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .set-row:last-child { border-bottom: 0; }
 .set-row label { flex: 1; }
 .set-row input { width: 70px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 6px 8px; font-family: inherit; }
+.set-row input[type="time"] { width: auto; }
+
+/* ── Settings v2: labelled item rows with inline microcopy + controls ──────── */
+.set-body { margin-top: 14px; }
+.set-item { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.set-item:last-child { border-bottom: 0; }
+.set-item-main { flex: 1; min-width: 0; }
+.set-item-label { font-size: 14px; font-weight: 600; }
+.set-item-note { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.45; }
+.set-item-control { flex: none; }
+/* wrap on narrow screens so the control drops under the label */
+@media (max-width: 560px) { .set-item { flex-direction: column; align-items: stretch; gap: 8px; } }
+
+/* Accessible toggle switch (checkbox under the hood) */
+.tgl { display: inline-flex; align-items: center; cursor: pointer; }
+.tgl input { position: absolute; opacity: 0; width: 0; height: 0; }
+.tgl-track { width: 42px; height: 24px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border);
+  position: relative; transition: background .16s ease, border-color .16s ease; }
+.tgl-thumb { position: absolute; top: 2px; inset-inline-start: 2px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--text-muted); transition: transform .16s ease, background .16s ease; }
+.tgl input:checked + .tgl-track { background: var(--brand); border-color: var(--brand); }
+.tgl input:checked + .tgl-track .tgl-thumb { background: #fff; transform: translateX(18px); }
+[dir="rtl"] .tgl input:checked + .tgl-track .tgl-thumb { transform: translateX(-18px); }
+.tgl input:focus-visible + .tgl-track { outline: 2px solid var(--brand); outline-offset: 2px; }
 .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .role-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
 .role-name { font-weight: 700; font-size: 15px; }
