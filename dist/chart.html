@@ -1444,20 +1444,14 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .mbr-access { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); min-width: 92px; }
 .mbr-access.is-on { color: var(--state-available); }
 /* Security → "this device" row (distinct from member rows) */
-.sec-device { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
-.sec-device-id .nm { font-weight: 600; font-size: 14px; }
-.sec-device-id .ttl { font-size: 12px; }
+/* Role meaning — a plain one-liner under the role value in Account. */
+.set-role-why { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
 
-/* Privacy — "what Tempo tracks about me" catalogue + no-surveillance guardrail. */
-.pv-cats { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 4px; }
-.pv-cat { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
-.pv-cat-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.pv-cat-h .nm { font-weight: 600; font-size: 14px; }
-.pv-cat-why { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
-.pv-never { margin: 14px 0; padding: 12px 14px; border: 1px solid var(--border); border-inline-start: 3px solid var(--state-available);
-  border-radius: var(--radius-sm); background: color-mix(in srgb, var(--state-available) 6%, var(--surface)); }
-.pv-never-h { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13.5px; }
-.pv-never-b { font-size: 12.5px; color: var(--text-muted); margin-top: 5px; line-height: 1.55; }
+/* Privacy — a single quiet reassurance line at the foot of My settings. */
+.pv-line { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2);
+  font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.pv-line svg { flex: none; }
 @media (max-width: 560px) {
   .mbr-row { flex-wrap: wrap; }
   .mbr-access { min-width: 0; }
@@ -3788,6 +3782,7 @@ const EMAIL_HASHES = {};
     prefCompact:    { en: 'Compact', ar: 'مدمجة' },
     prefDateFmt:    { en: 'Date format', ar: 'صيغة التاريخ' },
     prefDateFmtNote:{ en: 'How dates appear across Tempo.', ar: 'كيف تظهر التواريخ في تيمبو.' },
+    prefDateFmtInfo:{ en: 'How dates appear across Tempo (follows your language). Example: {sample}', ar: 'كيف تظهر التواريخ في تيمبو (تتبع لغتك). مثال: {sample}' },
     prefDateAuto:   { en: 'Automatic (by language)', ar: 'تلقائي (حسب اللغة)' },
     prefSaved:      { en: 'Preference saved', ar: 'تم حفظ التفضيل' },
     // Notifications
@@ -3799,6 +3794,7 @@ const EMAIL_HASHES = {};
     notifSlack:     { en: 'Slack', ar: 'سلاك' },
     notifInapp:     { en: 'In-app', ar: 'داخل التطبيق' },
     notifWhat:      { en: 'What you’re notified about', ar: 'مواضيع الإشعارات' },
+    notifWhere:     { en: 'Where to send them', ar: 'أين تُرسل' },
     notifAssignments:{ en: 'Work assigned to me', ar: 'العمل المُسنَد إليّ' },
     notifAssignmentsNote:{ en: 'When an event or task is assigned or reassigned to you.', ar: 'عند إسناد أو إعادة إسناد فعالية أو مهمة إليك.' },
     notifMentions:  { en: 'Mentions & requests', ar: 'الإشارات والطلبات' },
@@ -3819,6 +3815,13 @@ const EMAIL_HASHES = {};
     acctEmail:      { en: 'Email', ar: 'البريد الإلكتروني' },
     acctRole:       { en: 'Role', ar: 'الدور' },
     acctReadonly:   { en: 'Managed by your admin. Contact them to change these.', ar: 'يديرها المشرف. تواصل معه للتعديل.' },
+    // What each role means, in plain words (answers "what does role mean?").
+    acctRoleWhy_admin:      { en: 'Full access — manage people, roles and workspace settings.', ar: 'صلاحية كاملة — إدارة الأشخاص والأدوار وإعدادات مساحة العمل.' },
+    acctRoleWhy_director:   { en: 'Sees the whole portfolio and team health; guides decisions.', ar: 'يرى المحفظة كاملة وصحة الفرق؛ ويوجّه القرارات.' },
+    acctRoleWhy_sr_manager: { en: 'Leads managers and their teams; assigns and reviews work.', ar: 'يقود المدراء وفرقهم؛ يوزّع العمل ويراجعه.' },
+    acctRoleWhy_manager:    { en: 'Leads a team; assigns work and reviews their people.', ar: 'يقود فريقاً؛ يوزّع العمل ويراجع أعضاءه.' },
+    acctRoleWhy_sr_spec:    { en: 'Does the work and mentors others; no team to manage.', ar: 'ينجز العمل ويوجّه غيره؛ دون إدارة فريق.' },
+    acctRoleWhy_spec:       { en: 'Does the work; sees their own tasks and progress.', ar: 'ينجز العمل؛ ويرى مهامه وتقدّمه.' },
     // ── Security (My settings) ──
     secTitle:       { en: 'Security', ar: 'الأمان' },
     secSub:         { en: 'Your password and where you’re signed in.', ar: 'كلمة مرورك وأين سجّلت الدخول.' },

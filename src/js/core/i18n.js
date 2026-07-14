@@ -561,6 +561,7 @@
     prefCompact:    { en: 'Compact', ar: 'مدمجة' },
     prefDateFmt:    { en: 'Date format', ar: 'صيغة التاريخ' },
     prefDateFmtNote:{ en: 'How dates appear across Tempo.', ar: 'كيف تظهر التواريخ في تيمبو.' },
+    prefDateFmtInfo:{ en: 'How dates appear across Tempo (follows your language). Example: {sample}', ar: 'كيف تظهر التواريخ في تيمبو (تتبع لغتك). مثال: {sample}' },
     prefDateAuto:   { en: 'Automatic (by language)', ar: 'تلقائي (حسب اللغة)' },
     prefSaved:      { en: 'Preference saved', ar: 'تم حفظ التفضيل' },
     // Notifications
@@ -572,6 +573,7 @@
     notifSlack:     { en: 'Slack', ar: 'سلاك' },
     notifInapp:     { en: 'In-app', ar: 'داخل التطبيق' },
     notifWhat:      { en: 'What you’re notified about', ar: 'مواضيع الإشعارات' },
+    notifWhere:     { en: 'Where to send them', ar: 'أين تُرسل' },
     notifAssignments:{ en: 'Work assigned to me', ar: 'العمل المُسنَد إليّ' },
     notifAssignmentsNote:{ en: 'When an event or task is assigned or reassigned to you.', ar: 'عند إسناد أو إعادة إسناد فعالية أو مهمة إليك.' },
     notifMentions:  { en: 'Mentions & requests', ar: 'الإشارات والطلبات' },
@@ -592,6 +594,13 @@
     acctEmail:      { en: 'Email', ar: 'البريد الإلكتروني' },
     acctRole:       { en: 'Role', ar: 'الدور' },
     acctReadonly:   { en: 'Managed by your admin. Contact them to change these.', ar: 'يديرها المشرف. تواصل معه للتعديل.' },
+    // What each role means, in plain words (answers "what does role mean?").
+    acctRoleWhy_admin:      { en: 'Full access — manage people, roles and workspace settings.', ar: 'صلاحية كاملة — إدارة الأشخاص والأدوار وإعدادات مساحة العمل.' },
+    acctRoleWhy_director:   { en: 'Sees the whole portfolio and team health; guides decisions.', ar: 'يرى المحفظة كاملة وصحة الفرق؛ ويوجّه القرارات.' },
+    acctRoleWhy_sr_manager: { en: 'Leads managers and their teams; assigns and reviews work.', ar: 'يقود المدراء وفرقهم؛ يوزّع العمل ويراجعه.' },
+    acctRoleWhy_manager:    { en: 'Leads a team; assigns work and reviews their people.', ar: 'يقود فريقاً؛ يوزّع العمل ويراجع أعضاءه.' },
+    acctRoleWhy_sr_spec:    { en: 'Does the work and mentors others; no team to manage.', ar: 'ينجز العمل ويوجّه غيره؛ دون إدارة فريق.' },
+    acctRoleWhy_spec:       { en: 'Does the work; sees their own tasks and progress.', ar: 'ينجز العمل؛ ويرى مهامه وتقدّمه.' },
     // ── Security (My settings) ──
     secTitle:       { en: 'Security', ar: 'الأمان' },
     secSub:         { en: 'Your password and where you’re signed in.', ar: 'كلمة مرورك وأين سجّلت الدخول.' },

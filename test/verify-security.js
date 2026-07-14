@@ -1,12 +1,11 @@
-/* Settings v2 → My settings → Security. Proves:
- *   1. Section renders for every signed-in user (personal tab), with change-password,
- *      last sign-in, this-device, sign-out-everywhere, and a 2FA "coming soon" note.
- *   2. Change password = emails the SECURE RESET LINK to the user's OWN verified email
- *      (never takes the old password client-side; never signInWithPassword here).
- *   3. Sign out everywhere = Supabase global sign-out + ends the local session.
- *   4. Honest fallbacks: no session → last sign-in shows "not available"; offline
- *      client → change-password reports failure (no crash).
- *   5. i18n EN+AR; renders under AR/dark.
+/* Settings v2 → My settings → Security (trimmed). Proves:
+ *   1. The Security section renders for every signed-in user with EXACTLY one
+ *      useful action — "Change my password" — and none of the removed noise
+ *      (no last-sign-in, no device row, no sign-out-everywhere, no 2FA note).
+ *   2. Change password = emails the SECURE RESET LINK to the user's OWN verified
+ *      email (never the old password client-side; never signInWithPassword).
+ *   3. Offline client → change-password fails gracefully (no crash).
+ *   4. i18n EN+AR; renders under AR/dark.
  * jsdom; no network. */
 const fs = require('fs'), path = require('path');
 const { JSDOM } = require('jsdom');
@@ -27,12 +26,11 @@ const el = window.document.getElementById('root');
 const tick = () => new Promise(r => setTimeout(r, 0));
 WP.state.lang = 'en';
 
-// A mock Supabase client that records what Security asked for.
-let resetEmail = null, globalScope = null;
+let resetEmail = null;
 function mockSb() {
   return { auth: {
     resetPasswordForEmail: function (e) { resetEmail = e; return Promise.resolve({}); },
-    signOut: function (o) { globalScope = (o && o.scope) || 'local'; return Promise.resolve({}); },
+    signOut: function () { return Promise.resolve({}); },
     getSession: function () { return Promise.resolve({ data: { session: null } }); },
     onAuthStateChange: function () { return { data: { subscription: { unsubscribe() {} } } }; }
   } };
@@ -41,54 +39,30 @@ function mockSb() {
 (async function () {
   WP.state.viewerId = 'p_akram'; WP.state.authed = true; WP._settingsTab = 'mine';
   WP._sb = mockSb();
-  WP._session = { user: { email: 'akram@webook.com', last_sign_in_at: '2026-07-10T09:00:00Z' } };
+  WP._session = { user: { email: 'akram@webook.com' } };
   WP.ui.settings.render(el);
   let h = el.innerHTML;
 
-  // ---- 1) section renders with all parts --------------------------------------
+  // ---- 1) exactly the one useful action, none of the removed noise ----------
   assert(/id="sec-changepw"/.test(h), 'change-password control renders');
-  assert(/id="sec-signout-all"/.test(h), 'sign-out-everywhere control renders');
-  assert(new RegExp(WP.i18n.t('secThisDevice')).test(h), 'this-device row present');
-  assert(new RegExp(WP.i18n.t('comingSoon')).test(h), '2FA coming-soon note present (honest, not fake)');
-  // last sign-in date shown (formatted)
-  assert(/2026|10\/07|Jul/.test(h), 'last sign-in date is shown');
+  assert(!/id="sec-signout-all"/.test(h), 'sign-out-everywhere is REMOVED');
+  assert(!new RegExp(WP.i18n.t('secThisDevice')).test(h), 'this-device row is REMOVED');
+  assert(!/sec-device/.test(h), 'no device markup remains');
+  assert(!new RegExp(WP.i18n.t('secLastLogin')).test(h), 'last sign-in is REMOVED');
+  assert(!new RegExp(WP.i18n.t('sec2fa')).test(h), '2FA placeholder is REMOVED');
 
-  // ---- 2) change password emails the reset link to the user's OWN email -------
+  // ---- 2) change password emails the reset link to the user's OWN email -----
   el.querySelector('#sec-changepw').click(); await tick(); await tick();
   assert(resetEmail === 'akram@webook.com', 'change password emails the reset link to the signed-in user’s own email');
-  // it must NOT attempt a client-side password set / signInWithPassword
-  assert(!/signInWithPassword|updateUser/.test(WP.auth.requestPasswordChange.toString()), 'change-password never handles the old password / updateUser client-side');
+  assert(!/signInWithPassword|updateUser/.test(WP.auth.requestPasswordChange.toString()), 'never handles the old password / updateUser client-side');
 
-  // ---- 3) sign out everywhere = global scope + local session ends -------------
-  // spy on logEvent (the local activityLog is intentionally reset on sign-out, so
-  // assert the event was EMITTED at the moment it fired, not that it survives).
-  let loggedTypes = [];
-  const realLog = WP.logEvent;
-  WP.logEvent = function (e) { loggedTypes.push(e && e.type); return realLog.apply(WP, arguments); };
-  WP.ui.settings.render(el);
-  el.querySelector('#sec-signout-all').click(); await tick();
-  const ok = window.document.querySelector('#dlg-ok');
-  assert(ok, 'sign-out-everywhere asks for confirmation');
-  ok.click(); await tick(); await tick();
-  WP.logEvent = realLog;
-  assert(globalScope === 'global', 'sign-out-everywhere uses Supabase GLOBAL scope');
-  assert(WP.state.authed === false, 'sign-out-everywhere also ends the local session');
-  assert(loggedTypes.indexOf('sign-out-all') > -1, 'sign-out-all is logged (emitted for provenance)');
-
-  // ---- 4) honest fallbacks ----------------------------------------------------
-  WP.state.authed = true; WP._settingsTab = 'mine';
-  WP._session = null;                         // no session → last sign-in unknown
-  WP.ui.settings.render(el);
-  assert(new RegExp(WP.i18n.t('secLastLoginUnknown')).test(el.innerHTML), 'no session → last sign-in shows "not available" (honest)');
-  WP._sb = null;                              // offline client → change pw fails gracefully
+  // ---- 3) offline client → graceful failure ---------------------------------
+  WP._sb = null;
   const res = await WP.auth.requestPasswordChange();
   assert(res && res.ok === false, 'offline client → change-password returns ok:false (no crash)');
 
-  // ---- 5) i18n EN+AR + AR/dark ------------------------------------------------
-  const keys = ['secTitle','secSub','secPassword','secPasswordNote','secChangePw','secPwSent','secPwError',
-    'secLastLogin','secSessions','secSessionsNote','secThisDevice','secSignOutAll',
-    'secSignOutAllConfirmTitle','sec2fa','comingSoon'];
-  keys.forEach(function (k) {
+  // ---- 4) i18n EN+AR + AR/dark ----------------------------------------------
+  ['secTitle', 'secPassword', 'secPasswordNote', 'secChangePw', 'secPwSent', 'secPwError'].forEach(function (k) {
     WP.state.lang = 'en'; const en = WP.i18n.t(k);
     WP.state.lang = 'ar'; const ar = WP.i18n.t(k);
     assert(en && en !== k, 'i18n EN present: ' + k);
@@ -100,6 +74,6 @@ function mockSb() {
   WP.state.lang = 'en'; WP.state.theme = 'light';
 
   if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-  console.log('PASS — security: change-password emails a secure reset link to the user’s own email (never client-side); sign-out-everywhere uses global scope + ends local session + logs; honest last-sign-in + offline fallbacks; 2FA marked coming-soon; EN+AR both themes.');
+  console.log('PASS — security (trimmed): only "change my password" remains (emails a secure reset link to the user’s own email, never client-side); last-sign-in / device / sign-out-everywhere / 2FA removed; offline fails gracefully; EN+AR both themes.');
   process.exit(0);
 })();
