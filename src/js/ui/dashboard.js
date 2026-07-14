@@ -62,6 +62,25 @@
     return '<span class="dash-pct" style="color:' + c + '">' + snap.load + '%</span>';
   }
 
+  /* Executive-status card — a full-width entry point at the TOP of the
+   * director dashboard. Renders ONLY when WP.execDeckVisible() (deck URL set
+   * AND viewer is admin/director). The whole card is the click target; it
+   * opens the deck in a NEW TAB (never embedded — it is a Google-auth link).
+   * Empty/off → renders nothing. */
+  function execCard() {
+    if (!WP.execDeckVisible || !WP.execDeckVisible()) return '';
+    const t = WP.i18n.t;
+    const url = WP.ui.esc(WP.config.execDeckUrl.trim());
+    return '<a class="exec-card" href="' + url + '" target="_blank" rel="noopener noreferrer" ' +
+      'aria-label="' + t('execStatus') + ' — ' + t('execStatusSub') + '">' +
+      '<div class="exec-card-body">' +
+        '<div class="exec-card-title">' + t('execStatus') + '</div>' +
+        '<div class="exec-card-sub">' + t('execStatusSub') + '</div>' +
+      '</div>' +
+      '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('external', 18) + '</span>' +
+      '</a>';
+  }
+
   function director(root, viewer) {
     const t = WP.i18n.t, win = WP.state.window, ref = WP.state.refDate;
     const people = WP.access.visiblePeople(viewer);
@@ -210,6 +229,12 @@
 
     // S3-2 — honest "Sample data" badge while KPIs are seeded, not live.
     root.insertAdjacentHTML('afterbegin', WP.ui.provenanceNote());
+
+    // Executive-status card — director/admin entry point to the live deck.
+    // Prepended LAST so it sits at the very top of the dashboard. Renders
+    // nothing when the deck URL is unset or the viewer isn't admin/director.
+    const exec = execCard();
+    if (exec) root.insertAdjacentHTML('afterbegin', exec);
 
     root.querySelectorAll('[data-open]').forEach(function (el) {
       const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };

@@ -93,6 +93,13 @@
           '<div class="acct-ml">' + WP.ui.esc(email) + '</div></div></div>' +
       '<button class="acct-item" id="acct-lang"><span class="acct-k">' + t('prefsLang') + '</span><span class="acct-v">' + t('lang') + '</span></button>' +
       '<button class="acct-item" id="acct-theme"><span class="acct-k">' + t('prefsTheme') + '</span><span class="acct-v">' + ic(WP.state.theme === 'light' ? 'moon' : 'sun') + '</span></button>' +
+      // Executive status — Director/Admin only, deck URL set. Opens the live
+      // deck in a NEW TAB (never embedded). Renders nothing when off/empty.
+      (WP.execDeckVisible && WP.execDeckVisible()
+        ? '<div class="acct-sep"></div>' +
+          '<a class="acct-item" id="acct-execstatus" role="menuitem" href="' + WP.ui.esc(WP.config.execDeckUrl.trim()) + '"' +
+            ' target="_blank" rel="noopener noreferrer">' + ic('external') + ' ' + t('execStatus') + '</a>'
+        : '') +
       (viewAsHTML ? '<div class="acct-sep"></div>' + viewAsHTML : '') +
       '<div class="acct-sep"></div>' +
       '<button class="acct-item danger" id="acct-signout">' + ic('logout') + ' ' + t('signOut') + '</button>';

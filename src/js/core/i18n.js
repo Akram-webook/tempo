@@ -536,6 +536,8 @@
     errSetPw:       { en: "Couldn't set your password. Open the reset link again from your inbox.", ar: 'تعذّر تعيين كلمة المرور. افتح رابط إعادة التعيين من بريدك.' },
     setPwNote:      { en: 'This link is for your account only — after setting a password you are signed in as yourself.', ar: 'هذا الرابط لحسابك أنت فقط — بعد تعيين كلمة المرور تدخل بهويتك.' },
     navHome:        { en: 'Workload', ar: 'الأحمال' },
+    execStatus:     { en: 'Executive status', ar: 'الحالة التنفيذية' },
+    execStatusSub:  { en: 'Live portfolio + what needs you', ar: 'نظرة حيّة على المحفظة وما يحتاج إليك' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
     prefsLang:      { en: 'Language', ar: 'اللغة' },
