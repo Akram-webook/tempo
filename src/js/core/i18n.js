@@ -714,7 +714,6 @@
     freeForWork:    { en: 'Free for work', ar: 'متاح للعمل' },
     toDevelop:      { en: 'To develop', ar: 'للتطوير' },
     myLoad:         { en: 'My load', ar: 'حملي' },
-    yourGrowth:     { en: 'Your growth', ar: 'نموّك' },
     quickLinks:     { en: 'Quick links', ar: 'روابط سريعة' },
     healthy:        { en: 'healthy', ar: 'سليم' },
     allClear:       { en: 'All clear — nobody overloaded.', ar: 'كل شيء سليم — لا أحد محمّل زيادة.' },
@@ -939,6 +938,16 @@
   function stateLabel(stateObj) {
     return WP.state.lang === 'ar' ? stateObj.labelAr : stateObj.labelEn;
   }
+  // Localized label for an evaluation status ENUM ('Completed' | 'In progress' |
+  // 'Not started'). Keep the raw enum for CSS/status-class; translate only the
+  // TEXT so Arabic never shows the English enum. Single source (used by the
+  // evaluations hub + the evaluation detail) so the mapping can't drift.
+  function evalStatus(s) {
+    var k = s === 'Completed' ? 'statusCompleted'
+      : s === 'In progress' ? 'statusInProgress'
+      : s === 'Not started' ? 'statusNotStarted' : null;
+    return k ? t(k) : s;
+  }
 
   // Short, localized date like "21 Jun" — used for "Joining 21 Jun" chips.
   const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -949,5 +958,5 @@
     return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()];
   }
 
-  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, shortDate };
+  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, evalStatus, shortDate };
 })(window.WP = window.WP || {});

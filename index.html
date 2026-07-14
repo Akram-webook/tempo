@@ -27,8 +27,10 @@
   </div>
   <div id="overlay-host"></div>
 
-  <!-- Load order matters: data → core → ui → app.
-       Plain scripts (no build step) so index.html opens directly. -->
+  <!-- Load order matters: core bootstrap utils (log, sha256) → data → core → ui → app.
+       log.js + sha256.js are dependency-free leaf utilities loaded first so the
+       data seed can hash emails (mock-data uses WP.sha256, guarded). Plain
+       scripts (no build step) so index.html opens directly. -->
   <script src="src/js/core/log.js"></script>
   <script src="src/js/core/sha256.js"></script>
   <script src="src/js/data/mock-data.js"></script>

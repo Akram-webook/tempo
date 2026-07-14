@@ -4055,7 +4055,6 @@ const EMAIL_HASHES = {};
     freeForWork:    { en: 'Free for work', ar: 'متاح للعمل' },
     toDevelop:      { en: 'To develop', ar: 'للتطوير' },
     myLoad:         { en: 'My load', ar: 'حملي' },
-    yourGrowth:     { en: 'Your growth', ar: 'نموّك' },
     quickLinks:     { en: 'Quick links', ar: 'روابط سريعة' },
     healthy:        { en: 'healthy', ar: 'سليم' },
     allClear:       { en: 'All clear — nobody overloaded.', ar: 'كل شيء سليم — لا أحد محمّل زيادة.' },
@@ -4280,6 +4279,16 @@ const EMAIL_HASHES = {};
   function stateLabel(stateObj) {
     return WP.state.lang === 'ar' ? stateObj.labelAr : stateObj.labelEn;
   }
+  // Localized label for an evaluation status ENUM ('Completed' | 'In progress' |
+  // 'Not started'). Keep the raw enum for CSS/status-class; translate only the
+  // TEXT so Arabic never shows the English enum. Single source (used by the
+  // evaluations hub + the evaluation detail) so the mapping can't drift.
+  function evalStatus(s) {
+    var k = s === 'Completed' ? 'statusCompleted'
+      : s === 'In progress' ? 'statusInProgress'
+      : s === 'Not started' ? 'statusNotStarted' : null;
+    return k ? t(k) : s;
+  }
 
   // Short, localized date like "21 Jun" — used for "Joining 21 Jun" chips.
   const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -4290,7 +4299,7 @@ const EMAIL_HASHES = {};
     return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()];
   }
 
-  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, shortDate };
+  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, evalStatus, shortDate };
 })(window.WP = window.WP || {});
 
 </script>
@@ -6908,6 +6917,10 @@ const EMAIL_HASHES = {};
     // does tree-jump; the table search filters the directory list itself.
     if (listMode && people.length) {
       const canManage = WP.access.canManage(viewer);
+      // Burnout is a wellbeing signal — same gate as the card view (line ~148):
+      // only show it to someone who may view wellbeing. Never a bare per-person
+      // flag for everyone (Constitution II — no surveillance; V — explainable).
+      const canWell = WP.wellbeing && WP.wellbeing.canView(viewer);
       const stTone = function (key) { return key === 'available' || key === 'balanced' ? 'ok' : key === 'near' ? 'warn' : 'bad'; };
       // The team a person belongs to = nearest ancestor carrying a team label.
       const teamName = function (p) { const l = teamLeadOf(p.id); return l ? teamLabel(l) : '—'; };
@@ -6933,7 +6946,7 @@ const EMAIL_HASHES = {};
           if (key === 'team') return ui.esc(teamName(p));
           if (key === 'load') return s.load + '%';
           return WP.ui.statusBadge(stTone(s.state.key), WP.i18n.stateLabel(s.state)) +
-            (s.burnout ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
+            ((s.burnout && canWell) ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
         },
         actions: function () {
           const a = [{ act: 'open', icon: 'eye', label: t('openProfile') }];
