@@ -71,7 +71,11 @@ const PAYLOAD = {
 (async () => {
   try {
     // --- status -> color: all 5 buckets --------------------------------------------
-    const ck = WP.execStatusColorKey;
+    // DRIFT GUARD: this pins the status->colour bucket contract shared BY NAME
+    // with the Google Slides deck (docs/exec-deck/Code.gs, separate Apps Script
+    // runtime — cannot import). If either side's regex/buckets change and break
+    // these expectations, CI fails here. Keep Code.gs's statusColorKey in sync.
+    const ck = WP.execStatus.statusColorKey;
     assert(ck('Done') === 'green' && ck('live') === 'green' && ck('on track') === 'green', 'green bucket');
     assert(ck('In progress') === 'amber' && ck('next') === 'amber' && ck('in review') === 'amber', 'amber bucket');
     assert(ck('Needs input') === 'red' && ck('blocked') === 'red' && ck('needs you') === 'red', 'red bucket');
@@ -186,7 +190,8 @@ const PAYLOAD = {
     failNext = true;
     el.innerHTML = '';
     WP.ui.exec.render(el);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    // extra microtask hops: loadJSONP.onerror -> reject -> execStatus.fetch chain -> load().catch
+    for (let i = 0; i < 8; i++) await Promise.resolve();
     assert(el.querySelector('.ex-error'), 'error state shown when the endpoint fails');
     assert(el.querySelector('#exec-retry'), 'error state offers Retry');
     failNext = false;

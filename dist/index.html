@@ -4627,6 +4627,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   WP.setState = function (patch) {
     var wasAuthed = !!WP.state.authed;
     Object.assign(WP.state, patch);
+    // Clamp a deferred (MVP-hidden) route to home HERE, before persist — so the
+    // corrected route is what gets saved and a reload can't re-land on a hidden
+    // surface. RBAC route gates stay in the render router (effectiveRoute), which
+    // must not rewrite state. Guarded: WP.deferred (config.js) loads after state.js.
+    if (WP.deferred && WP.deferred(WP.state.route)) WP.state.route = 'dashboard';
     var nowAuthed = !!WP.state.authed;
     // Identity lifecycle: lock on sign-in, clear on sign-out. A "View as" change
     // (viewerId changes while authed stays true) deliberately does NOT re-key.
@@ -4903,6 +4908,22 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   const MS_DAY = 86400000;
 
   function parse(d) { return new Date(d + 'T00:00:00Z'); }
+
+  /* Shared ISO-date helpers (single source — fairness.js + wellbeing.js consume
+   * WP.dates instead of keeping their own verbatim copies). toISO normalizes any
+   * ref (Date | 'YYYY-MM-DD' | falsy→refDate/today) to 'YYYY-MM-DD'; shiftISO
+   * moves an ISO day by ±days in UTC. */
+  function toISO(ref) {
+    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
+    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
+    return String(ref).slice(0, 10);
+  }
+  function shiftISO(refISO, days) {
+    var d = new Date(refISO + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+  WP.dates = { toISO: toISO, shiftISO: shiftISO };
   function dayCountInclusive(startMs, endMs) {
     return Math.max(0, Math.round((endMs - startMs) / MS_DAY) + 1);
   }
@@ -5358,7 +5379,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   function localStore() {
     return (WP.data && WP.data.EVALUATIONS) ? WP.data.EVALUATIONS : (WP.data ? (WP.data.EVALUATIONS = {}) : {});
   }
-  function persistLocal() { try { if (WP.persist) WP.persist.saveData(); } catch (e) {} }
+  function persistLocal() { try { if (WP.persist) WP.persist.saveData(); } catch (e) { if (WP.log) WP.log.warn('[db]', 'local persist failed', { err: e && e.message }); } }
 
   function newer(a, b) {
     // true if record a is strictly newer than b (by updated_at). Missing = oldest.
@@ -5471,7 +5492,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   function localEvents() {
     try { return JSON.parse(localStorage.getItem(eventsKey()) || '[]') || []; } catch (e) { return []; }
   }
-  function saveLocalEvents(arr) { try { localStorage.setItem(eventsKey(), JSON.stringify(arr)); } catch (e) {} }
+  function saveLocalEvents(arr) { try { localStorage.setItem(eventsKey(), JSON.stringify(arr)); } catch (e) { if (WP.log) WP.log.warn('[db]', 'local events save failed', { err: e && e.message }); } }
 
   var events = {
     /* List persisted events (optionally for one subject). Backend when available,
@@ -5827,16 +5848,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return null;
   }
 
-  function toISO(ref) {
-    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
-    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
-    return String(ref).slice(0, 10);
-  }
-  function shiftISO(refISO, days) {
-    var d = new Date(refISO + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
+  // Shared ISO-date helpers live in core/capacity.js (WP.dates) — loaded before
+  // this module. Local aliases keep the call sites below unchanged.
+  var toISO = WP.dates.toISO, shiftISO = WP.dates.shiftISO;
   function avg(arr) { return arr.length ? arr.reduce(function (a, b) { return a + b; }, 0) / arr.length : 0; }
 
   function weeklyLoads(person, refISO) {
@@ -5979,16 +5993,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   };
 
   /* ---- date helpers (mirror capacity/wellbeing: ISO strings, UTC week steps) ---- */
-  function toISO(ref) {
-    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
-    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
-    return String(ref).slice(0, 10);
-  }
-  function shiftISO(refISO, days) {
-    var d = new Date(refISO + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
+  // Shared ISO-date helpers live in core/capacity.js (WP.dates) — loaded before
+  // this module. Local aliases keep the call sites below unchanged.
+  var toISO = WP.dates.toISO, shiftISO = WP.dates.shiftISO;
 
   /* The members whose load distribution we balance: a manager's DIRECT reports
    * (the people doing assignable work), excluding unfilled TBC placeholders so an
@@ -10158,19 +10165,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
  * Tempo — Executive Status (native, live from the Feedback sheet)
  * ------------------------------------------------------------
  * A native, on-brand render of the SAME "Tempo - Feedback (Live)" sheet the
- * Google Slides deck builds from. This page stores NO data of its own — it
- * reads a deployed Apps Script JSON endpoint (WP.config.execStatusEndpoint) at
- * view time. Deck + page are two thin views over one source of truth (the
- * sheet); neither can drift. The only shared logic is the status->color map.
+ * Google Slides deck builds from. This view holds NO data of its own — it reads
+ * a deployed Apps Script JSON endpoint (WP.config.execStatusEndpoint) at view
+ * time via JSONP and paints the result. Deck + page are two thin views over one
+ * source of truth (the sheet). (JSONP lives here in the ui layer because it
+ * needs the DOM; core is kept DOM-free by rule — see verify-architecture.)
  *
  * WHY native (not an embedded deck iframe): a PRIVATE Google Slides deck does
  * not frame inline — Google shows a sign-in / request-access box. We keep the
  * deck PRIVATE and reach it via the "Open / present" button (board / PDF /
  * present mode) instead of embedding it.
- *
- * WHY JSONP (not fetch): Apps Script web apps 302-redirect and send no CORS
- * headers, so fetch()/XHR from GitHub Pages fails. We load the endpoint with a
- * <script> tag + ?callback=, which is exempt from CORS.
  *
  * Gated to Director + Admin (WP.execDeckVisible → endpoint set AND
  * WP.can('viewSettings')). Re-checked here (defence in depth): a member or an
@@ -10180,13 +10184,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   'use strict';
   const ui = WP.ui;
 
-  // ---- status -> color bucket (mirror of the deck; the ONE shared rule) ------
-  // Colours resolve to CSS tokens (tokens.css --exec-*), which hold the exact
-  // hexes the deck uses — so the in-app view and the Slides deck match.
-  const COLORS = {
-    green:  'var(--exec-green)',  amber: 'var(--exec-amber)', red: 'var(--exec-red)',
-    violet: 'var(--exec-violet)', grey:  'var(--exec-grey)',
-  };
+  // status -> colour bucket. NOTE: the Google Slides deck (docs/exec-deck/Code.gs)
+  // is a SEPARATE Apps Script runtime and keeps its OWN copy of this rule — it
+  // cannot import this file, so this is NOT a shared module. The two are kept in
+  // sync by hand + the bucket contract pinned in test/verify-exec.js (change one
+  // side's regex and CI trips). Keep Code.gs's statusColorKey aligned.
   function statusColorKey(raw) {
     const s = String(raw || '').toLowerCase();
     if (/done|live|shipped|on.?track/.test(s)) return 'green';
@@ -10195,7 +10197,15 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     if (/later|planned|idea/.test(s)) return 'violet';
     return 'grey';
   }
-  WP.execStatusColorKey = statusColorKey;   // exported for tests
+  // Back-compat + test hook + a stable data surface for the buckets.
+  WP.execStatus = { statusColorKey: statusColorKey };
+  WP.execStatusColorKey = statusColorKey;
+  // Presentational colour tokens for each bucket (view-owned). Resolve to
+  // tokens.css --exec-* vars, which hold the exact hexes the deck uses.
+  const COLORS = {
+    green:  'var(--exec-green)',  amber: 'var(--exec-amber)', red: 'var(--exec-red)',
+    violet: 'var(--exec-violet)', grey:  'var(--exec-grey)',
+  };
 
   // ---- relative time from an ISO string ("just now", "3h ago", "2d ago") -----
   function relTime(iso) {
@@ -10214,7 +10224,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   }
 
   // ---- JSONP loader: builds a <script src=…?callback=FN>, NO fetch/XHR --------
-  // Resolves with the parsed payload, rejects on load error or 10s timeout.
+  // Lives in this ui-layer view because it needs the DOM (a <script> tag); the
+  // core layer is kept DOM-free by rule. WHY JSONP not fetch: the deployed Apps
+  // Script web app 302-redirects and sends no CORS headers, so a cross-origin
+  // fetch() from GitHub Pages fails; a script tag is CORS-exempt. Resolves with
+  // the parsed payload; rejects on load error or a 10s timeout. Self-cleaning.
   let jsonpSeq = 0;
   function loadJSONP(url) {
     return new Promise(function (resolve, reject) {
@@ -13063,6 +13077,19 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     };
   }
 
+  // Pure route resolver — maps the requested route to the one we actually render,
+  // applying the deferred-surface guard (MVP flag) and RBAC gates. No side
+  // effects: never mutates WP.state, never calls setState (keeps the render pass
+  // clean). If a persisted/stale route is denied, the router just renders the
+  // fallback; setState-driven navigation is where the persisted value updates.
+  function effectiveRoute(route) {
+    if (WP.deferred(route)) return 'dashboard';
+    if (route === 'activity' && !WP.can('manageAdmins')) return 'map';
+    if (route === 'admins' && !WP.can('manageAdmins')) return 'map';
+    if (route === 'exec' && !(WP.execDeckVisible && WP.execDeckVisible())) return 'dashboard';
+    return route;
+  }
+
   WP.render = function () {
     WP.applyDocAttrs();
     const bar = document.getElementById('topbar');
@@ -13085,28 +13112,30 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     bar.style.display = '';
     if (appbar) appbar.style.display = '';
     if (backdrop) backdrop.style.display = '';
-    // MVP flag (defence in depth): a deferred route — reached by a stale
-    // link, bookmark, or restored session — redirects to home. The nav
-    // already hides these entries; this guards the route itself.
-    if (WP.deferred(WP.state.route)) WP.state.route = 'dashboard';
+    // Resolve the EFFECTIVE route ONCE, before dispatch — a pure function of
+    // state, no WP.state mutation and no re-entrant setState during the render
+    // pass (both were state-discipline violations). A deferred route (stale
+    // link/bookmark/restored session; nav already hides these) or an
+    // RBAC-denied route falls back to its safe home here.
+    const route = effectiveRoute(WP.state.route);
     topbar();
-    if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
-    else if (WP.state.route === 'profile') WP.ui.profile.render(root);
-    else if (WP.state.route === 'settings') WP.ui.settings.render(root);
-    else if (WP.state.route === 'activity') { if (WP.can('manageAdmins')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
-    else if (WP.state.route === 'exec') { if (WP.execDeckVisible && WP.execDeckVisible()) WP.ui.exec.render(root); else WP.setState({ route: 'dashboard' }); }
-    else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
-    else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);
-    else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);
-    else if (WP.state.route === 'upward') WP.ui.upward.render(root);
-    else if (WP.state.route === 'evaluations') WP.ui.evaluations.render(root);
-    else if (WP.state.route === 'wellbeing') WP.ui.wellbeing.render(root);
-    else if (WP.state.route === 'fairness') WP.ui.fairness.render(root);
-    else if (WP.state.route === 'me') WP.ui.me.render(root);
-    else if (WP.state.route === 'weekly') WP.ui.weeklyReport.render(root);
-    else if (WP.state.route === 'org') WP.ui.readiness.orgRender(root);
-    else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
-    else if (WP.state.route === 'admins') { if (WP.can('manageAdmins')) WP.ui.admins.render(root); else WP.setState({ route: 'map' }); }
+    if (route === 'dashboard') WP.ui.dashboard.render(root);
+    else if (route === 'profile') WP.ui.profile.render(root);
+    else if (route === 'settings') WP.ui.settings.render(root);
+    else if (route === 'activity') WP.ui.activity.render(root);
+    else if (route === 'exec') WP.ui.exec.render(root);
+    else if (route === 'daily') WP.ui.dailyTasks.render(root);
+    else if (route === 'permissions') WP.ui.permissions.render(root);
+    else if (route === 'evaluation') WP.ui.evaluation.render(root);
+    else if (route === 'upward') WP.ui.upward.render(root);
+    else if (route === 'evaluations') WP.ui.evaluations.render(root);
+    else if (route === 'wellbeing') WP.ui.wellbeing.render(root);
+    else if (route === 'fairness') WP.ui.fairness.render(root);
+    else if (route === 'me') WP.ui.me.render(root);
+    else if (route === 'weekly') WP.ui.weeklyReport.render(root);
+    else if (route === 'org') WP.ui.readiness.orgRender(root);
+    else if (route === 'library') WP.ui.wbkLibrary.render(root);
+    else if (route === 'admins') WP.ui.admins.render(root);
     else WP.ui.workloadMap.render(root);
 
     // Every page is fluid / full-width now (no readable cap on `main`), so there's

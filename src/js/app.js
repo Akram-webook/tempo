@@ -184,6 +184,19 @@
     };
   }
 
+  // Pure route resolver — maps the requested route to the one we actually render,
+  // applying the deferred-surface guard (MVP flag) and RBAC gates. No side
+  // effects: never mutates WP.state, never calls setState (keeps the render pass
+  // clean). If a persisted/stale route is denied, the router just renders the
+  // fallback; setState-driven navigation is where the persisted value updates.
+  function effectiveRoute(route) {
+    if (WP.deferred(route)) return 'dashboard';
+    if (route === 'activity' && !WP.can('manageAdmins')) return 'map';
+    if (route === 'admins' && !WP.can('manageAdmins')) return 'map';
+    if (route === 'exec' && !(WP.execDeckVisible && WP.execDeckVisible())) return 'dashboard';
+    return route;
+  }
+
   WP.render = function () {
     WP.applyDocAttrs();
     const bar = document.getElementById('topbar');
@@ -206,28 +219,30 @@
     bar.style.display = '';
     if (appbar) appbar.style.display = '';
     if (backdrop) backdrop.style.display = '';
-    // MVP flag (defence in depth): a deferred route — reached by a stale
-    // link, bookmark, or restored session — redirects to home. The nav
-    // already hides these entries; this guards the route itself.
-    if (WP.deferred(WP.state.route)) WP.state.route = 'dashboard';
+    // Resolve the EFFECTIVE route ONCE, before dispatch — a pure function of
+    // state, no WP.state mutation and no re-entrant setState during the render
+    // pass (both were state-discipline violations). A deferred route (stale
+    // link/bookmark/restored session; nav already hides these) or an
+    // RBAC-denied route falls back to its safe home here.
+    const route = effectiveRoute(WP.state.route);
     topbar();
-    if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
-    else if (WP.state.route === 'profile') WP.ui.profile.render(root);
-    else if (WP.state.route === 'settings') WP.ui.settings.render(root);
-    else if (WP.state.route === 'activity') { if (WP.can('manageAdmins')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
-    else if (WP.state.route === 'exec') { if (WP.execDeckVisible && WP.execDeckVisible()) WP.ui.exec.render(root); else WP.setState({ route: 'dashboard' }); }
-    else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
-    else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);
-    else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);
-    else if (WP.state.route === 'upward') WP.ui.upward.render(root);
-    else if (WP.state.route === 'evaluations') WP.ui.evaluations.render(root);
-    else if (WP.state.route === 'wellbeing') WP.ui.wellbeing.render(root);
-    else if (WP.state.route === 'fairness') WP.ui.fairness.render(root);
-    else if (WP.state.route === 'me') WP.ui.me.render(root);
-    else if (WP.state.route === 'weekly') WP.ui.weeklyReport.render(root);
-    else if (WP.state.route === 'org') WP.ui.readiness.orgRender(root);
-    else if (WP.state.route === 'library') WP.ui.wbkLibrary.render(root);
-    else if (WP.state.route === 'admins') { if (WP.can('manageAdmins')) WP.ui.admins.render(root); else WP.setState({ route: 'map' }); }
+    if (route === 'dashboard') WP.ui.dashboard.render(root);
+    else if (route === 'profile') WP.ui.profile.render(root);
+    else if (route === 'settings') WP.ui.settings.render(root);
+    else if (route === 'activity') WP.ui.activity.render(root);
+    else if (route === 'exec') WP.ui.exec.render(root);
+    else if (route === 'daily') WP.ui.dailyTasks.render(root);
+    else if (route === 'permissions') WP.ui.permissions.render(root);
+    else if (route === 'evaluation') WP.ui.evaluation.render(root);
+    else if (route === 'upward') WP.ui.upward.render(root);
+    else if (route === 'evaluations') WP.ui.evaluations.render(root);
+    else if (route === 'wellbeing') WP.ui.wellbeing.render(root);
+    else if (route === 'fairness') WP.ui.fairness.render(root);
+    else if (route === 'me') WP.ui.me.render(root);
+    else if (route === 'weekly') WP.ui.weeklyReport.render(root);
+    else if (route === 'org') WP.ui.readiness.orgRender(root);
+    else if (route === 'library') WP.ui.wbkLibrary.render(root);
+    else if (route === 'admins') WP.ui.admins.render(root);
     else WP.ui.workloadMap.render(root);
 
     // Every page is fluid / full-width now (no readable cap on `main`), so there's

@@ -25,6 +25,22 @@
   const MS_DAY = 86400000;
 
   function parse(d) { return new Date(d + 'T00:00:00Z'); }
+
+  /* Shared ISO-date helpers (single source — fairness.js + wellbeing.js consume
+   * WP.dates instead of keeping their own verbatim copies). toISO normalizes any
+   * ref (Date | 'YYYY-MM-DD' | falsy→refDate/today) to 'YYYY-MM-DD'; shiftISO
+   * moves an ISO day by ±days in UTC. */
+  function toISO(ref) {
+    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
+    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
+    return String(ref).slice(0, 10);
+  }
+  function shiftISO(refISO, days) {
+    var d = new Date(refISO + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+  WP.dates = { toISO: toISO, shiftISO: shiftISO };
   function dayCountInclusive(startMs, endMs) {
     return Math.max(0, Math.round((endMs - startMs) / MS_DAY) + 1);
   }

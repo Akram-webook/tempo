@@ -160,6 +160,11 @@
   WP.setState = function (patch) {
     var wasAuthed = !!WP.state.authed;
     Object.assign(WP.state, patch);
+    // Clamp a deferred (MVP-hidden) route to home HERE, before persist — so the
+    // corrected route is what gets saved and a reload can't re-land on a hidden
+    // surface. RBAC route gates stay in the render router (effectiveRoute), which
+    // must not rewrite state. Guarded: WP.deferred (config.js) loads after state.js.
+    if (WP.deferred && WP.deferred(WP.state.route)) WP.state.route = 'dashboard';
     var nowAuthed = !!WP.state.authed;
     // Identity lifecycle: lock on sign-in, clear on sign-out. A "View as" change
     // (viewerId changes while authed stays true) deliberately does NOT re-key.
