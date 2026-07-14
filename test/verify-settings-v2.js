@@ -2,7 +2,7 @@
  *   1. Every signed-in user gets a "My settings" tab; the "Workspace" tab exists
  *      ONLY for viewSettings (admin/director) — a specialist never sees it.
  *   2. Personal → Preferences renders theme + language segmented controls (density
- *      removed; date format shown as read-only info) and changing one persists.
+ *      and date format both removed) and changing one persists.
  *   3. Personal → Notifications renders the WHAT (assignments/mentions/evaluations)
  *      + WHERE (email/Slack) toggles — no in-app, no digest, no quiet hours;
  *      toggling one persists to WP.state.prefs.notif.
@@ -54,14 +54,14 @@ h = el.innerHTML;
 assert(/data-subtab="workspace"/.test(h), 'admin gets the Workspace tab');
 assert(/data-subtab="mine"/.test(h), 'admin also gets My settings');
 
-// ---- 2) Preferences: theme + language only; density removed; date = info ----
+// ---- 2) Preferences: theme + language only; density + date format removed ---
 be('p_akram'); WP._settingsTab = 'mine'; WP.ui.settings.render(el);
 h = el.innerHTML;
 assert(/data-seg="theme"/.test(h), 'theme segmented control renders');
 assert(/data-seg="lang"/.test(h), 'language segmented control renders');
 assert(!/data-seg="density"/.test(h), 'density control is REMOVED');
-assert(!/data-seg="dateFormat"/.test(h), 'date-format is no longer a picker (info only)');
-assert(new RegExp(WP.i18n.t('prefDateFmt')).test(h), 'date format is still shown (as read-only info)');
+assert(!/data-seg="dateFormat"/.test(h), 'date-format picker is REMOVED');
+assert(!new RegExp(WP.i18n.t('prefDateFmt')).test(h), 'date format row is REMOVED entirely');
 // microcopy present under a control (best practice)
 assert(/set-item-note/.test(h), 'inline microcopy present under controls');
 // theme via segmented → state
@@ -86,10 +86,10 @@ WP.prefs.set('notif.channels.email', true);
 
 // ---- 4) i18n coverage (EN + AR) --------------------------------------------
 const keys = ['setTabMine','setTabWorkspace','setMineSub','prefsTitle','prefTheme','prefThemeNote',
-  'prefLang','prefDateFmt','prefDateFmtInfo','prefSaved',
+  'prefLang','prefSaved',
   'notifTitle','notifSub','notifWhat','notifWhere','notifEmail','notifSlack',
   'notifAssignments','notifMentions','notifEvaluations',
-  'acctTitle','acctReadonly','acctRoleWhy_spec','acctRoleWhy_admin'];
+  'acctTitle','acctReadonly'];
 keys.forEach(function (k) {
   WP.state.lang = 'en'; const en = WP.i18n.t(k);
   WP.state.lang = 'ar'; const ar = WP.i18n.t(k);
@@ -103,5 +103,5 @@ catch (e) { errors.push('[assert] AR/dark render threw: ' + e.message); }
 WP.state.lang = 'en'; WP.state.theme = 'light';
 
 if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-console.log('PASS — settings v2 (trimmed): personal for everyone, Workspace gated; Preferences = theme + language (density removed, date shown as info); Notifications = what (assignments/mentions/evaluations) + where (email/Slack), no inapp/digest/quiet; toggles persist; WP.fmt.date honors pref; role shows a plain meaning; EN+AR both themes.');
+console.log('PASS — settings v2 (trimmed): personal for everyone, Workspace gated; Preferences = theme + language only (density + date format removed); Notifications = what (assignments/mentions/evaluations) + where (email/Slack), no inapp/digest/quiet; toggles persist; WP.fmt.date still formats; EN+AR both themes.');
 process.exit(0);
