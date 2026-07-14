@@ -248,7 +248,7 @@
           '<div class="ttl">' + ui.esc(WP.i18n.title(p)) +
             (evaluator ? ' · ' + t('evaluator') + ': ' + ui.esc(WP.i18n.name(evaluator)) : '') + '</div></div>' +
         '<div class="eval-score"><div class="eval-num">' + (score == null ? '–' : score) + '<span>/5</span></div>' +
-          '<span class="rating ' + statusClass(ev.status) + '">' + ui.esc(ev.status) + '</span></div>' +
+          '<span class="rating ' + statusClass(ev.status) + '">' + ui.esc(WP.i18n.evalStatus(ev.status)) + '</span></div>' +
       '</div>' +
 
       (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +

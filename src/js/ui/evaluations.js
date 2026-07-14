@@ -11,7 +11,7 @@
 
   function statusChip(s) {
     const cls = s === 'Completed' ? 'Exceeds' : s === 'In progress' ? 'Developing' : 'Meets';
-    return '<span class="rating ' + cls + '">' + s + '</span>';
+    return '<span class="rating ' + cls + '">' + WP.ui.esc(WP.i18n.evalStatus(s)) + '</span>';
   }
 
   // Backend sync states (loading / offline-fallback / subtle success). Reads

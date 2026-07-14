@@ -552,6 +552,10 @@
     // does tree-jump; the table search filters the directory list itself.
     if (listMode && people.length) {
       const canManage = WP.access.canManage(viewer);
+      // Burnout is a wellbeing signal — same gate as the card view (line ~148):
+      // only show it to someone who may view wellbeing. Never a bare per-person
+      // flag for everyone (Constitution II — no surveillance; V — explainable).
+      const canWell = WP.wellbeing && WP.wellbeing.canView(viewer);
       const stTone = function (key) { return key === 'available' || key === 'balanced' ? 'ok' : key === 'near' ? 'warn' : 'bad'; };
       // The team a person belongs to = nearest ancestor carrying a team label.
       const teamName = function (p) { const l = teamLeadOf(p.id); return l ? teamLabel(l) : '—'; };
@@ -577,7 +581,7 @@
           if (key === 'team') return ui.esc(teamName(p));
           if (key === 'load') return s.load + '%';
           return WP.ui.statusBadge(stTone(s.state.key), WP.i18n.stateLabel(s.state)) +
-            (s.burnout ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
+            ((s.burnout && canWell) ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
         },
         actions: function () {
           const a = [{ act: 'open', icon: 'eye', label: t('openProfile') }];

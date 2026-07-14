@@ -2332,8 +2332,10 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   </div>
   <div id="overlay-host"></div>
 
-  <!-- Load order matters: data → core → ui → app.
-       Plain scripts (no build step) so index.html opens directly. -->
+  <!-- Load order matters: core bootstrap utils (log, sha256) → data → core → ui → app.
+       log.js + sha256.js are dependency-free leaf utilities loaded first so the
+       data seed can hash emails (mock-data uses WP.sha256, guarded). Plain
+       scripts (no build step) so index.html opens directly. -->
   <script>
 /* Tempo — structured logger (observability, no surveillance)
  * ------------------------------------------------------------
@@ -4048,7 +4050,6 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     freeForWork:    { en: 'Free for work', ar: 'متاح للعمل' },
     toDevelop:      { en: 'To develop', ar: 'للتطوير' },
     myLoad:         { en: 'My load', ar: 'حملي' },
-    yourGrowth:     { en: 'Your growth', ar: 'نموّك' },
     quickLinks:     { en: 'Quick links', ar: 'روابط سريعة' },
     healthy:        { en: 'healthy', ar: 'سليم' },
     allClear:       { en: 'All clear — nobody overloaded.', ar: 'كل شيء سليم — لا أحد محمّل زيادة.' },
@@ -4273,6 +4274,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   function stateLabel(stateObj) {
     return WP.state.lang === 'ar' ? stateObj.labelAr : stateObj.labelEn;
   }
+  // Localized label for an evaluation status ENUM ('Completed' | 'In progress' |
+  // 'Not started'). Keep the raw enum for CSS/status-class; translate only the
+  // TEXT so Arabic never shows the English enum. Single source (used by the
+  // evaluations hub + the evaluation detail) so the mapping can't drift.
+  function evalStatus(s) {
+    var k = s === 'Completed' ? 'statusCompleted'
+      : s === 'In progress' ? 'statusInProgress'
+      : s === 'Not started' ? 'statusNotStarted' : null;
+    return k ? t(k) : s;
+  }
 
   // Short, localized date like "21 Jun" — used for "Joining 21 Jun" chips.
   const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -4283,7 +4294,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()];
   }
 
-  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, shortDate };
+  WP.i18n = { t, plural, isRTL, name, title, eventName, stateLabel, evalStatus, shortDate };
 })(window.WP = window.WP || {});
 
 </script>
@@ -8985,6 +8996,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // does tree-jump; the table search filters the directory list itself.
     if (listMode && people.length) {
       const canManage = WP.access.canManage(viewer);
+      // Burnout is a wellbeing signal — same gate as the card view (line ~148):
+      // only show it to someone who may view wellbeing. Never a bare per-person
+      // flag for everyone (Constitution II — no surveillance; V — explainable).
+      const canWell = WP.wellbeing && WP.wellbeing.canView(viewer);
       const stTone = function (key) { return key === 'available' || key === 'balanced' ? 'ok' : key === 'near' ? 'warn' : 'bad'; };
       // The team a person belongs to = nearest ancestor carrying a team label.
       const teamName = function (p) { const l = teamLeadOf(p.id); return l ? teamLabel(l) : '—'; };
@@ -9010,7 +9025,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
           if (key === 'team') return ui.esc(teamName(p));
           if (key === 'load') return s.load + '%';
           return WP.ui.statusBadge(stTone(s.state.key), WP.i18n.stateLabel(s.state)) +
-            (s.burnout ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
+            ((s.burnout && canWell) ? ' <span title="' + t('burnoutFlag') + '" style="color:var(--state-overloaded)">' + WP.ui.icon('flame', 13) + '</span>' : '');
         },
         actions: function () {
           const a = [{ act: 'open', icon: 'eye', label: t('openProfile') }];
@@ -11150,7 +11165,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
           '<div class="ttl">' + ui.esc(WP.i18n.title(p)) +
             (evaluator ? ' · ' + t('evaluator') + ': ' + ui.esc(WP.i18n.name(evaluator)) : '') + '</div></div>' +
         '<div class="eval-score"><div class="eval-num">' + (score == null ? '–' : score) + '<span>/5</span></div>' +
-          '<span class="rating ' + statusClass(ev.status) + '">' + ui.esc(ev.status) + '</span></div>' +
+          '<span class="rating ' + statusClass(ev.status) + '">' + ui.esc(WP.i18n.evalStatus(ev.status)) + '</span></div>' +
       '</div>' +
 
       (showPrep ? '<div class="section eval-prep" id="eval-prep-host" aria-live="polite"><div class="ttl">' + WP.ui.icon('clipboard',14) + ' ' + t('epLoading') + '</div></div>' : '') +
@@ -11378,7 +11393,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   function statusChip(s) {
     const cls = s === 'Completed' ? 'Exceeds' : s === 'In progress' ? 'Developing' : 'Meets';
-    return '<span class="rating ' + cls + '">' + s + '</span>';
+    return '<span class="rating ' + cls + '">' + WP.ui.esc(WP.i18n.evalStatus(s)) + '</span>';
   }
 
   // Backend sync states (loading / offline-fallback / subtle success). Reads
