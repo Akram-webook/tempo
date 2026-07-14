@@ -1,11 +1,11 @@
 /* Settings v2 (personal + workspace split). Proves:
  *   1. Every signed-in user gets a "My settings" tab; the "Workspace" tab exists
  *      ONLY for viewSettings (admin/director) — a specialist never sees it.
- *   2. Personal → Preferences renders theme/language/density/date-format segmented
- *      controls and changing one persists (density/dateFormat via WP.prefs; theme/lang
- *      via state) and shows a saved confirmation.
- *   3. Personal → Notifications renders channel + category toggles + quiet hours;
- *      toggling a channel persists to WP.state.prefs.notif.
+ *   2. Personal → Preferences renders theme + language segmented controls (density
+ *      removed; date format shown as read-only info) and changing one persists.
+ *   3. Personal → Notifications renders the WHAT (assignments/mentions/evaluations)
+ *      + WHERE (email/Slack) toggles — no in-app, no digest, no quiet hours;
+ *      toggling one persists to WP.state.prefs.notif.
  *   4. WP.prefs defaults/merge are safe (old saved shape → no undefined keys), and
  *      WP.fmt.date honors the dateFormat pref.
  *   5. i18n: every new key present in EN and AR; renders under AR/dark too.
@@ -31,12 +31,11 @@ function be(id) { WP.state.viewerId = id; WP.state.authed = true; WP._settingsTa
 
 // ---- 0) prefs foundation: defaults + safe merge + date format ---------------
 assert(WP.prefs && typeof WP.prefs.get === 'function', 'WP.prefs helper exists');
-assert(WP.prefs.get('density') === 'comfortable', 'default density = comfortable');
 assert(WP.prefs.get('notif.channels.email') === true, 'default notif channel present');
 // a stale saved shape missing new keys must not yield undefined
 WP.state.prefs = { density: 'compact' };              // simulate an old save
 WP.state.prefs = WP.prefs.defaults();                  // reset for a clean run
-assert(typeof WP.prefs.get('notif.quietHours.on') === 'boolean', 'quietHours default present after merge');
+// date-format plumbing still works (shown as info now, not a picker)
 WP.state.prefs.dateFormat = 'iso';  assert(WP.fmt.date('2026-12-31') === '2026-12-31', 'fmt.date iso');
 WP.state.prefs.dateFormat = 'dmy';  assert(WP.fmt.date('2026-12-31') === '31/12/2026', 'fmt.date dmy');
 WP.state.prefs = WP.prefs.defaults();
@@ -55,32 +54,30 @@ h = el.innerHTML;
 assert(/data-subtab="workspace"/.test(h), 'admin gets the Workspace tab');
 assert(/data-subtab="mine"/.test(h), 'admin also gets My settings');
 
-// ---- 2) Preferences: segmented controls render + change persists ------------
+// ---- 2) Preferences: theme + language only; density removed; date = info ----
 be('p_akram'); WP._settingsTab = 'mine'; WP.ui.settings.render(el);
 h = el.innerHTML;
 assert(/data-seg="theme"/.test(h), 'theme segmented control renders');
 assert(/data-seg="lang"/.test(h), 'language segmented control renders');
-assert(/data-seg="density"/.test(h), 'density segmented control renders');
-assert(/data-seg="dateFormat"/.test(h), 'date-format segmented control renders');
+assert(!/data-seg="density"/.test(h), 'density control is REMOVED');
+assert(!/data-seg="dateFormat"/.test(h), 'date-format is no longer a picker (info only)');
+assert(new RegExp(WP.i18n.t('prefDateFmt')).test(h), 'date format is still shown (as read-only info)');
 // microcopy present under a control (best practice)
 assert(/set-item-note/.test(h), 'inline microcopy present under controls');
-// click density = compact → persists to prefs
-const compactBtn = [...el.querySelectorAll('[data-seg="density"]')].find(b => b.dataset.val === 'compact');
-assert(compactBtn, 'compact density option present');
-compactBtn.click();
-assert(WP.prefs.get('density') === 'compact', 'changing density persists to WP.prefs');
 // theme via segmented → state
 const darkBtn = [...el.querySelectorAll('[data-seg="theme"]')].find(b => b.dataset.val === 'dark');
 darkBtn.click();
 assert(WP.state.theme === 'dark', 'changing theme via Preferences updates state');
 WP.state.theme = 'light';
 
-// ---- 3) Notifications: toggles render + persist; quiet hours reveal ---------
+// ---- 3) Notifications: WHAT + WHERE toggles; no inapp/digest/quiet ----------
 WP._settingsTab = 'mine'; WP.ui.settings.render(el);
 h = el.innerHTML;
-assert(/id="nc-email"/.test(h) && /id="nc-slack"/.test(h) && /id="nc-inapp"/.test(h), 'all 3 delivery channels render');
-assert(/id="ct-assignments"/.test(h) && /id="ct-digest"/.test(h), 'category + digest toggles render');
-assert(/id="q-on"/.test(h), 'quiet-hours toggle renders');
+assert(/id="ct-assignments"/.test(h) && /id="ct-mentions"/.test(h) && /id="ct-evaluations"/.test(h), 'the 3 "what" categories render');
+assert(/id="nc-email"/.test(h) && /id="nc-slack"/.test(h), 'email + Slack "where" toggles render');
+assert(!/id="nc-inapp"/.test(h), 'in-app channel is REMOVED');
+assert(!/id="ct-digest"/.test(h), 'daily digest is REMOVED');
+assert(!/id="q-on"/.test(h), 'quiet hours are REMOVED');
 // toggle email OFF → persists false
 const email = el.querySelector('#nc-email');
 email.checked = false; email.dispatchEvent(new window.Event('change'));
@@ -89,10 +86,10 @@ WP.prefs.set('notif.channels.email', true);
 
 // ---- 4) i18n coverage (EN + AR) --------------------------------------------
 const keys = ['setTabMine','setTabWorkspace','setMineSub','prefsTitle','prefTheme','prefThemeNote',
-  'prefLang','prefDensity','prefDensityNote','prefDateFmt','prefDateAuto','prefSaved',
-  'notifTitle','notifSub','notifChannels','notifEmail','notifSlack','notifInapp','notifWhat',
-  'notifAssignments','notifMentions','notifEvaluations','notifDigest','notifQuiet','notifQuietNote',
-  'acctTitle','acctReadonly'];
+  'prefLang','prefDateFmt','prefDateFmtInfo','prefSaved',
+  'notifTitle','notifSub','notifWhat','notifWhere','notifEmail','notifSlack',
+  'notifAssignments','notifMentions','notifEvaluations',
+  'acctTitle','acctReadonly','acctRoleWhy_spec','acctRoleWhy_admin'];
 keys.forEach(function (k) {
   WP.state.lang = 'en'; const en = WP.i18n.t(k);
   WP.state.lang = 'ar'; const ar = WP.i18n.t(k);
@@ -106,5 +103,5 @@ catch (e) { errors.push('[assert] AR/dark render threw: ' + e.message); }
 WP.state.lang = 'en'; WP.state.theme = 'light';
 
 if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-console.log('PASS — settings v2: personal (My settings) for everyone, Workspace gated to admin/director; Preferences (theme/lang/density/date) with microcopy persist; Notifications channels+categories+quiet-hours persist; WP.prefs defaults safe; WP.fmt.date honors pref; EN+AR both themes.');
+console.log('PASS — settings v2 (trimmed): personal for everyone, Workspace gated; Preferences = theme + language (density removed, date shown as info); Notifications = what (assignments/mentions/evaluations) + where (email/Slack), no inapp/digest/quiet; toggles persist; WP.fmt.date honors pref; role shows a plain meaning; EN+AR both themes.');
 process.exit(0);

@@ -1222,20 +1222,14 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .mbr-access { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); min-width: 92px; }
 .mbr-access.is-on { color: var(--state-available); }
 /* Security → "this device" row (distinct from member rows) */
-.sec-device { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
-.sec-device-id .nm { font-weight: 600; font-size: 14px; }
-.sec-device-id .ttl { font-size: 12px; }
+/* Role meaning — a plain one-liner under the role value in Account. */
+.set-role-why { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
 
-/* Privacy — "what Tempo tracks about me" catalogue + no-surveillance guardrail. */
-.pv-cats { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 4px; }
-.pv-cat { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
-.pv-cat-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.pv-cat-h .nm { font-weight: 600; font-size: 14px; }
-.pv-cat-why { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
-.pv-never { margin: 14px 0; padding: 12px 14px; border: 1px solid var(--border); border-inline-start: 3px solid var(--state-available);
-  border-radius: var(--radius-sm); background: color-mix(in srgb, var(--state-available) 6%, var(--surface)); }
-.pv-never-h { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13.5px; }
-.pv-never-b { font-size: 12.5px; color: var(--text-muted); margin-top: 5px; line-height: 1.55; }
+/* Privacy — a single quiet reassurance line at the foot of My settings. */
+.pv-line { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2);
+  font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.pv-line svg { flex: none; }
 @media (max-width: 560px) {
   .mbr-row { flex-wrap: wrap; }
   .mbr-access { min-width: 0; }

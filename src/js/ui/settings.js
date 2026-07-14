@@ -187,97 +187,84 @@
     const t = WP.i18n.t, v = WP.viewer();
     if (!v) return '';
     function row(k, val) { return '<div class="set-row"><label>' + k + '</label><span>' + ui.esc(val || '—') + '</span></div>'; }
-    var roleLbl = WP.i18n.roleLabel ? WP.i18n.roleLabel(v) : (v.level || '');
+    // Role as a clear label (Specialist / Manager / …) + a plain one-liner
+    // explaining what it means — answers "what does role mean?".
+    var roleLbl = levelLabel(v.level);
+    var roleWhy = t('acctRoleWhy_' + (v.level || 'spec'));
+    var roleCell = '<span>' + ui.esc(roleLbl) +
+      (roleWhy && roleWhy !== 'acctRoleWhy_' + v.level ? '<span class="set-role-why">' + roleWhy + '</span>' : '') + '</span>';
     return '<div class="section"><h3>' + t('acctTitle') + '</h3>' +
       '<div class="acct-head" style="margin-bottom:10px">' + ui.avatar(v, 'var(--brand)') +
         '<div><div class="acct-nm">' + ui.esc(WP.i18n.name(v)) + '</div>' +
         '<div class="ttl">' + ui.esc(WP.i18n.title(v)) + '</div></div></div>' +
       row(t('acctName'), WP.i18n.name(v)) +
-      row(t('acctTitleField'), WP.i18n.title(v)) +
       row(t('acctEmail'), v.email) +
-      row(t('acctRole'), roleLbl) +
+      '<div class="set-row"><label>' + t('acctRole') + '</label>' + roleCell + '</div>' +
       '<div class="disclaimer">' + ui.icon('lock', 12) + ' ' + t('acctReadonly') + '</div></div>';
   }
 
   /* ── Personal: Preferences (theme / language / density / date format) ─────── */
   function preferencesView() {
     const t = WP.i18n.t;
-    const df = WP.prefs.get('dateFormat') || 'auto';
-    // live sample so the date-format choice is concrete
-    const sample = { dmy: '31/12/2026', mdy: '12/31/2026', iso: '2026-12-31' };
+    // Just the two choices people actually change: theme + language. Density is
+    // removed (everyone stays on the comfortable default). Date format is shown
+    // as read-only INFO (how dates look), not a picker — no clutter.
+    const sampleDate = WP.fmt && WP.fmt.date ? WP.fmt.date('2026-12-31') : '31/12/2026';
     return '<div class="section"><h3>' + t('prefsTitle') + '</h3>' +
       settingRow(t('prefTheme'), t('prefThemeNote'),
         segmented('theme', [{ val: 'light', label: t('prefThemeLight') }, { val: 'dark', label: t('prefThemeDark') }], WP.state.theme)) +
       settingRow(t('prefLang'), t('prefLangNote'),
         segmented('lang', [{ val: 'en', label: 'English' }, { val: 'ar', label: 'العربية' }], WP.state.lang)) +
-      settingRow(t('prefDensity'), t('prefDensityNote'),
-        segmented('density', [{ val: 'comfortable', label: t('prefComfortable') }, { val: 'compact', label: t('prefCompact') }], WP.prefs.get('density'))) +
-      settingRow(t('prefDateFmt'), t('prefDateFmtNote'),
-        segmented('dateFormat', [
-          { val: 'auto', label: t('prefDateAuto') },
-          { val: 'dmy', label: sample.dmy }, { val: 'mdy', label: sample.mdy }, { val: 'iso', label: sample.iso }
-        ], df)) +
+      settingRow(t('prefDateFmt'), t('prefDateFmtInfo').replace('{sample}', ui.esc(sampleDate)),
+        '<span class="ttl">' + ui.esc(sampleDate) + '</span>') +
       '</div>';
   }
 
   /* ── Personal: Notifications (channels × categories + digest + quiet hours) ── */
+  /* Simple, readable notifications: two plain questions —
+   *   1) What do you want to hear about?  (assignments / mentions / evaluations)
+   *   2) Where?  (email / Slack)
+   * No in-app toggle (always on), no digest, no quiet hours — just the choices
+   * that actually matter, easy to scan. */
   function notificationsView() {
     const t = WP.i18n.t;
     const ch = WP.prefs.get('notif.channels') || {};
     const cat = WP.prefs.get('notif.categories') || {};
-    const q = WP.prefs.get('notif.quietHours') || {};
     return '<div class="section"><h3>' + t('notifTitle') + '</h3>' +
-      '<div class="sub" style="margin:-4px 0 12px">' + t('notifSub') + '</div>' +
+      '<div class="sub" style="margin:-4px 0 14px">' + t('notifSub') + '</div>' +
 
-      '<div class="mini-label">' + t('notifChannels') + '</div>' +
-      '<div class="set-item-note" style="margin-bottom:8px">' + t('notifChannelsNote') + '</div>' +
-      settingRow(t('notifEmail'), '', toggle('nc-email', ch.email, t('notifEmail'))) +
-      settingRow(t('notifSlack'), '', toggle('nc-slack', ch.slack, t('notifSlack'))) +
-      settingRow(t('notifInapp'), '', toggle('nc-inapp', ch.inapp, t('notifInapp'))) +
-
-      '<div class="mini-label" style="margin-top:14px">' + t('notifWhat') + '</div>' +
+      '<div class="mini-label">' + t('notifWhat') + '</div>' +
       settingRow(t('notifAssignments'), t('notifAssignmentsNote'), toggle('ct-assignments', cat.assignments, t('notifAssignments'))) +
       settingRow(t('notifMentions'), t('notifMentionsNote'), toggle('ct-mentions', cat.mentions, t('notifMentions'))) +
       settingRow(t('notifEvaluations'), t('notifEvaluationsNote'), toggle('ct-evaluations', cat.evaluations, t('notifEvaluations'))) +
-      settingRow(t('notifDigest'), t('notifDigestNote'), toggle('ct-digest', cat.digest, t('notifDigest'))) +
 
-      '<div class="mini-label" style="margin-top:14px">' + t('notifQuiet') + '</div>' +
-      settingRow(t('notifQuiet'), t('notifQuietNote'), toggle('q-on', q.on, t('notifQuiet'))) +
-      '<div class="set-row" id="q-times"' + (q.on ? '' : ' hidden') + '>' +
-        '<label>' + t('notifQuietFrom') + '</label><input type="time" id="q-start" value="' + ui.esc(q.start || '19:00') + '" />' +
-        '<label style="margin-inline-start:12px">' + t('notifQuietTo') + '</label><input type="time" id="q-end" value="' + ui.esc(q.end || '08:00') + '" />' +
-      '</div>' +
+      '<div class="mini-label" style="margin-top:16px">' + t('notifWhere') + '</div>' +
+      settingRow(t('notifEmail'), '', toggle('nc-email', ch.email, t('notifEmail'))) +
+      settingRow(t('notifSlack'), '', toggle('nc-slack', ch.slack, t('notifSlack'))) +
+
       '<div class="disclaimer">' + ui.icon('info', 12) + ' ' + t('notifPrototype') + '</div></div>';
   }
 
   /* ── Wire the personal tab's controls (segmented + toggles + times) ────────── */
   function wirePersonal(root) {
-    // segmented groups → theme/lang go to top-level state; density/dateFormat to prefs
+    // segmented groups → theme + language (the only two live choices now)
     root.querySelectorAll('[data-seg]').forEach(function (b) {
       b.onclick = function () {
         var group = b.dataset.seg, val = b.dataset.val;
         if (group === 'theme') WP.setState({ theme: val });
         else if (group === 'lang') WP.setState({ lang: val });
-        else WP.prefs.set(group, val);   // density | dateFormat
         WP.ui.toast(WP.i18n.t('prefSaved'), 'success');
       };
     });
-    // channel toggles
-    [['nc-email', 'notif.channels.email'], ['nc-slack', 'notif.channels.slack'], ['nc-inapp', 'notif.channels.inapp'],
-     ['ct-assignments', 'notif.categories.assignments'], ['ct-mentions', 'notif.categories.mentions'],
-     ['ct-evaluations', 'notif.categories.evaluations'], ['ct-digest', 'notif.categories.digest']
+    // notification toggles: WHAT (categories) + WHERE (email/Slack)
+    [['ct-assignments', 'notif.categories.assignments'], ['ct-mentions', 'notif.categories.mentions'],
+     ['ct-evaluations', 'notif.categories.evaluations'],
+     ['nc-email', 'notif.channels.email'], ['nc-slack', 'notif.channels.slack']
     ].forEach(function (pair) {
       var el = root.querySelector('#' + pair[0]);
       if (el) el.onchange = function () { WP.prefs.set(pair[1], el.checked); };
     });
-    // quiet-hours toggle reveals the time inputs
-    var qon = root.querySelector('#q-on');
-    if (qon) qon.onchange = function () { WP.prefs.set('notif.quietHours.on', qon.checked); };
-    var qs = root.querySelector('#q-start'), qe = root.querySelector('#q-end');
-    if (qs) qs.onchange = function () { WP.prefs.set('notif.quietHours.start', qs.value); };
-    if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
     wireSecurity(root);
-    wirePrivacy(root);
   }
 
   /* ── Personal: Security (password · devices · last sign-in) ────────────────
@@ -285,31 +272,14 @@
    * (we never handle the old password client-side). "Sign out everywhere" uses
    * Supabase global sign-out. A full per-device list needs the sessions service,
    * so we're honest about that instead of faking rows. */
+  /* Security = just the one useful action: change my password (emails a secure
+   * reset link to the user's own verified email — never handled client-side).
+   * Last-sign-in / device list / sign-out-everywhere / 2FA were noise, removed. */
   function securityView() {
     const t = WP.i18n.t;
-    const last = WP.auth && WP.auth.lastSignInAt && WP.auth.lastSignInAt();
-    const lastStr = last ? WP.fmt.date(last) : t('secLastLoginUnknown');
     return '<div class="section"><h3>' + t('secTitle') + '</h3>' +
-      '<div class="sub" style="margin:-4px 0 12px">' + t('secSub') + '</div>' +
-
-      // Password
       settingRow(t('secPassword'), t('secPasswordNote'),
         '<button class="btn" id="sec-changepw">' + ui.icon('key', 14) + ' ' + t('secChangePw') + '</button>') +
-      // Last sign-in
-      settingRow(t('secLastLogin'), '', '<span class="ttl">' + ui.esc(lastStr) + '</span>') +
-
-      // Devices / sessions
-      '<div class="mini-label" style="margin-top:14px">' + t('secSessions') + '</div>' +
-      '<div class="set-item-note" style="margin-bottom:10px">' + t('secSessionsNote') + '</div>' +
-      '<div class="sec-device"><span class="dot" style="background:var(--state-available)"></span>' +
-        '<div class="sec-device-id"><div class="nm">' + t('secThisDevice') + '</div>' +
-        '<div class="ttl">' + t('secActive') + '</div></div></div>' +
-      '<div style="margin-top:12px"><button class="btn danger" id="sec-signout-all">' +
-        ui.icon('logout', 14) + ' ' + t('secSignOutAll') + '</button></div>' +
-
-      // 2FA (coming soon — honest placeholder, not a fake control)
-      settingRow(t('sec2fa'), t('sec2faNote'),
-        '<span class="tag">' + t('comingSoon') + '</span>') +
       '</div>';
   }
 
@@ -324,17 +294,6 @@
         WP.ui.toast(res && res.ok ? t('secPwSent') : t('secPwError'), res && res.ok ? 'success' : 'error');
       });
     };
-    const so = root.querySelector('#sec-signout-all');
-    if (so) so.onclick = function () {
-      WP.ui.confirm({
-        title: t('secSignOutAllConfirmTitle'), icon: 'logout', danger: true,
-        body: t('secSignOutAllConfirmBody'),
-        confirmLabel: t('secSignOutAll'), cancelLabel: t('cancel')
-      }).then(function (ok) {
-        if (!ok) return;
-        WP.auth.signOutEverywhere();   // ends local session too → app returns to login
-      });
-    };
   }
 
   /* ── Personal: Privacy (what Tempo tracks about me + export my data) ───────
@@ -342,59 +301,12 @@
    * of the DATA CATEGORIES Tempo actually holds about you (each with a why),
    * an explicit statement of what Tempo does NOT do, and a one-click export of
    * your own data (client-side JSON download — no server round-trip, only you). */
-  function privacyView() {
+  /* Privacy trimmed to a single reassurance line (no catalogue, no export) —
+   * Tempo measures work, not people. Kept because the promise is worth stating;
+   * everything detailed was noise. */
+  function privacyLine() {
     const t = WP.i18n.t;
-    const cats = (WP.privacy && WP.privacy.CATEGORIES) || [];
-    const rows = cats.map(function (c) {
-      return '<div class="pv-cat">' +
-        '<div class="pv-cat-h"><span class="nm">' + t('pvCat_' + c.key) + '</span>' +
-          '<span class="tag">' + t('pvSource') + ': ' + t('pvSrc_' + c.source.replace(/\s/g, '_')) + '</span></div>' +
-        '<div class="pv-cat-why">' + t('pvWhy_' + c.key) + '</div></div>';
-    }).join('');
-    return '<div class="section"><h3>' + t('pvTitle') + '</h3>' +
-      '<div class="sub" style="margin:-4px 0 12px">' + t('pvSub') + '</div>' +
-
-      // What Tempo tracks — the honest catalogue
-      '<div class="mini-label">' + t('pvHoldsTitle') + '</div>' +
-      '<div class="pv-cats">' + rows + '</div>' +
-
-      // What Tempo does NOT do — the guardrail, stated plainly
-      '<div class="pv-never"><div class="pv-never-h">' + ui.icon('lock', 13) + ' ' + t('pvNeverTitle') + '</div>' +
-        '<div class="pv-never-b">' + t('pvNeverBody') + '</div></div>' +
-
-      // Export my data
-      settingRow(t('pvExport'), t('pvExportNote'),
-        '<button class="btn" id="pv-export">' + ui.icon('external', 14) + ' ' + t('pvExportBtn') + '</button>') +
-      '</div>';
-  }
-
-  function wirePrivacy(root) {
-    const t = WP.i18n.t;
-    const btn = root.querySelector('#pv-export');
-    if (!btn) return;
-    btn.onclick = function () {
-      const label = btn.innerHTML;
-      btn.disabled = true; btn.textContent = t('pvExporting');
-      WP.privacy.myData(WP.state.refDate).then(function (data) {
-        btn.disabled = false; btn.innerHTML = label;
-        try {
-          const payload = WP.privacy.buildExport(data, new Date().toISOString());
-          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          const who = (data && data.subject) || 'me';
-          a.href = url; a.download = 'tempo-my-data-' + who + '.json';
-          document.body.appendChild(a); a.click(); a.remove();
-          setTimeout(function () { URL.revokeObjectURL(url); }, 0);
-          WP.ui.toast(t('pvExportDone'), 'success');
-        } catch (e) {
-          WP.ui.toast(t('pvExportError'), 'error');
-        }
-      }, function () {
-        btn.disabled = false; btn.innerHTML = label;
-        WP.ui.toast(t('pvExportError'), 'error');
-      });
-    };
+    return '<div class="pv-line">' + ui.icon('lock', 13) + ' ' + t('pvNeverBody') + '</div>';
   }
 
   /* ── Workspace: Members & Access ──────────────────────────────────────────
@@ -527,7 +439,7 @@
 
     const body = tab === 'workspace'
       ? workspaceView()
-      : (accountView() + preferencesView() + notificationsView() + securityView() + privacyView());
+      : (accountView() + preferencesView() + notificationsView() + securityView() + privacyLine());
 
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
