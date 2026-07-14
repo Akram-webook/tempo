@@ -1406,11 +1406,30 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
   transition: background .15s ease;
 }
 .acct-item:hover { background: var(--surface-2); }
+a.acct-item { text-decoration: none; }
+a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
 .acct-item .acct-k { flex: 1; }
 .acct-item .acct-v { color: var(--text-muted); display: inline-flex; align-items: center; }
 .acct-item.danger { color: var(--state-overloaded); }
 .acct-sep { height: 1px; background: var(--border); margin: 6px 4px; }
 .acct-section { padding: 4px 8px 8px; }
+
+/* Executive-status card — director dashboard entry point to the live deck.
+   Brand-accent left edge, whole card is the click target, opens in a new tab. */
+.exec-card {
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 0 18px; padding: 16px 18px;
+  border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
+  border-radius: var(--radius); background: var(--surface);
+  color: var(--text); text-decoration: none;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.exec-card:hover { border-color: var(--border-secondary); background: var(--surface-1); }
+.exec-card:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.exec-card-body { flex: 1; min-width: 0; }
+.exec-card-title { font-weight: 600; font-size: 15px; }
+.exec-card-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+.exec-card-go { flex: none; color: var(--brand); display: inline-flex; align-items: center; }
 .acct-mini { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
 
 @media (max-width: 860px) {
