@@ -1419,11 +1419,12 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 /* Executive-status card — director dashboard entry point to the live deck.
    Brand-accent left edge, whole card is the click target, opens in a new tab. */
 .exec-card {
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 14px; width: 100%;
   margin: 0 0 18px; padding: 16px 18px;
   border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
   border-radius: var(--radius); background: var(--surface);
-  color: var(--text); text-decoration: none;
+  color: var(--text); text-decoration: none; text-align: start;
+  font: inherit; cursor: pointer;
   transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
 }
 .exec-card:hover { border-color: var(--border-secondary); background: var(--surface-1); }

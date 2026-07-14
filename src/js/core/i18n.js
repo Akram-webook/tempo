@@ -538,6 +538,7 @@
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     execStatus:     { en: 'Executive status', ar: 'الحالة التنفيذية' },
     execStatusSub:  { en: 'Live portfolio + what needs you', ar: 'نظرة حيّة على المحفظة وما يحتاج إليك' },
+    execSub:        { en: 'Live across {n} people — portfolio health, what needs you, and team load.', ar: 'محدّث حيّ عبر {n} شخصاً — صحة المحفظة وما يحتاج إليك وحمل الفرق.' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
     prefsLang:      { en: 'Language', ar: 'اللغة' },

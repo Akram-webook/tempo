@@ -62,23 +62,20 @@
     return '<span class="dash-pct" style="color:' + c + '">' + snap.load + '%</span>';
   }
 
-  /* Executive-status card — a full-width entry point at the TOP of the
-   * director dashboard. Renders ONLY when WP.execDeckVisible() (deck URL set
-   * AND viewer is admin/director). The whole card is the click target; it
-   * opens the deck in a NEW TAB (never embedded — it is a Google-auth link).
-   * Empty/off → renders nothing. */
+  /* Executive-status card — a full-width shortcut at the TOP of the director
+   * dashboard that opens the in-app Executive Status page. Renders ONLY for
+   * director/admin (WP.execVisible). The whole card is the click target. */
   function execCard() {
-    if (!WP.execDeckVisible || !WP.execDeckVisible()) return '';
+    if (!WP.execVisible || !WP.execVisible()) return '';
     const t = WP.i18n.t;
-    const url = WP.ui.esc(WP.config.execDeckUrl.trim());
-    return '<a class="exec-card" href="' + url + '" target="_blank" rel="noopener noreferrer" ' +
+    return '<button type="button" class="exec-card" data-go="exec" ' +
       'aria-label="' + t('execStatus') + ' — ' + t('execStatusSub') + '">' +
       '<div class="exec-card-body">' +
         '<div class="exec-card-title">' + t('execStatus') + '</div>' +
         '<div class="exec-card-sub">' + t('execStatusSub') + '</div>' +
       '</div>' +
-      '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('external', 18) + '</span>' +
-      '</a>';
+      '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('arrowRight', 18) + '</span>' +
+      '</button>';
   }
 
   function director(root, viewer) {
