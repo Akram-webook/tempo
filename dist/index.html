@@ -109,7 +109,7 @@
      deck (docs/exec-deck) so the in-app view and the deck match exactly. */
   --exec-green:  #1FA655; /* done / live / on-track */
   --exec-amber:  #F19A2A; /* working / in-progress / in-review / next */
-  --exec-amber-ink: #b56f12; /* AA-readable amber text on light */
+  --exec-amber-ink: #8A5410; /* AA-readable (>=4.5:1) amber text on the light tint */
   --exec-red:    #E03B3B; /* needs input / blocked */
   --exec-violet: #7A5AF8; /* later / planned / idea */
   --exec-grey:   #C2C7CE; /* unknown / empty */
@@ -215,6 +215,14 @@
   --state-over-bg: color-mix(in srgb, var(--state-over) 22%, transparent);
   --state-watch:   #E8843C;
   --state-watch-bg: color-mix(in srgb, var(--state-watch) 22%, transparent);
+  /* Executive Status buckets — lifted for legibility on dark; chip text uses
+     the bright hue (dark-brown ink would vanish on a dark tint). */
+  --exec-green:  #2FBF6B;
+  --exec-amber:  #F5A93E;
+  --exec-amber-ink: #F5A93E;
+  --exec-red:    #F0554F;
+  --exec-violet: #937CFA;
+  --exec-grey:   #6B7280;
   --cat-freelance:    #9A7DFF;
   --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 22%, transparent);
   --cat-joining:      #E0B341; /* brighter gold reads on dark */
@@ -2493,8 +2501,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
  *   Ahmed Othman (Director)
  *   ├─ Ayman Albasha (Sr Mgr) → Batool, Shahad
  *   ├─ Motaa (Sr Mgr · Ticketing) → Akram → {Idris,Gamal,Osama};
- *   │                               Khaled → {Ibrahim};
- *   │                               Abdulrahman Maksousa → {Shamma,Talal}
+ *   │                               Khaled → {Ibrahim, Saleh};
+ *   │                               Abdulrahman Maksousa → {Talal, Shamma}
  *   ├─ Ayah Nasif (Sr Mgr) → Farah, Meshal Bin Howshan, Meshal Alsmari, Rana
  *   └─ Hani Ahmed (Sr Mgr) → Mohamed Zaidan, Ahmed Faraj, Batarfi,
  *                            Omar Zarea (Cashless) → {Aljazi, Rosa, Altahini}
@@ -2553,7 +2561,7 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
     P({ id: 'p_akram', slackId: 'U06H0ASQ761', name: 'Mohammed Akram', nameAr: 'محمد أكرم', initials: 'MA', level: 'manager', managerId: 'p_motaa', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2024-02-04/6593946722801_53f137cdf64568fb3570_original.png', assignedEvents: ['e_mdl_beast', 'e_expo_booth'], dailyCheckin: { plan: 'MDLBEAST staffing grid', done: 'Crew booked', remaining: 'Power supply', learned: 'Faster generator vendor', at: '2026-06-17T08:10:00' } }),
     P({ id: 'p_abdulrahman', slackId: 'U07LF0D3KSN', name: 'A. Maksosah', nameAr: 'عبدالرحمن مقصوصة', initials: 'AM', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-12/10274801113666_1fbe4f7bcf66ca4624f3_original.png', assignedEvents: ['e_intl_summit', 'e_school_fair'], dailyCheckin: { plan: 'Summit run sheet', done: 'Floor plan v1', remaining: 'Vendor quotes', learned: '—', at: '2026-06-17T08:20:00' } }),
     P({ id: 'p_khaled', slackId: 'U06D1GM1RRQ', name: 'Khaled Jeneina', nameAr: 'خالد جنينة', initials: 'KJ', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-14/10293227094166_e7874eb989412974c67e_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala AV', done: 'AV finalized', remaining: 'Guest list', learned: '—', at: '2026-06-17T07:55:00' } }),
-    P({ id: 'p_shamma', slackId: 'U09AH1Z1X6C', name: 'Shamma Alsagr', nameAr: 'شما الصقر', initials: 'SA', level: 'spec', managerId: 'p_motaa', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-05/9668189448720_833ee0a7c097344689a9_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
+    P({ id: 'p_shamma', slackId: 'U09AH1Z1X6C', name: 'Shamma Alsagr', nameAr: 'شما الصقر', initials: 'SA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-05/9668189448720_833ee0a7c097344689a9_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
     P({ id: 'p_idris', slackId: 'U09E1NA1B0W', name: 'Mohammed Adris', nameAr: 'محمد إدريس', initials: 'MA', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-06-15/11365789882978_4bafd0e08a38c77a3670_original.png', assignedEvents: ['e_pop_concert'], dailyCheckin: { plan: 'Shadow festival team', done: 'Signage checklist', remaining: 'Learning the tools', learned: 'Lots — first weeks', at: '2026-06-17T08:00:00' } }),
     P({ id: 'p_tbc_sports', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_motaa', tbc: true, title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
     // Freelancers — kept under their existing line managers, tagged freelance
@@ -2562,6 +2570,7 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
     P({ id: 'p_duha', slackId: '', name: 'Duha Alzahrani', nameAr: 'ضحى الزهراني', initials: 'DA', level: 'spec', managerId: 'p_farah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: null }),
     P({ id: 'p_talal', slackId: 'U08SB865W0Z', name: 'Talal', nameAr: 'طلال', initials: 'TA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-10-02/9621523706694_7e351c3e3a34a08ddd83_original.png', assignedEvents: [], dailyCheckin: { plan: 'Available for assignment', done: 'Helped with gala', remaining: 'Nothing assigned', learned: 'Wants more ownership', at: '2026-06-17T08:00:00' } }),
     P({ id: 'p_ibrahim', slackId: 'U09EF3NPRUZ', name: 'Ibrahim Al-bard', nameAr: 'إبراهيم البارد', initials: 'IA', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-09-08/9473444242659_54d3513cef976a556e43_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala setup support', done: 'Seating map', remaining: 'AV cabling', learned: '—', at: '2026-06-17T08:15:00' } }),
+    P({ id: 'p_saleh', name: 'Saleh', nameAr: 'صالح', initials: 'S', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
     // ===== Entertainment — Aya =====
     P({ id: 'p_ayah', slackId: 'U06DE5USEEM', name: 'Aya Nasif', nameAr: 'آية ناصف', initials: 'AN', level: 'sr_manager', managerId: 'p_ahmed', team: 'Entertainment', teamAr: 'الترفيه', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-03/9633258360626_e5386ad93e75920ed6db_original.png', assignedEvents: [], dailyCheckin: null }),
@@ -2603,7 +2612,7 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   // Unbuilt/dev runs + tests still use the plaintext map. EMAIL_SALT is a per-project constant
   // (not a secret — it only defeats generic rainbow tables). Keep it in sync with build.js.
   const EMAIL_SALT = 'tempo:webook:v1';
-const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7ceacc4d4860728a82', p_abdulrahman: '7f8d2dc11b7005e13871fbbb17c30f1ed0f031d60bcd1a541af62a0090b735fd', p_osama: '59bd186b1cb39a0f46428eb4f55908694b78b4239ebb673cc3e0f2bf123046ae', p_gamal: 'c8f5b9e27d52abefdb8bba5042b921143fc0f4bfa2b6b8b3d4d834fa39dbb66f', p_talal: 'c4a968e7b25f04f3bfa8a3d36613c9a6cfb17edaad41369ad32df3bf2c58d9d8', p_ahmed: '4011d17cecd67e61ab7b9fc890082c412669c655b77eb4edef17e72d7dc324a5', p_shamma: '838dbaa0c8ed5ae32e3f98a9ae0b6472338a3df5dbdb4f26905f6ef988f16139', p_idris: '68c9fff170a7ccf662983514b76d67603d52a76cb099eca58eeaea39e00d2e75', p_zaidan: 'd4ce6ce691b1365bf3194903e8342ba4c9fd864abf1b20c9ac45050eca0ce706', p_faraj: '96bc5903e21a0d2ee949d630a448274063ef959f70ab3f1616e6da3c27a9f3c3', p_meshalB: '785a26fc151c0b333ab7633ab9b3ed80ec705f89ea8d0e883161610544f8b210', p_fouda: '2614eb30bdbb4e4d506df9f1f835fe6bc80dacba00eb409806674ad1cefac59c', p_abdelaal: 'bfac7e4cca377228c7a6fb4706746908e0e7fadab649aceb68a2721548e7e449', p_motaa: 'c660382a5e89cc5d34c4213a7f9cca4adf34fc9cc4e0128b3a95fda57855ed40', p_hamdi: '043a7db438a5d42e04ef58cfd439d2c44e2fa50263b9a31182f10e1d3cf0e3d0', p_ayman: 'b893c4346ab90c95dec37e50e2901def2083e749cf8f6eac374869350d966c26', p_ayah: '7b0369d2d8e0dd5e682f3ca94bf3751ed76efd7837209b3e4abe1884974b34c8', p_hani: 'c9a321eefe9d29dcdafc3ec4ebe25ce7098e5598e22fb628b949d25bee66c32e', p_batool: '0b51a373228fd8fd169d3dcb4a59a12eff51cf6ee59ea9c3ab771beca912f559', p_farah: '3c158dcd0e8dea9dea93bd49ddea30271b59049eacf4f932c84c8da24d9a02fb', p_zarea: '83b9ea999e01c415b18be7ed807aa0df6b7246e61fb882f9abebb4350136366c', p_khaled: '89d422be747ce98c5af7e8eed50704dbe9df1e23ecdee3bcbc7d39f8165e520a', p_amen: 'd018ee7354cb65b6ad09bacd94f4a41227402a72b22584324789e174fb15eb0f', p_batarfi: '1aa668a1531b862eca71627929b9a5b3d26d7e13eda97079dd51dd27f1430ca4', p_rafah: 'dedcb7c28e971a7a5a69d24bab7944c33f86215d2a287c8c5e8bdea374823393', p_aljazi: 'a0ad7dfee009b24fc3b87b7ea6d243058ebcd4f3f91d858a2fcfebe182014a50', p_shahad: '64bccb8ba72689d90444df69625cb500f8eb75e7b0b6a750cfdf9f52e4b506a3', p_duha: '41d7b7a2e074b34895fc703d60ff0d9a5e30823612221fb2425c3848cd6c095c', p_ibrahim: 'ce31080440613eafcfc7f904727c29149fe583953d6c51e330c99fb57d990ce5', p_rana: '6aca8af17bcdfc46e9c08e6ef630606742e6388eba49ef65f1a7d1a647ea5318', p_rosa: 'c26a4866957f373b22efb7e0c162ea38a91b9b830c27a9e8464c1ee359f9de35', p_altahini: '0c195ed862f0eaf7854c3545536e98aabbbdf1709346db91e639971a5ecca567', p_meshalA: '3e22a95551db21794faab963e3a42a7f138f97a737ad46bc1472b72f04036fa9', p_raghdaa: 'b30c5cb067cfbe03933e7cd70deabbb4cc994d580eef965b11bc56a4449f195d' };
+const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7ceacc4d4860728a82', p_abdulrahman: '7f8d2dc11b7005e13871fbbb17c30f1ed0f031d60bcd1a541af62a0090b735fd', p_osama: '59bd186b1cb39a0f46428eb4f55908694b78b4239ebb673cc3e0f2bf123046ae', p_gamal: 'c8f5b9e27d52abefdb8bba5042b921143fc0f4bfa2b6b8b3d4d834fa39dbb66f', p_talal: 'c4a968e7b25f04f3bfa8a3d36613c9a6cfb17edaad41369ad32df3bf2c58d9d8', p_ahmed: '4011d17cecd67e61ab7b9fc890082c412669c655b77eb4edef17e72d7dc324a5', p_shamma: '838dbaa0c8ed5ae32e3f98a9ae0b6472338a3df5dbdb4f26905f6ef988f16139', p_idris: '68c9fff170a7ccf662983514b76d67603d52a76cb099eca58eeaea39e00d2e75', p_zaidan: 'd4ce6ce691b1365bf3194903e8342ba4c9fd864abf1b20c9ac45050eca0ce706', p_faraj: '96bc5903e21a0d2ee949d630a448274063ef959f70ab3f1616e6da3c27a9f3c3', p_meshalB: '785a26fc151c0b333ab7633ab9b3ed80ec705f89ea8d0e883161610544f8b210', p_fouda: '2614eb30bdbb4e4d506df9f1f835fe6bc80dacba00eb409806674ad1cefac59c', p_abdelaal: 'bfac7e4cca377228c7a6fb4706746908e0e7fadab649aceb68a2721548e7e449', p_motaa: 'c660382a5e89cc5d34c4213a7f9cca4adf34fc9cc4e0128b3a95fda57855ed40', p_hamdi: '043a7db438a5d42e04ef58cfd439d2c44e2fa50263b9a31182f10e1d3cf0e3d0', p_ayman: 'b893c4346ab90c95dec37e50e2901def2083e749cf8f6eac374869350d966c26', p_ayah: '7b0369d2d8e0dd5e682f3ca94bf3751ed76efd7837209b3e4abe1884974b34c8', p_hani: 'c9a321eefe9d29dcdafc3ec4ebe25ce7098e5598e22fb628b949d25bee66c32e', p_batool: '0b51a373228fd8fd169d3dcb4a59a12eff51cf6ee59ea9c3ab771beca912f559', p_farah: '3c158dcd0e8dea9dea93bd49ddea30271b59049eacf4f932c84c8da24d9a02fb', p_zarea: '83b9ea999e01c415b18be7ed807aa0df6b7246e61fb882f9abebb4350136366c', p_khaled: '89d422be747ce98c5af7e8eed50704dbe9df1e23ecdee3bcbc7d39f8165e520a', p_amen: 'd018ee7354cb65b6ad09bacd94f4a41227402a72b22584324789e174fb15eb0f', p_batarfi: '1aa668a1531b862eca71627929b9a5b3d26d7e13eda97079dd51dd27f1430ca4', p_rafah: 'dedcb7c28e971a7a5a69d24bab7944c33f86215d2a287c8c5e8bdea374823393', p_aljazi: 'a0ad7dfee009b24fc3b87b7ea6d243058ebcd4f3f91d858a2fcfebe182014a50', p_shahad: '64bccb8ba72689d90444df69625cb500f8eb75e7b0b6a750cfdf9f52e4b506a3', p_duha: '41d7b7a2e074b34895fc703d60ff0d9a5e30823612221fb2425c3848cd6c095c', p_ibrahim: 'ce31080440613eafcfc7f904727c29149fe583953d6c51e330c99fb57d990ce5', p_saleh: '851f96e1107c3a58f812bc9d23db3222a7d2bd3aa0b21e89a224c33b0df4bd17', p_rana: '6aca8af17bcdfc46e9c08e6ef630606742e6388eba49ef65f1a7d1a647ea5318', p_rosa: 'c26a4866957f373b22efb7e0c162ea38a91b9b830c27a9e8464c1ee359f9de35', p_altahini: '0c195ed862f0eaf7854c3545536e98aabbbdf1709346db91e639971a5ecca567', p_meshalA: '3e22a95551db21794faab963e3a42a7f138f97a737ad46bc1472b72f04036fa9', p_raghdaa: 'b30c5cb067cfbe03933e7cd70deabbb4cc994d580eef965b11bc56a4449f195d' };
   // build.js injects `const EMAIL_HASHES = {...}` and removes the EMAILS literal for the
   // public bundle. In dev/tests EMAILS is present and EMAIL_HASHES is absent; guard both.
   const HAS_PLAINTEXT = typeof EMAILS !== 'undefined';
@@ -2651,6 +2660,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     p_gamal:       { joined: '2024-03-01', roleStart: '2024-03-01', lastProgression: '2025-04-01', tier1Delivered: 2,  monthsSinceTier1: 0 },
     p_osama:       { joined: '2023-01-09', roleStart: '2024-09-01', lastProgression: '2024-09-01', tier1Delivered: 4,  monthsSinceTier1: 0 },
     p_ibrahim:     { joined: '2025-02-01', roleStart: '2025-02-01', lastProgression: '2025-02-01', tier1Delivered: 0,  monthsSinceTier1: 6 },
+    p_saleh:       { joined: '2026-01-01', roleStart: '2026-01-01', lastProgression: '2026-01-01', tier1Delivered: 0,  monthsSinceTier1: 0 },
     p_shamma:      { joined: '2024-10-01', roleStart: '2024-10-01', lastProgression: '2024-10-01', tier1Delivered: 1,  monthsSinceTier1: 3 },
     p_talal:       { joined: '2024-08-01', roleStart: '2024-08-01', lastProgression: '2024-08-01', tier1Delivered: 0,  monthsSinceTier1: 9 },
     p_shahad:      { joined: '2025-06-01', roleStart: '2025-06-01', lastProgression: '2025-06-01', tier1Delivered: 0,  monthsSinceTier1: 7 },
@@ -10388,8 +10398,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   let token = 0;   // guards against a stale JSONP resolving after a re-render
 
   function paintBody(host, data) {
-    const body = coverHTML(data.cover) + requestsHTML(data.requests) +
-      wavesHTML(data.waves) + needsHTML(data.requests);
+    // Order is deliberate for a director scan (top = most decision-critical):
+    // 1) cover rollup, 2) WHAT NEEDS YOU (the ask blocked on them — surfaced
+    // high, not buried), 3) your requests, 4) waves detail.
+    const body = coverHTML(data.cover) + needsHTML(data.requests) +
+      requestsHTML(data.requests) + wavesHTML(data.waves);
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = body;
     // refresh the "updated" stamp with the payload's generatedAt

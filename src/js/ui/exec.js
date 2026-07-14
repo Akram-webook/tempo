@@ -260,8 +260,11 @@
   let token = 0;   // guards against a stale JSONP resolving after a re-render
 
   function paintBody(host, data) {
-    const body = coverHTML(data.cover) + requestsHTML(data.requests) +
-      wavesHTML(data.waves) + needsHTML(data.requests);
+    // Order is deliberate for a director scan (top = most decision-critical):
+    // 1) cover rollup, 2) WHAT NEEDS YOU (the ask blocked on them — surfaced
+    // high, not buried), 3) your requests, 4) waves detail.
+    const body = coverHTML(data.cover) + needsHTML(data.requests) +
+      requestsHTML(data.requests) + wavesHTML(data.waves);
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = body;
     // refresh the "updated" stamp with the payload's generatedAt
