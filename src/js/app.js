@@ -42,6 +42,13 @@
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
       { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
     ];
+    // Executive status — an in-app window onto the live Executive Status Deck
+    // (Google Slides). Director/admin only AND only when a deck link is set
+    // (WP.execDeckVisible). Sits right under the dashboard as a first-class
+    // director entry point. Renders nothing otherwise. See src/js/ui/exec.js.
+    if (WP.execDeckVisible && WP.execDeckVisible()) {
+      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execStatus') });
+    }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
@@ -208,6 +215,7 @@
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
     else if (WP.state.route === 'settings') WP.ui.settings.render(root);
     else if (WP.state.route === 'activity') { if (WP.can('manageAdmins')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
+    else if (WP.state.route === 'exec') { if (WP.execDeckVisible && WP.execDeckVisible()) WP.ui.exec.render(root); else WP.setState({ route: 'dashboard' }); }
     else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
     else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);
     else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);

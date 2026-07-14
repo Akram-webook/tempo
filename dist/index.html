@@ -105,6 +105,14 @@
   --state-over-bg: color-mix(in srgb, var(--state-over) 13%, transparent);
   --state-watch:   #D2691E; /* at-risk amber-orange (wellbeing) */
   --state-watch-bg: color-mix(in srgb, var(--state-watch) 14%, transparent);
+  /* Executive Status — status→colour buckets, SHARED with the Google Slides
+     deck (docs/exec-deck) so the in-app view and the deck match exactly. */
+  --exec-green:  #1FA655; /* done / live / on-track */
+  --exec-amber:  #F19A2A; /* working / in-progress / in-review / next */
+  --exec-amber-ink: #b56f12; /* AA-readable amber text on light */
+  --exec-red:    #E03B3B; /* needs input / blocked */
+  --exec-violet: #7A5AF8; /* later / planned / idea */
+  --exec-grey:   #C2C7CE; /* unknown / empty */
   --cat-freelance:    #7C5CFF; /* employment category: Freelance (violet) */
   --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 14%, transparent);
   --cat-joining:      #9A6B00; /* employment category: Joining soon — AA gold text on light */
@@ -1644,6 +1652,105 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .acct-section { padding: 4px 8px 8px; }
 .acct-mini { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
 
+/* Executive-status card — director dashboard entry point to the live deck.
+   Brand-accent leading edge, whole card is the click target, routes in-app to
+   the embedded Executive Status view. It is a <button>, so reset button chrome. */
+.exec-card {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: start;
+  margin: 0 0 18px; padding: 16px 18px;
+  border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
+  border-radius: var(--radius); background: var(--surface);
+  color: var(--text); cursor: pointer; font: inherit;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.exec-card:hover { border-color: var(--border-secondary); background: var(--surface-1); }
+.exec-card:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.exec-card-body { flex: 1; min-width: 0; }
+.exec-card-title { font-weight: 600; font-size: 15px; }
+.exec-card-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+.exec-card-go { flex: none; color: var(--brand); display: inline-flex; align-items: center; }
+[dir="rtl"] .exec-card-go svg { transform: scaleX(-1); }
+
+/* Executive Status view — NATIVE render of the live Feedback sheet (JSONP).
+   On-brand, four sections; mirrors the Google Slides deck. */
+.ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.ex-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--brand-text); }
+.ex-title { font-size: 22px; font-weight: 700; margin: 2px 0 0; }
+.ex-updated { display: inline-block; margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
+.ex-head-actions { display: flex; gap: 8px; flex: none; }
+
+/* Cover rollup */
+.ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.ex-tile { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
+.ex-tile-v { font-size: 26px; font-weight: 700; line-height: 1; }
+.ex-tile-l { color: var(--text-muted); font-size: 12.5px; margin-top: 6px; }
+.ex-tile.is-green .ex-tile-v { color: var(--exec-green); }
+.ex-tile.is-amber .ex-tile-v { color: var(--exec-amber); }
+.ex-tile.is-grey  .ex-tile-v { color: var(--text-muted); }
+.ex-tile.is-ink   .ex-tile-v { color: var(--text); }
+.ex-pct-wrap { margin-top: 16px; }
+.ex-pct-n { font-size: 34px; font-weight: 800; color: var(--brand); }
+.ex-pct-l { color: var(--text-muted); font-size: 13px; }
+.ex-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin-top: 8px; background: var(--surface-1); }
+.ex-bar span { display: block; height: 100%; }
+
+/* Requests */
+.ex-h3 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+.ex-roll { color: var(--text-muted); font-size: 12.5px; margin-bottom: 12px; }
+.ex-rows { display: flex; flex-direction: column; gap: 2px; }
+.ex-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+.ex-row:last-child { border-bottom: 0; }
+.ex-row-main { flex: 1; min-width: 0; }
+.ex-row-area { font-weight: 600; }
+.ex-row-note { color: var(--text-muted); }
+.ex-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.ex-pri { color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; flex: none; }
+.ex-more { color: var(--text-muted); font-size: 12.5px; padding: 8px 4px 0; }
+
+/* Status chips (5 buckets) */
+.ex-chip { flex: none; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.ex-chip--green  { color: var(--exec-green); background: color-mix(in srgb, var(--exec-green) 14%, transparent); }
+.ex-chip--amber  { color: var(--exec-amber-ink); background: color-mix(in srgb, var(--exec-amber) 18%, transparent); }
+.ex-chip--red    { color: var(--exec-red); background: color-mix(in srgb, var(--exec-red) 14%, transparent); }
+.ex-chip--violet { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 14%, transparent); }
+.ex-chip--grey   { color: var(--text-muted); background: var(--surface-1); }
+
+/* Waves */
+.ex-waves { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.ex-wave { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
+.ex-wave-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ex-wave-title { font-weight: 600; }
+.ex-wave-focus { color: var(--text-muted); font-weight: 400; }
+.ex-inside { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ex-inside li { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); }
+.ex-inside svg { flex: none; color: var(--exec-green); }
+.ex-why { color: var(--text-muted); font-size: 12.5px; margin-top: 10px; }
+
+/* Needs you */
+.ex-needs { display: flex; flex-direction: column; gap: 8px; }
+.ex-need { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--exec-red) 30%, var(--border)); border-radius: var(--radius); background: color-mix(in srgb, var(--exec-red) 5%, transparent); }
+.ex-need .ex-dot { margin-top: 5px; }
+.ex-need-from { color: var(--text-muted); font-size: 12px; }
+.ex-clear { display: flex; align-items: center; gap: 8px; color: var(--exec-green); }
+.ex-clear svg { flex: none; }
+
+/* Empty + error + loading states */
+.ex-empty { color: var(--text-muted); font-size: 13px; padding: 8px 4px; }
+.ex-error { text-align: center; padding: 28px 16px; color: var(--text-muted); }
+.ex-error svg { color: var(--state-overloaded); }
+.ex-skel span, .ex-skel-bar, .ex-skel-line { background: linear-gradient(90deg, var(--surface-1) 25%, var(--surface-2) 37%, var(--surface-1) 63%); border-radius: 6px; }
+.ex-skel-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.ex-skel-tiles span { height: 66px; display: block; }
+.ex-skel-bar { height: 10px; margin-top: 16px; }
+.ex-skel-line { height: 14px; margin: 10px 0; }
+.ex-skel-line:nth-child(2) { width: 80%; }
+.ex-skel-line:nth-child(3) { width: 60%; }
+
+@media (max-width: 720px) {
+  .ex-tiles, .ex-skel-tiles { grid-template-columns: repeat(2, 1fr); }
+}
+[dir="rtl"] #exec-refresh svg { transform: scaleX(-1); }
+
 @media (max-width: 860px) {
   .nav-item span { display: none; }     /* icon-only nav on small screens */
   .account-nm { display: none; }
@@ -3155,9 +3262,41 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
    * -------------------------------------------------------------- */
   if (WP.config.mvp === undefined) WP.config.mvp = true;
 
-  // NOTE: the Executive Status Deck lives OUTSIDE this app — it's a standalone,
-  // auto-updating Google Slides deck generated by an Apps Script bound to the
-  // Tempo Feedback Sheet (director-only link). Nothing in the app renders it.
+  /* ----------------------------------------------------------------
+   * Executive Status — live data endpoint + deck link (both reversible).
+   * ----------------------------------------------------------------
+   * The Executive Status is the "Tempo — Feedback (Live)" sheet, surfaced two
+   * thin ways over ONE source of truth (the sheet) — neither stores data, so
+   * neither can drift:
+   *
+   *  - IN-APP VIEW (native): reads a deployed Apps Script JSON endpoint (the
+   *    same sheet the deck builds from) via JSONP and renders on-brand inside
+   *    Tempo. Works for everyone with a Tempo role — no Google sign-in wall.
+   *    See src/js/ui/exec.js. Empty string ⇒ the whole feature renders NOTHING.
+   *
+   *  - DECK (Google Slides): the board / PDF / present-mode artifact, reached
+   *    by the "Open / present" button (new tab). Stays PRIVATE — we do NOT set
+   *    it to "anyone with the link". It is NOT embedded (a private deck won't
+   *    frame; it would show a sign-in box).
+   *
+   * Both entry points (nav item + dashboard card) show ONLY to Director + Admin
+   * (WP.can('viewSettings')). Keep the deck + sheet shared to Director + Akram.
+   * The endpoint URL is not a secret; it returns only status data.
+   * -------------------------------------------------------------- */
+  if (WP.config.execStatusEndpoint === undefined)
+    WP.config.execStatusEndpoint = 'https://script.google.com/macros/s/AKfycbzcvghQNmEFZ5fNSjPIYONrNZVV8fjiboi93_cffS1vrfXPy9Cx4fskGmeVRhjFGu3Krw/exec';
+
+  if (WP.config.execDeckUrl === undefined)
+    WP.config.execDeckUrl = 'https://docs.google.com/presentation/d/1zDbpunKFqiO6AoCZs6O7hH_S6oLUEGI0xiM1vVmZS7A/edit?usp=sharing';
+
+  // True ⇒ the Executive-status entry points should render for this viewer.
+  // Single source of truth for the dashboard card, the nav item and the view:
+  // a non-empty live endpoint AND the admin/director gate (same engine as Settings).
+  WP.execDeckVisible = function () {
+    return typeof WP.config.execStatusEndpoint === 'string' &&
+      WP.config.execStatusEndpoint.trim() !== '' &&
+      WP.can && WP.can('viewSettings');
+  };
 
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
@@ -3713,6 +3852,32 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     errSetPw:       { en: "Couldn't set your password. Open the reset link again from your inbox.", ar: 'تعذّر تعيين كلمة المرور. افتح رابط إعادة التعيين من بريدك.' },
     setPwNote:      { en: 'This link is for your account only — after setting a password you are signed in as yourself.', ar: 'هذا الرابط لحسابك أنت فقط — بعد تعيين كلمة المرور تدخل بهويتك.' },
     navHome:        { en: 'Workload', ar: 'الأحمال' },
+    execStatus:     { en: 'Executive status', ar: 'الحالة التنفيذية' },
+    execStatusSub:  { en: 'Live portfolio + what needs you', ar: 'نظرة حيّة على المحفظة وما يحتاج إليك' },
+    execEyebrow:    { en: 'WEBOOK · WORKFORCE OPS (TEMPO)', ar: 'ويبوك · عمليات القوى العاملة (تيمبو)' },
+    execOpen:       { en: 'Open / present', ar: 'فتح / عرض تقديمي' },
+    execRefresh:    { en: 'Refresh', ar: 'تحديث' },
+    execUpdated:    { en: 'Updated', ar: 'آخر تحديث' },
+    execJustNow:    { en: 'just now', ar: 'الآن' },
+    execMinAgo:     { en: 'm ago', ar: ' د مضت' },
+    execHrAgo:      { en: 'h ago', ar: ' س مضت' },
+    execDayAgo:     { en: 'd ago', ar: ' ي مضت' },
+    execShipped:    { en: 'Shipped / on track', ar: 'مُنجز / على المسار' },
+    execInProgress: { en: 'In progress', ar: 'قيد التنفيذ' },
+    execPlanned:    { en: 'Planned', ar: 'مخطّط' },
+    execTotalWaves: { en: 'Total waves', ar: 'إجمالي الموجات' },
+    execDelivered:  { en: 'delivered', ar: 'مُنجز' },
+    execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
+    execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },
+    execNoRequests: { en: 'No requests on the sheet yet.', ar: 'لا توجد طلبات على الورقة بعد.' },
+    execMore:       { en: 'more', ar: 'أخرى' },
+    execWaves:      { en: 'Waves', ar: 'الموجات' },
+    execNoWaves:    { en: 'No waves on the sheet yet.', ar: 'لا توجد موجات على الورقة بعد.' },
+    execNeedsYou:   { en: 'What needs you', ar: 'ما يحتاج إليك' },
+    execFrom:       { en: 'from', ar: 'من' },
+    execAllClear:   { en: "Nothing needs you right now. You're all clear.", ar: 'لا شيء يحتاج إليك الآن. كل شيء على ما يُرام.' },
+    execError:      { en: "Couldn't reach the live status.", ar: 'تعذّر الوصول إلى الحالة الحيّة.' },
+    execRetry:      { en: 'Retry', ar: 'إعادة المحاولة' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
     prefsLang:      { en: 'Language', ar: 'اللغة' },
@@ -8051,6 +8216,24 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return '<span class="dash-pct" style="color:' + c + '">' + snap.load + '%</span>';
   }
 
+  /* Executive-status card — a full-width entry point at the TOP of the
+   * director dashboard. Renders ONLY when WP.execDeckVisible() (deck URL set
+   * AND viewer is admin/director). The whole card is the click target; it
+   * opens the in-app Executive Status view (which embeds the live deck +
+   * offers "open / present in Google Slides"). Empty/off → renders nothing. */
+  function execCard() {
+    if (!WP.execDeckVisible || !WP.execDeckVisible()) return '';
+    const t = WP.i18n.t;
+    return '<button type="button" class="exec-card" data-go="exec" ' +
+      'aria-label="' + t('execStatus') + ' — ' + t('execStatusSub') + '">' +
+      '<div class="exec-card-body">' +
+        '<div class="exec-card-title">' + t('execStatus') + '</div>' +
+        '<div class="exec-card-sub">' + t('execStatusSub') + '</div>' +
+      '</div>' +
+      '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('arrowRight', 18) + '</span>' +
+      '</button>';
+  }
+
   function director(root, viewer) {
     const t = WP.i18n.t, win = WP.state.window, ref = WP.state.refDate;
     const people = WP.access.visiblePeople(viewer);
@@ -8199,6 +8382,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
     // S3-2 — honest "Sample data" badge while KPIs are seeded, not live.
     root.insertAdjacentHTML('afterbegin', WP.ui.provenanceNote());
+
+    // Executive-status card — director/admin entry point to the live deck.
+    // Prepended LAST so it sits at the very top. Renders nothing when the deck
+    // URL is unset or the viewer isn't admin/director. Its data-go="exec" is
+    // wired by the shared [data-go] handler below (routes in-app to the view).
+    const exec = execCard();
+    if (exec) root.insertAdjacentHTML('afterbegin', exec);
 
     root.querySelectorAll('[data-open]').forEach(function (el) {
       const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };
@@ -9927,6 +10117,324 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   // Reset paging when leaving the page so a re-entry starts fresh.
   WP.ui.activity = { render: render, _reset: function () { shown = PAGE; } };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Executive Status (native, live from the Feedback sheet)
+ * ------------------------------------------------------------
+ * A native, on-brand render of the SAME "Tempo - Feedback (Live)" sheet the
+ * Google Slides deck builds from. This page stores NO data of its own — it
+ * reads a deployed Apps Script JSON endpoint (WP.config.execStatusEndpoint) at
+ * view time. Deck + page are two thin views over one source of truth (the
+ * sheet); neither can drift. The only shared logic is the status->color map.
+ *
+ * WHY native (not an embedded deck iframe): a PRIVATE Google Slides deck does
+ * not frame inline — Google shows a sign-in / request-access box. We keep the
+ * deck PRIVATE and reach it via the "Open / present" button (board / PDF /
+ * present mode) instead of embedding it.
+ *
+ * WHY JSONP (not fetch): Apps Script web apps 302-redirect and send no CORS
+ * headers, so fetch()/XHR from GitHub Pages fails. We load the endpoint with a
+ * <script> tag + ?callback=, which is exempt from CORS.
+ *
+ * Gated to Director + Admin (WP.execDeckVisible → endpoint set AND
+ * WP.can('viewSettings')). Re-checked here (defence in depth): a member or an
+ * empty endpoint redirects home and renders nothing.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  const ui = WP.ui;
+
+  // ---- status -> color bucket (mirror of the deck; the ONE shared rule) ------
+  // Colours resolve to CSS tokens (tokens.css --exec-*), which hold the exact
+  // hexes the deck uses — so the in-app view and the Slides deck match.
+  const COLORS = {
+    green:  'var(--exec-green)',  amber: 'var(--exec-amber)', red: 'var(--exec-red)',
+    violet: 'var(--exec-violet)', grey:  'var(--exec-grey)',
+  };
+  function statusColorKey(raw) {
+    const s = String(raw || '').toLowerCase();
+    if (/done|live|shipped|on.?track/.test(s)) return 'green';
+    if (/working|in.?progress|in.?review|next/.test(s)) return 'amber';
+    if (/needs?.?input|needs?.?you|blocked/.test(s)) return 'red';
+    if (/later|planned|idea/.test(s)) return 'violet';
+    return 'grey';
+  }
+  WP.execStatusColorKey = statusColorKey;   // exported for tests
+
+  // ---- relative time from an ISO string ("just now", "3h ago", "2d ago") -----
+  function relTime(iso) {
+    const t = WP.i18n.t;
+    if (!iso) return '';
+    const then = Date.parse(iso);
+    if (isNaN(then)) return '';
+    const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
+    if (secs < 60) return t('execJustNow');
+    const mins = Math.round(secs / 60);
+    if (mins < 60) return mins + t('execMinAgo');
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return hrs + t('execHrAgo');
+    const days = Math.round(hrs / 24);
+    return days + t('execDayAgo');
+  }
+
+  // ---- JSONP loader: builds a <script src=…?callback=FN>, NO fetch/XHR --------
+  // Resolves with the parsed payload, rejects on load error or 10s timeout.
+  let jsonpSeq = 0;
+  function loadJSONP(url) {
+    return new Promise(function (resolve, reject) {
+      const cbName = 'WP_execCb_' + (++jsonpSeq) + '_' + Math.floor(Date.now() % 1e7);
+      const script = document.createElement('script');
+      let done = false;
+      const cleanup = function () {
+        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+        if (timer) clearTimeout(timer);
+      };
+      const timer = setTimeout(function () {
+        if (done) return; done = true; cleanup(); reject(new Error('timeout'));
+      }, 10000);
+      window[cbName] = function (data) {
+        if (done) return; done = true; cleanup(); resolve(data);
+      };
+      script.onerror = function () {
+        if (done) return; done = true; cleanup(); reject(new Error('network'));
+      };
+      const sep = url.indexOf('?') >= 0 ? '&' : '?';
+      script.src = url + sep + 'callback=' + encodeURIComponent(cbName);
+      (document.head || document.documentElement).appendChild(script);
+    });
+  }
+
+  // ---- small on-brand pieces --------------------------------------------------
+  function dot(key) {
+    return '<span class="ex-dot" style="background:' + COLORS[key] + '" aria-hidden="true"></span>';
+  }
+  function chip(raw) {
+    const key = statusColorKey(raw);
+    const label = ui.esc(String(raw || '—'));
+    return '<span class="ex-chip ex-chip--' + key + '">' + label + '</span>';
+  }
+  function splitInside(s) {
+    return String(s || '').split(/[,;•·\n]+/).map(function (x) { return x.trim(); })
+      .filter(Boolean).slice(0, 6);
+  }
+
+  // ---- section builders -------------------------------------------------------
+  function coverHTML(cover) {
+    const t = WP.i18n.t;
+    const c = cover || {};
+    const done = +c.done || 0, next = +c.next || 0, later = +c.later || 0;
+    const total = +c.total || 0;
+    const pct = (c.pct != null && !isNaN(+c.pct)) ? Math.round(+c.pct)
+      : (total ? Math.round((done / total) * 100) : 0);
+    const w = function (n) { return total ? (n / total * 100) : 0; };
+    const tile = function (label, val, cls) {
+      return '<div class="ex-tile ' + cls + '"><div class="ex-tile-v">' + val + '</div>' +
+        '<div class="ex-tile-l">' + label + '</div></div>';
+    };
+    return '<div class="section ex-cover">' +
+      '<div class="ex-tiles">' +
+        tile(t('execShipped'), done, 'is-green') +
+        tile(t('execInProgress'), next, 'is-amber') +
+        tile(t('execPlanned'), later, 'is-grey') +
+        tile(t('execTotalWaves'), total, 'is-ink') +
+      '</div>' +
+      '<div class="ex-pct-wrap">' +
+        '<div class="ex-pct"><span class="ex-pct-n">' + pct + '%</span> <span class="ex-pct-l">' + t('execDelivered') + '</span></div>' +
+        '<div class="ex-bar" role="img" aria-label="' + pct + '% ' + t('execDelivered') + '">' +
+          '<span style="width:' + w(done) + '%;background:' + COLORS.green + '"></span>' +
+          '<span style="width:' + w(next) + '%;background:' + COLORS.amber + '"></span>' +
+          '<span style="width:' + Math.max(0, w(total - done - next)) + '%;background:' + COLORS.grey + '"></span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // sort order red -> amber -> green -> grey (violet lands with grey tail)
+  const RANK = { red: 0, amber: 1, green: 2, violet: 3, grey: 4 };
+  function requestsHTML(requests) {
+    const t = WP.i18n.t;
+    const list = (requests || []).slice();
+    if (!list.length) {
+      return '<div class="section"><h3 class="ex-h3">' + t('execYourRequests') + '</h3>' +
+        '<div class="ex-empty">' + t('execNoRequests') + '</div></div>';
+    }
+    const keyed = list.map(function (r) { return { r: r, k: statusColorKey(r.status) }; });
+    let done = 0, prog = 0, need = 0;
+    keyed.forEach(function (x) {
+      if (x.k === 'green') done++;
+      else if (x.k === 'amber') prog++;
+      else if (x.k === 'red') need++;
+    });
+    keyed.sort(function (a, b) { return (RANK[a.k] - RANK[b.k]); });
+    const shown = keyed.slice(0, 12);
+    const rows = shown.map(function (x) {
+      const r = x.r;
+      const area = ui.esc(r.area || '—');
+      const note = ui.esc(r.note || '');
+      const pri = r.priority ? '<span class="ex-pri">' + ui.esc(r.priority) + '</span>' : '';
+      return '<div class="ex-row">' + dot(x.k) +
+        '<div class="ex-row-main"><span class="ex-row-area">' + area + '</span>' +
+          (note ? ' <span class="ex-row-note">' + note + '</span>' : '') + '</div>' +
+        chip(r.status) + pri +
+      '</div>';
+    }).join('');
+    const more = keyed.length > 12
+      ? '<div class="ex-more">+' + (keyed.length - 12) + ' ' + t('execMore') + '</div>' : '';
+    const roll = t('execRaised').replace('{n}', list.length).replace('{m}', done)
+      .replace('{k}', prog).replace('{j}', need);
+    return '<div class="section">' +
+      '<h3 class="ex-h3">' + t('execYourRequests') + '</h3>' +
+      '<div class="ex-roll">' + roll + '</div>' +
+      '<div class="ex-rows">' + rows + more + '</div>' +
+    '</div>';
+  }
+
+  function wavesHTML(waves) {
+    const t = WP.i18n.t;
+    const list = (waves || []);
+    if (!list.length) {
+      return '<div class="section"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
+        '<div class="ex-empty">' + t('execNoWaves') + '</div></div>';
+    }
+    const cards = list.map(function (wv) {
+      const title = ui.esc(wv.wave || '—') + (wv.focus ? ' <span class="ex-wave-focus">' + ui.esc(wv.focus) + '</span>' : '');
+      const inside = splitInside(wv.inside);
+      const insideHTML = inside.length
+        ? '<ul class="ex-inside">' + inside.map(function (i) {
+            return '<li>' + ui.icon('check', 13) + ' ' + ui.esc(i) + '</li>';
+          }).join('') + '</ul>' : '';
+      const why = wv.why ? '<div class="ex-why">' + ui.esc(wv.why) + '</div>' : '';
+      return '<div class="ex-wave">' +
+        '<div class="ex-wave-head"><div class="ex-wave-title">' + title + '</div>' + chip(wv.status) + '</div>' +
+        insideHTML + why +
+      '</div>';
+    }).join('');
+    return '<div class="section"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
+      '<div class="ex-waves">' + cards + '</div></div>';
+  }
+
+  // "What needs you" — derived from requests[] whose status is red (needs input),
+  // PLUS "New" and "In review". NOT from waves[].needs.
+  function needsHTML(requests) {
+    const t = WP.i18n.t;
+    const list = (requests || []).filter(function (r) {
+      const s = String(r.status || '').toLowerCase();
+      return statusColorKey(r.status) === 'red' || /\bnew\b/.test(s) || /in.?review/.test(s);
+    });
+    if (!list.length) {
+      return '<div class="section ex-clear">' + ui.icon('check', 18) +
+        ' <span>' + t('execAllClear') + '</span></div>';
+    }
+    const items = list.map(function (r) {
+      const note = ui.esc(r.note || '—');
+      const from = r.area ? ' <span class="ex-need-from">' + t('execFrom') + ' ' + ui.esc(r.area) + '</span>' : '';
+      return '<div class="ex-need">' + dot('red') + '<div class="ex-need-b">' + note + from + '</div></div>';
+    }).join('');
+    return '<div class="section">' +
+      '<h3 class="ex-h3">' + t('execNeedsYou') + '</h3>' +
+      '<div class="ex-needs">' + items + '</div>' +
+    '</div>';
+  }
+
+  // ---- header (always present: title, updated-time, refresh, open/present) ----
+  function headerHTML(generatedAt) {
+    const t = WP.i18n.t;
+    const openUrl = ui.esc((WP.config.execDeckUrl || '').trim());
+    const updated = generatedAt
+      ? '<span class="ex-updated">' + t('execUpdated') + ' ' + ui.esc(relTime(generatedAt)) + '</span>' : '';
+    const openBtn = openUrl
+      ? '<a class="btn" id="exec-open" href="' + openUrl + '" target="_blank" rel="noopener noreferrer">' +
+          ui.icon('external', 15) + ' <span>' + t('execOpen') + '</span></a>' : '';
+    return '<div class="ex-head">' +
+      '<div class="ex-head-t">' +
+        '<div class="ex-eyebrow">' + t('execEyebrow') + '</div>' +
+        '<h2 class="ex-title">' + t('execStatus') + '</h2>' +
+        updated +
+      '</div>' +
+      '<div class="ex-head-actions">' +
+        '<button type="button" class="btn" id="exec-refresh">' + ui.icon('arrowRight', 15) +
+          ' <span>' + t('execRefresh') + '</span></button>' +
+        openBtn +
+      '</div>' +
+    '</div>';
+  }
+
+  function skeleton() {
+    return '<div class="section ex-skel"><div class="ex-skel-tiles">' +
+      '<span></span><span></span><span></span><span></span></div>' +
+      '<div class="ex-skel-bar"></div></div>' +
+      '<div class="section ex-skel"><div class="ex-skel-line"></div><div class="ex-skel-line"></div>' +
+      '<div class="ex-skel-line"></div></div>';
+  }
+
+  function errorHTML() {
+    const t = WP.i18n.t;
+    return '<div class="section ex-error">' + ui.icon('alert', 20) +
+      '<div style="margin-top:8px">' + t('execError') + '</div>' +
+      '<button type="button" class="btn primary" id="exec-retry" style="margin-top:12px">' +
+        t('execRetry') + '</button></div>';
+  }
+
+  // ---- orchestration ----------------------------------------------------------
+  let token = 0;   // guards against a stale JSONP resolving after a re-render
+
+  function paintBody(host, data) {
+    const body = coverHTML(data.cover) + requestsHTML(data.requests) +
+      wavesHTML(data.waves) + needsHTML(data.requests);
+    const bodyEl = host.querySelector('.ex-body');
+    if (bodyEl) bodyEl.innerHTML = body;
+    // refresh the "updated" stamp with the payload's generatedAt
+    const headEl = host.querySelector('.ex-head');
+    if (headEl && data.generatedAt) {
+      const oldU = headEl.querySelector('.ex-updated');
+      const html = '<span class="ex-updated">' + WP.i18n.t('execUpdated') + ' ' + ui.esc(relTime(data.generatedAt)) + '</span>';
+      if (oldU) oldU.outerHTML = html;
+      else headEl.querySelector('.ex-head-t').insertAdjacentHTML('beforeend', html);
+    }
+  }
+
+  function paintError(host) {
+    const bodyEl = host.querySelector('.ex-body');
+    if (bodyEl) bodyEl.innerHTML = errorHTML();
+    const retry = host.querySelector('#exec-retry');
+    if (retry) retry.onclick = function () { load(host); };
+  }
+
+  function load(host) {
+    const my = ++token;
+    const bodyEl = host.querySelector('.ex-body');
+    if (bodyEl) bodyEl.innerHTML = skeleton();
+    const url = (WP.config.execStatusEndpoint || '').trim();
+    if (!url) { paintError(host); return; }
+    loadJSONP(url).then(function (data) {
+      if (my !== token) return;                 // superseded by a newer load
+      if (!data || data.ok === false) { paintError(host); return; }
+      paintBody(host, data);
+    }).catch(function () {
+      if (my !== token) return;
+      paintError(host);
+    });
+  }
+
+  function render(root) {
+    // Defence in depth — never render for a viewer who shouldn't see it, and
+    // never render when no live endpoint is configured.
+    if (!WP.execDeckVisible || !WP.execDeckVisible()) { WP.setState({ route: 'dashboard' }); return; }
+
+    root.innerHTML = headerHTML(null) + '<div class="ex-body">' + skeleton() + '</div>';
+
+    const refresh = root.querySelector('#exec-refresh');
+    if (refresh) refresh.onclick = function () { load(root); };
+
+    load(root);
+  }
+
+  WP.ui = WP.ui || {};
+  WP.ui.exec = { render: render };
 })(window.WP = window.WP || {});
 
 </script>
@@ -12377,6 +12885,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
       { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
     ];
+    // Executive status — an in-app window onto the live Executive Status Deck
+    // (Google Slides). Director/admin only AND only when a deck link is set
+    // (WP.execDeckVisible). Sits right under the dashboard as a first-class
+    // director entry point. Renders nothing otherwise. See src/js/ui/exec.js.
+    if (WP.execDeckVisible && WP.execDeckVisible()) {
+      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execStatus') });
+    }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
@@ -12543,6 +13058,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
     else if (WP.state.route === 'settings') WP.ui.settings.render(root);
     else if (WP.state.route === 'activity') { if (WP.can('manageAdmins')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
+    else if (WP.state.route === 'exec') { if (WP.execDeckVisible && WP.execDeckVisible()) WP.ui.exec.render(root); else WP.setState({ route: 'dashboard' }); }
     else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
     else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);
     else if (WP.state.route === 'evaluation') WP.ui.evaluation.render(root);
