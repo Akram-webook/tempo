@@ -19,6 +19,7 @@ happens only through the feature-readiness gate. Columns mirror the sheet so the
 | F-008 | Real source integrations (Slack/KPIs/recognition) | 5 | Auto-collect evidence | Later | Low | Feeds the event store |
 | F-009 | Escape-metrics dashboard (Escape Rate by dept) | — | Track quality maturity | Later | Low | From ESCAPE-LEARNING |
 | F-010 | Promote a real `--text-secondary` token to tokens.css | plat | Reusable receding-text colour (DRY design tokens) | Backlog | Low | Surfaced by Signature Bar v2 (#15); currently falls back to `--text-muted` |
+| B-001 | Dashboard: "Burnout risk" fires while load reads 0% (contradictory to the director) | 3 | Trust in red signals — a red flag must match the numbers next to it | Idea | Med | `capacity.burnoutSignal()` is WINDOW-BLIND (checks overlapping/back-to-back events across ALL time), while `load%` is window-scoped. With mock events in June 2026 and the clock in July, load reads 0% for the current window but burnout still fires → looks like "0% load = burnout". Fix options: (a) scope burnoutSignal to the active window so it can't contradict a 0% load; (b) relabel to "scheduling clash" (it's about overlap, not load); (c) suppress the burnout chip when window load is 0. Related: mock-data staleness (events hardcoded to June 2026). From Akram's director-view review 2026-07-14. |
 
 How an idea flows: captured here as "Idea" → reviewed (TAOS gate + Council of Critics) → "Approved" →
 promoted to "Next"/"Now" only when it's the single most valuable thing → built → "Shipped" → observed.
