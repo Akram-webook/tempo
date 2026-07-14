@@ -688,24 +688,25 @@ h1, h2, h3, h4,
    pages (tables, multi-column settings) fill a modern monitor instead of stranding
    in a narrow column with dead side-canvas. Gutter scales with viewport (clamp) so
    there's breathing room on wide screens and tight margins on small ones. */
-main { padding: 24px clamp(16px, 4vw, 40px); max-width: 1320px; margin: 0 auto; width: 100%; }
+/* FLUID / FULL-WIDTH (Akram): every page fills the whole canvas — no max-width
+   cap, no dead side-gutter. Padding scales with the viewport so there's still
+   breathing room on wide screens and tight margins on small ones. */
+main { padding: 24px clamp(16px, 4vw, 40px); width: 100%; margin: 0; }
 /* Compact density (Settings v2 → Preferences): tighten global rhythm a notch.
    Deliberately conservative — pads + section gaps only — so no view's internal
    layout can break; comfortable is the default (no rule needed). */
 :root[data-density="compact"] main { padding-top: 14px; padding-bottom: 14px; }
 :root[data-density="compact"] .section { padding: 12px; margin-bottom: 10px; }
 :root[data-density="compact"] .set-item { padding: 9px 0; }
-/* People & Workload (org tree/map) goes FULL-BLEED so a wide branch fills the screen
-   instead of stranding in a 1180 box with a dead right-side gutter. Only this view
-   opts in (class toggled per-route in app.js) — text/data pages keep the readable cap.
-   Padding + margin:auto stay (harmless once the cap is off). */
+/* Every page is full-width now, so .full-bleed is a no-op kept only so the old
+   per-route class toggle (app.js) never errors. */
 main.full-bleed { max-width: none; }
-/* …but on a WIDE screen the KPI cards shouldn't sprawl into 4 sparse ultra-wide blocks.
-   Cap each card and align the row to the content start; the tree itself still centres/fills.
-   Gated ≥1181px: below the old cap full-bleed is inert, so the normal responsive .metrics
-   rules (incl. the 2-col mobile breakpoint) must win — otherwise 4×180px overflows narrow. */
+/* On a WIDE screen the KPI cards shouldn't sprawl into 4 sparse ultra-wide blocks.
+   Cap each card and align the row to the content start (applies to every page now
+   that all pages fill the canvas). Gated ≥1181px so the normal responsive .metrics
+   rules — incl. the 2-col mobile breakpoint — win below that. */
 @media (min-width: 1181px) {
-  main.full-bleed .metrics { grid-template-columns: repeat(4, minmax(180px, 300px)); justify-content: start; }
+  main .metrics { grid-template-columns: repeat(4, minmax(180px, 300px)); justify-content: start; }
 }
 
 /* ---- app shell: top bar + collapsible drawer ---- */
@@ -12741,9 +12742,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     else if (WP.state.route === 'admins') { if (WP.can('manageAdmins')) WP.ui.admins.render(root); else WP.setState({ route: 'map' }); }
     else WP.ui.workloadMap.render(root);
 
-    // Full-bleed ONLY the People & Workload map (route 'map') so the org tree fills a
-    // wide screen; every other view keeps `main`'s readable 1180 cap. Toggle (not add)
-    // so navigating away restores the cap.
+    // Every page is fluid / full-width now (no readable cap on `main`), so there's
+    // nothing to toggle per-route. The map keeps the .full-bleed class only for any
+    // view-specific hooks that still key off it; it no longer changes the width.
     var viewMain = document.querySelector('.view-main');
     if (viewMain) viewMain.classList.toggle('full-bleed', WP.state.route === 'map');
 

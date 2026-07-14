@@ -229,9 +229,9 @@
     else if (WP.state.route === 'admins') { if (WP.can('manageAdmins')) WP.ui.admins.render(root); else WP.setState({ route: 'map' }); }
     else WP.ui.workloadMap.render(root);
 
-    // Full-bleed ONLY the People & Workload map (route 'map') so the org tree fills a
-    // wide screen; every other view keeps `main`'s readable 1180 cap. Toggle (not add)
-    // so navigating away restores the cap.
+    // Every page is fluid / full-width now (no readable cap on `main`), so there's
+    // nothing to toggle per-route. The map keeps the .full-bleed class only for any
+    // view-specific hooks that still key off it; it no longer changes the width.
     var viewMain = document.querySelector('.view-main');
     if (viewMain) viewMain.classList.toggle('full-bleed', WP.state.route === 'map');
 

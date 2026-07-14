@@ -37,17 +37,22 @@ try {
   assert(intervals.filter(Boolean).length >= 1, 'auto-refresh timer was scheduled on the map');
   const cb = intervals.filter(Boolean).slice(-1)[0];
 
-  // Layout: the People & Workload map goes full-bleed (kills the wide-screen dead space).
+  // Layout: every page is fluid/full-width now. The map still carries the
+  // .full-bleed class (kept for view-specific hooks); it no longer changes width.
   const viewMain = window.document.querySelector('.view-main');
-  assert(viewMain && viewMain.classList.contains('full-bleed'), 'map view sets .view-main.full-bleed (no 1180 cap)');
+  assert(viewMain && viewMain.classList.contains('full-bleed'), 'map view still sets .view-main.full-bleed');
+  // The real guarantee: `main` has NO max-width cap (fluid everywhere, no dead gutter).
+  const cssTxt = fs.readFileSync(path.join(root, 'src/css/app.css'), 'utf8');
+  assert(/main\s*\{[^}]*width:\s*100%/.test(cssTxt) && !/^main\s*\{[^}]*max-width:\s*\d/m.test(cssTxt),
+    'main is full-width with no max-width cap (fluid layout)');
 
   // Navigate to Evaluations.
   WP.state.route = 'evaluations';
   WP.render();
   const hadEvalMarker = !view.querySelector('.controlbar');  // map toolbar gone
   assert(hadEvalMarker, 'evaluations replaced the map content');
-  // …and the cap is restored for a text/data page (only the map is full-bleed).
-  assert(!viewMain.classList.contains('full-bleed'), 'navigating away restores the readable cap (full-bleed removed)');
+  // …and the map-only class comes off other pages (still all full-width regardless).
+  assert(!viewMain.classList.contains('full-bleed'), 'navigating away removes the map-only .full-bleed class');
   const snapshot = view.innerHTML;
 
   // Fire the stale workload timer callback — it must NOT repaint the map.
