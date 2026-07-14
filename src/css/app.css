@@ -1221,9 +1221,6 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .mbr-role { flex: none; }
 .mbr-access { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); min-width: 92px; }
 .mbr-access.is-on { color: var(--state-available); }
-/* Security → "this device" row (distinct from member rows) */
-/* Role meaning — a plain one-liner under the role value in Account. */
-.set-role-why { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
 
 /* Privacy — a single quiet reassurance line at the foot of My settings. */
 .pv-line { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 10px 12px;
