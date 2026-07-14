@@ -87,6 +87,14 @@
   --state-over-bg: color-mix(in srgb, var(--state-over) 13%, transparent);
   --state-watch:   #D2691E; /* at-risk amber-orange (wellbeing) */
   --state-watch-bg: color-mix(in srgb, var(--state-watch) 14%, transparent);
+  /* Executive Status — status→colour buckets, SHARED with the Google Slides
+     deck (docs/exec-deck) so the in-app view and the deck match exactly. */
+  --exec-green:  #1FA655; /* done / live / on-track */
+  --exec-amber:  #F19A2A; /* working / in-progress / in-review / next */
+  --exec-amber-ink: #b56f12; /* AA-readable amber text on light */
+  --exec-red:    #E03B3B; /* needs input / blocked */
+  --exec-violet: #7A5AF8; /* later / planned / idea */
+  --exec-grey:   #C2C7CE; /* unknown / empty */
   --cat-freelance:    #7C5CFF; /* employment category: Freelance (violet) */
   --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 14%, transparent);
   --cat-joining:      #9A6B00; /* employment category: Joining soon — AA gold text on light */
