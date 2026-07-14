@@ -43,30 +43,26 @@ const html1 = root_el.innerHTML;
 assert(/log-table|log-empty/.test(html1), 'activity page renders a table (or empty state)');
 assert(!/<input|<button[^>]*data-/.test(html1.replace(/id="back"|id="log-more"/g, '')), 'activity page is read-only (no data-editing inputs)');
 
-// ---- 2) Tier editor: routine tag + live counts (under the WORKSPACE tab) --
-// Settings v2 splits into My settings / Workspace. Admin org-config lives under
-// Workspace, so switch to it first (default tab is personal "mine").
+// ---- 2) Workspace tab is now Members & Access ONLY -----------------------
+// Trimmed (Akram review): tier weights, capacity-state reference, roles wall,
+// activity-log button and Slack linking were removed. Only the member roster
+// with grant/revoke remains.
 WP._settingsTab = 'workspace';
 WP.ui.settings.render(root_el);
 const shtml = root_el.innerHTML;
-assert(/tier-routine/.test(shtml), 'a tier is marked as the routine baseline');
-assert(/tier-count/.test(shtml), 'each tier shows a live event count');
-// the routine tag should sit on Standard (tier 3), not Mega.
-const standardIdx = shtml.indexOf('Standard');
-const routineIdx = shtml.indexOf('tier-routine');
-assert(standardIdx > -1 && routineIdx > -1, 'Standard tier present with routine tag');
+assert(/mbr-list/.test(shtml), 'Workspace shows the Members & Access roster');
+assert(!/tier-routine|tier-count|data-tier=/.test(shtml), 'tier editor is REMOVED from Workspace');
+assert(!/data-slack=|slack-edit/.test(shtml), 'Slack linking is REMOVED from Workspace');
+assert(!/role-card|accessModel/.test(shtml), 'the roles reference wall is REMOVED');
+assert(!/id="go-activity"/.test(shtml), 'the activity-log button is REMOVED from Workspace');
 
-// ---- 3) Slack list: alphabetical + editable + missing flag ---------------
-assert(/data-slack=/.test(shtml), 'Slack IDs are editable (data-slack inputs present)');
-assert(/slack-missing/.test(shtml), 'people missing a Slack ID are flagged');
-// alphabetical: extract the rendered names in the slack section order and check sorted
-const names = [...shtml.matchAll(/class="slack-edit[^"]*" data-slack="([^"]+)"/g)].map(m => m[1]);
-assert(names.length >= 2, 'slack list rendered multiple people');
+// ---- 3) The activity page itself still exists as its own gated route ------
+// (only the shortcut button in Settings was removed; the page is unchanged)
+assert(WP.ui.activity && typeof WP.ui.activity.render === 'function', 'activity page route still exists');
 
-// ---- 4) i18n coverage ----------------------------------------------------
-const keys = ['tierRoutine','tierEventsNow','slackIdPlaceholder','slackMissingNote','activitySub',
-  'logEntries','logColAction','logColDetail','logColWhen','logLoadMore','logView','logOverride',
-  'logAssign','logConfig','logInvite','logGrant','logRevoke'];
+// ---- 4) i18n coverage (Members & Access strings that remain) --------------
+const keys = ['membersTitle','membersCount','membersNote','membersSearch','membersInvite',
+  'accessOn','accessOff','activitySub','logEntries','logColAction'];
 keys.forEach(function (k) {
   WP.state.lang = 'en'; const en = WP.i18n.t(k);
   WP.state.lang = 'ar'; const ar = WP.i18n.t(k);
@@ -76,5 +72,5 @@ keys.forEach(function (k) {
 WP.state.lang = 'en';
 
 if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-console.log('PASS — layout/settings: activity is its own gated read-only page; tier editor shows the routine baseline + live counts; Slack IDs are alphabetical, editable, and missing ones flagged; EN+AR i18n complete.');
+console.log('PASS — layout/settings: activity is its own gated read-only page; Workspace tab is now Members & Access ONLY (tiers, states, roles wall, activity button and Slack linking removed); EN+AR i18n complete.');
 process.exit(0);

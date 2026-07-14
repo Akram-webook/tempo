@@ -40,7 +40,8 @@ function be(id) { WP.state.viewerId = id; WP.state.authed = true; WP._settingsTa
   let h = el.innerHTML;
   assert(/id="mbr-search"/.test(h), 'Members search renders under Workspace for admin');
   assert(/id="mbr-list"/.test(h), 'Members roster renders');
-  assert(/id="mbr-roles"/.test(h), 'link to the role-assignment screen present');
+  assert(!/id="mbr-roles"/.test(h), 'the "manage roles" link is REMOVED (Akram review)');
+  assert(!/class="mbr-role/.test(h), 'the per-member role chip is REMOVED (Akram review)');
   assert(/id="mbr-invite"/.test(h), 'invite-admin entry present (manageAdmins)');
 
   // ---- 2) roster excludes tbc/open roles, has a toggle per member --------------
