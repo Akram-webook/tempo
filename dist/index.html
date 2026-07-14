@@ -1645,11 +1645,12 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 /* Executive-status card — director dashboard entry point to the live deck.
    Brand-accent left edge, whole card is the click target, opens in a new tab. */
 .exec-card {
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 14px; width: 100%;
   margin: 0 0 18px; padding: 16px 18px;
   border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
   border-radius: var(--radius); background: var(--surface);
-  color: var(--text); text-decoration: none;
+  color: var(--text); text-decoration: none; text-align: start;
+  font: inherit; cursor: pointer;
   transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
 }
 .exec-card:hover { border-color: var(--border-secondary); background: var(--surface-1); }
@@ -3171,27 +3172,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
    * -------------------------------------------------------------- */
   if (WP.config.mvp === undefined) WP.config.mvp = true;
 
-  /* ----------------------------------------------------------------
-   * Executive Status Deck link (reversible, one line).
-   * ----------------------------------------------------------------
-   * The live Executive Status Deck is a separate Google Slides artifact.
-   * Paste its share link here once the deck is built. While this is an
-   * empty string the "Executive status" entry points render NOTHING
-   * (no broken link, no placeholder). When set, they appear ONLY to
-   * Director + Admin (WP.can('viewSettings')) and open the deck in a
-   * NEW TAB — never embedded (it is a Google-auth link).
-   * Keep the deck shared to Director + Akram only.
-   * -------------------------------------------------------------- */
-  if (WP.config.execDeckUrl === undefined) WP.config.execDeckUrl = '';
-
-  // True ⇒ the Executive-status entry points should render for this viewer.
-  // Single source of truth for both the dashboard card and the nav item:
-  // a non-empty deck URL AND the admin/director gate (same engine as Settings).
-  WP.execDeckVisible = function () {
-    return typeof WP.config.execDeckUrl === 'string' &&
-      WP.config.execDeckUrl.trim() !== '' &&
-      WP.can && WP.can('viewSettings');
-  };
+  // NOTE: Executive Status is now a LIVE in-app page (src/js/ui/exec.js,
+  // route 'exec'), gated by WP.execVisible() = WP.can('viewSettings'). The old
+  // external-Google-Slides link (WP.config.execDeckUrl / WP.execDeckVisible)
+  // was removed — the deck is built into the product and updates itself.
 
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
@@ -3749,6 +3733,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     execStatus:     { en: 'Executive status', ar: 'الحالة التنفيذية' },
     execStatusSub:  { en: 'Live portfolio + what needs you', ar: 'نظرة حيّة على المحفظة وما يحتاج إليك' },
+    execSub:        { en: 'Live across {n} people — portfolio health, what needs you, and team load.', ar: 'محدّث حيّ عبر {n} شخصاً — صحة المحفظة وما يحتاج إليك وحمل الفرق.' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
     prefsLang:      { en: 'Language', ar: 'اللغة' },
@@ -8087,23 +8072,20 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return '<span class="dash-pct" style="color:' + c + '">' + snap.load + '%</span>';
   }
 
-  /* Executive-status card — a full-width entry point at the TOP of the
-   * director dashboard. Renders ONLY when WP.execDeckVisible() (deck URL set
-   * AND viewer is admin/director). The whole card is the click target; it
-   * opens the deck in a NEW TAB (never embedded — it is a Google-auth link).
-   * Empty/off → renders nothing. */
+  /* Executive-status card — a full-width shortcut at the TOP of the director
+   * dashboard that opens the in-app Executive Status page. Renders ONLY for
+   * director/admin (WP.execVisible). The whole card is the click target. */
   function execCard() {
-    if (!WP.execDeckVisible || !WP.execDeckVisible()) return '';
+    if (!WP.execVisible || !WP.execVisible()) return '';
     const t = WP.i18n.t;
-    const url = WP.ui.esc(WP.config.execDeckUrl.trim());
-    return '<a class="exec-card" href="' + url + '" target="_blank" rel="noopener noreferrer" ' +
+    return '<button type="button" class="exec-card" data-go="exec" ' +
       'aria-label="' + t('execStatus') + ' — ' + t('execStatusSub') + '">' +
       '<div class="exec-card-body">' +
         '<div class="exec-card-title">' + t('execStatus') + '</div>' +
         '<div class="exec-card-sub">' + t('execStatusSub') + '</div>' +
       '</div>' +
-      '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('external', 18) + '</span>' +
-      '</a>';
+      '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('arrowRight', 18) + '</span>' +
+      '</button>';
   }
 
   function director(root, viewer) {
@@ -8280,6 +8262,140 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   }
 
   WP.ui.dashboard = { render: render };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Executive Status (the live "deck", in-app)
+ * ------------------------------------------------------------
+ * A director/admin's one-screen status: portfolio health, what needs
+ * you now, and team-by-team load — all from the SAME live engine the
+ * dashboard uses (capacity + growth + access scope). No mock numbers,
+ * no external Slides to keep in sync: it updates itself.
+ *
+ * Gated to viewSettings (director/admin) — re-checked here (defence in
+ * depth). ETHICS: work + decisions only (Constitution II); the "needs
+ * you" list is early SUPPORT, never a ranking of people.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  const ui = WP.ui;
+
+  // Single gate for every Executive-status entry point (page, nav tab, card).
+  WP.execVisible = function () { return !!(WP.can && WP.can('viewSettings')); };
+
+  function stat(label, value, sub, color, info) {
+    const infoHtml = info
+      ? ' <span class="kpi-info" tabindex="0" role="img" aria-label="' + ui.esc(info) + '" title="' + ui.esc(info) + '">' + ui.icon('info', 13) + '</span>'
+      : '';
+    return '<div class="card"><div class="label">' + label + infoHtml + '</div>' +
+      '<div class="value"' + (color ? ' style="color:' + color + '"' : '') + '>' + value + '</div>' +
+      '<div class="sub">' + (sub || '') + '</div></div>';
+  }
+
+  function loadBar(pct) {
+    const c = ui.stateColor(WP.capacity.stateForLoad(pct));
+    return '<span class="bar"><i style="width:' + Math.min(100, pct) + '%;background:' + c + '"></i></span>';
+  }
+
+  function render(root) {
+    const t = WP.i18n.t;
+    if (!WP.execVisible()) { WP.setState({ route: 'map' }); return; }
+
+    const viewer = WP.viewer();
+    const win = WP.state.window, ref = WP.state.refDate;
+    const people = WP.access.visiblePeople(viewer);
+    const m = WP.capacity.teamMetrics(people, win, ref);
+    const mPrev = WP.capacity.teamMetrics(people, win, WP.capacity.priorRefDate(win, ref));
+    const period = t(win);
+
+    // ── "What needs you" — people at/over capacity or flagged for support.
+    // Framed as support (Ethics #5), capped, sorted by load. Never a ranking.
+    const attn = m.snaps.filter(function (s) {
+      return s.state.key === 'overloaded' || s.state.key === 'near' || s.burnout;
+    }).sort(function (a, b) { return b.load - a.load; }).slice(0, 8);
+
+    // Talent signals across the org (fair-shot / flight-risk / ramping) — counts only.
+    let risk = 0, fairShot = 0, ramp = 0;
+    people.forEach(function (p) {
+      if (WP.growth.flightRisk(p).risk) risk++;
+      if (WP.growth.promotionReadiness(p).fairnessGap) fairShot++;
+      if (WP.growth.isRamping(p)) ramp++;
+    });
+
+    // ── Team-by-team load (per direct report who leads a team).
+    const leads = WP.access.directReports(viewer.id);
+    const teamRows = leads.map(function (lead) {
+      const team = WP.access.teamOf(lead.id);
+      const tm = WP.capacity.teamMetrics(team, win, ref);
+      const avg = Math.round(tm.snaps.reduce(function (a, s) { return a + s.load; }, 0) / (tm.snaps.length || 1));
+      return '<div class="lr"><span class="nm">' + ui.esc(WP.i18n.name(lead).split(' ')[0]) +
+        '<span class="ttl"> · ' + team.length + '</span></span>' + loadBar(avg) +
+        '<span class="dash-pct">' + avg + '%</span>' +
+        '<span class="tag">' + tm.teamHealth + '% ' + t('healthy') + '</span></div>';
+    }).join('');
+
+    const attnHtml = attn.length ? attn.map(function (s) {
+      const p = WP.access.byId(s.id);
+      const c = ui.stateColor(s.state);
+      const reason = s.burnout ? t('burnoutShort') : t('overloadedShort');
+      return '<div class="dash-row" data-open="' + s.id + '" style="--node-accent:' + c + '">' +
+        ui.avatar(p, c) +
+        '<div class="dash-meta"><div class="nm">' + ui.esc(WP.i18n.name(p)) + '</div>' +
+          '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></div>' +
+        '<span class="dash-pct" style="color:' + c + '">' + s.load + '%</span>' +
+        '<span class="tag" style="color:var(--state-' + (s.state.key === 'overloaded' || s.burnout ? 'overloaded' : 'near') + ')">' + reason + '</span>' +
+      '</div>';
+    }).join('') : '<div class="sub">' + t('allClear') + '</div>';
+
+    const hasData = m.snaps.some(function (s) { return s.load > 0; });
+    const healthVal = hasData ? m.teamHealth + '%' : '—';
+    const healthSub = hasData
+      ? t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size)
+      : t('noDataYet');
+
+    root.innerHTML =
+      ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'dashboard' }, { label: t('execStatus') }],
+        title: t('execStatus'),
+        subtitle: t('execSub').replace('{n}', people.length),
+      }) +
+      ui.provenanceNote() +
+      '<div class="metrics">' +
+        stat(t('teamHealth'), healthVal, healthSub, 'var(--state-balanced)', t('teamHealthInfo')) +
+        stat(t('available'), m.counts.available, t('ofPeople').replace('{n}', people.length), 'var(--state-available)') +
+        stat(t('nearCapacity'), m.nearOrOver, t('nearCapSub'), 'var(--state-overloaded)', t('nearCapInfo')) +
+        stat(t('earlyWarnings'), m.earlyWarnings, t('burnoutShort')) +
+      '</div>' +
+
+      '<div class="grid-2" style="align-items:start">' +
+        '<div class="section"><h3>' + ui.icon('alert', 16) + ' ' + t('needsAttention') + '</h3>' + attnHtml + '</div>' +
+        '<div class="section"><h3>' + ui.icon('sprout', 16) + ' ' + t('talent') + '</h3>' +
+          '<div class="metrics" style="grid-template-columns:repeat(3,1fr)">' +
+            stat(t('dashFairShot'), fairShot, t('rdFairTitle'), 'var(--state-available)') +
+            stat(t('flightRisk').split(' ')[0], risk, t('flightRisk'), 'var(--state-overloaded)') +
+            stat(t('rampingShort'), ramp, t('rampingUp').split('—')[0]) +
+          '</div></div>' +
+      '</div>' +
+
+      (teamRows
+        ? '<div class="section"><h3>' + ui.icon('users', 16) + ' ' + t('teamLoad') + '</h3>' + teamRows + '</div>'
+        : '');
+
+    // Clicking a "needs you" person opens their profile (accessible rows).
+    root.querySelectorAll('[data-open]').forEach(function (el) {
+      const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      const p = WP.access.byId(el.dataset.open);
+      if (p) el.setAttribute('aria-label', WP.i18n.t('openProfile') + ' — ' + WP.i18n.name(p));
+      el.onclick = open;
+      el.onkeydown = function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(); } };
+    });
+  }
+
+  WP.ui.exec = { render: render };
 })(window.WP = window.WP || {});
 
 </script>
@@ -12438,6 +12554,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
       { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
     ];
+    // Executive status — the director/admin's live one-screen status (portfolio
+    // health + what needs you + team load). Sits right under Dashboard as a
+    // primary destination. Gated to viewSettings (director/admin).
+    if (WP.execVisible && WP.execVisible()) {
+      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'sparkles', label: t('execStatus') });
+    }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
@@ -12489,13 +12611,6 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
           '<div class="acct-ml">' + WP.ui.esc(email) + '</div></div></div>' +
       '<button class="acct-item" id="acct-lang"><span class="acct-k">' + t('prefsLang') + '</span><span class="acct-v">' + t('lang') + '</span></button>' +
       '<button class="acct-item" id="acct-theme"><span class="acct-k">' + t('prefsTheme') + '</span><span class="acct-v">' + ic(WP.state.theme === 'light' ? 'moon' : 'sun') + '</span></button>' +
-      // Executive status — Director/Admin only, deck URL set. Opens the live
-      // deck in a NEW TAB (never embedded). Renders nothing when off/empty.
-      (WP.execDeckVisible && WP.execDeckVisible()
-        ? '<div class="acct-sep"></div>' +
-          '<a class="acct-item" id="acct-execstatus" role="menuitem" href="' + WP.ui.esc(WP.config.execDeckUrl.trim()) + '"' +
-            ' target="_blank" rel="noopener noreferrer">' + ic('external') + ' ' + t('execStatus') + '</a>'
-        : '') +
       (viewAsHTML ? '<div class="acct-sep"></div>' + viewAsHTML : '') +
       '<div class="acct-sep"></div>' +
       '<button class="acct-item danger" id="acct-signout">' + ic('logout') + ' ' + t('signOut') + '</button>';
@@ -12610,6 +12725,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
     else if (WP.state.route === 'settings') WP.ui.settings.render(root);
+    else if (WP.state.route === 'exec') { if (WP.execVisible && WP.execVisible()) WP.ui.exec.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'activity') { if (WP.can('manageAdmins')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
     else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);

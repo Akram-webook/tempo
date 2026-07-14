@@ -42,6 +42,12 @@
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
       { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
     ];
+    // Executive status — the director/admin's live one-screen status (portfolio
+    // health + what needs you + team load). Sits right under Dashboard as a
+    // primary destination. Gated to viewSettings (director/admin).
+    if (WP.execVisible && WP.execVisible()) {
+      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'sparkles', label: t('execStatus') });
+    }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
@@ -93,13 +99,6 @@
           '<div class="acct-ml">' + WP.ui.esc(email) + '</div></div></div>' +
       '<button class="acct-item" id="acct-lang"><span class="acct-k">' + t('prefsLang') + '</span><span class="acct-v">' + t('lang') + '</span></button>' +
       '<button class="acct-item" id="acct-theme"><span class="acct-k">' + t('prefsTheme') + '</span><span class="acct-v">' + ic(WP.state.theme === 'light' ? 'moon' : 'sun') + '</span></button>' +
-      // Executive status — Director/Admin only, deck URL set. Opens the live
-      // deck in a NEW TAB (never embedded). Renders nothing when off/empty.
-      (WP.execDeckVisible && WP.execDeckVisible()
-        ? '<div class="acct-sep"></div>' +
-          '<a class="acct-item" id="acct-execstatus" role="menuitem" href="' + WP.ui.esc(WP.config.execDeckUrl.trim()) + '"' +
-            ' target="_blank" rel="noopener noreferrer">' + ic('external') + ' ' + t('execStatus') + '</a>'
-        : '') +
       (viewAsHTML ? '<div class="acct-sep"></div>' + viewAsHTML : '') +
       '<div class="acct-sep"></div>' +
       '<button class="acct-item danger" id="acct-signout">' + ic('logout') + ' ' + t('signOut') + '</button>';
@@ -214,6 +213,7 @@
     if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
     else if (WP.state.route === 'settings') WP.ui.settings.render(root);
+    else if (WP.state.route === 'exec') { if (WP.execVisible && WP.execVisible()) WP.ui.exec.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'activity') { if (WP.can('manageAdmins')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
     else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);

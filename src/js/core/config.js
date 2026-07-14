@@ -74,27 +74,10 @@
    * -------------------------------------------------------------- */
   if (WP.config.mvp === undefined) WP.config.mvp = true;
 
-  /* ----------------------------------------------------------------
-   * Executive Status Deck link (reversible, one line).
-   * ----------------------------------------------------------------
-   * The live Executive Status Deck is a separate Google Slides artifact.
-   * Paste its share link here once the deck is built. While this is an
-   * empty string the "Executive status" entry points render NOTHING
-   * (no broken link, no placeholder). When set, they appear ONLY to
-   * Director + Admin (WP.can('viewSettings')) and open the deck in a
-   * NEW TAB — never embedded (it is a Google-auth link).
-   * Keep the deck shared to Director + Akram only.
-   * -------------------------------------------------------------- */
-  if (WP.config.execDeckUrl === undefined) WP.config.execDeckUrl = '';
-
-  // True ⇒ the Executive-status entry points should render for this viewer.
-  // Single source of truth for both the dashboard card and the nav item:
-  // a non-empty deck URL AND the admin/director gate (same engine as Settings).
-  WP.execDeckVisible = function () {
-    return typeof WP.config.execDeckUrl === 'string' &&
-      WP.config.execDeckUrl.trim() !== '' &&
-      WP.can && WP.can('viewSettings');
-  };
+  // NOTE: Executive Status is now a LIVE in-app page (src/js/ui/exec.js,
+  // route 'exec'), gated by WP.execVisible() = WP.can('viewSettings'). The old
+  // external-Google-Slides link (WP.config.execDeckUrl / WP.execDeckVisible)
+  // was removed — the deck is built into the product and updates itself.
 
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
