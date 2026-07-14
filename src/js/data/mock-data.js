@@ -9,8 +9,8 @@
  *   Ahmed Othman (Director)
  *   ├─ Ayman Albasha (Sr Mgr) → Batool, Shahad
  *   ├─ Motaa (Sr Mgr · Ticketing) → Akram → {Idris,Gamal,Osama};
- *   │                               Khaled → {Ibrahim};
- *   │                               Abdulrahman Maksousa → {Shamma,Talal}
+ *   │                               Khaled → {Ibrahim, Saleh};
+ *   │                               Abdulrahman Maksousa → {Talal, Shamma}
  *   ├─ Ayah Nasif (Sr Mgr) → Farah, Meshal Bin Howshan, Meshal Alsmari, Rana
  *   └─ Hani Ahmed (Sr Mgr) → Mohamed Zaidan, Ahmed Faraj, Batarfi,
  *                            Omar Zarea (Cashless) → {Aljazi, Rosa, Altahini}
@@ -69,7 +69,7 @@
     P({ id: 'p_akram', slackId: 'U06H0ASQ761', name: 'Mohammed Akram', nameAr: 'محمد أكرم', initials: 'MA', level: 'manager', managerId: 'p_motaa', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2024-02-04/6593946722801_53f137cdf64568fb3570_original.png', assignedEvents: ['e_mdl_beast', 'e_expo_booth'], dailyCheckin: { plan: 'MDLBEAST staffing grid', done: 'Crew booked', remaining: 'Power supply', learned: 'Faster generator vendor', at: '2026-06-17T08:10:00' } }),
     P({ id: 'p_abdulrahman', slackId: 'U07LF0D3KSN', name: 'A. Maksosah', nameAr: 'عبدالرحمن مقصوصة', initials: 'AM', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-12/10274801113666_1fbe4f7bcf66ca4624f3_original.png', assignedEvents: ['e_intl_summit', 'e_school_fair'], dailyCheckin: { plan: 'Summit run sheet', done: 'Floor plan v1', remaining: 'Vendor quotes', learned: '—', at: '2026-06-17T08:20:00' } }),
     P({ id: 'p_khaled', slackId: 'U06D1GM1RRQ', name: 'Khaled Jeneina', nameAr: 'خالد جنينة', initials: 'KJ', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-14/10293227094166_e7874eb989412974c67e_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala AV', done: 'AV finalized', remaining: 'Guest list', learned: '—', at: '2026-06-17T07:55:00' } }),
-    P({ id: 'p_shamma', slackId: 'U09AH1Z1X6C', name: 'Shamma Alsagr', nameAr: 'شما الصقر', initials: 'SA', level: 'spec', managerId: 'p_motaa', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-05/9668189448720_833ee0a7c097344689a9_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
+    P({ id: 'p_shamma', slackId: 'U09AH1Z1X6C', name: 'Shamma Alsagr', nameAr: 'شما الصقر', initials: 'SA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-05/9668189448720_833ee0a7c097344689a9_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
     P({ id: 'p_idris', slackId: 'U09E1NA1B0W', name: 'Mohammed Adris', nameAr: 'محمد إدريس', initials: 'MA', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-06-15/11365789882978_4bafd0e08a38c77a3670_original.png', assignedEvents: ['e_pop_concert'], dailyCheckin: { plan: 'Shadow festival team', done: 'Signage checklist', remaining: 'Learning the tools', learned: 'Lots — first weeks', at: '2026-06-17T08:00:00' } }),
     P({ id: 'p_tbc_sports', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_motaa', tbc: true, title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
     // Freelancers — kept under their existing line managers, tagged freelance
@@ -78,6 +78,7 @@
     P({ id: 'p_duha', slackId: '', name: 'Duha Alzahrani', nameAr: 'ضحى الزهراني', initials: 'DA', level: 'spec', managerId: 'p_farah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: null }),
     P({ id: 'p_talal', slackId: 'U08SB865W0Z', name: 'Talal', nameAr: 'طلال', initials: 'TA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-10-02/9621523706694_7e351c3e3a34a08ddd83_original.png', assignedEvents: [], dailyCheckin: { plan: 'Available for assignment', done: 'Helped with gala', remaining: 'Nothing assigned', learned: 'Wants more ownership', at: '2026-06-17T08:00:00' } }),
     P({ id: 'p_ibrahim', slackId: 'U09EF3NPRUZ', name: 'Ibrahim Al-bard', nameAr: 'إبراهيم البارد', initials: 'IA', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-09-08/9473444242659_54d3513cef976a556e43_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala setup support', done: 'Seating map', remaining: 'AV cabling', learned: '—', at: '2026-06-17T08:15:00' } }),
+    P({ id: 'p_saleh', name: 'Saleh', nameAr: 'صالح', initials: 'S', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
     // ===== Entertainment — Aya =====
     P({ id: 'p_ayah', slackId: 'U06DE5USEEM', name: 'Aya Nasif', nameAr: 'آية ناصف', initials: 'AN', level: 'sr_manager', managerId: 'p_ahmed', team: 'Entertainment', teamAr: 'الترفيه', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-03/9633258360626_e5386ad93e75920ed6db_original.png', assignedEvents: [], dailyCheckin: null }),
@@ -130,7 +131,7 @@
     p_hani: 'hani@webook.com', p_batool: 'batool@webook.com', p_farah: 'alsmay@webook.com',
     p_zarea: 'zarea@webook.com', p_khaled: 'khaled@webook.com', p_amen: 'amen@webook.com',
     p_batarfi: 'batarfi@webook.com', p_rafah: 'rafah.alansari@webook.com', p_aljazi: 'alshubaike@webook.com',
-    p_shahad: 'shahad@webook.com', p_duha: 'duha.alzahrani.c@webook.com', p_ibrahim: 'ibrahim.albard.c@webook.com',
+    p_shahad: 'shahad@webook.com', p_duha: 'duha.alzahrani.c@webook.com', p_ibrahim: 'ibrahim.albard.c@webook.com', p_saleh: 'saleh.c@webook.com',
     p_rana: 'alsalem@webook.com', p_rosa: 'rosa@webook.com', p_altahini: 'altahini@webook.com',
     p_meshalA: 'alsmari@webook.com', p_raghdaa: 'raghdaa@webook.com',
   };
@@ -181,6 +182,7 @@
     p_gamal:       { joined: '2024-03-01', roleStart: '2024-03-01', lastProgression: '2025-04-01', tier1Delivered: 2,  monthsSinceTier1: 0 },
     p_osama:       { joined: '2023-01-09', roleStart: '2024-09-01', lastProgression: '2024-09-01', tier1Delivered: 4,  monthsSinceTier1: 0 },
     p_ibrahim:     { joined: '2025-02-01', roleStart: '2025-02-01', lastProgression: '2025-02-01', tier1Delivered: 0,  monthsSinceTier1: 6 },
+    p_saleh:       { joined: '2026-01-01', roleStart: '2026-01-01', lastProgression: '2026-01-01', tier1Delivered: 0,  monthsSinceTier1: 0 },
     p_shamma:      { joined: '2024-10-01', roleStart: '2024-10-01', lastProgression: '2024-10-01', tier1Delivered: 1,  monthsSinceTier1: 3 },
     p_talal:       { joined: '2024-08-01', roleStart: '2024-08-01', lastProgression: '2024-08-01', tier1Delivered: 0,  monthsSinceTier1: 9 },
     p_shahad:      { joined: '2025-06-01', roleStart: '2025-06-01', lastProgression: '2025-06-01', tier1Delivered: 0,  monthsSinceTier1: 7 },

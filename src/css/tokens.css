@@ -91,7 +91,7 @@
      deck (docs/exec-deck) so the in-app view and the deck match exactly. */
   --exec-green:  #1FA655; /* done / live / on-track */
   --exec-amber:  #F19A2A; /* working / in-progress / in-review / next */
-  --exec-amber-ink: #b56f12; /* AA-readable amber text on light */
+  --exec-amber-ink: #8A5410; /* AA-readable (>=4.5:1) amber text on the light tint */
   --exec-red:    #E03B3B; /* needs input / blocked */
   --exec-violet: #7A5AF8; /* later / planned / idea */
   --exec-grey:   #C2C7CE; /* unknown / empty */
@@ -197,6 +197,14 @@
   --state-over-bg: color-mix(in srgb, var(--state-over) 22%, transparent);
   --state-watch:   #E8843C;
   --state-watch-bg: color-mix(in srgb, var(--state-watch) 22%, transparent);
+  /* Executive Status buckets — lifted for legibility on dark; chip text uses
+     the bright hue (dark-brown ink would vanish on a dark tint). */
+  --exec-green:  #2FBF6B;
+  --exec-amber:  #F5A93E;
+  --exec-amber-ink: #F5A93E;
+  --exec-red:    #F0554F;
+  --exec-violet: #937CFA;
+  --exec-grey:   #6B7280;
   --cat-freelance:    #9A7DFF;
   --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 22%, transparent);
   --cat-joining:      #E0B341; /* brighter gold reads on dark */

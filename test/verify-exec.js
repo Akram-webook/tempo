@@ -155,6 +155,17 @@ const PAYLOAD = {
     assert(needs && /Please review/.test(needs.textContent), 'needs-you includes an In-review request');
     assert(!/SHOULD-BE-IGNORED-FOR-NEEDS/.test(el.textContent), 'needs-you does NOT use waves[].needs');
 
+    // --- section ORDER: cover -> needs-you -> requests -> waves (director scan) -----
+    const secs = [...el.querySelectorAll('.section')];
+    const idxOf = sel => secs.findIndex(s => s.matches(sel) || s.querySelector(sel));
+    const iCover = secs.findIndex(s => s.classList.contains('ex-cover'));
+    const iNeeds = idxOf('.ex-needs');
+    const iReq = idxOf('.ex-rows');
+    const iWave = idxOf('.ex-waves');
+    assert(iCover === 0, 'cover is first');
+    assert(iNeeds > iCover && iNeeds < iReq, 'what-needs-you sits right after the cover, above requests');
+    assert(iReq < iWave, 'your requests come before the waves detail');
+
     // --- waves render --------------------------------------------------------------
     assert(el.querySelectorAll('.ex-wave').length === 2, 'one card per wave');
     assert(/Native status/.test(el.textContent), 'wave "what\'s inside" renders');
