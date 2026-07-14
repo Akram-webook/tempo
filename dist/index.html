@@ -1451,6 +1451,17 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .sec-device { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
 .sec-device-id .nm { font-weight: 600; font-size: 14px; }
 .sec-device-id .ttl { font-size: 12px; }
+
+/* Privacy — "what Tempo tracks about me" catalogue + no-surveillance guardrail. */
+.pv-cats { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 4px; }
+.pv-cat { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.pv-cat-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pv-cat-h .nm { font-weight: 600; font-size: 14px; }
+.pv-cat-why { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+.pv-never { margin: 14px 0; padding: 12px 14px; border: 1px solid var(--border); border-inline-start: 3px solid var(--state-available);
+  border-radius: var(--radius-sm); background: color-mix(in srgb, var(--state-available) 6%, var(--surface)); }
+.pv-never-h { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13.5px; }
+.pv-never-b { font-size: 12.5px; color: var(--text-muted); margin-top: 5px; line-height: 1.55; }
 @media (max-width: 560px) {
   .mbr-row { flex-wrap: wrap; }
   .mbr-access { min-width: 0; }
@@ -3822,6 +3833,36 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     sec2fa:         { en: 'Two-factor authentication', ar: 'المصادقة الثنائية' },
     sec2faNote:     { en: 'Coming soon — an extra code at sign-in for stronger protection.', ar: 'قريباً — رمز إضافي عند الدخول لحماية أقوى.' },
     comingSoon:     { en: 'Coming soon', ar: 'قريباً' },
+    // ── Privacy (My settings) ──
+    pvTitle:        { en: 'Privacy', ar: 'الخصوصية' },
+    pvSub:          { en: 'Exactly what Tempo holds about you, and how to get a copy.', ar: 'ما الذي يحتفظ به تِمبو عنك بالضبط، وكيف تحصل على نسخة منه.' },
+    pvHoldsTitle:   { en: 'What Tempo keeps about you', ar: 'ما الذي يحتفظ به تِمبو عنك' },
+    pvSource:       { en: 'From', ar: 'المصدر' },
+    // category labels
+    pvCat_identity:    { en: 'Your details', ar: 'بياناتك' },
+    pvCat_preferences: { en: 'Your preferences', ar: 'تفضيلاتك' },
+    pvCat_evidence:    { en: 'Your work signals', ar: 'إشارات عملك' },
+    pvCat_decisions:   { en: 'Decisions recorded about you', ar: 'القرارات المسجّلة عنك' },
+    // why each is kept
+    pvWhy_identity:    { en: 'Name, title, work email, role and who you report to — so the app knows who you are and what you can see.', ar: 'الاسم والمسمى والبريد الوظيفي والدور ومن تتبعه — ليعرف التطبيق من أنت وما يمكنك رؤيته.' },
+    pvWhy_preferences: { en: 'Theme, language, layout density, date format and notification choices — saved on your device so the app fits you.', ar: 'السمة واللغة وكثافة العرض وصيغة التاريخ وخيارات الإشعارات — محفوظة على جهازك ليناسبك التطبيق.' },
+    pvWhy_evidence:    { en: 'Work-based signals (workload, check-ins, recognition, completed evaluations) — each one carries its source, so nothing is unexplained.', ar: 'إشارات مبنية على العمل (الحِمل، تسجيلات الحضور، التقدير، التقييمات المكتملة) — لكل إشارة مصدرها، فلا شيء بلا تفسير.' },
+    pvWhy_decisions:   { en: 'Decisions made in Tempo (assignments, evaluations, access changes) — kept so every decision is traceable.', ar: 'القرارات المتخذة في تِمبو (الإسنادات، التقييمات، تغييرات الوصول) — محفوظة ليكون كل قرار قابلاً للتتبّع.' },
+    // source labels
+    pvSrc_directory:    { en: 'the directory', ar: 'الدليل' },
+    pvSrc_this_device:  { en: 'this device', ar: 'هذا الجهاز' },
+    pvSrc_work_signals: { en: 'work signals', ar: 'إشارات العمل' },
+    pvSrc_activity_log: { en: 'the activity log', ar: 'سجل النشاط' },
+    // what Tempo never does
+    pvNeverTitle:   { en: 'What Tempo never does', ar: 'ما لا يفعله تِمبو أبداً' },
+    pvNeverBody:    { en: 'Tempo measures work and decisions — never people. No keystroke, mouse, presence or location tracking. No screen recording. No reading your private messages.', ar: 'يقيس تِمبو العمل والقرارات — لا الأشخاص أبداً. لا تتبّع لضغطات المفاتيح أو الفأرة أو الحضور أو الموقع. لا تسجيل للشاشة. لا قراءة لرسائلك الخاصة.' },
+    // export
+    pvExport:       { en: 'Export my data', ar: 'تصدير بياناتي' },
+    pvExportNote:   { en: 'Download everything Tempo holds about you as a file. Only your own data.', ar: 'نزّل كل ما يحتفظ به تِمبو عنك كملف. بياناتك أنت فقط.' },
+    pvExportBtn:    { en: 'Download (JSON)', ar: 'تنزيل (JSON)' },
+    pvExporting:    { en: 'Preparing…', ar: 'جارٍ التحضير…' },
+    pvExportDone:   { en: 'Your data was downloaded.', ar: 'تم تنزيل بياناتك.' },
+    pvExportError:  { en: 'Could not prepare the export. Please try again.', ar: 'تعذّر تحضير التصدير. حاول مرة أخرى.' },
     // ── Members & Access (Workspace) ──
     membersTitle:   { en: 'Members & Access', ar: 'الأعضاء والوصول' },
     membersNote:    { en: 'Who can enter Tempo and what role they hold. Grant is the app-level gate — off means they cannot sign in at all.', ar: 'من يدخل تيمبو وأي دور يحمل. المنح هو بوابة الدخول للتطبيق — الإيقاف يعني عدم القدرة على تسجيل الدخول إطلاقاً.' },
@@ -7094,6 +7135,104 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 </script>
   <script>
 /* ============================================================
+ * Tempo — Privacy (self data access + export)
+ * GATE: ai-os/CONSTITUTION.md Article II (Human-First: track work, never
+ * surveil people) · tempo-secure-data §5 (ethics invariants).
+ * ------------------------------------------------------------
+ * Gives a person an HONEST, plain answer to "what does Tempo hold about me?"
+ * and the ability to DOWNLOAD it (a right-to-access export). This reads only
+ * the current signed-in viewer's own data — never anyone else's — from the
+ * data we already have client-side: their directory record, their saved
+ * preferences/session, and their OWN work-evidence events (each carrying its
+ * source, so nothing is unexplained).
+ *
+ * What Tempo intentionally does NOT hold (and this module must never invent):
+ * no keystroke/mouse/presence/location tracking, no screen recording, no
+ * private message content — Tempo measures WORK and DECISIONS, not people.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  // The honest catalogue of data CATEGORIES Tempo keeps about a person. Each is
+  // a real store we can point at; `key` maps to an i18n label/why pair in the UI.
+  var CATEGORIES = [
+    { key: 'identity',    source: 'directory' },   // name, title, email, role, manager
+    { key: 'preferences', source: 'this device' }, // theme, language, density, notifications
+    { key: 'evidence',    source: 'work signals' },// derived work-evidence events (with sources)
+    { key: 'decisions',   source: 'activity log' } // decisions recorded ABOUT the person (assignments, evals, access)
+  ];
+
+  // Fields from the person record that are safe + relevant to show the owner.
+  // Deliberately excludes nothing sensitive that is theirs, but never pulls
+  // another person's row.
+  function identityOf(person) {
+    if (!person) return null;
+    return {
+      id: person.id,
+      name: person.name || null,
+      title: person.title || null,
+      email: person.email || null,
+      level: person.level || null,
+      managerId: person.manager_id || person.managerId || null
+    };
+  }
+
+  // Everything Tempo holds about ME, assembled for display + export. Async
+  // because the event store may query the backend; falls back to local events.
+  // Returns { generatedAt, subject, identity, preferences, events } — events
+  // each keep their `source` (Ethics: explainable, no fabrication).
+  function myData(refDate) {
+    var viewer = WP.viewer && WP.viewer();
+    var id = viewer && viewer.id;
+    var identity = identityOf(viewer);
+    var preferences = null;
+    try { preferences = JSON.parse(JSON.stringify(WP.state.prefs || {})); } catch (e) { preferences = {}; }
+
+    var evP = (id && WP.events && WP.events.query)
+      ? WP.events.query(id, {}, refDate)
+      : Promise.resolve([]);
+
+    return Promise.resolve(evP).then(function (events) {
+      // keep only this person's events (defence in depth) + strip to the
+      // owner-facing shape, preserving the source of every entry.
+      var mine = (events || [])
+        .filter(function (e) { return !id || e.subjectId === id; })
+        .map(function (e) {
+          return { ts: e.ts, category: e.category, description: e.description, source: e.source };
+        });
+      return {
+        subject: id || null,
+        identity: identity,
+        preferences: preferences,
+        events: mine,
+        note: 'Tempo measures work and decisions, not people. It holds no ' +
+              'keystroke, presence, location, or message-content tracking.'
+      };
+    });
+  }
+
+  // Build the downloadable export object (adds a wrapper + generated stamp).
+  // `now` is passed in so callers control the timestamp (testable, no Date.now
+  // buried here). Returns a plain object ready to JSON.stringify.
+  function buildExport(data, now) {
+    return {
+      _tempoExport: 'personal-data',
+      _generatedAt: now || null,
+      _scope: 'Only your own data. Tempo tracks work and decisions, not people.',
+      data: data
+    };
+  }
+
+  WP.privacy = {
+    CATEGORIES: CATEGORIES,
+    myData: myData,
+    buildExport: buildExport
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * Tempo — Shared UI helpers
  * ========================================================== */
 (function (WP) {
@@ -9865,6 +10004,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     if (qs) qs.onchange = function () { WP.prefs.set('notif.quietHours.start', qs.value); };
     if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
     wireSecurity(root);
+    wirePrivacy(root);
   }
 
   /* ── Personal: Security (password · devices · last sign-in) ────────────────
@@ -9920,6 +10060,66 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       }).then(function (ok) {
         if (!ok) return;
         WP.auth.signOutEverywhere();   // ends local session too → app returns to login
+      });
+    };
+  }
+
+  /* ── Personal: Privacy (what Tempo tracks about me + export my data) ───────
+   * The no-surveillance stance made concrete and honest: a plain-language list
+   * of the DATA CATEGORIES Tempo actually holds about you (each with a why),
+   * an explicit statement of what Tempo does NOT do, and a one-click export of
+   * your own data (client-side JSON download — no server round-trip, only you). */
+  function privacyView() {
+    const t = WP.i18n.t;
+    const cats = (WP.privacy && WP.privacy.CATEGORIES) || [];
+    const rows = cats.map(function (c) {
+      return '<div class="pv-cat">' +
+        '<div class="pv-cat-h"><span class="nm">' + t('pvCat_' + c.key) + '</span>' +
+          '<span class="tag">' + t('pvSource') + ': ' + t('pvSrc_' + c.source.replace(/\s/g, '_')) + '</span></div>' +
+        '<div class="pv-cat-why">' + t('pvWhy_' + c.key) + '</div></div>';
+    }).join('');
+    return '<div class="section"><h3>' + t('pvTitle') + '</h3>' +
+      '<div class="sub" style="margin:-4px 0 12px">' + t('pvSub') + '</div>' +
+
+      // What Tempo tracks — the honest catalogue
+      '<div class="mini-label">' + t('pvHoldsTitle') + '</div>' +
+      '<div class="pv-cats">' + rows + '</div>' +
+
+      // What Tempo does NOT do — the guardrail, stated plainly
+      '<div class="pv-never"><div class="pv-never-h">' + ui.icon('lock', 13) + ' ' + t('pvNeverTitle') + '</div>' +
+        '<div class="pv-never-b">' + t('pvNeverBody') + '</div></div>' +
+
+      // Export my data
+      settingRow(t('pvExport'), t('pvExportNote'),
+        '<button class="btn" id="pv-export">' + ui.icon('external', 14) + ' ' + t('pvExportBtn') + '</button>') +
+      '</div>';
+  }
+
+  function wirePrivacy(root) {
+    const t = WP.i18n.t;
+    const btn = root.querySelector('#pv-export');
+    if (!btn) return;
+    btn.onclick = function () {
+      const label = btn.innerHTML;
+      btn.disabled = true; btn.textContent = t('pvExporting');
+      WP.privacy.myData(WP.state.refDate).then(function (data) {
+        btn.disabled = false; btn.innerHTML = label;
+        try {
+          const payload = WP.privacy.buildExport(data, new Date().toISOString());
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const who = (data && data.subject) || 'me';
+          a.href = url; a.download = 'tempo-my-data-' + who + '.json';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+          WP.ui.toast(t('pvExportDone'), 'success');
+        } catch (e) {
+          WP.ui.toast(t('pvExportError'), 'error');
+        }
+      }, function () {
+        btn.disabled = false; btn.innerHTML = label;
+        WP.ui.toast(t('pvExportError'), 'error');
       });
     };
   }
@@ -10054,7 +10254,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
     const body = tab === 'workspace'
       ? workspaceView()
-      : (accountView() + preferencesView() + notificationsView() + securityView());
+      : (accountView() + preferencesView() + notificationsView() + securityView() + privacyView());
 
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +

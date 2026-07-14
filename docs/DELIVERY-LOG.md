@@ -9,6 +9,7 @@ Value (why it matters) · Status · PR · Live?
 
 | Date | Type | Title | What changed | Value | Status | PR | Live |
 |------|------|-------|--------------|-------|--------|----|------|
+| 2026-07-14 | Feature | Settings → Privacy | A plain-language list of exactly what Tempo keeps about you (with a why for each), a clear "what Tempo never does" statement (no keystroke/presence/location tracking), and one-click "Download my data" (only your own). | Builds trust — people see the no-surveillance promise made concrete, and can take a copy of their data. | Shipped | #86 | ⏳ |
 | 2026-07-14 | Feature | Executive status (deck link) | A one-click "Executive status" entry point (dashboard card + account-menu item) that opens the live Executive Status Deck in a new tab. Director + Admin only; hidden until the deck link is set. | The director reaches the live portfolio deck instantly from inside Tempo, without hunting for a link. | Shipped (awaiting deck link) | #85 | ⏳ |
 | 2026-07-14 | Feature | Settings → Security | Change your password (secure emailed link — we never see it), see your last sign-in, and "sign out everywhere" (all devices at once). 2FA marked coming-soon. | Users control their own account security; a lost/shared device can be cut off instantly. | Shipped | #84 | ✅ |
 | 2026-07-14 | Feature | Settings → Members & Access | Manage who can sign in (the access allowlist) + see each person's role, from the UI. Was editable only in code before. | Admins control access without a developer; every change is logged. | Shipped | #82 | ✅ |

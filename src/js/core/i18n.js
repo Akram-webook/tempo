@@ -613,6 +613,36 @@
     sec2fa:         { en: 'Two-factor authentication', ar: 'المصادقة الثنائية' },
     sec2faNote:     { en: 'Coming soon — an extra code at sign-in for stronger protection.', ar: 'قريباً — رمز إضافي عند الدخول لحماية أقوى.' },
     comingSoon:     { en: 'Coming soon', ar: 'قريباً' },
+    // ── Privacy (My settings) ──
+    pvTitle:        { en: 'Privacy', ar: 'الخصوصية' },
+    pvSub:          { en: 'Exactly what Tempo holds about you, and how to get a copy.', ar: 'ما الذي يحتفظ به تِمبو عنك بالضبط، وكيف تحصل على نسخة منه.' },
+    pvHoldsTitle:   { en: 'What Tempo keeps about you', ar: 'ما الذي يحتفظ به تِمبو عنك' },
+    pvSource:       { en: 'From', ar: 'المصدر' },
+    // category labels
+    pvCat_identity:    { en: 'Your details', ar: 'بياناتك' },
+    pvCat_preferences: { en: 'Your preferences', ar: 'تفضيلاتك' },
+    pvCat_evidence:    { en: 'Your work signals', ar: 'إشارات عملك' },
+    pvCat_decisions:   { en: 'Decisions recorded about you', ar: 'القرارات المسجّلة عنك' },
+    // why each is kept
+    pvWhy_identity:    { en: 'Name, title, work email, role and who you report to — so the app knows who you are and what you can see.', ar: 'الاسم والمسمى والبريد الوظيفي والدور ومن تتبعه — ليعرف التطبيق من أنت وما يمكنك رؤيته.' },
+    pvWhy_preferences: { en: 'Theme, language, layout density, date format and notification choices — saved on your device so the app fits you.', ar: 'السمة واللغة وكثافة العرض وصيغة التاريخ وخيارات الإشعارات — محفوظة على جهازك ليناسبك التطبيق.' },
+    pvWhy_evidence:    { en: 'Work-based signals (workload, check-ins, recognition, completed evaluations) — each one carries its source, so nothing is unexplained.', ar: 'إشارات مبنية على العمل (الحِمل، تسجيلات الحضور، التقدير، التقييمات المكتملة) — لكل إشارة مصدرها، فلا شيء بلا تفسير.' },
+    pvWhy_decisions:   { en: 'Decisions made in Tempo (assignments, evaluations, access changes) — kept so every decision is traceable.', ar: 'القرارات المتخذة في تِمبو (الإسنادات، التقييمات، تغييرات الوصول) — محفوظة ليكون كل قرار قابلاً للتتبّع.' },
+    // source labels
+    pvSrc_directory:    { en: 'the directory', ar: 'الدليل' },
+    pvSrc_this_device:  { en: 'this device', ar: 'هذا الجهاز' },
+    pvSrc_work_signals: { en: 'work signals', ar: 'إشارات العمل' },
+    pvSrc_activity_log: { en: 'the activity log', ar: 'سجل النشاط' },
+    // what Tempo never does
+    pvNeverTitle:   { en: 'What Tempo never does', ar: 'ما لا يفعله تِمبو أبداً' },
+    pvNeverBody:    { en: 'Tempo measures work and decisions — never people. No keystroke, mouse, presence or location tracking. No screen recording. No reading your private messages.', ar: 'يقيس تِمبو العمل والقرارات — لا الأشخاص أبداً. لا تتبّع لضغطات المفاتيح أو الفأرة أو الحضور أو الموقع. لا تسجيل للشاشة. لا قراءة لرسائلك الخاصة.' },
+    // export
+    pvExport:       { en: 'Export my data', ar: 'تصدير بياناتي' },
+    pvExportNote:   { en: 'Download everything Tempo holds about you as a file. Only your own data.', ar: 'نزّل كل ما يحتفظ به تِمبو عنك كملف. بياناتك أنت فقط.' },
+    pvExportBtn:    { en: 'Download (JSON)', ar: 'تنزيل (JSON)' },
+    pvExporting:    { en: 'Preparing…', ar: 'جارٍ التحضير…' },
+    pvExportDone:   { en: 'Your data was downloaded.', ar: 'تم تنزيل بياناتك.' },
+    pvExportError:  { en: 'Could not prepare the export. Please try again.', ar: 'تعذّر تحضير التصدير. حاول مرة أخرى.' },
     // ── Members & Access (Workspace) ──
     membersTitle:   { en: 'Members & Access', ar: 'الأعضاء والوصول' },
     membersNote:    { en: 'Who can enter Tempo and what role they hold. Grant is the app-level gate — off means they cannot sign in at all.', ar: 'من يدخل تيمبو وأي دور يحمل. المنح هو بوابة الدخول للتطبيق — الإيقاف يعني عدم القدرة على تسجيل الدخول إطلاقاً.' },
