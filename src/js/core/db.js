@@ -80,7 +80,7 @@
   function localStore() {
     return (WP.data && WP.data.EVALUATIONS) ? WP.data.EVALUATIONS : (WP.data ? (WP.data.EVALUATIONS = {}) : {});
   }
-  function persistLocal() { try { if (WP.persist) WP.persist.saveData(); } catch (e) {} }
+  function persistLocal() { try { if (WP.persist) WP.persist.saveData(); } catch (e) { if (WP.log) WP.log.warn('[db]', 'local persist failed', { err: e && e.message }); } }
 
   function newer(a, b) {
     // true if record a is strictly newer than b (by updated_at). Missing = oldest.
@@ -193,7 +193,7 @@
   function localEvents() {
     try { return JSON.parse(localStorage.getItem(eventsKey()) || '[]') || []; } catch (e) { return []; }
   }
-  function saveLocalEvents(arr) { try { localStorage.setItem(eventsKey(), JSON.stringify(arr)); } catch (e) {} }
+  function saveLocalEvents(arr) { try { localStorage.setItem(eventsKey(), JSON.stringify(arr)); } catch (e) { if (WP.log) WP.log.warn('[db]', 'local events save failed', { err: e && e.message }); } }
 
   var events = {
     /* List persisted events (optionally for one subject). Backend when available,

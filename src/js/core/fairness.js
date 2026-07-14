@@ -36,16 +36,9 @@
   };
 
   /* ---- date helpers (mirror capacity/wellbeing: ISO strings, UTC week steps) ---- */
-  function toISO(ref) {
-    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
-    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
-    return String(ref).slice(0, 10);
-  }
-  function shiftISO(refISO, days) {
-    var d = new Date(refISO + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
+  // Shared ISO-date helpers live in core/capacity.js (WP.dates) — loaded before
+  // this module. Local aliases keep the call sites below unchanged.
+  var toISO = WP.dates.toISO, shiftISO = WP.dates.shiftISO;
 
   /* The members whose load distribution we balance: a manager's DIRECT reports
    * (the people doing assignable work), excluding unfilled TBC placeholders so an

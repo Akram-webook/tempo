@@ -53,16 +53,9 @@
     return null;
   }
 
-  function toISO(ref) {
-    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
-    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
-    return String(ref).slice(0, 10);
-  }
-  function shiftISO(refISO, days) {
-    var d = new Date(refISO + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
+  // Shared ISO-date helpers live in core/capacity.js (WP.dates) — loaded before
+  // this module. Local aliases keep the call sites below unchanged.
+  var toISO = WP.dates.toISO, shiftISO = WP.dates.shiftISO;
   function avg(arr) { return arr.length ? arr.reduce(function (a, b) { return a + b; }, 0) / arr.length : 0; }
 
   function weeklyLoads(person, refISO) {

@@ -4466,6 +4466,11 @@ const EMAIL_HASHES = {};
   WP.setState = function (patch) {
     var wasAuthed = !!WP.state.authed;
     Object.assign(WP.state, patch);
+    // Clamp a deferred (MVP-hidden) route to home HERE, before persist — so the
+    // corrected route is what gets saved and a reload can't re-land on a hidden
+    // surface. RBAC route gates stay in the render router (effectiveRoute), which
+    // must not rewrite state. Guarded: WP.deferred (config.js) loads after state.js.
+    if (WP.deferred && WP.deferred(WP.state.route)) WP.state.route = 'dashboard';
     var nowAuthed = !!WP.state.authed;
     // Identity lifecycle: lock on sign-in, clear on sign-out. A "View as" change
     // (viewerId changes while authed stays true) deliberately does NOT re-key.
@@ -4742,6 +4747,22 @@ const EMAIL_HASHES = {};
   const MS_DAY = 86400000;
 
   function parse(d) { return new Date(d + 'T00:00:00Z'); }
+
+  /* Shared ISO-date helpers (single source — fairness.js + wellbeing.js consume
+   * WP.dates instead of keeping their own verbatim copies). toISO normalizes any
+   * ref (Date | 'YYYY-MM-DD' | falsy→refDate/today) to 'YYYY-MM-DD'; shiftISO
+   * moves an ISO day by ±days in UTC. */
+  function toISO(ref) {
+    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
+    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
+    return String(ref).slice(0, 10);
+  }
+  function shiftISO(refISO, days) {
+    var d = new Date(refISO + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+  WP.dates = { toISO: toISO, shiftISO: shiftISO };
   function dayCountInclusive(startMs, endMs) {
     return Math.max(0, Math.round((endMs - startMs) / MS_DAY) + 1);
   }
@@ -5170,16 +5191,9 @@ const EMAIL_HASHES = {};
     return null;
   }
 
-  function toISO(ref) {
-    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
-    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
-    return String(ref).slice(0, 10);
-  }
-  function shiftISO(refISO, days) {
-    var d = new Date(refISO + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
+  // Shared ISO-date helpers live in core/capacity.js (WP.dates) — loaded before
+  // this module. Local aliases keep the call sites below unchanged.
+  var toISO = WP.dates.toISO, shiftISO = WP.dates.shiftISO;
   function avg(arr) { return arr.length ? arr.reduce(function (a, b) { return a + b; }, 0) / arr.length : 0; }
 
   function weeklyLoads(person, refISO) {
@@ -5322,16 +5336,9 @@ const EMAIL_HASHES = {};
   };
 
   /* ---- date helpers (mirror capacity/wellbeing: ISO strings, UTC week steps) ---- */
-  function toISO(ref) {
-    if (!ref) ref = (WP.state && WP.state.refDate) || new Date().toISOString().slice(0, 10);
-    if (ref instanceof Date) return ref.toISOString().slice(0, 10);
-    return String(ref).slice(0, 10);
-  }
-  function shiftISO(refISO, days) {
-    var d = new Date(refISO + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
+  // Shared ISO-date helpers live in core/capacity.js (WP.dates) — loaded before
+  // this module. Local aliases keep the call sites below unchanged.
+  var toISO = WP.dates.toISO, shiftISO = WP.dates.shiftISO;
 
   /* The members whose load distribution we balance: a manager's DIRECT reports
    * (the people doing assignable work), excluding unfilled TBC placeholders so an

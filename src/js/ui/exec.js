@@ -2,19 +2,16 @@
  * Tempo — Executive Status (native, live from the Feedback sheet)
  * ------------------------------------------------------------
  * A native, on-brand render of the SAME "Tempo - Feedback (Live)" sheet the
- * Google Slides deck builds from. This page stores NO data of its own — it
- * reads a deployed Apps Script JSON endpoint (WP.config.execStatusEndpoint) at
- * view time. Deck + page are two thin views over one source of truth (the
- * sheet); neither can drift. The only shared logic is the status->color map.
+ * Google Slides deck builds from. This view holds NO data of its own — it reads
+ * a deployed Apps Script JSON endpoint (WP.config.execStatusEndpoint) at view
+ * time via JSONP and paints the result. Deck + page are two thin views over one
+ * source of truth (the sheet). (JSONP lives here in the ui layer because it
+ * needs the DOM; core is kept DOM-free by rule — see verify-architecture.)
  *
  * WHY native (not an embedded deck iframe): a PRIVATE Google Slides deck does
  * not frame inline — Google shows a sign-in / request-access box. We keep the
  * deck PRIVATE and reach it via the "Open / present" button (board / PDF /
  * present mode) instead of embedding it.
- *
- * WHY JSONP (not fetch): Apps Script web apps 302-redirect and send no CORS
- * headers, so fetch()/XHR from GitHub Pages fails. We load the endpoint with a
- * <script> tag + ?callback=, which is exempt from CORS.
  *
  * Gated to Director + Admin (WP.execDeckVisible → endpoint set AND
  * WP.can('viewSettings')). Re-checked here (defence in depth): a member or an
@@ -24,13 +21,11 @@
   'use strict';
   const ui = WP.ui;
 
-  // ---- status -> color bucket (mirror of the deck; the ONE shared rule) ------
-  // Colours resolve to CSS tokens (tokens.css --exec-*), which hold the exact
-  // hexes the deck uses — so the in-app view and the Slides deck match.
-  const COLORS = {
-    green:  'var(--exec-green)',  amber: 'var(--exec-amber)', red: 'var(--exec-red)',
-    violet: 'var(--exec-violet)', grey:  'var(--exec-grey)',
-  };
+  // status -> colour bucket. NOTE: the Google Slides deck (docs/exec-deck/Code.gs)
+  // is a SEPARATE Apps Script runtime and keeps its OWN copy of this rule — it
+  // cannot import this file, so this is NOT a shared module. The two are kept in
+  // sync by hand + the bucket contract pinned in test/verify-exec.js (change one
+  // side's regex and CI trips). Keep Code.gs's statusColorKey aligned.
   function statusColorKey(raw) {
     const s = String(raw || '').toLowerCase();
     if (/done|live|shipped|on.?track/.test(s)) return 'green';
@@ -39,7 +34,15 @@
     if (/later|planned|idea/.test(s)) return 'violet';
     return 'grey';
   }
-  WP.execStatusColorKey = statusColorKey;   // exported for tests
+  // Back-compat + test hook + a stable data surface for the buckets.
+  WP.execStatus = { statusColorKey: statusColorKey };
+  WP.execStatusColorKey = statusColorKey;
+  // Presentational colour tokens for each bucket (view-owned). Resolve to
+  // tokens.css --exec-* vars, which hold the exact hexes the deck uses.
+  const COLORS = {
+    green:  'var(--exec-green)',  amber: 'var(--exec-amber)', red: 'var(--exec-red)',
+    violet: 'var(--exec-violet)', grey:  'var(--exec-grey)',
+  };
 
   // ---- relative time from an ISO string ("just now", "3h ago", "2d ago") -----
   function relTime(iso) {
@@ -58,7 +61,11 @@
   }
 
   // ---- JSONP loader: builds a <script src=…?callback=FN>, NO fetch/XHR --------
-  // Resolves with the parsed payload, rejects on load error or 10s timeout.
+  // Lives in this ui-layer view because it needs the DOM (a <script> tag); the
+  // core layer is kept DOM-free by rule. WHY JSONP not fetch: the deployed Apps
+  // Script web app 302-redirects and sends no CORS headers, so a cross-origin
+  // fetch() from GitHub Pages fails; a script tag is CORS-exempt. Resolves with
+  // the parsed payload; rejects on load error or a 10s timeout. Self-cleaning.
   let jsonpSeq = 0;
   function loadJSONP(url) {
     return new Promise(function (resolve, reject) {
