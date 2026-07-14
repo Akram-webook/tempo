@@ -42,12 +42,6 @@
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
       { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
     ];
-    // Executive status — the director/admin's live one-screen status (portfolio
-    // health + what needs you + team load). Sits right under Dashboard as a
-    // primary destination. Gated to viewSettings (director/admin).
-    if (WP.execVisible && WP.execVisible()) {
-      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'sparkles', label: t('execStatus') });
-    }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
@@ -213,7 +207,6 @@
     if (WP.state.route === 'dashboard') WP.ui.dashboard.render(root);
     else if (WP.state.route === 'profile') WP.ui.profile.render(root);
     else if (WP.state.route === 'settings') WP.ui.settings.render(root);
-    else if (WP.state.route === 'exec') { if (WP.execVisible && WP.execVisible()) WP.ui.exec.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'activity') { if (WP.can('manageAdmins')) WP.ui.activity.render(root); else WP.setState({ route: 'map' }); }
     else if (WP.state.route === 'daily') WP.ui.dailyTasks.render(root);
     else if (WP.state.route === 'permissions') WP.ui.permissions.render(root);
