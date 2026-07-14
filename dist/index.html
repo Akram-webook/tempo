@@ -1706,17 +1706,20 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-h3 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
 .ex-roll { color: var(--text-muted); font-size: 12.5px; margin-bottom: 12px; }
 .ex-rows { display: flex; flex-direction: column; gap: 2px; }
-.ex-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+.ex-row { display: flex; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
 .ex-row:last-child { border-bottom: 0; }
 .ex-row-main { flex: 1; min-width: 0; }
 .ex-row-area { font-weight: 600; }
 .ex-row-note { color: var(--text-muted); }
-.ex-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-.ex-pri { color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; flex: none; }
+.ex-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+/* priority: fixed width + right-aligned so HIGH/MEDIUM form a clean column */
+.ex-pri { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .03em; flex: none; width: 62px; text-align: end; }
 .ex-more { color: var(--text-muted); font-size: 12.5px; padding: 8px 4px 0; }
 
 /* Status chips (5 buckets) */
-.ex-chip { flex: none; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+/* Status chip: fixed min-width + centred so every status (Done / Working /
+   Needs input) is the SAME pill size and their edges align down the column. */
+.ex-chip { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 96px; height: 22px; padding: 0 10px; font-size: 11px; font-weight: 600; line-height: 1; border-radius: 999px; white-space: nowrap; }
 .ex-chip--green  { color: var(--exec-green); background: color-mix(in srgb, var(--exec-green) 14%, transparent); }
 .ex-chip--amber  { color: var(--exec-amber-ink); background: color-mix(in srgb, var(--exec-amber) 18%, transparent); }
 .ex-chip--red    { color: var(--exec-red); background: color-mix(in srgb, var(--exec-red) 14%, transparent); }
