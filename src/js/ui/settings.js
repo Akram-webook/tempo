@@ -277,6 +277,7 @@
     if (qs) qs.onchange = function () { WP.prefs.set('notif.quietHours.start', qs.value); };
     if (qe) qe.onchange = function () { WP.prefs.set('notif.quietHours.end', qe.value); };
     wireSecurity(root);
+    wirePrivacy(root);
   }
 
   /* ── Personal: Security (password · devices · last sign-in) ────────────────
@@ -332,6 +333,66 @@
       }).then(function (ok) {
         if (!ok) return;
         WP.auth.signOutEverywhere();   // ends local session too → app returns to login
+      });
+    };
+  }
+
+  /* ── Personal: Privacy (what Tempo tracks about me + export my data) ───────
+   * The no-surveillance stance made concrete and honest: a plain-language list
+   * of the DATA CATEGORIES Tempo actually holds about you (each with a why),
+   * an explicit statement of what Tempo does NOT do, and a one-click export of
+   * your own data (client-side JSON download — no server round-trip, only you). */
+  function privacyView() {
+    const t = WP.i18n.t;
+    const cats = (WP.privacy && WP.privacy.CATEGORIES) || [];
+    const rows = cats.map(function (c) {
+      return '<div class="pv-cat">' +
+        '<div class="pv-cat-h"><span class="nm">' + t('pvCat_' + c.key) + '</span>' +
+          '<span class="tag">' + t('pvSource') + ': ' + t('pvSrc_' + c.source.replace(/\s/g, '_')) + '</span></div>' +
+        '<div class="pv-cat-why">' + t('pvWhy_' + c.key) + '</div></div>';
+    }).join('');
+    return '<div class="section"><h3>' + t('pvTitle') + '</h3>' +
+      '<div class="sub" style="margin:-4px 0 12px">' + t('pvSub') + '</div>' +
+
+      // What Tempo tracks — the honest catalogue
+      '<div class="mini-label">' + t('pvHoldsTitle') + '</div>' +
+      '<div class="pv-cats">' + rows + '</div>' +
+
+      // What Tempo does NOT do — the guardrail, stated plainly
+      '<div class="pv-never"><div class="pv-never-h">' + ui.icon('lock', 13) + ' ' + t('pvNeverTitle') + '</div>' +
+        '<div class="pv-never-b">' + t('pvNeverBody') + '</div></div>' +
+
+      // Export my data
+      settingRow(t('pvExport'), t('pvExportNote'),
+        '<button class="btn" id="pv-export">' + ui.icon('external', 14) + ' ' + t('pvExportBtn') + '</button>') +
+      '</div>';
+  }
+
+  function wirePrivacy(root) {
+    const t = WP.i18n.t;
+    const btn = root.querySelector('#pv-export');
+    if (!btn) return;
+    btn.onclick = function () {
+      const label = btn.innerHTML;
+      btn.disabled = true; btn.textContent = t('pvExporting');
+      WP.privacy.myData(WP.state.refDate).then(function (data) {
+        btn.disabled = false; btn.innerHTML = label;
+        try {
+          const payload = WP.privacy.buildExport(data, new Date().toISOString());
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const who = (data && data.subject) || 'me';
+          a.href = url; a.download = 'tempo-my-data-' + who + '.json';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+          WP.ui.toast(t('pvExportDone'), 'success');
+        } catch (e) {
+          WP.ui.toast(t('pvExportError'), 'error');
+        }
+      }, function () {
+        btn.disabled = false; btn.innerHTML = label;
+        WP.ui.toast(t('pvExportError'), 'error');
       });
     };
   }
@@ -466,7 +527,7 @@
 
     const body = tab === 'workspace'
       ? workspaceView()
-      : (accountView() + preferencesView() + notificationsView() + securityView());
+      : (accountView() + preferencesView() + notificationsView() + securityView() + privacyView());
 
     root.innerHTML =
       '<button class="btn" id="back" style="margin-bottom:16px"><span class="ar ar-left"></span> ' + t('back') + '</button>' +
