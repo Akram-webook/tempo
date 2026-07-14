@@ -1,10 +1,9 @@
-/* Directory gate — retained as a REVERSIBLE option, no longer the default.
- * As of Jul-2026 the default authMode is 'password' (Akram: password-only sign-in).
- * This suite proves the directory gate STILL works correctly when explicitly set
- * (WP.config.authMode='directory'): Supabase stays wired for WP.db, a registered
- * @webook.com email signs straight in with NO email-send/OTP path, unknown/wrong-domain
- * are rejected, and the switch is reversible. It also pins that the DEFAULT is now
- * password, not directory. jsdom; no network. */
+/* Directory gate — the current DEFAULT authMode (Akram Jul-2026: temporary
+ * stopgap to unblock sign-in without external accounts; flip back to 'password'
+ * once real accounts exist). This suite proves the directory gate works: a
+ * registered @webook.com email signs straight in with NO email-send/OTP path,
+ * unknown/wrong-domain are rejected, and the switch is reversible. It pins that
+ * the DEFAULT is directory. jsdom; no network. */
 const fs=require('fs'),path=require('path');const {JSDOM}=require('jsdom');
 const root=path.join(__dirname,'..');const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const srcs=[...html.matchAll(/src="([^"]+\.js)"/g)].map(m=>m[1]);
@@ -18,7 +17,7 @@ for(const s of srcs){try{new window.Function(fs.readFileSync(path.join(root,s),'
 const WP=window.WP;function assert(c,m){if(!c)errors.push('[assert] '+m);}
 try{
   // ── the DEFAULT is now password-only (directory is no longer the default) ──
-  assert(WP.config.authMode==='password','default authMode is now password (directory retired as default)');
+  assert(WP.config.authMode==='directory','default authMode is directory (Akram Jul-2026: temporary stopgap to unblock sign-in; flip back to password once real accounts exist)');
   // Explicitly select the directory gate to test it still works as a reversible option.
   WP.config.authMode='directory';
   assert(WP.config.supabaseUrl && WP.config.supabaseUrl.indexOf('supabase.co')>0,'Supabase URL still configured (WP.db data layer)');

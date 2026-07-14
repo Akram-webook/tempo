@@ -3242,7 +3242,12 @@ const EMAIL_HASHES = {};
   // A leftover Google/OAuth session is rejected at the session level (handleSession
   // → providerAllowedForMode). Nobody signs in without a password set via the
   // invite/reset link. Reversible: change this one word back to 'google'/'directory'.
-  if (WP.config.authMode === undefined)        WP.config.authMode = 'password';
+  // DIRECTORY (Akram, Jul 2026): unblock sign-in NOW — a registered @webook.com
+  // email goes straight in, no password, no external account needed. Not
+  // identity-proof (anyone who types a known @webook.com email gets in), fine as
+  // a short-term stopgap on an obscure URL. Flip back to 'password' once real
+  // accounts exist.
+  if (WP.config.authMode === undefined)        WP.config.authMode = 'directory';
 
   /* ----------------------------------------------------------------
    * MVP FLAG (reversible, one line) — what the org SEES in v1.
