@@ -26,16 +26,22 @@ WP.state.lang = 'en';
 // helper: become a viewer
 function be(id) { WP.state.viewerId = id; WP.state.authed = true; }
 
-// ---- 1) Activity page gated + read-only ----------------------------------
+// ---- 1) Activity page = SUPER ADMIN ONLY + read-only ---------------------
+// Akram: the override log must NOT show to directors/other admins — only the
+// Super Admin (manageAdmins cap). A specialist AND a director are both redirected.
 assert(WP.ui.activity && typeof WP.ui.activity.render === 'function', 'WP.ui.activity.render exists');
-be('p_idris'); // specialist
-let redirected = false; const realSet = WP.setState;
-WP.setState = function (patch) { if (patch && patch.route === 'map') redirected = true; };
-WP.ui.activity.render(root_el);
-assert(redirected, 'specialist is redirected away from the activity page (viewSettings gate)');
-WP.setState = realSet;
+function assertRedirected(id, label) {
+  be(id);
+  let redirected = false; const realSet = WP.setState;
+  WP.setState = function (patch) { if (patch && patch.route === 'map') redirected = true; };
+  WP.ui.activity.render(root_el);
+  WP.setState = realSet;
+  assert(redirected, label + ' is redirected away from the activity page (Super-Admin-only gate)');
+}
+assertRedirected('p_idris', 'specialist');
+assertRedirected('p_ahmed', 'director (NOT super admin)');
 
-be('p_akram'); // super admin
+be('p_akram'); // super admin (manageAdmins)
 WP.ui.activity._reset();
 WP.activityLog.unshift({ type: 'config', by: 'p_akram', target: 'tier 3 = 12%', at: '2026-07-12T10:00:00' });
 WP.ui.activity.render(root_el);

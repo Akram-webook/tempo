@@ -5,8 +5,9 @@
  * a provenance record (who did what, when, why) — a director/admin scans it, so
  * it deserves a real, scannable, paginated table page.
  *
- * Gated to director/admin (WP.can('viewSettings')); re-checked here (defence in
- * depth). Read-only. Newest first, load-more paging.
+ * Gated to Super Admin ONLY (WP.can('manageAdmins')); re-checked here (defence
+ * in depth). Read-only. Newest first, load-more paging. (Akram: directors/other
+ * admins should NOT see the override log — Super Admin only.)
  * ========================================================== */
 (function (WP) {
   'use strict';
@@ -31,7 +32,7 @@
 
   function render(root) {
     const t = WP.i18n.t;
-    if (!WP.can('viewSettings')) { WP.setState({ route: 'map' }); return; }
+    if (!WP.can('manageAdmins')) { WP.setState({ route: 'map' }); return; }
     const all = (WP.activityLog || []).slice();   // already newest-first
 
     const head =
