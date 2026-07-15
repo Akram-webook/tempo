@@ -5,8 +5,8 @@
  * Google Slides deck builds from. This view holds NO data of its own — it reads
  * a deployed Apps Script JSON endpoint (WP.config.execStatusEndpoint) at view
  * time via JSONP and paints the result. Deck + page are two thin views over one
- * source of truth (the sheet). (JSONP lives here in the ui layer because it
- * needs the DOM; core is kept DOM-free by rule — see verify-architecture.)
+ * source of truth (the sheet). Transport is the shared WP.ui.jsonp helper
+ * (ui layer — it needs the DOM; core is kept DOM-free by rule).
  *
  * WHY native (not an embedded deck iframe): a PRIVATE Google Slides deck does
  * not frame inline — Google shows a sign-in / request-access box. We keep the
@@ -60,37 +60,11 @@
     return days + t('execDayAgo');
   }
 
-  // ---- JSONP loader: builds a <script src=…?callback=FN>, NO fetch/XHR --------
-  // Lives in this ui-layer view because it needs the DOM (a <script> tag); the
-  // core layer is kept DOM-free by rule. WHY JSONP not fetch: the deployed Apps
-  // Script web app 302-redirects and sends no CORS headers, so a cross-origin
-  // fetch() from GitHub Pages fails; a script tag is CORS-exempt. Resolves with
-  // the parsed payload; rejects on load error or a 10s timeout. Self-cleaning.
-  let jsonpSeq = 0;
-  function loadJSONP(url) {
-    return new Promise(function (resolve, reject) {
-      const cbName = 'WP_execCb_' + (++jsonpSeq) + '_' + Math.floor(Date.now() % 1e7);
-      const script = document.createElement('script');
-      let done = false;
-      const cleanup = function () {
-        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
-        if (script.parentNode) script.parentNode.removeChild(script);
-        if (timer) clearTimeout(timer);
-      };
-      const timer = setTimeout(function () {
-        if (done) return; done = true; cleanup(); reject(new Error('timeout'));
-      }, 10000);
-      window[cbName] = function (data) {
-        if (done) return; done = true; cleanup(); resolve(data);
-      };
-      script.onerror = function () {
-        if (done) return; done = true; cleanup(); reject(new Error('network'));
-      };
-      const sep = url.indexOf('?') >= 0 ? '&' : '?';
-      script.src = url + sep + 'callback=' + encodeURIComponent(cbName);
-      (document.head || document.documentElement).appendChild(script);
-    });
-  }
+  // Cross-origin GET uses the shared ui-layer JSONP helper (WP.ui.jsonp) — the
+  // transport lives in the ui layer (DOM-legal) and is reused, not buried here.
+  // WHY JSONP: the Apps Script endpoint 302-redirects with no CORS headers, so
+  // fetch() from GitHub Pages fails; a <script> tag is CORS-exempt.
+  const loadJSONP = WP.ui.jsonp;
 
   // ---- small on-brand pieces --------------------------------------------------
   function dot(key) {
