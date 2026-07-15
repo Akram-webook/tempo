@@ -112,11 +112,15 @@
     '</div>';
   }
 
-  // ---- TIMELINE (senior-BA/PM view): items grouped into week buckets by date --
-  // Reads a date per item from the sheet (requests[].date; features[].date/reviewed
-  // when present). Filter: This week / Last week / Upcoming / All. Undated items
-  // fall into a clearly-labelled "No date yet" group so nothing is silently hidden.
-  const TL_FILTERS = ['thisWeek', 'lastWeek', 'upcoming', 'all'];
+  // ---- TIMELINE (senior-BA/PM view): a calendar-style WEEK NAVIGATOR ----------
+  // The director can step to ANY week (‹ prev · "Week of 8–14 Jun" · next ›) and
+  // snap back with Today, or switch to "All" to see every dated item grouped by
+  // week. Time-navigator pattern: ONE reference (refWeekOffset, 0 = current week)
+  // drives the window; the label always names the exact week so he never loses
+  // his place. Reads a date per item from the sheet (requests[].date;
+  // features[].date/reviewed). Undated items surface in a labelled "No date yet"
+  // group (All view) so nothing is silently hidden.
+  const TL_MODES = ['week', 'all'];
 
   // Monday-based week window for a given offset (0 = this week, -1 = last, +1 = next).
   function weekWindow(offset) {
@@ -126,6 +130,19 @@
     return { start: monday, end: monday + 7 * 86400000 - 1 };
   }
   function inWindow(ms, win) { return ms >= win.start && ms <= win.end; }
+
+  // Human label for a week window, e.g. "8–14 Jun 2026" / "29 Jun – 5 Jul 2026".
+  // Numbers/months stay LTR-friendly; formatting is locale-aware via toLocaleDateString.
+  function weekLabel(win) {
+    const loc = (WP.state && WP.state.lang === 'ar') ? 'ar' : 'en-GB';
+    const a = new Date(win.start), b = new Date(win.end);
+    const day = { day: 'numeric', timeZone: 'UTC' };
+    const dayMon = { day: 'numeric', month: 'short', timeZone: 'UTC' };
+    const full = { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' };
+    const sameMonth = a.getUTCMonth() === b.getUTCMonth() && a.getUTCFullYear() === b.getUTCFullYear();
+    const left = sameMonth ? a.toLocaleDateString(loc, day) : a.toLocaleDateString(loc, dayMon);
+    return left + ' – ' + b.toLocaleDateString(loc, full);
+  }
 
   // Normalize the timeline items from the payload (requests + any dated features).
   function timelineItems(data) {
@@ -147,31 +164,54 @@
       '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + chip(it.status) + '</div>';
   }
 
-  function timelineHTML(data, filter) {
+  // Navigator control: [Week | All] granularity segment + (in Week mode) the
+  // ‹ prev · "Week of …" · next › stepper and a Today button. label is aria-live
+  // so screen readers announce the week on change.
+  function navHTML(mode, offset) {
+    const t = WP.i18n.t;
+    const seg = TL_MODES.map(function (m) {
+      const on = m === mode ? ' is-on' : '';
+      const label = m === 'week' ? t('execWeekView') : t('execAllView');
+      return '<button type="button" class="ex-seg-btn' + on + '" data-mode="' + m + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + label + '</button>';
+    }).join('');
+    let stepper = '';
+    if (mode === 'week') {
+      const isNow = offset === 0;
+      const label = weekLabel(weekWindow(offset));
+      stepper =
+        '<div class="ex-step">' +
+          '<button type="button" class="ex-step-btn ex-step-prev" data-step="-1" aria-label="' + t('execPrevWeek') + '">' + ui.icon('chevronLeft', 16) + '</button>' +
+          '<span class="ex-step-label" aria-live="polite">' + ui.esc(label) + '</span>' +
+          '<button type="button" class="ex-step-btn ex-step-next" data-step="1" aria-label="' + t('execNextWeek') + '">' + ui.icon('chevronRight', 16) + '</button>' +
+          '<button type="button" class="ex-step-today btn' + (isNow ? ' is-now' : '') + '" data-today="1"' + (isNow ? ' disabled' : '') + '>' + t('execToday') + '</button>' +
+        '</div>';
+    }
+    return '<div class="ex-seg" role="group" aria-label="' + t('execTimeline') + '">' + seg + '</div>' + stepper;
+  }
+
+  function timelineHTML(data, mode, offset) {
     const t = WP.i18n.t;
     const items = timelineItems(data);
-    const tabs = TL_FILTERS.map(function (f) {
-      const on = f === filter ? ' is-on' : '';
-      const label = f === 'thisWeek' ? t('execThisWeek') : f === 'lastWeek' ? t('execLastWeek')
-        : f === 'upcoming' ? t('execUpcoming') : t('execAll');
-      return '<button type="button" class="ex-tl-tab' + on + '" data-tl="' + f + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + label + '</button>';
-    }).join('');
-
-    // bucket by the active filter
     const dated = items.map(function (it) { return { it: it, ms: it.date ? Date.parse(it.date) : NaN }; });
+
     let groups;
-    if (filter === 'all') {
-      groups = [
-        { label: t('execLastWeek'), rows: dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, weekWindow(-1)); }) },
-        { label: t('execThisWeek'), rows: dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, weekWindow(0)); }) },
-        { label: t('execUpcoming'), rows: dated.filter(function (x) { return !isNaN(x.ms) && x.ms > weekWindow(0).end; }) },
-        { label: t('execUndated'), rows: dated.filter(function (x) { return isNaN(x.ms); }) },
-      ].filter(function (g) { return g.rows.length; });
+    if (mode === 'all') {
+      // group every dated item by week around the current week (±), plus undated.
+      const buckets = {};
+      dated.forEach(function (x) {
+        if (isNaN(x.ms)) { (buckets.__undated = buckets.__undated || []).push(x); return; }
+        // find its week offset relative to now
+        const base = weekWindow(0).start;
+        const off = Math.floor((x.ms - base) / (7 * 86400000));
+        (buckets[off] = buckets[off] || []).push(x);
+      });
+      const offs = Object.keys(buckets).filter(function (k) { return k !== '__undated'; })
+        .map(Number).sort(function (a, b) { return b - a; });   // newest week first
+      groups = offs.map(function (o) { return { label: weekLabel(weekWindow(o)), rows: buckets[o] }; });
+      if (buckets.__undated) groups.push({ label: t('execUndated'), rows: buckets.__undated });
     } else {
-      const win = filter === 'thisWeek' ? weekWindow(0) : filter === 'lastWeek' ? weekWindow(-1) : null;
-      const rows = filter === 'upcoming'
-        ? dated.filter(function (x) { return !isNaN(x.ms) && x.ms > weekWindow(0).end; })
-        : dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, win); });
+      const win = weekWindow(offset);
+      const rows = dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, win); });
       groups = rows.length ? [{ label: null, rows: rows }] : [];
     }
 
@@ -184,7 +224,7 @@
 
     return '<div class="section">' +
       '<div class="ex-tl-head"><h3 class="ex-h3">' + t('execTimeline') + '</h3>' +
-        '<div class="ex-tl-tabs" role="group" aria-label="' + t('execTimeline') + '">' + tabs + '</div></div>' +
+        '<div class="ex-tl-nav">' + navHTML(mode, offset) + '</div></div>' +
       '<div class="ex-tl-body">' + body + '</div>' +
     '</div>';
   }
@@ -249,14 +289,15 @@
 
   // ---- orchestration ----------------------------------------------------------
   let token = 0;         // guards against a stale JSONP resolving after a re-render
-  let tlFilter = 'thisWeek';   // timeline filter (view-local; defaults to the current week)
-  let lastData = null;   // last payload (so a filter change repaints without refetch)
+  let tlMode = 'week';   // 'week' (stepper) | 'all' (every week grouped) — view-local
+  let refWeekOffset = 0; // current week = 0; ‹prev = -1, next› = +1 … (time-navigator reference)
+  let lastData = null;   // last payload (so a nav change repaints without refetch)
 
   function paintBody(host, data) {
     lastData = data;
     // Order for a director/PM scan: 1) compact launcher (summary + open deck),
     // 2) TIMELINE (what shipped / is coming, by week), 3) WHAT NEEDS YOU.
-    const body = launcherHTML(data) + timelineHTML(data, tlFilter) + needsHTML(data.requests);
+    const body = launcherHTML(data) + timelineHTML(data, tlMode, refWeekOffset) + needsHTML(data.requests);
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = body;
     wireBody(host);
@@ -270,21 +311,32 @@
     }
   }
 
-  // Wire the timeline filter tabs — a filter change repaints from lastData (no
-  // refetch). Purely view-local state; nothing touches WP.state.
+  // Repaint ONLY the timeline section in place from lastData (no refetch), then
+  // re-wire. Keeps focus off WP.state — this is view-local navigation.
+  function repaintTimeline(host) {
+    if (!lastData) return;
+    const cur = host.querySelector('.ex-tl-head') && host.querySelector('.ex-tl-head').closest('.section');
+    if (cur) { cur.outerHTML = timelineHTML(lastData, tlMode, refWeekOffset); wireBody(host); }
+  }
+
+  // Wire the navigator: [Week|All] segment, ‹ prev / next ›, and Today. A change
+  // repaints the timeline from lastData. Purely view-local; nothing touches WP.state.
   function wireBody(host) {
-    host.querySelectorAll('[data-tl]').forEach(function (b) {
+    host.querySelectorAll('[data-mode]').forEach(function (b) {
       b.onclick = function () {
-        tlFilter = b.getAttribute('data-tl');
-        const tlBody = host.querySelector('.ex-body');
-        if (tlBody && lastData) {
-          // repaint only the timeline section in place
-          const sec = timelineHTML(lastData, tlFilter);
-          const cur = host.querySelector('.ex-tl-head') && host.querySelector('.ex-tl-head').closest('.section');
-          if (cur) { cur.outerHTML = sec; wireBody(host); }
-        }
+        tlMode = b.getAttribute('data-mode');
+        if (tlMode === 'week' && isNaN(refWeekOffset)) refWeekOffset = 0;
+        repaintTimeline(host);
       };
     });
+    host.querySelectorAll('[data-step]').forEach(function (b) {
+      b.onclick = function () {
+        refWeekOffset += parseInt(b.getAttribute('data-step'), 10) || 0;
+        repaintTimeline(host);
+      };
+    });
+    const today = host.querySelector('[data-today]');
+    if (today) today.onclick = function () { refWeekOffset = 0; repaintTimeline(host); };
   }
 
   function paintError(host) {

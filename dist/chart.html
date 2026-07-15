@@ -1739,13 +1739,29 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-deck-btn { flex: none; }
 .ex-launch-sum { color: var(--text-muted); font-size: 13px; }
 
-/* Timeline (BA/PM view) — filter tabs + week-bucketed rows */
+/* Timeline (BA/PM view) — calendar-style WEEK NAVIGATOR + week-bucketed rows.
+   [Week|All] granularity segment, then ‹ prev · "week of …" · next › + Today. */
 .ex-tl-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-.ex-tl-tabs { display: inline-flex; gap: 2px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
-.ex-tl-tab { border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--text-muted); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
-.ex-tl-tab:hover { color: var(--text); }
-.ex-tl-tab.is-on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-.ex-tl-tab:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+.ex-tl-nav { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* granularity segment (Week | All) */
+.ex-seg { display: inline-flex; gap: 2px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+.ex-seg-btn { border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--text-muted); padding: 5px 14px; border-radius: 999px; cursor: pointer; }
+.ex-seg-btn:hover { color: var(--text); }
+.ex-seg-btn.is-on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.ex-seg-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+
+/* week stepper */
+.ex-step { display: inline-flex; align-items: center; gap: 6px; }
+.ex-step-btn { display: inline-grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; color: var(--text); cursor: pointer; }
+.ex-step-btn:hover { background: var(--surface-1); }
+.ex-step-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+.ex-step-label { min-width: 168px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.ex-step-today { padding: 5px 12px; font-size: 12.5px; }
+.ex-step-today.is-now, .ex-step-today[disabled] { opacity: .5; cursor: default; }
+/* RTL: chevrons point the natural direction; numbers/dates stay LTR */
+[dir="rtl"] .ex-step-prev svg, [dir="rtl"] .ex-step-next svg { transform: scaleX(-1); }
+[dir="rtl"] .ex-step-label { direction: ltr; }
 .ex-tl-group { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 14px 0 6px; }
 .ex-tl-group:first-child { margin-top: 0; }
 .ex-tl-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
@@ -3977,6 +3993,11 @@ const EMAIL_HASHES = {};
     execAll:        { en: 'All', ar: 'الكل' },
     execUndated:    { en: 'No date yet', ar: 'بدون تاريخ' },
     execTlEmpty:    { en: 'Nothing in this range.', ar: 'لا شيء في هذا النطاق.' },
+    execToday:      { en: 'Today', ar: 'اليوم' },
+    execPrevWeek:   { en: 'Previous week', ar: 'الأسبوع السابق' },
+    execNextWeek:   { en: 'Next week', ar: 'الأسبوع التالي' },
+    execWeekView:   { en: 'Week', ar: 'أسبوع' },
+    execAllView:    { en: 'All', ar: 'الكل' },
     execEyebrowOld: { en: 'WEBOOK · WORKFORCE OPS (TEMPO)', ar: 'ويبوك · عمليات القوى العاملة (تيمبو)' },
     execOpen:       { en: 'Open / present', ar: 'فتح / عرض تقديمي' },
     execRefresh:    { en: 'Refresh', ar: 'تحديث' },
@@ -6484,6 +6505,8 @@ const EMAIL_HASHES = {};
     arrowUp:  '<path d="M12 19V5M5 12l7-7 7 7"/>',
     arrowRight:'<path d="M5 12h14M13 6l6 6-6 6"/>',
     arrowLeft:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+    chevronLeft:'<path d="M15 18l-6-6 6-6"/>',
+    chevronRight:'<path d="M9 18l6-6-6-6"/>',
     bulb:     '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/>',
     eye:      '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
     tree:     '<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-2.5a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1V17"/>',
