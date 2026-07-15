@@ -138,6 +138,53 @@ function installTrigger() {
   Logger.log('Triggers installed: on-edit (debounced) + daily @ ' + withSettings_(CONFIG).REFRESH_HOUR + ':00');
 }
 
+/*═══════════════════════ WEEKLY HISTORY (snapshot) ════════════════════════
+ * The live deck + the in-app Executive Status page always show "now" — a
+ * rebuild overwrites, so nothing is archived. This adds a WEEKLY, permanent,
+ * browsable history: once a week it rebuilds the deck (so it's current) and
+ * exports it as a DATED PDF into a Drive folder. Past weeks are then just files
+ * in that folder — this is what makes "last week" truly historical.
+ *
+ * SETUP (once): create/choose a Drive folder, put its ID in SNAPSHOT_FOLDER_ID
+ * below (or a 'snapshot_folder_id' row in the Deck Settings tab), then run
+ * installWeeklySnapshot() once. Share the folder to Director (Viewer) + you.
+ * Runs Mondays ~06:00. Safe + idempotent; never touches the Tempo app/repo. */
+var SNAPSHOT_FOLDER_ID = '';   // ← paste the Drive folder id (or set it in Deck Settings)
+
+function snapshotFolderId_() {
+  var s = withSettings_(CONFIG);
+  return (s.SNAPSHOT_FOLDER_ID || SNAPSHOT_FOLDER_ID || '').trim();
+}
+
+/** Rebuild the deck, then save a dated PDF snapshot into the Drive folder. */
+function weeklySnapshot() {
+  buildDeck();                                   // ensure the deck is current
+  var folderId = snapshotFolderId_();
+  if (!folderId) { Logger.log('weeklySnapshot: no SNAPSHOT_FOLDER_ID set — skipped'); return; }
+  var deckId = PropertiesService.getScriptProperties().getProperty('DECK_ID');
+  if (!deckId) { Logger.log('weeklySnapshot: no DECK_ID yet — run buildDeck first'); return; }
+  try {
+    var pdf = DriveApp.getFileById(deckId).getAs('application/pdf');
+    var now = new Date();
+    var stamp = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    pdf.setName('Tempo Executive Status — ' + stamp + '.pdf');
+    DriveApp.getFolderById(folderId).createFile(pdf);
+    Logger.log('weeklySnapshot: archived ' + stamp);
+  } catch (e) {
+    Logger.log('weeklySnapshot failed: ' + e.message);   // never throw — one bad run must not break the schedule
+  }
+}
+
+/** Install the weekly snapshot trigger (Mondays ~06:00). Run once. Idempotent. */
+function installWeeklySnapshot() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'weeklySnapshot') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('weeklySnapshot').timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(6).create();
+  Logger.log('Weekly snapshot installed: Mondays ~06:00 → dated PDF in the Drive folder');
+}
+
 /** Debounced on-edit handler: schedules a rebuild ~60s after edits settle, so a
     burst of edits triggers ONE rebuild, not dozens. */
 function onEditRebuild_() {

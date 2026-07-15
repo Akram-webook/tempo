@@ -27,6 +27,22 @@ never changes.
 5. Keep the **sheet** shared to you (Editor) + Director (Viewer/Commenter) only.
 6. Bookmark the deck link.
 
+## Weekly history (optional but recommended)
+The live deck + the in-app page always show **now** — a rebuild overwrites, so
+nothing is archived. To keep a permanent, browsable history so "last week" is
+real:
+1. Create (or pick) a **Drive folder** for the archive. Copy its folder id from
+   the URL (`drive.google.com/drive/folders/<THIS>`).
+2. Put it in the script: set `SNAPSHOT_FOLDER_ID = '<id>'` near the top of the
+   snapshot section (or add a `snapshot_folder_id` row in the **Deck Settings** tab).
+3. Run **`installWeeklySnapshot`** once → every **Monday ~06:00** it rebuilds the
+   deck and saves a dated **PDF** (`Tempo Executive Status — YYYY-MM-DD.pdf`) into
+   that folder. Run `weeklySnapshot` manually anytime to snapshot on demand.
+4. **Share the folder** to the Director (Viewer) + you (Editor) only.
+
+Each past Monday is then just a file in the folder — that is the historical
+"last week / two weeks ago" record the live surfaces don't keep.
+
 ## Change it later
 - **What it says** → edit the sheet tabs. Rebuilds in ~1 min.
 - **Look / structure** → the optional **`Deck Settings`** sheet tab (key/value:
