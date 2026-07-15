@@ -1547,8 +1547,15 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-chip { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 96px; height: 22px; padding: 0 10px; font-size: 11px; font-weight: 600; line-height: 1; border-radius: 999px; white-space: nowrap; }
 .ex-chip--green  { color: var(--exec-green); background: color-mix(in srgb, var(--exec-green) 14%, transparent); }
 .ex-chip--amber  { color: var(--exec-amber-ink); background: color-mix(in srgb, var(--exec-amber) 18%, transparent); }
-.ex-chip--red    { color: var(--exec-red); background: color-mix(in srgb, var(--exec-red) 14%, transparent); }
-.ex-chip--violet { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 14%, transparent); }
+/* status icon (shape + colour, so status is never colour-alone) */
+.ex-sic { flex: none; display: inline-flex; line-height: 0; margin-top: 1px; }
+.ex-sic--green  { color: var(--exec-green); }
+.ex-sic--amber  { color: var(--exec-amber-ink); }
+.ex-sic--red    { color: var(--exec-red-ink); }
+.ex-sic--violet { color: var(--exec-violet); }
+.ex-sic--grey   { color: var(--text-muted); }
+.ex-chip--red    { color: var(--exec-red-ink); background: color-mix(in srgb, var(--exec-red) 16%, transparent); }
+.ex-chip--violet { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 16%, transparent); }
 .ex-chip--grey   { color: var(--text-muted); background: var(--surface-1); }
 
 /* Waves */
