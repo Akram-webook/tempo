@@ -1639,6 +1639,51 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
   transition: opacity .18s ease, transform .18s ease, visibility .18s;
 }
 .account.open .account-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* Notifications bell + inbox popover (Phase 1). Mirrors the account popover. */
+.notif { position: relative; display: inline-flex; }
+.notif-btn { position: relative; }
+.notif-badge {
+  position: absolute; top: -2px; inset-inline-end: -2px;
+  min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; line-height: 1; color: var(--brand-contrast);
+  background: var(--brand); border-radius: 999px; border: 2px solid var(--surface);
+}
+.notif-panel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 8px);
+  width: 340px; max-width: calc(100vw - 24px); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(0,0,0,.18); z-index: 40;
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+  overflow: hidden;
+}
+.notif.open .notif-panel { opacity: 1; visibility: visible; transform: translateY(0); }
+.notif-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.notif-title { font-weight: 700; font-size: 14px; }
+.notif-clear { background: none; border: 0; color: var(--link); font: inherit; font-size: 12.5px; cursor: pointer; padding: 2px 4px; border-radius: var(--radius-sm); }
+.notif-clear:hover { background: var(--surface-1); }
+.notif-body { max-height: 420px; overflow-y: auto; }
+.notif-list { list-style: none; margin: 0; padding: 4px; }
+.notif-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius-sm); cursor: pointer; }
+.notif-row:hover { background: var(--surface-1); }
+.notif-row:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+.notif-ic { flex: none; color: var(--text-muted); margin-top: 1px; }
+.notif-main { flex: 1; min-width: 0; }
+.notif-text { display: block; font-size: 13.5px; line-height: 1.4; }
+.notif-meta { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.notif-dot { margin: 0 5px; }
+.notif-x { flex: none; background: none; border: 0; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); line-height: 0; }
+.notif-x:hover { background: var(--surface-2); color: var(--text); }
+.notif-empty { text-align: center; padding: 28px 16px; color: var(--text-muted); }
+.notif-empty svg { color: var(--exec-green); }
+.notif-empty div { margin-top: 8px; font-size: 13px; }
+.notif-msg { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; color: var(--text-muted); font-size: 13px; }
+.notif-msg svg { color: var(--state-overloaded); }
+.notif-retry { margin-top: 4px; }
+.notif-skel span { display: block; height: 44px; margin: 8px; border-radius: var(--radius-sm); background: linear-gradient(90deg, var(--surface-1) 25%, var(--surface-2) 37%, var(--surface-1) 63%); }
+[dir="rtl"] .notif-badge { inset-inline-end: auto; inset-inline-start: -2px; }
 .acct-head { display: flex; align-items: center; gap: 10px; padding: 8px 8px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
 .acct-head .avatar { width: 40px; height: 40px; margin: 0; }
 .acct-id { min-width: 0; }
@@ -3318,6 +3363,17 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       WP.can && WP.can('viewSettings');
   };
 
+  /* ----------------------------------------------------------------
+   * Notifications & Nudges (Phase 1: in-app notification center).
+   * ----------------------------------------------------------------
+   * A calm, work-based notification bell + inbox. Items are DERIVED from live
+   * work data (Feedback "needs input", evaluation self-assessment due), never
+   * from activity/presence. Reversible + dormant-safe: false ⇒ the bell renders
+   * nothing; true but no items ⇒ "You're all caught up." (no nag). Phase 2
+   * (Slack digest/nudge) reuses the SAME WP.notifications.buildItems() logic.
+   * -------------------------------------------------------------- */
+  if (WP.config.notificationsEnabled === undefined) WP.config.notificationsEnabled = true;
+
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
   // (WP.deferred) gates nav, routes, and panels alike.
@@ -3898,6 +3954,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execAllClear:   { en: "Nothing needs you right now. You're all clear.", ar: 'لا شيء يحتاج إليك الآن. كل شيء على ما يُرام.' },
     execError:      { en: "Couldn't reach the live status.", ar: 'تعذّر الوصول إلى الحالة الحيّة.' },
     execRetry:      { en: 'Retry', ar: 'إعادة المحاولة' },
+    notifications:  { en: 'Notifications', ar: 'الإشعارات' },
+    allCaughtUp:    { en: "You're all caught up.", ar: 'كل شيء على ما يُرام.' },
+    markAllRead:    { en: 'Mark all read', ar: 'تعليم الكل كمقروء' },
+    dismiss:        { en: 'Dismiss', ar: 'إخفاء' },
+    needsYourInput: { en: 'Needs your input', ar: 'بحاجة إلى ردّك' },
+    selfAssessmentDue: { en: 'Your self-assessment is due', ar: 'تقييمك الذاتي مستحق' },
+    notifLoadError: { en: "Couldn't load updates", ar: 'تعذّر تحميل التحديثات' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
     prefsLang:      { en: 'Language', ar: 'اللغة' },
@@ -5091,6 +5154,151 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   WP.capacity = {
     loadForPerson, loadBreakdown, stateForLoad, isHealthy, burnoutSignal,
     snapshot, teamMetrics, simulateAssignment, windowBounds, priorRefDate,
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Notifications engine (the "what needs me" source of truth)
+ * ------------------------------------------------------------
+ * ONE place that answers "what needs this person, right now?" — from WORK, not
+ * people-watching. Two surfaces consume it: the in-app bell/inbox (Phase 1,
+ * ui/notifications.js) and, later, a Slack digest/nudge (Phase 2). Same logic,
+ * two surfaces — mirrors the sheet→deck+page pattern.
+ *
+ * DOM-free (core layer): pure functions + an in-memory per-viewer dismiss set.
+ * The UI does the DOM + the async fetch and passes data IN (buildItems ctx), so
+ * this stays unit-testable and Phase-2-reusable.
+ *
+ * GUARDRAILS (Constitution II/V — this is a workforce tool, not surveillance):
+ *  - Work-based triggers ONLY. No "you haven't logged in", no idle/activity.
+ *  - Every item must point at something the viewer could ALREADY see (the item
+ *    builders here only use data the viewer's role already permits).
+ *  - Dismiss/seen is PERSONAL to the viewer and never exposed to anyone else.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  // Per-viewer dismissed item ids. SESSION-ONLY + in-memory (Phase 1): never
+  // localStorage (would leak one person's private seen-state on a shared device)
+  // and we do not stand up new storage infra for v1. Keyed by viewerId so a
+  // "view as" switch shows the right person's inbox. Cleared on reload — an
+  // honest v1 tradeoff noted in the wave.
+  var DISMISSED = {};   // { viewerId: { itemId: true } }
+
+  function dismissedSet(viewerId) {
+    if (!DISMISSED[viewerId]) DISMISSED[viewerId] = {};
+    return DISMISSED[viewerId];
+  }
+  function dismiss(viewerId, itemId) { dismissedSet(viewerId)[itemId] = true; }
+  function dismissAll(viewerId, itemIds) {
+    var s = dismissedSet(viewerId);
+    (itemIds || []).forEach(function (id) { s[id] = true; });
+  }
+  function isDismissed(viewerId, itemId) { return !!dismissedSet(viewerId)[itemId]; }
+  function resetDismissed(viewerId) {   // test hook
+    if (viewerId) delete DISMISSED[viewerId]; else DISMISSED = {};
+  }
+
+  /* ---- item-type registry (data-driven: add a type = add one entry) --------
+   * Each builder is a pure (viewer, ctx) -> [item]. An item is:
+   *   { id, type, icon, text, area, route, at }  (at = ISO string or null)
+   * `at` drives newest-first sort + relative time; null sinks to the bottom.
+   * A builder returns [] when its data is absent — so the whole feature is
+   * dormant-safe (empty sources ⇒ no items ⇒ "all caught up"). */
+  var TYPES = {
+    // DIRECTOR / ADMIN — Feedback items whose Status is the red "needs input"
+    // bucket. Source: the Executive Status payload (ctx.execRequests), fetched
+    // by the UI via the shared endpoint. Gated to viewers who may see it.
+    needsInput: {
+      build: function (viewer, ctx) {
+        if (!viewer || !(WP.can && WP.can('viewSettings'))) return [];      // director/admin only
+        var reqs = (ctx && ctx.execRequests) || [];
+        var colorKey = WP.execStatus && WP.execStatus.statusColorKey;
+        if (!colorKey) return [];
+        return reqs.filter(function (r) { return colorKey(r.status) === 'red'; })
+          .map(function (r, i) {
+            var area = String(r.area || '').trim();
+            var note = String(r.note || '').trim();
+            return {
+              id: 'needsInput:' + (r.id != null && String(r.id).trim() ? r.id : (area + '#' + i)),
+              type: 'needsInput',
+              icon: 'alert',
+              text: WP.i18n.t('needsYourInput') + (note ? ' — ' + note : ''),
+              area: area,
+              route: 'exec',
+              at: r.date ? String(r.date) : null,
+            };
+          });
+      },
+    },
+
+    // EVERYONE — the viewer's own self-assessment is due while a cycle is open.
+    // Purely the viewer's OWN status (no one else's) — no surveillance.
+    selfAssessmentDue: {
+      build: function (viewer) {
+        if (!viewer || !WP.evaluation || !WP.evaluation.activeCycle) return [];
+        var cycle = WP.evaluation.activeCycle();
+        if (!cycle || cycle.status !== 'Active') return [];
+        var self = WP.data && WP.data.SELF && WP.data.SELF[viewer.id];
+        if (self && self.status === 'Completed') return [];   // already done → nothing
+        return [{
+          id: 'selfAssessment:' + cycle.id,
+          type: 'selfAssessmentDue',
+          icon: 'clipboard',
+          text: WP.i18n.t('selfAssessmentDue'),
+          area: cycle.name || '',
+          route: 'evaluations',
+          at: null,   // not time-stamped; sorts after dated items
+        }];
+      },
+    },
+
+    // MANAGER — "a direct report needs attention". Phase-1 EXTENSION POINT:
+    // the app has no per-report actionable-item model yet that isn't already
+    // surveillance-adjacent, so we do NOT invent one. Returns [] until a clean
+    // work-item source exists (respecting canSeeSensitive). Left wired so
+    // adding it later is one builder, not a rewrite.
+    directReportNeedsAttention: {
+      build: function () { return []; },
+    },
+  };
+
+  /* Build the viewer's active notification list (dismissed removed), newest
+   * first. Pure: same (viewer, ctx) → same output. ctx.execRequests optional. */
+  function buildItems(viewer, ctx) {
+    if (!(WP.config && WP.config.notificationsEnabled)) return [];
+    if (!viewer) return [];
+    var out = [];
+    Object.keys(TYPES).forEach(function (k) {
+      try { out = out.concat(TYPES[k].build(viewer, ctx) || []); }
+      catch (e) { if (WP.log) WP.log.warn('[notifications]', 'builder failed', { type: k, err: e && e.message }); }
+    });
+    var live = out.filter(function (it) { return it && it.id && !isDismissed(viewer.id, it.id); });
+    live.sort(function (a, b) {
+      var ta = a.at ? Date.parse(a.at) : -Infinity;
+      var tb = b.at ? Date.parse(b.at) : -Infinity;
+      return tb - ta;   // newest first; null (=-Infinity) sinks to the bottom
+    });
+    return live;
+  }
+
+  // Does this viewer need the exec endpoint fetched? (only if a fetch-backed
+  // type applies) — lets the UI skip the network for members.
+  function needsExecData(viewer) {
+    return !!(viewer && WP.can && WP.can('viewSettings') &&
+      WP.config && WP.config.notificationsEnabled);
+  }
+
+  WP.notifications = {
+    buildItems: buildItems,
+    needsExecData: needsExecData,
+    dismiss: dismiss,
+    dismissAll: dismissAll,
+    isDismissed: isDismissed,
+    _resetDismissed: resetDismissed,   // test hook
+    _types: TYPES,                     // extension point / test hook
   };
 })(window.WP = window.WP || {});
 
@@ -7694,6 +7902,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     flame:    '<path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 .5-2S6 11 6 14a6 6 0 0 0 12 0c0-5-6-12-6-12z"/>',
     sprout:   '<path d="M7 20h10"/><path d="M12 20v-8"/><path d="M12 12C12 8 9 6 4 6c0 4 3 6 8 6z"/><path d="M12 11c0-3 2-5 6-5 0 3-2 5-6 5z"/>',
     alert:    '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+    bell:     '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
     lock:     '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     wallet:   '<path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7"/><circle cx="17" cy="14" r="1.5" fill="currentColor" stroke="none"/>',
     check:    '<path d="M20 6 9 17l-5-5"/>',
@@ -10504,6 +10713,226 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 </script>
   <script>
 /* ============================================================
+ * Tempo — Notifications bell + inbox (Phase 1, in-app only)
+ * ------------------------------------------------------------
+ * The top-bar bell + count badge + inbox popover. Reads the "what needs me"
+ * list from the DOM-free engine (WP.notifications.buildItems) and paints it.
+ * Async "needs input" data comes from the Executive Status endpoint, fetched
+ * here via the shared WP.ui.jsonp helper (ui layer owns the DOM + network),
+ * then handed to buildItems — so core stays pure/testable and Phase 2 (Slack)
+ * can reuse the exact same engine.
+ *
+ * Calm by design: badge only when >0 (cap 9+), no firehose, friendly empty
+ * state, no red-dot spam. Dismiss/seen is personal (engine, per-viewer).
+ * Fully gated: WP.config.notificationsEnabled=false ⇒ renders nothing.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  var ui = WP.ui;
+
+  // Cache of the last exec payload requests[] so opening the panel is instant
+  // and a refresh re-fetches. Keyed nothing fancy — one viewer at a time.
+  var execRequests = null;   // null = not loaded, [] = loaded-empty
+  var loadState = 'idle';    // 'idle' | 'loading' | 'ok' | 'error'
+
+  function enabled() { return !!(WP.config && WP.config.notificationsEnabled); }
+
+  function items() {
+    return WP.notifications.buildItems(WP.viewer(), { execRequests: execRequests || [] });
+  }
+
+  // ---- badge -----------------------------------------------------------------
+  function badgeHTML(n) {
+    if (!n) return '';
+    var label = n > 9 ? '9+' : String(n);
+    return '<span class="notif-badge" aria-hidden="true">' + label + '</span>';
+  }
+
+  function refreshBadge() {
+    var btn = document.getElementById('notif-btn');
+    if (!btn) return;
+    var n = items().length;
+    var old = btn.querySelector('.notif-badge');
+    if (old) old.remove();
+    if (n) btn.insertAdjacentHTML('beforeend', badgeHTML(n));
+    var t = WP.i18n.t;
+    btn.setAttribute('aria-label', n ? (t('notifications') + ' (' + n + ')') : t('notifications'));
+  }
+
+  // ---- panel -----------------------------------------------------------------
+  function rowHTML(it) {
+    var t = WP.i18n.t;
+    var when = it.at ? relTime(it.at) : '';
+    return '<li class="notif-row" data-id="' + ui.esc(it.id) + '" data-route="' + ui.esc(it.route || '') + '" tabindex="0" role="button">' +
+        '<span class="notif-ic" aria-hidden="true">' + ui.icon(it.icon || 'bell', 16) + '</span>' +
+        '<span class="notif-main">' +
+          '<span class="notif-text">' + ui.esc(it.text) + '</span>' +
+          '<span class="notif-meta">' + (it.area ? ui.esc(it.area) : '') +
+            (when ? '<span class="notif-dot">·</span>' + ui.esc(when) : '') + '</span>' +
+        '</span>' +
+        '<button type="button" class="notif-x" data-dismiss="' + ui.esc(it.id) + '" aria-label="' + t('dismiss') + '" title="' + t('dismiss') + '">' + ui.icon('x', 14) + '</button>' +
+      '</li>';
+  }
+
+  function bodyHTML() {
+    var t = WP.i18n.t;
+    if (loadState === 'loading' && execRequests === null && WP.notifications.needsExecData(WP.viewer())) {
+      return '<div class="notif-skel"><span></span><span></span><span></span></div>';
+    }
+    if (loadState === 'error' && execRequests === null) {
+      return '<div class="notif-msg">' + ui.icon('alert', 16) + '<span>' + t('notifLoadError') + '</span>' +
+        '<button type="button" class="btn notif-retry" id="notif-retry">' + t('execRetry') + '</button></div>';
+    }
+    var list = items();
+    if (!list.length) {
+      return '<div class="notif-empty">' + ui.icon('check', 20) + '<div>' + t('allCaughtUp') + '</div></div>';
+    }
+    return '<ul class="notif-list">' + list.map(rowHTML).join('') + '</ul>';
+  }
+
+  function panelHTML() {
+    var t = WP.i18n.t;
+    var list = items();
+    var canClear = list.length > 0;
+    return '<div class="notif-head">' +
+        '<span class="notif-title">' + t('notifications') + '</span>' +
+        (canClear ? '<button type="button" class="notif-clear" id="notif-clear">' + t('markAllRead') + '</button>' : '') +
+      '</div>' +
+      '<div class="notif-body">' + bodyHTML() + '</div>';
+  }
+
+  function relTime(iso) {
+    var t = WP.i18n.t;
+    var then = Date.parse(iso);
+    if (isNaN(then)) return '';
+    var secs = Math.max(0, Math.round((Date.now() - then) / 1000));
+    if (secs < 60) return t('execJustNow');
+    var mins = Math.round(secs / 60); if (mins < 60) return mins + t('execMinAgo');
+    var hrs = Math.round(mins / 60); if (hrs < 24) return hrs + t('execHrAgo');
+    return Math.round(hrs / 24) + t('execDayAgo');
+  }
+
+  function paintPanel() {
+    var panel = document.getElementById('notif-panel');
+    if (!panel) return;
+    panel.innerHTML = panelHTML();
+    wirePanel(panel);
+  }
+
+  function wirePanel(panel) {
+    var clear = panel.querySelector('#notif-clear');
+    if (clear) clear.onclick = function (e) {
+      e.stopPropagation();
+      WP.notifications.dismissAll(WP.state.viewerId, items().map(function (i) { return i.id; }));
+      paintPanel(); refreshBadge();
+    };
+    var retry = panel.querySelector('#notif-retry');
+    if (retry) retry.onclick = function (e) { e.stopPropagation(); loadExec(true); };
+    panel.querySelectorAll('[data-dismiss]').forEach(function (b) {
+      b.onclick = function (e) {
+        e.stopPropagation();
+        WP.notifications.dismiss(WP.state.viewerId, b.getAttribute('data-dismiss'));
+        paintPanel(); refreshBadge();
+      };
+    });
+    panel.querySelectorAll('.notif-row').forEach(function (row) {
+      var go = function () {
+        var r = row.getAttribute('data-route');
+        closePanel();
+        if (r) WP.setState({ route: r, selectedId: null });
+      };
+      row.onclick = go;
+      row.onkeydown = function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } };
+    });
+  }
+
+  function isOpen() {
+    var wrap = document.getElementById('notif');
+    return !!(wrap && wrap.classList.contains('open'));
+  }
+  function openPanel() {
+    var wrap = document.getElementById('notif');
+    if (!wrap) return;
+    wrap.classList.add('open');
+    var btn = document.getElementById('notif-btn');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    paintPanel();
+    // fetch exec data on first open if this viewer needs it
+    if (execRequests === null && WP.notifications.needsExecData(WP.viewer())) loadExec(false);
+  }
+  function closePanel() {
+    var wrap = document.getElementById('notif');
+    if (!wrap) return;
+    wrap.classList.remove('open');
+    var btn = document.getElementById('notif-btn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  // Fetch the Executive Status endpoint (same source as the exec view) to get
+  // the Feedback requests[] for the "needs input" items. Reuses WP.ui.jsonp.
+  function loadExec(force) {
+    var url = (WP.config.execStatusEndpoint || '').trim();
+    // No endpoint → nothing to fetch; resolve to empty immediately (checked
+    // BEFORE the in-flight guard so a stuck request can't block the empty case).
+    if (!url) { loadState = 'ok'; execRequests = []; if (isOpen()) paintPanel(); refreshBadge(); return; }
+    if (loadState === 'loading') return;
+    if (execRequests !== null && !force) return;
+    loadState = 'loading';
+    if (isOpen()) paintPanel();
+    ui.jsonp(url).then(function (data) {
+      execRequests = (data && data.requests) || [];
+      loadState = 'ok';
+      if (isOpen()) paintPanel();
+      refreshBadge();
+    }).catch(function () {
+      loadState = 'error';
+      if (isOpen()) paintPanel();
+      refreshBadge();
+    });
+  }
+
+  /* Mount the bell into the appbar (called from topbar()). Renders nothing when
+   * the feature is off or there is no signed-in viewer. */
+  function mount(appbar) {
+    if (!enabled() || !WP.viewer()) return;
+    var t = WP.i18n.t;
+    // insert before the account control
+    var account = appbar.querySelector('#account');
+    var html =
+      '<div class="notif" id="notif">' +
+        '<button type="button" class="btn icon-btn notif-btn" id="notif-btn" aria-haspopup="true" aria-expanded="false" aria-label="' + t('notifications') + '">' +
+          ui.icon('bell', 20) +
+        '</button>' +
+        '<div class="notif-panel" id="notif-panel" role="dialog" aria-label="' + t('notifications') + '"></div>' +
+      '</div>';
+    if (account) account.insertAdjacentHTML('beforebegin', html);
+    else appbar.insertAdjacentHTML('beforeend', html);
+
+    var wrap = document.getElementById('notif');
+    var btn = document.getElementById('notif-btn');
+    btn.onclick = function (e) { e.stopPropagation(); if (isOpen()) closePanel(); else openPanel(); };
+
+    // close on outside click / Esc (single shared handlers, replaced each render)
+    if (WP._notifDocClose) document.removeEventListener('click', WP._notifDocClose);
+    WP._notifDocClose = function (ev) { var w = document.getElementById('notif'); if (w && !w.contains(ev.target)) closePanel(); };
+    document.addEventListener('click', WP._notifDocClose);
+    if (WP._notifEsc) document.removeEventListener('keydown', WP._notifEsc);
+    WP._notifEsc = function (ev) { if (ev.key === 'Escape' && isOpen()) { closePanel(); btn.focus(); } };
+    document.addEventListener('keydown', WP._notifEsc);
+
+    // initial badge: instant from in-memory sources; kick a fetch if needed so
+    // the count reflects "needs input" without opening the panel.
+    refreshBadge();
+    if (execRequests === null && WP.notifications.needsExecData(WP.viewer())) loadExec(false);
+    void wrap;
+  }
+
+  WP.ui.notifications = { mount: mount, refreshBadge: refreshBadge, _items: items };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * Webook Workload — Daily Tasks (auto-read from Slack #daily-checkin)
  * ------------------------------------------------------------
  * IA: overview-first summary, then compact "smart cards" — one key line
@@ -13039,6 +13468,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         '</button>' +
         '<div class="account-menu" id="acct-menu" role="menu">' + menu + '</div>' +
       '</div>';
+
+    // Notification bell + inbox (Phase 1) — mounted into the appbar before the
+    // account control. Renders nothing when disabled or signed out.
+    if (WP.ui.notifications) WP.ui.notifications.mount(appbar);
 
     // reflect remembered open/closed state
     applyNav();

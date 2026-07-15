@@ -133,6 +133,10 @@
         '<div class="account-menu" id="acct-menu" role="menu">' + menu + '</div>' +
       '</div>';
 
+    // Notification bell + inbox (Phase 1) — mounted into the appbar before the
+    // account control. Renders nothing when disabled or signed out.
+    if (WP.ui.notifications) WP.ui.notifications.mount(appbar);
+
     // reflect remembered open/closed state
     applyNav();
 
