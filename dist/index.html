@@ -1731,6 +1731,28 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-title { font-size: 22px; font-weight: 700; margin: 2px 0 0; }
 .ex-updated { display: inline-block; margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
 .ex-head-actions { display: flex; gap: 8px; flex: none; }
+/* "for the project team, not employees" clarifier under the title */
+.ex-forwho { margin: 6px 0 0; max-width: 560px; color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
+
+/* Compact launcher — % + bar + one-line summary + big Open-deck button. The
+   full slide-by-slide status lives in the Google Slides deck, not duplicated. */
+.ex-launch { display: flex; flex-direction: column; gap: 10px; }
+.ex-launch-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ex-deck-btn { flex: none; }
+.ex-launch-sum { color: var(--text-muted); font-size: 13px; }
+
+/* Timeline (BA/PM view) — filter tabs + week-bucketed rows */
+.ex-tl-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.ex-tl-tabs { display: inline-flex; gap: 2px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+.ex-tl-tab { border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--text-muted); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.ex-tl-tab:hover { color: var(--text); }
+.ex-tl-tab.is-on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.ex-tl-tab:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+.ex-tl-group { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 14px 0 6px; }
+.ex-tl-group:first-child { margin-top: 0; }
+.ex-tl-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+.ex-tl-row:last-child { border-bottom: 0; }
+.ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
 
 /* Cover rollup */
 .ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -3930,7 +3952,18 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     execStatus:     { en: 'Executive status', ar: 'الحالة التنفيذية' },
     execStatusSub:  { en: 'Live portfolio + what needs you', ar: 'نظرة حيّة على المحفظة وما يحتاج إليك' },
-    execEyebrow:    { en: 'WEBOOK · WORKFORCE OPS (TEMPO)', ar: 'ويبوك · عمليات القوى العاملة (تيمبو)' },
+    execEyebrow:    { en: 'WEBOOK · TEMPO — PROJECT DELIVERY', ar: 'ويبوك · تيمبو — تسليم المشروع' },
+    execForWho:     { en: 'Build & delivery status for the project team — what shipped, what\'s in progress, and what needs a decision. Not an employee view.', ar: 'حالة بناء وتسليم المشروع لفريق العمل — ما تم تسليمه وما هو قيد التنفيذ وما يحتاج قراراً. ليست شاشة للموظفين.' },
+    execOpenDeck:   { en: 'Open full status deck', ar: 'فتح عرض الحالة الكامل' },
+    execSummary:    { en: '{done} shipped · {next} in progress · {need} need you', ar: '{done} مُنجز · {next} قيد التنفيذ · {need} بحاجة إليك' },
+    execTimeline:   { en: 'Timeline', ar: 'الجدول الزمني' },
+    execThisWeek:   { en: 'This week', ar: 'هذا الأسبوع' },
+    execLastWeek:   { en: 'Last week', ar: 'الأسبوع الماضي' },
+    execUpcoming:   { en: 'Upcoming', ar: 'القادم' },
+    execAll:        { en: 'All', ar: 'الكل' },
+    execUndated:    { en: 'No date yet', ar: 'بدون تاريخ' },
+    execTlEmpty:    { en: 'Nothing in this range.', ar: 'لا شيء في هذا النطاق.' },
+    execEyebrowOld: { en: 'WEBOOK · WORKFORCE OPS (TEMPO)', ar: 'ويبوك · عمليات القوى العاملة (تيمبو)' },
     execOpen:       { en: 'Open / present', ar: 'فتح / عرض تقديمي' },
     execRefresh:    { en: 'Refresh', ar: 'تحديث' },
     execUpdated:    { en: 'Updated', ar: 'آخر تحديث' },
@@ -10487,104 +10520,115 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const label = ui.esc(String(raw || '—'));
     return '<span class="ex-chip ex-chip--' + key + '">' + label + '</span>';
   }
-  function splitInside(s) {
-    return String(s || '').split(/[,;•·\n]+/).map(function (x) { return x.trim(); })
-      .filter(Boolean).slice(0, 6);
-  }
 
   // ---- section builders -------------------------------------------------------
-  function coverHTML(cover) {
+  // Compact LAUNCHER — a small summary + % bar + one-line rollup + a big button
+  // to the full Google Slides deck (the hosted, presentable artifact). The page
+  // no longer duplicates the full slide-by-slide render; the deck owns that.
+  function launcherHTML(data) {
     const t = WP.i18n.t;
-    const c = cover || {};
+    const c = (data && data.cover) || {};
     const done = +c.done || 0, next = +c.next || 0, later = +c.later || 0;
     const total = +c.total || 0;
     const pct = (c.pct != null && !isNaN(+c.pct)) ? Math.round(+c.pct)
       : (total ? Math.round((done / total) * 100) : 0);
     const w = function (n) { return total ? (n / total * 100) : 0; };
-    const tile = function (label, val, cls) {
-      return '<div class="ex-tile ' + cls + '"><div class="ex-tile-v">' + val + '</div>' +
-        '<div class="ex-tile-l">' + label + '</div></div>';
-    };
-    return '<div class="section ex-cover">' +
-      '<div class="ex-tiles">' +
-        tile(t('execShipped'), done, 'is-green') +
-        tile(t('execInProgress'), next, 'is-amber') +
-        tile(t('execPlanned'), later, 'is-grey') +
-        tile(t('execTotalWaves'), total, 'is-ink') +
-      '</div>' +
-      '<div class="ex-pct-wrap">' +
+    // needs-count from the live requests (red bucket) for the rollup
+    const need = ((data && data.requests) || []).filter(function (r) { return statusColorKey(r.status) === 'red'; }).length;
+    const summary = t('execSummary').replace('{done}', done).replace('{next}', next).replace('{need}', need);
+    const openUrl = ui.esc((WP.config.execDeckUrl || '').trim());
+    const openBtn = openUrl
+      ? '<a class="btn primary ex-deck-btn" id="exec-open" href="' + openUrl + '" target="_blank" rel="noopener noreferrer">' +
+          ui.icon('external', 16) + ' <span>' + t('execOpenDeck') + '</span></a>' : '';
+    return '<div class="section ex-launch">' +
+      '<div class="ex-launch-top">' +
         '<div class="ex-pct"><span class="ex-pct-n">' + pct + '%</span> <span class="ex-pct-l">' + t('execDelivered') + '</span></div>' +
-        '<div class="ex-bar" role="img" aria-label="' + pct + '% ' + t('execDelivered') + '">' +
-          '<span style="width:' + w(done) + '%;background:' + COLORS.green + '"></span>' +
-          '<span style="width:' + w(next) + '%;background:' + COLORS.amber + '"></span>' +
-          '<span style="width:' + Math.max(0, w(total - done - next)) + '%;background:' + COLORS.grey + '"></span>' +
-        '</div>' +
+        openBtn +
       '</div>' +
+      '<div class="ex-bar" role="img" aria-label="' + pct + '% ' + t('execDelivered') + '">' +
+        '<span style="width:' + w(done) + '%;background:' + COLORS.green + '"></span>' +
+        '<span style="width:' + w(next) + '%;background:' + COLORS.amber + '"></span>' +
+        '<span style="width:' + Math.max(0, w(total - done - next)) + '%;background:' + COLORS.grey + '"></span>' +
+      '</div>' +
+      '<div class="ex-launch-sum">' + summary + '</div>' +
     '</div>';
   }
 
-  // sort order red -> amber -> green -> grey (violet lands with grey tail)
-  const RANK = { red: 0, amber: 1, green: 2, violet: 3, grey: 4 };
-  function requestsHTML(requests) {
-    const t = WP.i18n.t;
-    const list = (requests || []).slice();
-    if (!list.length) {
-      return '<div class="section"><h3 class="ex-h3">' + t('execYourRequests') + '</h3>' +
-        '<div class="ex-empty">' + t('execNoRequests') + '</div></div>';
-    }
-    const keyed = list.map(function (r) { return { r: r, k: statusColorKey(r.status) }; });
-    let done = 0, prog = 0, need = 0;
-    keyed.forEach(function (x) {
-      if (x.k === 'green') done++;
-      else if (x.k === 'amber') prog++;
-      else if (x.k === 'red') need++;
+  // ---- TIMELINE (senior-BA/PM view): items grouped into week buckets by date --
+  // Reads a date per item from the sheet (requests[].date; features[].date/reviewed
+  // when present). Filter: This week / Last week / Upcoming / All. Undated items
+  // fall into a clearly-labelled "No date yet" group so nothing is silently hidden.
+  const TL_FILTERS = ['thisWeek', 'lastWeek', 'upcoming', 'all'];
+
+  // Monday-based week window for a given offset (0 = this week, -1 = last, +1 = next).
+  function weekWindow(offset) {
+    const now = new Date();
+    const day = (now.getUTCDay() + 6) % 7;   // 0 = Monday
+    const monday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - day) + offset * 7 * 86400000;
+    return { start: monday, end: monday + 7 * 86400000 - 1 };
+  }
+  function inWindow(ms, win) { return ms >= win.start && ms <= win.end; }
+
+  // Normalize the timeline items from the payload (requests + any dated features).
+  function timelineItems(data) {
+    const out = [];
+    ((data && data.requests) || []).forEach(function (r) {
+      out.push({ title: (r.area ? r.area + ' — ' : '') + (r.note || '—'), status: r.status, date: r.date || null });
     });
-    keyed.sort(function (a, b) { return (RANK[a.k] - RANK[b.k]); });
-    const shown = keyed.slice(0, 12);
-    const rows = shown.map(function (x) {
-      const r = x.r;
-      const area = ui.esc(r.area || '—');
-      const note = ui.esc(r.note || '');
-      const pri = r.priority ? '<span class="ex-pri">' + ui.esc(r.priority) + '</span>' : '';
-      return '<div class="ex-row">' + dot(x.k) +
-        '<div class="ex-row-main"><span class="ex-row-area">' + area + '</span>' +
-          (note ? ' <span class="ex-row-note">' + note + '</span>' : '') + '</div>' +
-        chip(r.status) + pri +
-      '</div>';
-    }).join('');
-    const more = keyed.length > 12
-      ? '<div class="ex-more">+' + (keyed.length - 12) + ' ' + t('execMore') + '</div>' : '';
-    const roll = t('execRaised').replace('{n}', list.length).replace('{m}', done)
-      .replace('{k}', prog).replace('{j}', need);
-    return '<div class="section">' +
-      '<h3 class="ex-h3">' + t('execYourRequests') + '</h3>' +
-      '<div class="ex-roll">' + roll + '</div>' +
-      '<div class="ex-rows">' + rows + more + '</div>' +
-    '</div>';
+    ((data && data.features) || []).forEach(function (f) {
+      const d = f.date || f.Reviewed || f.reviewed || null;
+      const title = (f.area || f.Area || '') ? ((f.area || f.Area) + ' — ' + (f.feature || f.Feature || '')) : (f.feature || f.Feature || '');
+      if (title) out.push({ title: title, status: f.status || f.Status, date: d });
+    });
+    return out;
   }
 
-  function wavesHTML(waves) {
+  function tlRow(it) {
+    const k = statusColorKey(it.status);
+    return '<div class="ex-tl-row">' + dot(k) +
+      '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + chip(it.status) + '</div>';
+  }
+
+  function timelineHTML(data, filter) {
     const t = WP.i18n.t;
-    const list = (waves || []);
-    if (!list.length) {
-      return '<div class="section"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
-        '<div class="ex-empty">' + t('execNoWaves') + '</div></div>';
-    }
-    const cards = list.map(function (wv) {
-      const title = ui.esc(wv.wave || '—') + (wv.focus ? ' <span class="ex-wave-focus">' + ui.esc(wv.focus) + '</span>' : '');
-      const inside = splitInside(wv.inside);
-      const insideHTML = inside.length
-        ? '<ul class="ex-inside">' + inside.map(function (i) {
-            return '<li>' + ui.icon('check', 13) + ' ' + ui.esc(i) + '</li>';
-          }).join('') + '</ul>' : '';
-      const why = wv.why ? '<div class="ex-why">' + ui.esc(wv.why) + '</div>' : '';
-      return '<div class="ex-wave">' +
-        '<div class="ex-wave-head"><div class="ex-wave-title">' + title + '</div>' + chip(wv.status) + '</div>' +
-        insideHTML + why +
-      '</div>';
+    const items = timelineItems(data);
+    const tabs = TL_FILTERS.map(function (f) {
+      const on = f === filter ? ' is-on' : '';
+      const label = f === 'thisWeek' ? t('execThisWeek') : f === 'lastWeek' ? t('execLastWeek')
+        : f === 'upcoming' ? t('execUpcoming') : t('execAll');
+      return '<button type="button" class="ex-tl-tab' + on + '" data-tl="' + f + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + label + '</button>';
     }).join('');
-    return '<div class="section"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
-      '<div class="ex-waves">' + cards + '</div></div>';
+
+    // bucket by the active filter
+    const dated = items.map(function (it) { return { it: it, ms: it.date ? Date.parse(it.date) : NaN }; });
+    let groups;
+    if (filter === 'all') {
+      groups = [
+        { label: t('execLastWeek'), rows: dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, weekWindow(-1)); }) },
+        { label: t('execThisWeek'), rows: dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, weekWindow(0)); }) },
+        { label: t('execUpcoming'), rows: dated.filter(function (x) { return !isNaN(x.ms) && x.ms > weekWindow(0).end; }) },
+        { label: t('execUndated'), rows: dated.filter(function (x) { return isNaN(x.ms); }) },
+      ].filter(function (g) { return g.rows.length; });
+    } else {
+      const win = filter === 'thisWeek' ? weekWindow(0) : filter === 'lastWeek' ? weekWindow(-1) : null;
+      const rows = filter === 'upcoming'
+        ? dated.filter(function (x) { return !isNaN(x.ms) && x.ms > weekWindow(0).end; })
+        : dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, win); });
+      groups = rows.length ? [{ label: null, rows: rows }] : [];
+    }
+
+    const body = groups.length
+      ? groups.map(function (g) {
+          return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
+            g.rows.map(function (x) { return tlRow(x.it); }).join('');
+        }).join('')
+      : '<div class="ex-empty">' + t('execTlEmpty') + '</div>';
+
+    return '<div class="section">' +
+      '<div class="ex-tl-head"><h3 class="ex-h3">' + t('execTimeline') + '</h3>' +
+        '<div class="ex-tl-tabs" role="group" aria-label="' + t('execTimeline') + '">' + tabs + '</div></div>' +
+      '<div class="ex-tl-body">' + body + '</div>' +
+    '</div>';
   }
 
   // "What needs you" — derived from requests[] whose status is red (needs input),
@@ -10613,22 +10657,18 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   // ---- header (always present: title, updated-time, refresh, open/present) ----
   function headerHTML(generatedAt) {
     const t = WP.i18n.t;
-    const openUrl = ui.esc((WP.config.execDeckUrl || '').trim());
     const updated = generatedAt
       ? '<span class="ex-updated">' + t('execUpdated') + ' ' + ui.esc(relTime(generatedAt)) + '</span>' : '';
-    const openBtn = openUrl
-      ? '<a class="btn" id="exec-open" href="' + openUrl + '" target="_blank" rel="noopener noreferrer">' +
-          ui.icon('external', 15) + ' <span>' + t('execOpen') + '</span></a>' : '';
     return '<div class="ex-head">' +
       '<div class="ex-head-t">' +
         '<div class="ex-eyebrow">' + t('execEyebrow') + '</div>' +
         '<h2 class="ex-title">' + t('execStatus') + '</h2>' +
+        '<p class="ex-forwho">' + t('execForWho') + '</p>' +
         updated +
       '</div>' +
       '<div class="ex-head-actions">' +
         '<button type="button" class="btn" id="exec-refresh">' + ui.icon('arrowRight', 15) +
           ' <span>' + t('execRefresh') + '</span></button>' +
-        openBtn +
       '</div>' +
     '</div>';
   }
@@ -10650,16 +10690,18 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   }
 
   // ---- orchestration ----------------------------------------------------------
-  let token = 0;   // guards against a stale JSONP resolving after a re-render
+  let token = 0;         // guards against a stale JSONP resolving after a re-render
+  let tlFilter = 'thisWeek';   // timeline filter (view-local; defaults to the current week)
+  let lastData = null;   // last payload (so a filter change repaints without refetch)
 
   function paintBody(host, data) {
-    // Order is deliberate for a director scan (top = most decision-critical):
-    // 1) cover rollup, 2) WHAT NEEDS YOU (the ask blocked on them — surfaced
-    // high, not buried), 3) your requests, 4) waves detail.
-    const body = coverHTML(data.cover) + needsHTML(data.requests) +
-      requestsHTML(data.requests) + wavesHTML(data.waves);
+    lastData = data;
+    // Order for a director/PM scan: 1) compact launcher (summary + open deck),
+    // 2) TIMELINE (what shipped / is coming, by week), 3) WHAT NEEDS YOU.
+    const body = launcherHTML(data) + timelineHTML(data, tlFilter) + needsHTML(data.requests);
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = body;
+    wireBody(host);
     // refresh the "updated" stamp with the payload's generatedAt
     const headEl = host.querySelector('.ex-head');
     if (headEl && data.generatedAt) {
@@ -10668,6 +10710,23 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       if (oldU) oldU.outerHTML = html;
       else headEl.querySelector('.ex-head-t').insertAdjacentHTML('beforeend', html);
     }
+  }
+
+  // Wire the timeline filter tabs — a filter change repaints from lastData (no
+  // refetch). Purely view-local state; nothing touches WP.state.
+  function wireBody(host) {
+    host.querySelectorAll('[data-tl]').forEach(function (b) {
+      b.onclick = function () {
+        tlFilter = b.getAttribute('data-tl');
+        const tlBody = host.querySelector('.ex-body');
+        if (tlBody && lastData) {
+          // repaint only the timeline section in place
+          const sec = timelineHTML(lastData, tlFilter);
+          const cur = host.querySelector('.ex-tl-head') && host.querySelector('.ex-tl-head').closest('.section');
+          if (cur) { cur.outerHTML = sec; wireBody(host); }
+        }
+      };
+    });
   }
 
   function paintError(host) {
