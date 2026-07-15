@@ -1,0 +1,30 @@
+# Tempo — BA Feed  (append-only handoff to "Tempo — Feedback (Live)")
+#
+# WHY THIS FILE EXISTS
+#   Claude (the builder) cannot write to the Google Sheet directly — the Google
+#   connector is read-only for existing sheets. So instead of pasting rows into
+#   chat for Akram to courier, Claude APPENDS a row here and commits it every time
+#   an item ships. This file is the single source the sync agent reads.
+#
+# AGENT INSTRUCTIONS  (the "chat" / sync agent)
+#   1. On each run, read this file. Rows with sync=NO are un-synced.
+#   2. For each sync=NO row, add it to the correct tab in the Live sheet:
+#        - type = Feature            -> FEATURES tab
+#        - type = Bug / Improvement  -> FEEDBACK tab
+#      Map columns by NAME (see header rows below), not by position.
+#   3. After a row lands in the sheet, flip its sync field NO -> YES (edit in place,
+#      commit "chore(ba-feed): mark synced"). Never delete rows — this is the audit log.
+#   4. The sheet auto-computes the dashboard (Total / %Done / Needs input / SLA).
+#      Do NOT touch the dashboard tab; only append to FEATURES / FEEDBACK.
+#
+# FORMAT: tab-separated. Lines starting with # are comments/headers and are NOT rows.
+# Do not reorder or rename columns. One row per finished item.
+#
+# ==== FEATURES rows ====  columns: sync	date	area	feature	what_it_does	status
+#F	sync	date	area	feature	what_it_does	status
+F	NO	2026-07-15	Executive Status	Calmer status colours + status icons	Softened the alarming red to warm coral, swapped the confusing violet to slate-blue, and added an icon per status so colour-blind users are not relying on colour alone.	Live
+F	NO	2026-07-15	Executive Status	Weekly history (deck snapshot)	The deck's script now saves a dated PDF to a Drive folder every Monday, so past weeks are kept and 'last week' is browsable.	Next
+#
+# ==== FEEDBACK rows ====  columns: sync	date	area	type	note	priority	status	owner
+#B	sync	date	area	type	note	priority	status	owner
+B	NO	2026-07-15	Executive Status	Improvement	Update the deck's Code.gs status colours to match the app's new coral/slate-blue so the deck and in-app page look identical.	LOW	Later	Akram
