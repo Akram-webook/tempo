@@ -92,8 +92,9 @@
   --exec-green:  #1FA655; /* done / live / on-track */
   --exec-amber:  #F19A2A; /* working / in-progress / in-review / next */
   --exec-amber-ink: #8A5410; /* AA-readable (>=4.5:1) amber text on the light tint */
-  --exec-red:    #E03B3B; /* needs input / blocked */
-  --exec-violet: #7A5AF8; /* later / planned / idea */
+  --exec-red:    #E5604D; /* needs input / blocked — warm coral: "attention", not "error" (softened from #E03B3B) */
+  --exec-red-ink: #B23A2A; /* AA-readable coral text on the light tint */
+  --exec-violet: #5B7089; /* later / planned — muted slate-blue reads as "future/planned" (was violet #7A5AF8, unintuitive) */
   --exec-grey:   #C2C7CE; /* unknown / empty */
   --cat-freelance:    #7C5CFF; /* employment category: Freelance (violet) */
   --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 14%, transparent);
@@ -202,8 +203,9 @@
   --exec-green:  #2FBF6B;
   --exec-amber:  #F5A93E;
   --exec-amber-ink: #F5A93E;
-  --exec-red:    #F0554F;
-  --exec-violet: #937CFA;
+  --exec-red:    #EE7361;   /* softened coral, lifted for dark */
+  --exec-red-ink: #EE7361;
+  --exec-violet: #8695AE;   /* muted slate-blue, lifted for dark */
   --exec-grey:   #6B7280;
   --cat-freelance:    #9A7DFF;
   --cat-freelance-bg: color-mix(in srgb, var(--cat-freelance) 22%, transparent);

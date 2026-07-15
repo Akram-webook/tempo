@@ -67,8 +67,11 @@
   const loadJSONP = WP.ui.jsonp;
 
   // ---- small on-brand pieces --------------------------------------------------
-  function dot(key) {
-    return '<span class="ex-dot" style="background:' + COLORS[key] + '" aria-hidden="true"></span>';
+  // Status icon per bucket — so status is conveyed by SHAPE + colour, never
+  // colour alone (a11y: color-blind users). Pairs with the chip's text label.
+  const BUCKET_ICON = { green: 'check', amber: 'clock', red: 'alert', violet: 'clock', grey: 'minus' };
+  function statusIcon(key) {
+    return '<span class="ex-sic ex-sic--' + key + '" aria-hidden="true">' + ui.icon(BUCKET_ICON[key] || 'minus', 13) + '</span>';
   }
   function chip(raw) {
     const key = statusColorKey(raw);
@@ -140,7 +143,7 @@
 
   function tlRow(it) {
     const k = statusColorKey(it.status);
-    return '<div class="ex-tl-row">' + dot(k) +
+    return '<div class="ex-tl-row">' + statusIcon(k) +
       '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + chip(it.status) + '</div>';
   }
 
@@ -201,7 +204,7 @@
     const items = list.map(function (r) {
       const note = ui.esc(r.note || '—');
       const from = r.area ? ' <span class="ex-need-from">' + t('execFrom') + ' ' + ui.esc(r.area) + '</span>' : '';
-      return '<div class="ex-need">' + dot('red') + '<div class="ex-need-b">' + note + from + '</div></div>';
+      return '<div class="ex-need">' + statusIcon('red') + '<div class="ex-need-b">' + note + from + '</div></div>';
     }).join('');
     return '<div class="section">' +
       '<h3 class="ex-h3">' + t('execNeedsYou') + '</h3>' +
