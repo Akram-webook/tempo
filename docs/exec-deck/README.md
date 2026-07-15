@@ -43,6 +43,29 @@ real:
 Each past Monday is then just a file in the folder — that is the historical
 "last week / two weeks ago" record the live surfaces don't keep.
 
+## Full automation — idea → sheet → deck → site (no hand-checking)
+The chain is designed so a new idea reaches all three surfaces with **zero manual
+steps**:
+
+```
+idea  ──POST──▶  sheet  ──on-edit rebuild──▶  deck        (Code.gs onEditRebuild_)
+                   └──────── read live ───────▶  in-app page (exec.js JSONP)
+```
+
+- **sheet → deck** and **sheet → site** are already automatic (this repo's
+  `Code.gs` + the app's Executive Status view). Nothing to check.
+- The only missing link was **writing into the sheet**. `endpoint.gs` closes it:
+  one Web App with `doGet` (serves the site's JSON) **and** `doPost` (appends a
+  row). Deploy it once (steps in the file header), set `WRITE_TOKEN`, then a row
+  can be appended programmatically.
+- `add-idea.mjs` is the sender: `node docs/exec-deck/add-idea.mjs --tab feedback
+  --note "…" …` POSTs the row and logs it to `docs/ba-feed.tsv` (audit trail).
+  Reads the endpoint URL + token from `~/.tempo-exec.json` (never committed).
+
+**Because it's fully automatic, verification is built in, not manual:** the POST
+returns `{ok:true}` only if the row landed; the deck's on-edit trigger and the
+site's live read need no confirmation.
+
 ## Change it later
 - **What it says** → edit the sheet tabs. Rebuilds in ~1 min.
 - **Look / structure** → the optional **`Deck Settings`** sheet tab (key/value:
