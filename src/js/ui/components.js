@@ -313,6 +313,45 @@
   function confirmDialog(o) { return dialog(Object.assign({}, o, { prompt: false })); }
   function promptDialog(o) { return dialog(Object.assign({}, o, { prompt: true })); }
 
+  /* ----------------------------------------------------------------
+   * jsonp(url, opts) — shared cross-origin GET via a <script> tag.
+   * ----------------------------------------------------------------
+   * Lives in the ui layer (not core) because it needs the DOM — a <script>
+   * element — and core is kept DOM-free by rule (see verify-architecture).
+   * WHY JSONP over fetch: some endpoints (e.g. a Google Apps Script web app)
+   * 302-redirect and send no CORS headers, so a cross-origin fetch()/XHR from
+   * GitHub Pages fails; a script tag is CORS-exempt. Appends ?callback=<fn>,
+   * resolves with the parsed payload, rejects on load error or timeout
+   * (default 10s). Self-cleaning (removes the tag + global callback).
+   * -------------------------------------------------------------- */
+  var jsonpSeq = 0;
+  function jsonp(url, opts) {
+    var timeoutMs = (opts && opts.timeoutMs) || 10000;
+    return new Promise(function (resolve, reject) {
+      var cbName = 'WP_jsonp_' + (++jsonpSeq) + '_' + Math.floor(Date.now() % 1e7);
+      var script = document.createElement('script');
+      var done = false;
+      var timer = null;
+      var cleanup = function () {
+        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+        if (timer) clearTimeout(timer);
+      };
+      timer = setTimeout(function () {
+        if (done) return; done = true; cleanup(); reject(new Error('timeout'));
+      }, timeoutMs);
+      window[cbName] = function (data) {
+        if (done) return; done = true; cleanup(); resolve(data);
+      };
+      script.onerror = function () {
+        if (done) return; done = true; cleanup(); reject(new Error('network'));
+      };
+      var sep = url.indexOf('?') >= 0 ? '&' : '?';
+      script.src = url + sep + 'callback=' + encodeURIComponent(cbName);
+      (document.head || document.documentElement).appendChild(script);
+    });
+  }
+
   WP.ui.dialog = dialog;
   WP.ui.confirm = confirmDialog;
   WP.ui.prompt = promptDialog;
@@ -326,5 +365,6 @@
   WP.ui.pageHeader = pageHeader;
   WP.ui.statusBadge = statusBadge;
   WP.ui.subTabs = subTabs;
+  WP.ui.jsonp = jsonp;
   WP.ui.table = { html: tableHTML, wire: tableWire, mount: tableMount, _state: TBL };
 })(window.WP = window.WP || {});
