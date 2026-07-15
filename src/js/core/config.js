@@ -115,6 +115,17 @@
       WP.can && WP.can('viewSettings');
   };
 
+  /* ----------------------------------------------------------------
+   * Notifications & Nudges (Phase 1: in-app notification center).
+   * ----------------------------------------------------------------
+   * A calm, work-based notification bell + inbox. Items are DERIVED from live
+   * work data (Feedback "needs input", evaluation self-assessment due), never
+   * from activity/presence. Reversible + dormant-safe: false ⇒ the bell renders
+   * nothing; true but no items ⇒ "You're all caught up." (no nag). Phase 2
+   * (Slack digest/nudge) reuses the SAME WP.notifications.buildItems() logic.
+   * -------------------------------------------------------------- */
+  if (WP.config.notificationsEnabled === undefined) WP.config.notificationsEnabled = true;
+
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
   // (WP.deferred) gates nav, routes, and panels alike.

@@ -1397,6 +1397,51 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
   transition: opacity .18s ease, transform .18s ease, visibility .18s;
 }
 .account.open .account-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* Notifications bell + inbox popover (Phase 1). Mirrors the account popover. */
+.notif { position: relative; display: inline-flex; }
+.notif-btn { position: relative; }
+.notif-badge {
+  position: absolute; top: -2px; inset-inline-end: -2px;
+  min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; line-height: 1; color: var(--brand-contrast);
+  background: var(--brand); border-radius: 999px; border: 2px solid var(--surface);
+}
+.notif-panel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 8px);
+  width: 340px; max-width: calc(100vw - 24px); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(0,0,0,.18); z-index: 40;
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+  overflow: hidden;
+}
+.notif.open .notif-panel { opacity: 1; visibility: visible; transform: translateY(0); }
+.notif-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.notif-title { font-weight: 700; font-size: 14px; }
+.notif-clear { background: none; border: 0; color: var(--link); font: inherit; font-size: 12.5px; cursor: pointer; padding: 2px 4px; border-radius: var(--radius-sm); }
+.notif-clear:hover { background: var(--surface-1); }
+.notif-body { max-height: 420px; overflow-y: auto; }
+.notif-list { list-style: none; margin: 0; padding: 4px; }
+.notif-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius-sm); cursor: pointer; }
+.notif-row:hover { background: var(--surface-1); }
+.notif-row:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+.notif-ic { flex: none; color: var(--text-muted); margin-top: 1px; }
+.notif-main { flex: 1; min-width: 0; }
+.notif-text { display: block; font-size: 13.5px; line-height: 1.4; }
+.notif-meta { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.notif-dot { margin: 0 5px; }
+.notif-x { flex: none; background: none; border: 0; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); line-height: 0; }
+.notif-x:hover { background: var(--surface-2); color: var(--text); }
+.notif-empty { text-align: center; padding: 28px 16px; color: var(--text-muted); }
+.notif-empty svg { color: var(--exec-green); }
+.notif-empty div { margin-top: 8px; font-size: 13px; }
+.notif-msg { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; color: var(--text-muted); font-size: 13px; }
+.notif-msg svg { color: var(--state-overloaded); }
+.notif-retry { margin-top: 4px; }
+.notif-skel span { display: block; height: 44px; margin: 8px; border-radius: var(--radius-sm); background: linear-gradient(90deg, var(--surface-1) 25%, var(--surface-2) 37%, var(--surface-1) 63%); }
+[dir="rtl"] .notif-badge { inset-inline-end: auto; inset-inline-start: -2px; }
 .acct-head { display: flex; align-items: center; gap: 10px; padding: 8px 8px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
 .acct-head .avatar { width: 40px; height: 40px; margin: 0; }
 .acct-id { min-width: 0; }

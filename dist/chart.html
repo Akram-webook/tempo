@@ -1635,6 +1635,51 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
   transition: opacity .18s ease, transform .18s ease, visibility .18s;
 }
 .account.open .account-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* Notifications bell + inbox popover (Phase 1). Mirrors the account popover. */
+.notif { position: relative; display: inline-flex; }
+.notif-btn { position: relative; }
+.notif-badge {
+  position: absolute; top: -2px; inset-inline-end: -2px;
+  min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; line-height: 1; color: var(--brand-contrast);
+  background: var(--brand); border-radius: 999px; border: 2px solid var(--surface);
+}
+.notif-panel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 8px);
+  width: 340px; max-width: calc(100vw - 24px); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(0,0,0,.18); z-index: 40;
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+  overflow: hidden;
+}
+.notif.open .notif-panel { opacity: 1; visibility: visible; transform: translateY(0); }
+.notif-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.notif-title { font-weight: 700; font-size: 14px; }
+.notif-clear { background: none; border: 0; color: var(--link); font: inherit; font-size: 12.5px; cursor: pointer; padding: 2px 4px; border-radius: var(--radius-sm); }
+.notif-clear:hover { background: var(--surface-1); }
+.notif-body { max-height: 420px; overflow-y: auto; }
+.notif-list { list-style: none; margin: 0; padding: 4px; }
+.notif-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius-sm); cursor: pointer; }
+.notif-row:hover { background: var(--surface-1); }
+.notif-row:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+.notif-ic { flex: none; color: var(--text-muted); margin-top: 1px; }
+.notif-main { flex: 1; min-width: 0; }
+.notif-text { display: block; font-size: 13.5px; line-height: 1.4; }
+.notif-meta { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.notif-dot { margin: 0 5px; }
+.notif-x { flex: none; background: none; border: 0; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-sm); line-height: 0; }
+.notif-x:hover { background: var(--surface-2); color: var(--text); }
+.notif-empty { text-align: center; padding: 28px 16px; color: var(--text-muted); }
+.notif-empty svg { color: var(--exec-green); }
+.notif-empty div { margin-top: 8px; font-size: 13px; }
+.notif-msg { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 16px; color: var(--text-muted); font-size: 13px; }
+.notif-msg svg { color: var(--state-overloaded); }
+.notif-retry { margin-top: 4px; }
+.notif-skel span { display: block; height: 44px; margin: 8px; border-radius: var(--radius-sm); background: linear-gradient(90deg, var(--surface-1) 25%, var(--surface-2) 37%, var(--surface-1) 63%); }
+[dir="rtl"] .notif-badge { inset-inline-end: auto; inset-inline-start: -2px; }
 .acct-head { display: flex; align-items: center; gap: 10px; padding: 8px 8px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
 .acct-head .avatar { width: 40px; height: 40px; margin: 0; }
 .acct-id { min-width: 0; }
@@ -3323,6 +3368,17 @@ const EMAIL_HASHES = {};
       WP.can && WP.can('viewSettings');
   };
 
+  /* ----------------------------------------------------------------
+   * Notifications & Nudges (Phase 1: in-app notification center).
+   * ----------------------------------------------------------------
+   * A calm, work-based notification bell + inbox. Items are DERIVED from live
+   * work data (Feedback "needs input", evaluation self-assessment due), never
+   * from activity/presence. Reversible + dormant-safe: false ⇒ the bell renders
+   * nothing; true but no items ⇒ "You're all caught up." (no nag). Phase 2
+   * (Slack digest/nudge) reuses the SAME WP.notifications.buildItems() logic.
+   * -------------------------------------------------------------- */
+  if (WP.config.notificationsEnabled === undefined) WP.config.notificationsEnabled = true;
+
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
   // (WP.deferred) gates nav, routes, and panels alike.
@@ -3903,6 +3959,13 @@ const EMAIL_HASHES = {};
     execAllClear:   { en: "Nothing needs you right now. You're all clear.", ar: 'لا شيء يحتاج إليك الآن. كل شيء على ما يُرام.' },
     execError:      { en: "Couldn't reach the live status.", ar: 'تعذّر الوصول إلى الحالة الحيّة.' },
     execRetry:      { en: 'Retry', ar: 'إعادة المحاولة' },
+    notifications:  { en: 'Notifications', ar: 'الإشعارات' },
+    allCaughtUp:    { en: "You're all caught up.", ar: 'كل شيء على ما يُرام.' },
+    markAllRead:    { en: 'Mark all read', ar: 'تعليم الكل كمقروء' },
+    dismiss:        { en: 'Dismiss', ar: 'إخفاء' },
+    needsYourInput: { en: 'Needs your input', ar: 'بحاجة إلى ردّك' },
+    selfAssessmentDue: { en: 'Your self-assessment is due', ar: 'تقييمك الذاتي مستحق' },
+    notifLoadError: { en: "Couldn't load updates", ar: 'تعذّر تحميل التحديثات' },
     account:        { en: 'Account', ar: 'الحساب' },
     signedInAs:     { en: 'Signed in as', ar: 'مسجّل الدخول باسم' },
     prefsLang:      { en: 'Language', ar: 'اللغة' },
@@ -6366,6 +6429,7 @@ const EMAIL_HASHES = {};
     flame:    '<path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 .5-2S6 11 6 14a6 6 0 0 0 12 0c0-5-6-12-6-12z"/>',
     sprout:   '<path d="M7 20h10"/><path d="M12 20v-8"/><path d="M12 12C12 8 9 6 4 6c0 4 3 6 8 6z"/><path d="M12 11c0-3 2-5 6-5 0 3-2 5-6 5z"/>',
     alert:    '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+    bell:     '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
     lock:     '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     wallet:   '<path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7"/><circle cx="17" cy="14" r="1.5" fill="currentColor" stroke="none"/>',
     check:    '<path d="M20 6 9 17l-5-5"/>',
