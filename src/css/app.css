@@ -1489,6 +1489,28 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-title { font-size: 22px; font-weight: 700; margin: 2px 0 0; }
 .ex-updated { display: inline-block; margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
 .ex-head-actions { display: flex; gap: 8px; flex: none; }
+/* "for the project team, not employees" clarifier under the title */
+.ex-forwho { margin: 6px 0 0; max-width: 560px; color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
+
+/* Compact launcher — % + bar + one-line summary + big Open-deck button. The
+   full slide-by-slide status lives in the Google Slides deck, not duplicated. */
+.ex-launch { display: flex; flex-direction: column; gap: 10px; }
+.ex-launch-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ex-deck-btn { flex: none; }
+.ex-launch-sum { color: var(--text-muted); font-size: 13px; }
+
+/* Timeline (BA/PM view) — filter tabs + week-bucketed rows */
+.ex-tl-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.ex-tl-tabs { display: inline-flex; gap: 2px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+.ex-tl-tab { border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--text-muted); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.ex-tl-tab:hover { color: var(--text); }
+.ex-tl-tab.is-on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.ex-tl-tab:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 40%, transparent); }
+.ex-tl-group { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 14px 0 6px; }
+.ex-tl-group:first-child { margin-top: 0; }
+.ex-tl-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+.ex-tl-row:last-child { border-bottom: 0; }
+.ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
 
 /* Cover rollup */
 .ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }

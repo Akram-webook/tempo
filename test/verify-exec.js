@@ -50,7 +50,13 @@ function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 const REAL_DECK = WP.config.execDeckUrl;
 const ENDPOINT = WP.config.execStatusEndpoint;
 
-// A representative payload mirroring the verified response shape.
+// ISO date helpers for the timeline buckets (deterministic vs "today").
+const DAY = 86400000;
+function iso(offsetDays) { return new Date(Date.now() + offsetDays * DAY).toISOString().slice(0, 10); }
+
+// A representative payload mirroring the verified response shape. Requests carry
+// dates so the timeline can bucket them: one this-week, one last-week, one
+// upcoming, plus undated.
 const PAYLOAD = {
   ok: true,
   generatedAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),  // 3h ago
@@ -60,11 +66,11 @@ const PAYLOAD = {
     { wave: 'Wave 3.2', focus: 'Exec', status: 'Next', inside: 'Native status', why: 'One click' },
   ],
   requests: [
-    { id: 1, area: 'Settings', note: 'Trim my settings', status: 'Done', priority: 'P2' },
-    { id: 2, area: 'Layout',   note: 'Full width',       status: 'In progress', priority: 'P1' },
-    { id: 3, area: 'Exec',     note: 'Where do I see it', status: 'Needs input', priority: 'P0' },
-    { id: 4, area: 'Access',   note: 'New ask',           status: 'New' },
-    { id: 5, area: 'Eval',     note: 'Please review',     status: 'In review' },
+    { id: 1, area: 'Settings', note: 'Trim my settings',   status: 'Done',        priority: 'P2', date: iso(0) },   // this week
+    { id: 2, area: 'Layout',   note: 'Full width',         status: 'In progress', priority: 'P1', date: iso(-8) },  // last week
+    { id: 3, area: 'Exec',     note: 'Where do I see it',  status: 'Needs input', priority: 'P0', date: iso(0) },
+    { id: 4, area: 'Access',   note: 'New ask',            status: 'New',         date: iso(10) },                  // upcoming
+    { id: 5, area: 'Eval',     note: 'Please review',      status: 'In review' },                                   // undated
   ],
 };
 
@@ -118,14 +124,9 @@ const PAYLOAD = {
 
     WP.ui.exec.render(el);
 
-    // header present immediately
+    // header present immediately — relabeled as PROJECT DELIVERY (not employee)
     assert(el.querySelector('.ex-title'), 'header title renders immediately');
     assert(el.querySelector('.ex-skel'), 'loading skeleton shown while JSONP resolves');
-    const open = el.querySelector('#exec-open');
-    assert(open && open.tagName === 'A', 'Open/present is an anchor');
-    assert(open && open.getAttribute('href') === REAL_DECK, 'Open/present href is the raw deck link');
-    assert(open && open.target === '_blank' && /noopener/.test(open.rel) && /noreferrer/.test(open.rel), 'Open/present new tab + noopener/noreferrer');
-    assert(open && open.querySelector('svg'), 'Open/present uses an inline SVG icon');
     assert(el.querySelector('#exec-refresh'), 'Refresh button present');
 
     // the JSONP loader built the right URL
@@ -135,21 +136,41 @@ const PAYLOAD = {
     // let the callback + paint run
     await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
 
-    // --- cover math + bar widths ---------------------------------------------------
-    const pct = el.querySelector('.ex-pct-n');
-    assert(pct && /60%/.test(pct.textContent), 'cover pct renders (60%)');
-    const bars = el.querySelectorAll('.ex-bar span');
-    assert(bars.length === 3, 'proportion bar has 3 segments');
-    assert(bars[0] && /width:\s*60%/.test(bars[0].getAttribute('style')), 'green segment = done/total = 60%');
-    assert(bars[1] && /width:\s*30%/.test(bars[1].getAttribute('style')), 'amber segment = next/total = 30%');
-    assert(bars[2] && /width:\s*10%/.test(bars[2].getAttribute('style')), 'grey remainder = 10%');
+    // --- header framing: project-delivery, explicitly not an employee view ---------
+    assert(/PROJECT DELIVERY|تسليم المشروع/i.test(el.querySelector('.ex-eyebrow').textContent), 'eyebrow reads as project delivery (not "workforce ops")');
+    assert(el.querySelector('.ex-forwho') && /Not an employee view|ليست شاشة للموظفين/i.test(el.querySelector('.ex-forwho').textContent), 'a for-who line states it is not an employee view');
 
-    // --- requests sorted red->amber->green, rollup counts --------------------------
-    const rows = el.querySelectorAll('.ex-rows .ex-row');
-    assert(rows.length >= 3, 'request rows render');
-    const roll = el.querySelector('.ex-roll');
-    // done=green(1: "Done"); in-progress=amber("In progress"+"In review"=2); need=red("Needs input"=1); "New"=grey
-    assert(roll && /raised 5/.test(roll.textContent) && /1 delivered/.test(roll.textContent) && /2 in progress/.test(roll.textContent) && /1 need/.test(roll.textContent), 'rollup counts (5 raised, 1 delivered, 2 in progress, 1 need input)');
+    // --- compact LAUNCHER: % + bar + open-DECK button (not a full render) ----------
+    const pct = el.querySelector('.ex-pct-n');
+    assert(pct && /60%/.test(pct.textContent), 'launcher % delivered renders (60%)');
+    const bars = el.querySelectorAll('.ex-launch .ex-bar span');
+    assert(bars.length === 3 && /width:\s*60%/.test(bars[0].getAttribute('style')), 'proportion bar green = 60%');
+    const open = el.querySelector('#exec-open');
+    assert(open && open.tagName === 'A' && open.getAttribute('href') === REAL_DECK, 'Open-deck is an anchor to the deck link');
+    assert(open && open.target === '_blank' && /noopener/.test(open.rel) && /noreferrer/.test(open.rel), 'Open-deck new tab + noopener/noreferrer');
+    assert(open && open.querySelector('svg'), 'Open-deck uses an inline SVG icon');
+    assert(!el.querySelector('.ex-rows') && !el.querySelector('.ex-waves'), 'the full requests table + waves grid are NO LONGER rendered in-page (deck owns them)');
+    assert(el.querySelector('.ex-launch-sum'), 'launcher shows a one-line summary');
+
+    // --- TIMELINE: filter tabs + week bucketing ------------------------------------
+    const tabs = [...el.querySelectorAll('.ex-tl-tab')].map(b => b.getAttribute('data-tl'));
+    ['thisWeek', 'lastWeek', 'upcoming', 'all'].forEach(f => assert(tabs.indexOf(f) >= 0, 'timeline has the ' + f + ' filter'));
+    // default = this week: the this-week dated items show, the last-week one does not
+    let tl = el.querySelector('.ex-tl-body');
+    assert(/Where do I see it|Trim my settings/.test(tl.textContent), 'this-week timeline shows this-week items');
+    assert(!/Full width/.test(tl.textContent), 'this-week timeline hides the last-week item');
+    // click "Last week" → repaint shows the last-week item, hides this-week
+    el.querySelector('.ex-tl-tab[data-tl="lastWeek"]').click();
+    tl = el.querySelector('.ex-tl-body');
+    assert(/Full width/.test(tl.textContent), 'last-week filter surfaces the last-week item');
+    assert(!/Where do I see it/.test(tl.textContent), 'last-week filter hides this-week items');
+    // "All" → grouped, includes an undated bucket
+    el.querySelector('.ex-tl-tab[data-tl="all"]').click();
+    tl = el.querySelector('.ex-tl-body');
+    assert(/Please review/.test(tl.textContent), 'All shows the undated item (nothing silently hidden)');
+    assert(el.querySelectorAll('.ex-tl-group').length >= 2, 'All groups by week bucket');
+    // restore this-week for later asserts
+    el.querySelector('.ex-tl-tab[data-tl="thisWeek"]').click();
 
     // --- WHAT NEEDS YOU derives from requests[] (Needs input + New + In review), NOT waves[].needs
     const needs = el.querySelector('.ex-needs');
@@ -159,26 +180,16 @@ const PAYLOAD = {
     assert(needs && /Please review/.test(needs.textContent), 'needs-you includes an In-review request');
     assert(!/SHOULD-BE-IGNORED-FOR-NEEDS/.test(el.textContent), 'needs-you does NOT use waves[].needs');
 
-    // --- section ORDER: cover -> needs-you -> requests -> waves (director scan) -----
+    // --- section ORDER: launcher -> timeline -> needs-you --------------------------
     const secs = [...el.querySelectorAll('.section')];
     const idxOf = sel => secs.findIndex(s => s.matches(sel) || s.querySelector(sel));
-    const iCover = secs.findIndex(s => s.classList.contains('ex-cover'));
-    const iNeeds = idxOf('.ex-needs');
-    const iReq = idxOf('.ex-rows');
-    const iWave = idxOf('.ex-waves');
-    assert(iCover === 0, 'cover is first');
-    assert(iNeeds > iCover && iNeeds < iReq, 'what-needs-you sits right after the cover, above requests');
-    assert(iReq < iWave, 'your requests come before the waves detail');
-
-    // --- waves render --------------------------------------------------------------
-    assert(el.querySelectorAll('.ex-wave').length === 2, 'one card per wave');
-    assert(/Native status/.test(el.textContent), 'wave "what\'s inside" renders');
+    assert(secs.findIndex(s => s.classList.contains('ex-launch')) === 0, 'launcher is first');
+    assert(idxOf('.ex-tl-body') > 0 && idxOf('.ex-tl-body') < idxOf('.ex-needs'), 'timeline sits between launcher and needs-you');
 
     // --- "all clear" when no open asks ---------------------------------------------
-    // Swap the interceptor payload to one with only delivered requests.
     curPayload = { ok: true, generatedAt: PAYLOAD.generatedAt,
       cover: { done: 2, next: 0, later: 0, total: 2, pct: 100 },
-      waves: [], requests: [{ id: 9, area: 'X', note: 'shipped', status: 'Done' }] };
+      waves: [], requests: [{ id: 9, area: 'X', note: 'shipped', status: 'Done', date: iso(0) }] };
     el.innerHTML = '';
     WP.ui.exec.render(el);
     await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
