@@ -1487,6 +1487,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .ex-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--brand-text); }
 .ex-title { font-size: 22px; font-weight: 700; margin: 2px 0 0; }
+/* one-line "what this surface is" subtitle directly under the title */
+.ex-subtitle { margin: 4px 0 0; max-width: 560px; color: var(--text); font-size: 13.5px; line-height: 1.45; }
 .ex-updated { display: inline-block; margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
 .ex-head-actions { display: flex; gap: 8px; flex: none; }
 /* "for the project team, not employees" clarifier under the title */

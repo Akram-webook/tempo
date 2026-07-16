@@ -47,7 +47,7 @@
     // (WP.execDeckVisible). Sits right under the dashboard as a first-class
     // director entry point. Renders nothing otherwise. See src/js/ui/exec.js.
     if (WP.execDeckVisible && WP.execDeckVisible()) {
-      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execStatus') });
+      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execNavLabel'), tip: t('execNavSub') });
     }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
@@ -79,7 +79,8 @@
     const navHTML = visibleNav.map(function (n) {
       const active = n.routes.indexOf(route) >= 0 ? ' active' : '';
       const cur = active ? ' aria-current="page"' : '';
-      return '<button type="button" class="nav-item' + active + '" data-go="' + n.id + '"' + cur + '>' + ic(n.icon) + '<span>' + n.label + '</span></button>';
+      const tip = n.tip ? ' title="' + WP.ui.esc(n.tip) + '"' : '';
+      return '<button type="button" class="nav-item' + active + '" data-go="' + n.id + '"' + cur + tip + '>' + ic(n.icon) + '<span>' + n.label + '</span></button>';
     }).join('');
 
     // account dropdown (bottom of sidebar, opens upward)

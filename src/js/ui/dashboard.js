@@ -71,10 +71,10 @@
     if (!WP.execDeckVisible || !WP.execDeckVisible()) return '';
     const t = WP.i18n.t;
     return '<button type="button" class="exec-card" data-go="exec" ' +
-      'aria-label="' + t('execStatus') + ' — ' + t('execStatusSub') + '">' +
+      'aria-label="' + t('execNavLabel') + ' — ' + t('execNavSub') + '">' +
       '<div class="exec-card-body">' +
-        '<div class="exec-card-title">' + t('execStatus') + '</div>' +
-        '<div class="exec-card-sub">' + t('execStatusSub') + '</div>' +
+        '<div class="exec-card-title">' + t('execNavLabel') + '</div>' +
+        '<div class="exec-card-sub">' + t('execNavSub') + '</div>' +
       '</div>' +
       '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('arrowRight', 18) + '</span>' +
       '</button>';

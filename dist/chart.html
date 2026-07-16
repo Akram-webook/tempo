@@ -1727,6 +1727,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .ex-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--brand-text); }
 .ex-title { font-size: 22px; font-weight: 700; margin: 2px 0 0; }
+/* one-line "what this surface is" subtitle directly under the title */
+.ex-subtitle { margin: 4px 0 0; max-width: 560px; color: var(--text); font-size: 13.5px; line-height: 1.45; }
 .ex-updated { display: inline-block; margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
 .ex-head-actions { display: flex; gap: 8px; flex: none; }
 /* "for the project team, not employees" clarifier under the title */
@@ -3980,9 +3982,12 @@ const EMAIL_HASHES = {};
     errSetPw:       { en: "Couldn't set your password. Open the reset link again from your inbox.", ar: 'تعذّر تعيين كلمة المرور. افتح رابط إعادة التعيين من بريدك.' },
     setPwNote:      { en: 'This link is for your account only — after setting a password you are signed in as yourself.', ar: 'هذا الرابط لحسابك أنت فقط — بعد تعيين كلمة المرور تدخل بهويتك.' },
     navHome:        { en: 'Workload', ar: 'الأحمال' },
-    execStatus:     { en: 'Executive status', ar: 'الحالة التنفيذية' },
+    execStatus:     { en: 'Executive Status', ar: 'الحالة التنفيذية' },
+    execNavLabel:   { en: 'Project status', ar: 'حالة المشروع' },
+    execNavSub:     { en: 'How the Tempo build is progressing — director/admin only', ar: 'كيف يتقدّم بناء تيمبو — للمدير والمشرف فقط' },
+    execSubtitle:   { en: 'Delivery & build status of the Tempo project — internal, director view.', ar: 'حالة تسليم وبناء مشروع تيمبو — عرض داخلي للمدير.' },
     execStatusSub:  { en: 'Live portfolio + what needs you', ar: 'نظرة حيّة على المحفظة وما يحتاج إليك' },
-    execEyebrow:    { en: 'WEBOOK · TEMPO — PROJECT DELIVERY', ar: 'ويبوك · تيمبو — تسليم المشروع' },
+    execEyebrow:    { en: 'TEMPO · PROJECT DELIVERY (INTERNAL)', ar: 'تيمبو · تسليم المشروع (داخلي)' },
     execForWho:     { en: 'Build & delivery status for the project team — what shipped, what\'s in progress, and what needs a decision. Not an employee view.', ar: 'حالة بناء وتسليم المشروع لفريق العمل — ما تم تسليمه وما هو قيد التنفيذ وما يحتاج قراراً. ليست شاشة للموظفين.' },
     execOpenDeck:   { en: 'Open full status deck', ar: 'فتح عرض الحالة الكامل' },
     execSummary:    { en: '{done} shipped · {next} in progress · {need} need you', ar: '{done} مُنجز · {next} قيد التنفيذ · {need} بحاجة إليك' },

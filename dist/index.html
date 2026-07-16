@@ -1731,6 +1731,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .ex-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--brand-text); }
 .ex-title { font-size: 22px; font-weight: 700; margin: 2px 0 0; }
+/* one-line "what this surface is" subtitle directly under the title */
+.ex-subtitle { margin: 4px 0 0; max-width: 560px; color: var(--text); font-size: 13.5px; line-height: 1.45; }
 .ex-updated { display: inline-block; margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
 .ex-head-actions { display: flex; gap: 8px; flex: none; }
 /* "for the project team, not employees" clarifier under the title */
@@ -3975,9 +3977,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     errSetPw:       { en: "Couldn't set your password. Open the reset link again from your inbox.", ar: 'تعذّر تعيين كلمة المرور. افتح رابط إعادة التعيين من بريدك.' },
     setPwNote:      { en: 'This link is for your account only — after setting a password you are signed in as yourself.', ar: 'هذا الرابط لحسابك أنت فقط — بعد تعيين كلمة المرور تدخل بهويتك.' },
     navHome:        { en: 'Workload', ar: 'الأحمال' },
-    execStatus:     { en: 'Executive status', ar: 'الحالة التنفيذية' },
+    execStatus:     { en: 'Executive Status', ar: 'الحالة التنفيذية' },
+    execNavLabel:   { en: 'Project status', ar: 'حالة المشروع' },
+    execNavSub:     { en: 'How the Tempo build is progressing — director/admin only', ar: 'كيف يتقدّم بناء تيمبو — للمدير والمشرف فقط' },
+    execSubtitle:   { en: 'Delivery & build status of the Tempo project — internal, director view.', ar: 'حالة تسليم وبناء مشروع تيمبو — عرض داخلي للمدير.' },
     execStatusSub:  { en: 'Live portfolio + what needs you', ar: 'نظرة حيّة على المحفظة وما يحتاج إليك' },
-    execEyebrow:    { en: 'WEBOOK · TEMPO — PROJECT DELIVERY', ar: 'ويبوك · تيمبو — تسليم المشروع' },
+    execEyebrow:    { en: 'TEMPO · PROJECT DELIVERY (INTERNAL)', ar: 'تيمبو · تسليم المشروع (داخلي)' },
     execForWho:     { en: 'Build & delivery status for the project team — what shipped, what\'s in progress, and what needs a decision. Not an employee view.', ar: 'حالة بناء وتسليم المشروع لفريق العمل — ما تم تسليمه وما هو قيد التنفيذ وما يحتاج قراراً. ليست شاشة للموظفين.' },
     execOpenDeck:   { en: 'Open full status deck', ar: 'فتح عرض الحالة الكامل' },
     execSummary:    { en: '{done} shipped · {next} in progress · {need} need you', ar: '{done} مُنجز · {next} قيد التنفيذ · {need} بحاجة إليك' },
@@ -8575,10 +8580,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     if (!WP.execDeckVisible || !WP.execDeckVisible()) return '';
     const t = WP.i18n.t;
     return '<button type="button" class="exec-card" data-go="exec" ' +
-      'aria-label="' + t('execStatus') + ' — ' + t('execStatusSub') + '">' +
+      'aria-label="' + t('execNavLabel') + ' — ' + t('execNavSub') + '">' +
       '<div class="exec-card-body">' +
-        '<div class="exec-card-title">' + t('execStatus') + '</div>' +
-        '<div class="exec-card-sub">' + t('execStatusSub') + '</div>' +
+        '<div class="exec-card-title">' + t('execNavLabel') + '</div>' +
+        '<div class="exec-card-sub">' + t('execNavSub') + '</div>' +
       '</div>' +
       '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('arrowRight', 18) + '</span>' +
       '</button>';
@@ -10738,6 +10743,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       '<div class="ex-head-t">' +
         '<div class="ex-eyebrow">' + t('execEyebrow') + '</div>' +
         '<h2 class="ex-title">' + t('execStatus') + '</h2>' +
+        '<p class="ex-subtitle">' + t('execSubtitle') + '</p>' +
         '<p class="ex-forwho">' + t('execForWho') + '</p>' +
         updated +
       '</div>' +
@@ -13529,7 +13535,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // (WP.execDeckVisible). Sits right under the dashboard as a first-class
     // director entry point. Renders nothing otherwise. See src/js/ui/exec.js.
     if (WP.execDeckVisible && WP.execDeckVisible()) {
-      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execStatus') });
+      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execNavLabel'), tip: t('execNavSub') });
     }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
@@ -13561,7 +13567,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const navHTML = visibleNav.map(function (n) {
       const active = n.routes.indexOf(route) >= 0 ? ' active' : '';
       const cur = active ? ' aria-current="page"' : '';
-      return '<button type="button" class="nav-item' + active + '" data-go="' + n.id + '"' + cur + '>' + ic(n.icon) + '<span>' + n.label + '</span></button>';
+      const tip = n.tip ? ' title="' + WP.ui.esc(n.tip) + '"' : '';
+      return '<button type="button" class="nav-item' + active + '" data-go="' + n.id + '"' + cur + tip + '>' + ic(n.icon) + '<span>' + n.label + '</span></button>';
     }).join('');
 
     // account dropdown (bottom of sidebar, opens upward)

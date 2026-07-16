@@ -261,6 +261,7 @@
       '<div class="ex-head-t">' +
         '<div class="ex-eyebrow">' + t('execEyebrow') + '</div>' +
         '<h2 class="ex-title">' + t('execStatus') + '</h2>' +
+        '<p class="ex-subtitle">' + t('execSubtitle') + '</p>' +
         '<p class="ex-forwho">' + t('execForWho') + '</p>' +
         updated +
       '</div>' +

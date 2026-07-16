@@ -138,6 +138,8 @@ const PAYLOAD = {
 
     // --- header framing: project-delivery, explicitly not an employee view ---------
     assert(/PROJECT DELIVERY|تسليم المشروع/i.test(el.querySelector('.ex-eyebrow').textContent), 'eyebrow reads as project delivery (not "workforce ops")');
+    assert(/INTERNAL|داخلي/i.test(el.querySelector('.ex-eyebrow').textContent), 'eyebrow marks the surface INTERNAL');
+    assert(el.querySelector('.ex-subtitle') && /Delivery & build status of the Tempo project|حالة تسليم وبناء مشروع تيمبو/i.test(el.querySelector('.ex-subtitle').textContent), 'subtitle names it the internal delivery/build status of the Tempo project');
     assert(el.querySelector('.ex-forwho') && /Not an employee view|ليست شاشة للموظفين/i.test(el.querySelector('.ex-forwho').textContent), 'a for-who line states it is not an employee view');
 
     // --- compact LAUNCHER: % + bar + open-DECK button (not a full render) ----------
