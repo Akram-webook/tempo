@@ -152,25 +152,37 @@ const PAYLOAD = {
     assert(!el.querySelector('.ex-rows') && !el.querySelector('.ex-waves'), 'the full requests table + waves grid are NO LONGER rendered in-page (deck owns them)');
     assert(el.querySelector('.ex-launch-sum'), 'launcher shows a one-line summary');
 
-    // --- TIMELINE: filter tabs + week bucketing ------------------------------------
-    const tabs = [...el.querySelectorAll('.ex-tl-tab')].map(b => b.getAttribute('data-tl'));
-    ['thisWeek', 'lastWeek', 'upcoming', 'all'].forEach(f => assert(tabs.indexOf(f) >= 0, 'timeline has the ' + f + ' filter'));
-    // default = this week: the this-week dated items show, the last-week one does not
+    // --- TIMELINE: calendar-style WEEK NAVIGATOR (segment + stepper + Today) -------
+    const modes = [...el.querySelectorAll('.ex-seg-btn')].map(b => b.getAttribute('data-mode'));
+    ['week', 'all'].forEach(m => assert(modes.indexOf(m) >= 0, 'timeline has the ' + m + ' mode'));
+    // stepper present with prev/next + a week label + Today
+    assert(el.querySelector('.ex-step-prev[data-step="-1"]'), 'stepper has a prev-week control');
+    assert(el.querySelector('.ex-step-next[data-step="1"]'), 'stepper has a next-week control');
+    assert(el.querySelector('.ex-step-label') && el.querySelector('.ex-step-label').getAttribute('aria-live') === 'polite', 'week label is aria-live for a11y');
+    const todayBtn = el.querySelector('.ex-step-today[data-today="1"]');
+    assert(todayBtn, 'stepper has a Today button');
+    assert(todayBtn.hasAttribute('disabled'), 'Today is disabled while already on the current week');
+    // default = current week (offset 0): this-week items show, last-week one does not
     let tl = el.querySelector('.ex-tl-body');
-    assert(/Where do I see it|Trim my settings/.test(tl.textContent), 'this-week timeline shows this-week items');
-    assert(!/Full width/.test(tl.textContent), 'this-week timeline hides the last-week item');
-    // click "Last week" → repaint shows the last-week item, hides this-week
-    el.querySelector('.ex-tl-tab[data-tl="lastWeek"]').click();
+    assert(/Where do I see it|Trim my settings/.test(tl.textContent), 'current-week timeline shows this-week items');
+    assert(!/Full width/.test(tl.textContent), 'current-week timeline hides the last-week item');
+    // step ‹ prev → previous week surfaces the last-week item, hides this-week; Today re-enables
+    el.querySelector('.ex-step-prev').click();
     tl = el.querySelector('.ex-tl-body');
-    assert(/Full width/.test(tl.textContent), 'last-week filter surfaces the last-week item');
-    assert(!/Where do I see it/.test(tl.textContent), 'last-week filter hides this-week items');
-    // "All" → grouped, includes an undated bucket
-    el.querySelector('.ex-tl-tab[data-tl="all"]').click();
+    assert(/Full width/.test(tl.textContent), 'prev-week step surfaces the last-week item');
+    assert(!/Where do I see it/.test(tl.textContent), 'prev-week step hides this-week items');
+    assert(!el.querySelector('.ex-step-today').hasAttribute('disabled'), 'Today becomes enabled once off the current week');
+    // Today snaps back to the current week
+    el.querySelector('.ex-step-today').click();
+    tl = el.querySelector('.ex-tl-body');
+    assert(/Where do I see it|Trim my settings/.test(tl.textContent), 'Today snaps back to the current week');
+    // "All" → grouped by week, includes an undated bucket (nothing silently hidden)
+    el.querySelector('.ex-seg-btn[data-mode="all"]').click();
     tl = el.querySelector('.ex-tl-body');
     assert(/Please review/.test(tl.textContent), 'All shows the undated item (nothing silently hidden)');
     assert(el.querySelectorAll('.ex-tl-group').length >= 2, 'All groups by week bucket');
-    // restore this-week for later asserts
-    el.querySelector('.ex-tl-tab[data-tl="thisWeek"]').click();
+    // restore week mode for later asserts
+    el.querySelector('.ex-seg-btn[data-mode="week"]').click();
 
     // --- WHAT NEEDS YOU derives from requests[] (Needs input + New + In review), NOT waves[].needs
     const needs = el.querySelector('.ex-needs');
