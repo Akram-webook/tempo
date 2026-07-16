@@ -1727,7 +1727,12 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
 .ex-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--brand-text); }
 .ex-title { font-size: 22px; font-weight: 700; margin: 2px 0 0; }
-.ex-updated { display: inline-block; margin-top: 4px; color: var(--text-muted); font-size: 12.5px; }
+/* freshness indicator — calm "Live" dot by default; amber "Updated Xm ago" when stale */
+.ex-fresh { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--text-muted); font-size: 12.5px; }
+.ex-fresh-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--state-positive); animation: livepulse 2.4s ease-out infinite; }
+.ex-fresh.is-stale { color: var(--state-near); }
+.ex-fresh.is-stale .ex-fresh-dot { background: var(--state-near); animation: none; }
+@media (prefers-reduced-motion: reduce) { .ex-fresh-dot { animation: none; } }
 .ex-head-actions { display: flex; gap: 8px; flex: none; }
 /* "for the project team, not employees" clarifier under the title */
 .ex-forwho { margin: 6px 0 0; max-width: 560px; color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
@@ -4001,6 +4006,7 @@ const EMAIL_HASHES = {};
     execEyebrowOld: { en: 'WEBOOK · WORKFORCE OPS (TEMPO)', ar: 'ويبوك · عمليات القوى العاملة (تيمبو)' },
     execOpen:       { en: 'Open / present', ar: 'فتح / عرض تقديمي' },
     execRefresh:    { en: 'Refresh', ar: 'تحديث' },
+    execLive:       { en: 'Live', ar: 'مباشر' },
     execUpdated:    { en: 'Updated', ar: 'آخر تحديث' },
     execJustNow:    { en: 'just now', ar: 'الآن' },
     execMinAgo:     { en: 'm ago', ar: ' د مضت' },

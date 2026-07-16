@@ -252,21 +252,36 @@
     '</div>';
   }
 
-  // ---- header (always present: title, updated-time, refresh, open/present) ----
+  // Freshness indicator (system-status visibility, Heuristic #1) tuned for the
+  // stale-while-revalidate model: data auto-refreshes in the background, so there
+  // is NO manual Refresh button. Per UX best practice for SWR (NN/g; web.dev), we
+  // do NOT stamp "updated just now" on every load — that is false precision/noise.
+  // Instead: a calm green "Live" dot when the data is current; it degrades to an
+  // honest "Updated Xm ago" (amber) only once the payload ages past a threshold.
+  // The exact age is always available on hover for anyone who wants it.
+  const STALE_MS = 10 * 60 * 1000;   // >10 min old => surface the age, not just "Live"
+  function freshnessHTML(generatedAt) {
+    const t = WP.i18n.t;
+    if (!generatedAt) return '';
+    const age = Date.now() - Date.parse(generatedAt);
+    const stale = isNaN(age) ? false : age > STALE_MS;
+    const label = stale ? (t('execUpdated') + ' ' + relTime(generatedAt)) : t('execLive');
+    return '<span class="ex-fresh' + (stale ? ' is-stale' : '') + '" ' +
+      'title="' + ui.esc(t('execUpdated') + ' ' + relTime(generatedAt)) + '">' +
+      '<span class="ex-fresh-dot" aria-hidden="true"></span>' +
+      '<span class="ex-fresh-txt">' + ui.esc(label) + '</span>' +
+    '</span>';
+  }
+
+  // ---- header (always present: eyebrow, title, subtitle, freshness) ----
   function headerHTML(generatedAt) {
     const t = WP.i18n.t;
-    const updated = generatedAt
-      ? '<span class="ex-updated">' + t('execUpdated') + ' ' + ui.esc(relTime(generatedAt)) + '</span>' : '';
     return '<div class="ex-head">' +
       '<div class="ex-head-t">' +
         '<div class="ex-eyebrow">' + t('execEyebrow') + '</div>' +
         '<h2 class="ex-title">' + t('execStatus') + '</h2>' +
         '<p class="ex-forwho">' + t('execForWho') + '</p>' +
-        updated +
-      '</div>' +
-      '<div class="ex-head-actions">' +
-        '<button type="button" class="btn" id="exec-refresh">' + ui.icon('arrowRight', 15) +
-          ' <span>' + t('execRefresh') + '</span></button>' +
+        freshnessHTML(generatedAt) +
       '</div>' +
     '</div>';
   }
@@ -292,22 +307,28 @@
   let tlMode = 'week';   // 'week' (stepper) | 'all' (every week grouped) — view-local
   let refWeekOffset = 0; // current week = 0; ‹prev = -1, next› = +1 … (time-navigator reference)
   let lastData = null;   // last payload (so a nav change repaints without refetch)
+  // Module-level cache so re-entering the view is INSTANT (stale-while-revalidate).
+  // The Apps Script endpoint is slow (cold start + a 302 redirect, several seconds),
+  // and it was refetched from scratch on every visit. Now: paint the cached payload
+  // immediately, then silently revalidate in the background. Lives for the session.
+  let cache = null;      // { data, at } — last good payload + when we fetched it (ms)
 
   function paintBody(host, data) {
     lastData = data;
+    cache = { data: data, at: Date.now() };   // remember for an instant re-entry
     // Order for a director/PM scan: 1) compact launcher (summary + open deck),
     // 2) TIMELINE (what shipped / is coming, by week), 3) WHAT NEEDS YOU.
     const body = launcherHTML(data) + timelineHTML(data, tlMode, refWeekOffset) + needsHTML(data.requests);
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = body;
     wireBody(host);
-    // refresh the "updated" stamp with the payload's generatedAt
+    // refresh the freshness indicator with the payload's generatedAt
     const headEl = host.querySelector('.ex-head');
     if (headEl && data.generatedAt) {
-      const oldU = headEl.querySelector('.ex-updated');
-      const html = '<span class="ex-updated">' + WP.i18n.t('execUpdated') + ' ' + ui.esc(relTime(data.generatedAt)) + '</span>';
-      if (oldU) oldU.outerHTML = html;
-      else headEl.querySelector('.ex-head-t').insertAdjacentHTML('beforeend', html);
+      const oldF = headEl.querySelector('.ex-fresh');
+      const html = freshnessHTML(data.generatedAt);
+      if (oldF) oldF.outerHTML = html;
+      else if (html) headEl.querySelector('.ex-head-t').insertAdjacentHTML('beforeend', html);
     }
   }
 
@@ -346,19 +367,22 @@
     if (retry) retry.onclick = function () { load(host); };
   }
 
-  function load(host) {
+  // Fetch the live payload. When `background` is true we already have content on
+  // screen (cached), so we DON'T blank it with a skeleton and we DON'T show an
+  // error if the silent revalidation fails — the user keeps the good cached view.
+  function load(host, background) {
     const my = ++token;
     const bodyEl = host.querySelector('.ex-body');
-    if (bodyEl) bodyEl.innerHTML = skeleton();
+    if (bodyEl && !background) bodyEl.innerHTML = skeleton();
     const url = (WP.config.execStatusEndpoint || '').trim();
-    if (!url) { paintError(host); return; }
+    if (!url) { if (!background) paintError(host); return; }
     loadJSONP(url).then(function (data) {
       if (my !== token) return;                 // superseded by a newer load
-      if (!data || data.ok === false) { paintError(host); return; }
+      if (!data || data.ok === false) { if (!background) paintError(host); return; }
       paintBody(host, data);
     }).catch(function () {
       if (my !== token) return;
-      paintError(host);
+      if (!background) paintError(host);         // silent on a background refresh
     });
   }
 
@@ -367,14 +391,21 @@
     // never render when no live endpoint is configured.
     if (!WP.execDeckVisible || !WP.execDeckVisible()) { WP.setState({ route: 'dashboard' }); return; }
 
-    root.innerHTML = headerHTML(null) + '<div class="ex-body">' + skeleton() + '</div>';
-
-    const refresh = root.querySelector('#exec-refresh');
-    if (refresh) refresh.onclick = function () { load(root); };
-
-    load(root);
+    // Stale-while-revalidate: if we have a cached payload from earlier this
+    // session, paint it INSTANTLY (no skeleton, no waiting on the slow endpoint),
+    // then revalidate quietly in the background. Cold first load shows the skeleton.
+    if (cache) {
+      root.innerHTML = headerHTML(cache.data.generatedAt) + '<div class="ex-body"></div>';
+      paintBody(root, cache.data);
+      load(root, true);                          // silent background refresh
+    } else {
+      root.innerHTML = headerHTML(null) + '<div class="ex-body">' + skeleton() + '</div>';
+      load(root, false);
+    }
   }
 
   WP.ui = WP.ui || {};
-  WP.ui.exec = { render: render };
+  // _resetCache: clears the session SWR cache so a cold load can be exercised
+  // deterministically (used by verify-exec; harmless in the app).
+  WP.ui.exec = { render: render, _resetCache: function () { cache = null; lastData = null; } };
 })(window.WP = window.WP || {});

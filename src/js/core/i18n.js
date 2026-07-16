@@ -557,6 +557,7 @@
     execEyebrowOld: { en: 'WEBOOK · WORKFORCE OPS (TEMPO)', ar: 'ويبوك · عمليات القوى العاملة (تيمبو)' },
     execOpen:       { en: 'Open / present', ar: 'فتح / عرض تقديمي' },
     execRefresh:    { en: 'Refresh', ar: 'تحديث' },
+    execLive:       { en: 'Live', ar: 'مباشر' },
     execUpdated:    { en: 'Updated', ar: 'آخر تحديث' },
     execJustNow:    { en: 'just now', ar: 'الآن' },
     execMinAgo:     { en: 'm ago', ar: ' د مضت' },

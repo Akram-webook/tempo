@@ -126,8 +126,9 @@ const PAYLOAD = {
 
     // header present immediately — relabeled as PROJECT DELIVERY (not employee)
     assert(el.querySelector('.ex-title'), 'header title renders immediately');
-    assert(el.querySelector('.ex-skel'), 'loading skeleton shown while JSONP resolves');
-    assert(el.querySelector('#exec-refresh'), 'Refresh button present');
+    assert(el.querySelector('.ex-skel'), 'loading skeleton shown while JSONP resolves (cold first load)');
+    // manual Refresh button removed — data auto-refreshes (stale-while-revalidate)
+    assert(!el.querySelector('#exec-refresh'), 'no manual Refresh button (auto-refresh instead)');
 
     // the JSONP loader built the right URL
     assert(injectedSrc && injectedSrc.indexOf(ENDPOINT) === 0, 'JSONP script src starts with the endpoint');
@@ -139,6 +140,14 @@ const PAYLOAD = {
     // --- header framing: project-delivery, explicitly not an employee view ---------
     assert(/PROJECT DELIVERY|تسليم المشروع/i.test(el.querySelector('.ex-eyebrow').textContent), 'eyebrow reads as project delivery (not "workforce ops")');
     assert(el.querySelector('.ex-forwho') && /Not an employee view|ليست شاشة للموظفين/i.test(el.querySelector('.ex-forwho').textContent), 'a for-who line states it is not an employee view');
+
+    // --- freshness indicator (SWR): a live dot + honest age; stale when old -------
+    const fresh = el.querySelector('.ex-fresh');
+    assert(fresh, 'freshness indicator renders after the payload loads');
+    assert(fresh && fresh.querySelector('.ex-fresh-dot'), 'freshness indicator has a status dot');
+    // PAYLOAD.generatedAt is 3h ago (> 10 min) => stale, shows the age not just "Live"
+    assert(fresh && fresh.classList.contains('is-stale'), 'old payload (3h) is marked stale');
+    assert(fresh && /ago|مضت/i.test(fresh.textContent), 'stale indicator shows the honest age');
 
     // --- compact LAUNCHER: % + bar + open-DECK button (not a full render) ----------
     const pct = el.querySelector('.ex-pct-n');
@@ -199,6 +208,7 @@ const PAYLOAD = {
     assert(idxOf('.ex-tl-body') > 0 && idxOf('.ex-tl-body') < idxOf('.ex-needs'), 'timeline sits between launcher and needs-you');
 
     // --- "all clear" when no open asks ---------------------------------------------
+    WP.ui.exec._resetCache();   // clean foreground load for this case
     curPayload = { ok: true, generatedAt: PAYLOAD.generatedAt,
       cover: { done: 2, next: 0, later: 0, total: 2, pct: 100 },
       waves: [], requests: [{ id: 9, area: 'X', note: 'shipped', status: 'Done', date: iso(0) }] };
@@ -209,15 +219,45 @@ const PAYLOAD = {
     assert(!el.querySelector('.ex-needs'), 'no needs-you list when all clear');
     curPayload = PAYLOAD;   // restore
 
-    // --- error state on JSONP failure ----------------------------------------------
+    // --- SWR: a fresh payload reads "Live" (not stale) -----------------------------
+    WP.ui.exec._resetCache();
+    curPayload = Object.assign({}, PAYLOAD, { generatedAt: new Date().toISOString() });  // now
+    el.innerHTML = '';
+    WP.ui.exec.render(el);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    const freshNow = el.querySelector('.ex-fresh');
+    assert(freshNow && !freshNow.classList.contains('is-stale'), 'a fresh payload is NOT marked stale');
+    assert(freshNow && /Live|مباشر/i.test(freshNow.textContent), 'fresh payload shows the calm "Live" label');
+    curPayload = PAYLOAD;
+
+    // --- SWR: re-entering with a warm cache paints INSTANTLY (no skeleton) ----------
+    // cache is now warm from the render above; a fresh render must show content
+    // immediately, not the loading skeleton.
+    el.innerHTML = '';
+    WP.ui.exec.render(el);
+    assert(!el.querySelector('.ex-skel'), 'warm cache repaints instantly (no skeleton on re-entry)');
+    assert(el.querySelector('.ex-launch') || el.querySelector('.ex-pct-n'), 'cached content painted immediately on re-entry');
+
+    // --- SWR: a silent background-refresh failure KEEPS the cached view (no error) --
+    failNext = true;
+    el.innerHTML = '';
+    WP.ui.exec.render(el);                 // cache warm -> background refresh -> fails
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+    assert(!el.querySelector('.ex-error'), 'a failed BACKGROUND refresh does not blow away the cached view');
+    assert(el.querySelector('.ex-launch') || el.querySelector('.ex-pct-n'), 'cached content survives a background failure');
+    failNext = false;
+
+    // --- error state on a COLD JSONP failure (no cache) ----------------------------
+    WP.ui.exec._resetCache();
     failNext = true;
     el.innerHTML = '';
     WP.ui.exec.render(el);
     // extra microtask hops: loadJSONP.onerror -> reject -> execStatus.fetch chain -> load().catch
     for (let i = 0; i < 8; i++) await Promise.resolve();
-    assert(el.querySelector('.ex-error'), 'error state shown when the endpoint fails');
+    assert(el.querySelector('.ex-error'), 'error state shown when a cold load fails (no cache)');
     assert(el.querySelector('#exec-retry'), 'error state offers Retry');
     failNext = false;
+    WP.ui.exec._resetCache();
 
     // --- role gate at the view: a member is bounced --------------------------------
     WP.can = function () { return false; };
@@ -230,6 +270,7 @@ const PAYLOAD = {
     WP.can = function (cap) { return cap === 'viewSettings'; };
 
     // --- AR ------------------------------------------------------------------------
+    WP.ui.exec._resetCache();
     WP.state.lang = 'ar';
     el.innerHTML = '';
     WP.ui.exec.render(el);
