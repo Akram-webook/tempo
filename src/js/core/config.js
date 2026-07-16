@@ -126,6 +126,30 @@
    * -------------------------------------------------------------- */
   if (WP.config.notificationsEnabled === undefined) WP.config.notificationsEnabled = true;
 
+  /* ----------------------------------------------------------------
+   * Global Feedback widget — endpoint + key + AI helper (all reversible).
+   * ----------------------------------------------------------------
+   * A floating "Feedback" button on every authed page. Submit POSTs a batch
+   * (one row per comment) to the "Feedback" tab via an Apps Script web app.
+   *
+   *  - feedbackEndpoint : Apps Script /exec that accepts a POST {payload,callback}
+   *    and writes one row per item, returning {ok,count}. EMPTY ⇒ the widget
+   *    still renders and composes, but Submit says "not set up yet" (no crash).
+   *  - feedbackKey      : shared key sent with the payload. It lives in the
+   *    PUBLIC bundle, so it only deters CASUAL spam — the REAL protection is a
+   *    server-side per-owner rate limit in doPost, which must also DEFAULT the
+   *    priority (blank/Medium) for any caller it can't verify as a director.
+   *  - aiPolishEndpoint : optional Suggest/Polish helper (JSONP GET). EMPTY ⇒
+   *    the AI buttons are hidden (never a dead affordance). AI is always
+   *    optional and never blocks Submit.
+   *
+   * The Google side (doPost, columns, rate limit, Web App deploy) is the
+   * orchestrator's job; we build against these keys now. Set them post-deploy.
+   * -------------------------------------------------------------- */
+  if (WP.config.feedbackEndpoint === undefined) WP.config.feedbackEndpoint = '';
+  if (WP.config.feedbackKey === undefined)      WP.config.feedbackKey = '';
+  if (WP.config.aiPolishEndpoint === undefined) WP.config.aiPolishEndpoint = '';
+
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
   // (WP.deferred) gates nav, routes, and panels alike.
