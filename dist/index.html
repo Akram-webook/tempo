@@ -3557,8 +3557,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
    * (one row per comment) to the "Feedback" tab via an Apps Script web app.
    *
    *  - feedbackEndpoint : Apps Script /exec that accepts a POST {payload,callback}
-   *    and writes one row per item, returning {ok,count}. EMPTY ⇒ the widget
-   *    still renders and composes, but Submit says "not set up yet" (no crash).
+   *    and writes one row per item, returning {ok,count}. EMPTY ⇒ the FAB does
+   *    NOT render at all (no half-feature on the live site). The button appears
+   *    only when a user is signed in AND this endpoint is set.
    *  - feedbackKey      : shared key sent with the payload. It lives in the
    *    PUBLIC bundle, so it only deters CASUAL spam — the REAL protection is a
    *    server-side per-owner rate limit in doPost, which must also DEFAULT the
@@ -13819,7 +13820,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   function mount() {
     var h = host();
     var authed = !!(WP.state && WP.state.authed);
-    if (!authed) { h.innerHTML = ''; return; }   // hidden on login / signed-out (QA G)
+    // Signed-in AND the sheet endpoint is configured — otherwise render NOTHING
+    // (no half-feature on the live site: a FAB with nowhere to send is worse than
+    // no FAB). Hidden on login/signed-out (QA G) and until the endpoint is wired.
+    if (!authed || cfg('feedbackEndpoint') === '') { h.innerHTML = ''; return; }
     if (h.querySelector('.fb-fab')) return;      // already mounted; survive re-renders
     var t = WP.i18n.t;
     h.innerHTML =

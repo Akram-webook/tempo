@@ -125,7 +125,10 @@
   function mount() {
     var h = host();
     var authed = !!(WP.state && WP.state.authed);
-    if (!authed) { h.innerHTML = ''; return; }   // hidden on login / signed-out (QA G)
+    // Signed-in AND the sheet endpoint is configured — otherwise render NOTHING
+    // (no half-feature on the live site: a FAB with nowhere to send is worse than
+    // no FAB). Hidden on login/signed-out (QA G) and until the endpoint is wired.
+    if (!authed || cfg('feedbackEndpoint') === '') { h.innerHTML = ''; return; }
     if (h.querySelector('.fb-fab')) return;      // already mounted; survive re-renders
     var t = WP.i18n.t;
     h.innerHTML =

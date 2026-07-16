@@ -3562,8 +3562,9 @@ const EMAIL_HASHES = {};
    * (one row per comment) to the "Feedback" tab via an Apps Script web app.
    *
    *  - feedbackEndpoint : Apps Script /exec that accepts a POST {payload,callback}
-   *    and writes one row per item, returning {ok,count}. EMPTY ⇒ the widget
-   *    still renders and composes, but Submit says "not set up yet" (no crash).
+   *    and writes one row per item, returning {ok,count}. EMPTY ⇒ the FAB does
+   *    NOT render at all (no half-feature on the live site). The button appears
+   *    only when a user is signed in AND this endpoint is set.
    *  - feedbackKey      : shared key sent with the payload. It lives in the
    *    PUBLIC bundle, so it only deters CASUAL spam — the REAL protection is a
    *    server-side per-owner rate limit in doPost, which must also DEFAULT the

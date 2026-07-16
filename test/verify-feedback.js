@@ -87,15 +87,26 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     fb._reset();
 
     // ========================================================================
-    // FAB visibility (QA G)
+    // FAB visibility (QA G) — signed-in AND endpoint configured, else nothing.
     // ========================================================================
+    WP.config.feedbackEndpoint = 'https://script.example/exec';   // configured for the visible-state tests
     WP.state.authed = false;
     fb.mount();
     assert(!$('.fb-fab'), 'FAB hidden when signed out');
 
+    // Signed in but endpoint EMPTY → still no FAB (no half-feature on live).
     WP.state.authed = true; WP.state.viewerId = member.id; WP.state.route = 'dashboard';
+    WP.config.feedbackEndpoint = '';
     fb.mount();
-    assert(!!$('.fb-fab'), 'FAB renders on an authed route');
+    assert(!$('.fb-fab'), 'FAB hidden when feedbackEndpoint is empty (signed in)');
+    WP.config.feedbackEndpoint = '   ';   // whitespace-only counts as empty
+    fb.mount();
+    assert(!$('.fb-fab'), 'FAB hidden when feedbackEndpoint is whitespace only');
+
+    // Signed in AND endpoint set → FAB renders.
+    WP.config.feedbackEndpoint = 'https://script.example/exec';
+    fb.mount();
+    assert(!!$('.fb-fab'), 'FAB renders when authed AND endpoint set');
     assert($('#fb-fab').getAttribute('aria-label'), 'FAB has an aria-label');
 
     // ========================================================================
@@ -402,7 +413,7 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
       console.log('FAIL — verify-feedback:\n' + errors.join('\n'));
       process.exit(1);
     }
-    console.log('PASS — feedback widget: FAB authed-only; feedback-first composer, 4 types (no Question); priority director-only + defaulted blank for members in payload; note required + capped + escaped; Suggest-empty/Polish-disabled/Undo; add queues+resets+marker; edit reloads, remove drops; batch submit = separate items in ONE request; double-submit guarded; failure keeps the queue; close persists + reopen restores (sessionStorage); wrong-type + >5MB images rejected; empty endpoint graceful; silent metadata in payload; EN + AR/RTL; no console errors.');
+    console.log('PASS — feedback widget: FAB only when authed AND endpoint set (hidden otherwise); feedback-first composer, 4 types (no Question); priority director-only + defaulted blank for members in payload; note required + capped + escaped; Suggest-empty/Polish-disabled/Undo; add queues+resets+marker; edit reloads, remove drops; batch submit = separate items in ONE request; double-submit guarded; failure keeps the queue; close persists + reopen restores (sessionStorage); wrong-type + >5MB images rejected; empty endpoint graceful; silent metadata in payload; EN + AR/RTL; no console errors.');
   } catch (e) {
     console.log('FAIL — verify-feedback threw: ' + e.stack);
     process.exit(1);
