@@ -791,6 +791,7 @@ main.full-bleed { max-width: none; }
 
 /* ---- metric cards ---- */
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.metrics.metrics-empty { display: block; border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px 16px; }
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
@@ -3268,6 +3269,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   // For anyone without explicit data, derive a gentle default from their work.
   function get(personId) {
+    // no-demo mode: no synthetic engagement. Return a neutral empty record so
+    // the "My progress" view renders its honest empty states (no fake streak).
+    if (WP.demo && !WP.demo()) {
+      return { streak: 0, freeze: 0, daysActive: 0, weekGoal: 0, weekDone: 0,
+        level: '—', levelNo: 0, levelPct: 0, doneToday: [], kudos: [] };
+    }
     if (ENGAGE[personId]) return ENGAGE[personId];
     const p = WP.access.byId(personId);
     const done = (p && p.dailyCheckin && p.dailyCheckin.done && p.dailyCheckin.done !== '—') ? [p.dailyCheckin.done] : [];
@@ -3433,6 +3440,55 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   WP.deferred = function (id) {
     return !!WP.config.mvp && WP.MVP_DEFER.indexOf(id) >= 0;
   };
+
+  /* ----------------------------------------------------------------
+   * DEMO-DATA FLAG (reversible, one line) — synthetic seeds on/off.
+   * ----------------------------------------------------------------
+   * Same pattern as the MVP flag above: ONE constant decides whether the
+   * app runs on the bundled SAMPLE data or on REAL data from Supabase.
+   *
+   *   true  (default) → today's behavior: the bundled sample people /
+   *           workload / events / growth / evaluations / engagement seed
+   *           the app, and the honest "Sample data" badge shows.
+   *   false ("no-demo") → the app carries NO synthetic PERSON data. People,
+   *           workload, growth, evaluations and engagement come ONLY from
+   *           Supabase (WP.db, under RLS). Where nothing is loaded yet the
+   *           screens show honest EMPTY STATES ("awaiting input") — never
+   *           zeros-that-look-real and never the Sample-data badge (that
+   *           badge is a demo affordance). Taxonomy / config (tiers, states,
+   *           rubric criteria, cycles, ladders) STAYS — it is not personal
+   *           data.
+   *
+   * REAL DATA NEVER LIVES IN THE BUNDLE. This flag only decides whether the
+   * SYNTHETIC seed is used; real values are loaded into Supabase separately
+   * by the service-role data-load tool (never committed to the repo).
+   *
+   * ← flip to false to run on real data. NOTE (do this only AFTER):
+   *   (a) migrations 0004/0005/0006 applied + real org data-loaded into
+   *       Supabase, and (b) the access gate (Google + Cloudflare) is up for
+   *       sensitive data. Until then leave demoData = true.
+   * -------------------------------------------------------------- */
+  if (WP.config.demoData === undefined) WP.config.demoData = true;
+
+  // SINGLE HELPER — true ⇒ run on the bundled sample seed (demo mode).
+  WP.demo = function () { return WP.config.demoData !== false; };
+
+  // no-demo mode: DROP the synthetic PERSON seeds so nothing bundled is ever
+  // shown as real. This runs here because core/config.js loads AFTER the
+  // data/*.js files (load order: data → core → ui → app), so the seeds exist
+  // to clear. Emptying the seed also makes WP.db's "never-blank" fallback
+  // (peopleStore()/growthStore()) blank automatically — no bundle mock is read
+  // for real fields. Taxonomy / rubric / threshold maps are intentionally kept
+  // (TIERS, STATES, LEVELS, CEILING, SKILL_LADDER, CYCLES, EVAL_CRITERIA, …) —
+  // they are configuration, not personal data. Fully reversible: flip the flag.
+  if (!WP.demo() && WP.data) {
+    WP.data.PEOPLE = [];          // org directory → Supabase (public.people, 0004) only
+    WP.data.EVENTS = {};          // synthetic events / workload
+    WP.data.GROWTH = {};          // sensitive growth record → Supabase (0005) only
+    WP.data.EVALUATIONS = {};     // manager reviews → backend only
+    WP.data.SELF = {};            // self-assessments → backend only
+    WP.data.ENGAGE = {};          // kudos / engagement seed
+  }
 })(window.WP = window.WP || {});
 
 </script>
@@ -3578,6 +3634,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     healthyZone:    { en: 'in healthy zone (41–75%)', ar: 'في النطاق الصحي (٤١-٧٥٪)' },
     healthyBandSplit:{ en: '{h} of {n} in healthy band (41–75%)', ar: '{h} من {n} في النطاق الصحي (٤١-٧٥٪)' },
     noDataYet:      { en: 'No data yet', ar: 'لا توجد بيانات بعد' },
+    noWorkloadYet:  { en: 'No workload data yet — awaiting input', ar: 'لا توجد بيانات أعباء بعد — بانتظار الإدخال' },
     ofPeople:       { en: 'of {n} people', ar: 'من {n} أشخاص' },
     nearCapSub:     { en: 'at 76%+ load', ar: 'بحمل ٧٦٪ فأكثر' },
     tlTitle:        { en: 'Evidence timeline', ar: 'سجل الأدلة' },
@@ -3597,6 +3654,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
     sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
     sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
+    sigOps:         { en: 'Webook Operations', ar: 'عمليات ويبوك' },
     // ─────────── Wave 3.002 Eval-Prep keys (Builder A) — keep fenced together for clean rebase ───────────
     epTitle:        { en: 'Evaluation prep · evidence', ar: 'تحضير التقييم · الأدلة' },
     epIntro:        { en: 'The evidence already on record — sourced, not invented. Prep only: no score, no verdict. You decide.', ar: 'الأدلة المسجّلة فعلاً — بمصادرها، لا مُختلقة. تحضير فقط: بلا درجة ولا حكم. القرار لك.' },
@@ -7610,6 +7668,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const db = WP.db;
     const live = db && db.usingBackend && db.usingBackend() && db.status && db.status.synced;
     if (live) return '';
+    // no-demo mode carries no sample data → never show the "Sample data" badge
+    // (it is a demo affordance). Screens show honest empty states instead.
+    if (WP.demo && !WP.demo()) return '';
     return '<div class="provenance-note" title="' + t('sampleDataHint') + '">' +
       WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>';
   }
@@ -8821,6 +8882,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       return '<div class="card"><div class="label">' + label + '</div>' +
              '<div class="value">' + value + '</div>' +
              '<div class="sub">' + sub + '</div></div>';
+    }
+    // No roster yet (e.g. no-demo mode before Supabase is loaded) → honest empty
+    // state, not a wall of zeros that reads as real ("0% team health").
+    if (!m.size) {
+      return WP.ui.provenanceNote() +
+        '<div class="metrics metrics-empty"><div class="sub">' + t('noWorkloadYet') + '</div></div>';
     }
     const healthSplit = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
     return WP.ui.provenanceNote() +
@@ -13766,12 +13833,26 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   // Signature / credits bar — a thin decorative footer across the bottom of the authed
   // app (department + the two credit signatures). Credit-only: no data, no logic. Hidden
-  // on the sign-in screen. Names are proper nouns, kept verbatim in both languages.
+  // on the sign-in screen. The personal credit names are part of the DEMO seed — in
+  // no-demo mode we must not bake real personal names into the bundle (a name-free empty
+  // state + the "no real names in the bundle" rule), so we fall back to a neutral
+  // department line. Names are proper nouns, kept verbatim in both languages.
   function renderSignatureBar() {
     const host = document.getElementById('sig-bar');
     if (!host) return;
     if (!WP.state.authed) { host.innerHTML = ''; return; }
     const t = WP.i18n.t;
+    if (!WP.demo()) {
+      host.innerHTML =
+        '<div class="sig-bar">' +
+          '<div class="sig-dept">' + t('sigDept') + '</div>' +
+          '<div class="sig-sep"></div>' +
+          '<div class="sig-credit">' +
+            '<div class="sig-name sig-name--accent">' + t('sigOps') + '</div>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
     host.innerHTML =
       '<div class="sig-bar">' +
         '<div class="sig-dept">' + t('sigDept') + '</div>' +

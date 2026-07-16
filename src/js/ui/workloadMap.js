@@ -57,6 +57,12 @@
              '<div class="value">' + value + '</div>' +
              '<div class="sub">' + sub + '</div></div>';
     }
+    // No roster yet (e.g. no-demo mode before Supabase is loaded) → honest empty
+    // state, not a wall of zeros that reads as real ("0% team health").
+    if (!m.size) {
+      return WP.ui.provenanceNote() +
+        '<div class="metrics metrics-empty"><div class="sub">' + t('noWorkloadYet') + '</div></div>';
+    }
     const healthSplit = t('healthyBandSplit').replace('{h}', m.healthyCount).replace('{n}', m.size);
     return WP.ui.provenanceNote() +
       '<div class="metrics">' +

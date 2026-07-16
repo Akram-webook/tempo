@@ -139,6 +139,7 @@
     healthyZone:    { en: 'in healthy zone (41–75%)', ar: 'في النطاق الصحي (٤١-٧٥٪)' },
     healthyBandSplit:{ en: '{h} of {n} in healthy band (41–75%)', ar: '{h} من {n} في النطاق الصحي (٤١-٧٥٪)' },
     noDataYet:      { en: 'No data yet', ar: 'لا توجد بيانات بعد' },
+    noWorkloadYet:  { en: 'No workload data yet — awaiting input', ar: 'لا توجد بيانات أعباء بعد — بانتظار الإدخال' },
     ofPeople:       { en: 'of {n} people', ar: 'من {n} أشخاص' },
     nearCapSub:     { en: 'at 76%+ load', ar: 'بحمل ٧٦٪ فأكثر' },
     tlTitle:        { en: 'Evidence timeline', ar: 'سجل الأدلة' },
@@ -158,6 +159,7 @@
     sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
     sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
     sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
+    sigOps:         { en: 'Webook Operations', ar: 'عمليات ويبوك' },
     // ─────────── Wave 3.002 Eval-Prep keys (Builder A) — keep fenced together for clean rebase ───────────
     epTitle:        { en: 'Evaluation prep · evidence', ar: 'تحضير التقييم · الأدلة' },
     epIntro:        { en: 'The evidence already on record — sourced, not invented. Prep only: no score, no verdict. You decide.', ar: 'الأدلة المسجّلة فعلاً — بمصادرها، لا مُختلقة. تحضير فقط: بلا درجة ولا حكم. القرار لك.' },

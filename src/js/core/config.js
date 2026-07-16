@@ -138,4 +138,53 @@
   WP.deferred = function (id) {
     return !!WP.config.mvp && WP.MVP_DEFER.indexOf(id) >= 0;
   };
+
+  /* ----------------------------------------------------------------
+   * DEMO-DATA FLAG (reversible, one line) — synthetic seeds on/off.
+   * ----------------------------------------------------------------
+   * Same pattern as the MVP flag above: ONE constant decides whether the
+   * app runs on the bundled SAMPLE data or on REAL data from Supabase.
+   *
+   *   true  (default) → today's behavior: the bundled sample people /
+   *           workload / events / growth / evaluations / engagement seed
+   *           the app, and the honest "Sample data" badge shows.
+   *   false ("no-demo") → the app carries NO synthetic PERSON data. People,
+   *           workload, growth, evaluations and engagement come ONLY from
+   *           Supabase (WP.db, under RLS). Where nothing is loaded yet the
+   *           screens show honest EMPTY STATES ("awaiting input") — never
+   *           zeros-that-look-real and never the Sample-data badge (that
+   *           badge is a demo affordance). Taxonomy / config (tiers, states,
+   *           rubric criteria, cycles, ladders) STAYS — it is not personal
+   *           data.
+   *
+   * REAL DATA NEVER LIVES IN THE BUNDLE. This flag only decides whether the
+   * SYNTHETIC seed is used; real values are loaded into Supabase separately
+   * by the service-role data-load tool (never committed to the repo).
+   *
+   * ← flip to false to run on real data. NOTE (do this only AFTER):
+   *   (a) migrations 0004/0005/0006 applied + real org data-loaded into
+   *       Supabase, and (b) the access gate (Google + Cloudflare) is up for
+   *       sensitive data. Until then leave demoData = true.
+   * -------------------------------------------------------------- */
+  if (WP.config.demoData === undefined) WP.config.demoData = true;
+
+  // SINGLE HELPER — true ⇒ run on the bundled sample seed (demo mode).
+  WP.demo = function () { return WP.config.demoData !== false; };
+
+  // no-demo mode: DROP the synthetic PERSON seeds so nothing bundled is ever
+  // shown as real. This runs here because core/config.js loads AFTER the
+  // data/*.js files (load order: data → core → ui → app), so the seeds exist
+  // to clear. Emptying the seed also makes WP.db's "never-blank" fallback
+  // (peopleStore()/growthStore()) blank automatically — no bundle mock is read
+  // for real fields. Taxonomy / rubric / threshold maps are intentionally kept
+  // (TIERS, STATES, LEVELS, CEILING, SKILL_LADDER, CYCLES, EVAL_CRITERIA, …) —
+  // they are configuration, not personal data. Fully reversible: flip the flag.
+  if (!WP.demo() && WP.data) {
+    WP.data.PEOPLE = [];          // org directory → Supabase (public.people, 0004) only
+    WP.data.EVENTS = {};          // synthetic events / workload
+    WP.data.GROWTH = {};          // sensitive growth record → Supabase (0005) only
+    WP.data.EVALUATIONS = {};     // manager reviews → backend only
+    WP.data.SELF = {};            // self-assessments → backend only
+    WP.data.ENGAGE = {};          // kudos / engagement seed
+  }
 })(window.WP = window.WP || {});
