@@ -9,7 +9,7 @@
 
   const STRINGS = {
     appName:        { en: 'Webook',                 ar: 'ويبوك' },
-    subtitle:       { en: 'Tempo',                  ar: 'Tempo' },
+    subtitle:       { en: 'Tembo',                  ar: 'Tembo' },
     workloadMap:    { en: 'Workload Map',           ar: 'خريطة الأحمال' },
     teamHealth:     { en: 'Team Health',            ar: 'صحة الفريق' },
     available:      { en: 'Available',              ar: 'متاح' },
@@ -867,7 +867,7 @@
 
     /* ── WBK PRO design-parity: breadcrumb / header / table / sub-tabs / KPI delta ── */
     breadcrumb:     { en: 'Breadcrumb', ar: 'مسار التنقل' },
-    bcTempo:        { en: 'Tempo', ar: 'تيمبو' },
+    bcTempo:        { en: 'Tembo', ar: 'تيمبو' },
     // page-header subtitles
     dashSubDirector:{ en: 'Org-wide capacity & team health · {n} people in scope', ar: 'السعة وصحة الفرق على مستوى المنظمة · {n} شخصاً ضمن النطاق' },
     dashSubManager: { en: 'Your team’s capacity & growth · {n} reports', ar: 'سعة فريقك ونموّه · {n} من المرؤوسين' },
