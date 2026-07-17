@@ -858,6 +858,7 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
    stranding in the corner; a large chart grows and scrolls from the start */
 .tree-scroll {
   overflow: auto; text-align: center; padding: 4px 0 12px; cursor: grab;   /* was overflow-x — now scrolls vertically too (fixes full-screen "can't scroll down") */
+  max-width: 100%;                  /* the scroller is the scroll boundary: a tree wider than the viewport scrolls INSIDE here, never pushing the page body sideways (mobile) */
   min-height: max(380px, calc(100vh - 270px));
   max-height: calc(100vh - 96px);   /* bound the height so a tall/expanded tree scrolls instead of clipping */
   display: flex; align-items: safe center; justify-content: safe center;    /* safe center → top stays reachable when the tree overflows */
@@ -2073,6 +2074,31 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   flex-wrap: wrap; margin-top: var(--sp-3); font-size: var(--fs-body-s); color: var(--text-muted); }
 .wbk-tbl-size select { margin-inline-start: var(--sp-2); }
 .wbk-tbl-count { flex: 1 1 auto; text-align: center; }
+
+/* ---- Mobile responsiveness pass (phones) ----
+   The shell already collapses the sidebar to a drawer and stacks the grids;
+   these rules fix the two surfaces that still overflow the viewport on a phone:
+   the org tree and wide data tables. Both are contained + scroll INSIDE their
+   own box so the page body never scrolls sideways. */
+@media (max-width: 560px) {
+  /* Org tree: when it is bigger than the phone, anchor to the top-start corner
+     so the org ROOT shows first (centering strands the root off-screen and
+     leaves a confusing empty gap); the rest pans into view. */
+  .tree-scroll { justify-content: safe start; align-items: safe start; }
+  /* Data tables: keep columns legible while the wrap scrolls horizontally, and
+     never let a half-clipped last column read as "broken". A soft inline-end
+     fade hints there is more to scroll. */
+  .wbk-table { min-inline-size: max-content; }
+  .wbk-table-wrap { position: relative; -webkit-overflow-scrolling: touch; }
+  .wbk-table th, .wbk-table td { padding-inline: var(--sp-3); }
+  /* Toolbar dropdowns: on a phone the toolbar is compressed, so a left-anchored
+     menu (~160px) opens past the screen edge and adds a horizontal body scroll
+     even while closed (it is still laid out). Anchor the later menus to the end
+     edge (they sit right-of-centre); keep the FIRST one start-anchored so it does
+     not run off the left edge instead. Net: every menu stays fully on-screen. */
+  .toolbar .dd:not(:first-child) .dd-menu { inset-inline-start: auto; inset-inline-end: 0; }
+  .dd-menu { min-width: 160px; }
+}
 .wbk-tbl-pages { display: flex; align-items: center; gap: var(--sp-1); }
 .wbk-pg-n { appearance: none; cursor: pointer; min-inline-size: 30px; block-size: 30px; padding: 0 var(--sp-2);
   border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: var(--radius-sm);
