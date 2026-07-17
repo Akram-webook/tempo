@@ -203,6 +203,10 @@
 
   WP.render = function () {
     WP.applyDocAttrs();
+    // Global Feedback FAB — mounts into its own host that survives every render;
+    // shows on all authed pages, hides itself on the sign-in screen. Called on
+    // every render so it toggles with auth and re-mounts if the host was cleared.
+    if (WP.ui.feedback) WP.ui.feedback.mount();
     const bar = document.getElementById('topbar');
     const appbar = document.getElementById('appbar');
     const backdrop = document.getElementById('nav-backdrop');
