@@ -138,6 +138,10 @@ const PAYLOAD = {
 
     // --- header framing: project-delivery, explicitly not an employee view ---------
     assert(/PROJECT DELIVERY|تسليم المشروع/i.test(el.querySelector('.ex-eyebrow').textContent), 'eyebrow reads as project delivery (not "workforce ops")');
+    // the big page title must match the delivery framing too — no employee should
+    // read it as an "Executive status" / product page.
+    assert(/Project delivery|تسليم المشروع/i.test(el.querySelector('.ex-title').textContent) &&
+      !/Executive/i.test(el.querySelector('.ex-title').textContent), 'title reads as project delivery (not "Executive status")');
     assert(el.querySelector('.ex-forwho') && /Not an employee view|ليست شاشة للموظفين/i.test(el.querySelector('.ex-forwho').textContent), 'a for-who line states it is not an employee view');
 
     // --- compact LAUNCHER: % + bar + open-DECK button (not a full render) ----------
@@ -234,7 +238,7 @@ const PAYLOAD = {
     el.innerHTML = '';
     WP.ui.exec.render(el);
     await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
-    assert(/الحالة التنفيذية/.test(el.textContent), 'title localizes to AR');
+    assert(/تسليم المشروع/.test(el.textContent), 'title localizes to AR (project delivery)');
     const openAr = el.querySelector('#exec-open');
     assert(openAr && /فتح/.test(openAr.textContent), 'Open/present localizes to AR');
 
