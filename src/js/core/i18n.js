@@ -597,7 +597,7 @@
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     execStatus:     { en: 'Project delivery', ar: 'تسليم المشروع' },
     execStatusSub:  { en: 'Build status — what shipped, what\'s next', ar: 'حالة البناء — ما تم تسليمه وما هو التالي' },
-    execEyebrow:    { en: 'WEBOOK · TEMPO — PROJECT DELIVERY', ar: 'ويبوك · تيمبو — تسليم المشروع' },
+    execEyebrow:    { en: 'WEBOOK · TEMBO — PROJECT DELIVERY', ar: 'ويبوك · تيمبو — تسليم المشروع' },
     execForWho:     { en: 'Build & delivery status for the project team — what shipped, what\'s in progress, and what needs a decision. Not an employee view.', ar: 'حالة بناء وتسليم المشروع لفريق العمل — ما تم تسليمه وما هو قيد التنفيذ وما يحتاج قراراً. ليست شاشة للموظفين.' },
     execOpenDeck:   { en: 'Open full status deck', ar: 'فتح عرض الحالة الكامل' },
     execSummary:    { en: '{done} shipped · {next} in progress · {need} need you', ar: '{done} مُنجز · {next} قيد التنفيذ · {need} بحاجة إليك' },
