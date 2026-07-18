@@ -1499,6 +1499,13 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-launch-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .ex-deck-btn { flex: none; }
 .ex-launch-sum { color: var(--text-muted); font-size: 13px; }
+/* Trend sparkline (last N delivered-% points). Colour by direction. */
+.ex-spark { display: flex; align-items: center; gap: 8px; margin-top: 2px; color: var(--text-muted); }
+.ex-spark svg { display: block; opacity: .85; }
+.ex-spark-l { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.ex-spark-l--up   { color: var(--state-positive); }
+.ex-spark-l--down { color: var(--state-negative); }
+.ex-spark-l--flat { color: var(--text-muted); }
 
 /* Timeline (BA/PM view) — calendar-style WEEK NAVIGATOR + week-bucketed rows.
    [Week|All] granularity segment, then ‹ prev · "week of …" · next › + Today. */

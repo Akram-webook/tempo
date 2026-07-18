@@ -3,12 +3,17 @@
  * compute-exec-status.js — DERIVE exec status from real PR data
  * ------------------------------------------------------------
  * Runs in GitHub Actions on every merge to main (and daily 7am UTC).
- * It does NOT let anyone assert a health number: health is computed
- * as merged PRs / total PRs per wave, from the GitHub API. Narrative
- * is built from a template over those facts, never free prose.
+ * It does NOT let anyone assert numbers - everything is derived from the
+ * GitHub API. Narrative is a template over the facts, never free prose.
+ * Two ORTHOGONAL signals (progress != health):
  *
- *   health(wave) = round( mergedPRs / totalPRs * 100 )   (0 if none)
- *   cover.health = round( sum(merged) / sum(total) * 100 ) across waves
+ *   PROGRESS (how far)  = round( merged change-size / total change-size )
+ *                         effort-weighted (lines), NOT PR count (1/1 != 100%).
+ *   HEALTH   (stuck?)   = green | amber | red, from open-PR state:
+ *                         red   = build failing, changes-requested, or >10d stuck
+ *                         amber = awaiting review 3-10d
+ *                         green = nothing stuck
+ *   BLOCKED-ON per PR   = build | author | reviewers (whose move is it).
  *
  * Then it POSTs the computed {ship} to the Apps Script endpoint, which
  * writes the Google Sheet + rebuilds the Slides deck; the in-app page
@@ -36,6 +41,7 @@ const WAVES = [
 ];
 
 function today_() { return new Date().toISOString().slice(0, 10); }
+const TODAY_ISO = today_();   // one stable "today" per run (used for age math + date stamp)
 
 // --- GitHub API: all PRs with a given label (open + closed) ------------------
 function ghGet(path) {
@@ -60,18 +66,51 @@ function ghGet(path) {
   });
 }
 
-// Search PRs by label. Returns [{merged:bool}] for the health math.
+const DAY_MS = 86400000;
+function ageDays(iso) { return iso ? (Date.parse(TODAY_ISO + 'T00:00:00Z') - Date.parse(iso)) / DAY_MS : 0; }
+
+// Fetch the PRs for a label WITH the fields the intelligence layer needs. The
+// search API gives state + merged_at cheaply; per-OPEN-PR we fetch details
+// (additions, review state, checks) since only open PRs can be "blocked" and
+// only they need the extra call. Merged PRs just need additions for weighting,
+// pulled from the same detail call (bounded: few PRs per wave).
 async function prsForLabel(label) {
   const q = encodeURIComponent(`repo:${REPO} is:pr label:"${label}"`);
   const out = await ghGet(`/search/issues?q=${q}&per_page=100`);
   const items = out.items || [];
-  // is:pr search returns issues; "merged" is not on the search item, so a PR
-  // counts as delivered when it is closed AND has a merged_at (fetched cheaply
-  // via pull_request.merged_at when present, else treat closed as merged=false).
-  return items.map((it) => ({
-    merged: !!(it.pull_request && it.pull_request.merged_at),
-    closed: it.state === 'closed',
-  }));
+  const prs = [];
+  for (const it of items) {
+    const merged = !!(it.pull_request && it.pull_request.merged_at);
+    const open = it.state === 'open';
+    let additions = 0, blockedOn = '', stuckDays = 0;
+    try {
+      const d = await ghGet(`/repos/${REPO}/pulls/${it.number}`);
+      additions = (d.additions || 0) + (d.deletions || 0);   // total churn = effort proxy
+      if (open) {
+        const updated = d.updated_at;
+        stuckDays = Math.round(ageDays(updated));
+        // blocked-on, derived from GitHub state (no new data source):
+        const reviews = await ghGet(`/repos/${REPO}/pulls/${it.number}/reviews`).catch(() => []);
+        const lastByUser = {};
+        (reviews || []).forEach((r) => { lastByUser[r.user && r.user.login] = r.state; });
+        const states = Object.values(lastByUser);
+        const changesReq = states.includes('CHANGES_REQUESTED');
+        const reviewRequested = (d.requested_reviewers || []).length > 0;
+        // checks: combined status on the head sha
+        let checksFailing = false;
+        if (d.head && d.head.sha) {
+          const cs = await ghGet(`/repos/${REPO}/commits/${d.head.sha}/status`).catch(() => ({}));
+          checksFailing = cs && cs.state === 'failure';
+        }
+        if (checksFailing) blockedOn = 'build';
+        else if (changesReq) blockedOn = 'author';
+        else if (reviewRequested || states.length === 0) blockedOn = 'reviewers';
+        else blockedOn = '';
+      }
+    } catch (e) { /* detail fetch failed — fall back to count-only for this PR */ }
+    prs.push({ number: it.number, title: it.title, merged, open, additions, blockedOn, stuckDays });
+  }
+  return prs;
 }
 
 function statusFor(pct, total) {
@@ -81,35 +120,70 @@ function statusFor(pct, total) {
   return 'Next';
 }
 
+// #2 Health flag (orthogonal to progress): a wave is unhealthy if any open PR is
+// stuck. red = stuck >10d OR changes-requested untouched OR build failing;
+// amber = blocked on reviewers 3-10d; green = nothing stuck.
+function healthFlagFor(prs) {
+  const open = prs.filter((p) => p.open);
+  let flag = 'green';
+  const blockers = [];
+  for (const p of open) {
+    if (p.blockedOn === 'build' || (p.blockedOn === 'author') || p.stuckDays > 10) {
+      flag = 'red'; blockers.push(`#${p.number} blocked on ${p.blockedOn || 'age'} (${p.stuckDays}d)`);
+    } else if (p.blockedOn === 'reviewers' && p.stuckDays >= 3) {
+      if (flag !== 'red') flag = 'amber';
+      blockers.push(`#${p.number} awaiting review (${p.stuckDays}d)`);
+    }
+  }
+  return { flag, blockers };
+}
+
 // Template narrative — facts only, no opinion.
 function narrativeFor(waves, cover) {
   const done = waves.filter((w) => w.status === 'Done').length;
   const active = waves.filter((w) => w.status === 'In Progress').length;
-  return `${cover.health}% delivered across ${waves.length} waves — ` +
-    `${done} done, ${active} in progress (computed from merged PRs).`;
+  const unhealthy = waves.filter((w) => w.healthFlag && w.healthFlag !== 'green').length;
+  const tail = unhealthy ? ` - ${unhealthy} wave(s) need attention.` : '';
+  return `${cover.progress}% delivered across ${waves.length} waves - ` +
+    `${done} done, ${active} in progress (weighted by change size).${tail}`;
 }
 
 async function computeShip() {
   const waves = [];
-  let merged = 0, total = 0;
+  let mergedChurn = 0, totalChurn = 0;
   for (const w of WAVES) {
     const prs = await prsForLabel(w.label);
     const m = prs.filter((p) => p.merged).length;
     const t = prs.length;
-    merged += m; total += t;
-    const pct = t === 0 ? 0 : Math.round((m / t) * 100);
+    // #1 PROGRESS = merged churn / total churn (effort-weighted), NOT PR count.
+    // Falls back to count if churn data is unavailable (all zero).
+    const wChurnMerged = prs.filter((p) => p.merged).reduce((s, p) => s + p.additions, 0);
+    const wChurnTotal = prs.reduce((s, p) => s + p.additions, 0);
+    mergedChurn += wChurnMerged; totalChurn += wChurnTotal;
+    const pct = wChurnTotal > 0 ? Math.round((wChurnMerged / wChurnTotal) * 100)
+      : (t === 0 ? 0 : Math.round((m / t) * 100));   // fallback: count-based
+    const { flag, blockers } = healthFlagFor(prs);
     waves.push({
       name: w.name,
       status: statusFor(pct, t),
       percent: pct,
-      notes: `${m}/${t} PRs merged (${w.label}).`,
-      needs: '',
+      healthFlag: flag,                               // #2 green/amber/red
+      blockedOn: blockers.join('; '),                 // #2 whose move is it
+      notes: `${m}/${t} PRs merged, ${Math.round(wChurnMerged / 1000)}k/${Math.round(wChurnTotal / 1000)}k lines.`,
+      needs: blockers.length ? blockers[0] : '',
     });
   }
-  const health = total === 0 ? 0 : Math.round((merged / total) * 100);
-  const cover = { status: health >= 100 ? 'Done' : 'In Progress', health, narrative: '' };
+  // Overall progress = effort-weighted, not a mean of percentages.
+  const progress = totalChurn > 0 ? Math.round((mergedChurn / totalChurn) * 100) : 0;
+  const anyRed = waves.some((w) => w.healthFlag === 'red');
+  const cover = {
+    status: progress >= 100 ? 'Done' : (anyRed ? 'Needs input' : 'In Progress'),
+    progress,                                         // #1 the effort-weighted number
+    health: anyRed ? 'red' : (waves.some((w) => w.healthFlag === 'amber') ? 'amber' : 'green'),  // #2 flag, not %
+    narrative: '',
+  };
   cover.narrative = narrativeFor(waves, cover);
-  return { date: today_(), agent: 'exec-status-bot', cover, waves };
+  return { date: TODAY_ISO, agent: 'exec-status-bot', cover, waves };
 }
 
 // --- POST to Apps Script, redirect-aware (Apps Script always 302s once) ------
@@ -141,7 +215,8 @@ function selftest() {
           // a real doPost would return its ContentService JSON here
           if (req.method !== 'POST') { res.writeHead(405); return res.end('method'); }
           const payload = JSON.parse(body);
-          if (!payload.ship || typeof payload.ship.cover.health !== 'number') {
+          if (!payload.ship || typeof payload.ship.cover.progress !== 'number' ||
+              typeof payload.ship.cover.health !== 'string') {
             res.writeHead(400); return res.end('bad payload');
           }
           res.writeHead(200, { 'Content-Type': 'application/json' });

@@ -255,6 +255,15 @@
       "owner": "Akram"
     }
   ],
-  "features": []
+  "features": [],
+  "history": [
+    { "date": "2026-07-11", "progress": 41 },
+    { "date": "2026-07-12", "progress": 47 },
+    { "date": "2026-07-14", "progress": 52 },
+    { "date": "2026-07-15", "progress": 58 },
+    { "date": "2026-07-16", "progress": 64 },
+    { "date": "2026-07-17", "progress": 69 },
+    { "date": "2026-07-18", "progress": 73 }
+  ]
 };
 })(window.WP = window.WP || {});

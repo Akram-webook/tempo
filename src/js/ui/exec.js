@@ -83,6 +83,32 @@
   // Compact LAUNCHER — a small summary + % bar + one-line rollup + a big button
   // to the full Google Slides deck (the hosted, presentable artifact). The page
   // no longer duplicates the full slide-by-slide render; the deck owns that.
+  // Trend sparkline: an inline SVG polyline of the last N delivered-% points
+  // from data.history (appended per run on the sheet side). Renders NOTHING when
+  // history is absent or has <2 points - never a broken/empty chart. Pure SVG,
+  // no library, theme-aware via currentColor.
+  function sparklineHTML(history) {
+    const pts = (history || [])
+      .map(function (h) { return (h && (h.progress != null ? +h.progress : +h.pct)); })
+      .filter(function (n) { return !isNaN(n); })
+      .slice(-10);
+    if (pts.length < 2) return '';
+    const W = 120, H = 28, max = 100, min = 0;
+    const step = W / (pts.length - 1);
+    const y = function (v) { return H - ((v - min) / (max - min)) * H; };
+    const d = pts.map(function (v, i) { return (i ? 'L' : 'M') + (i * step).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+    const last = pts[pts.length - 1], first = pts[0];
+    const dir = last > first ? 'up' : (last < first ? 'down' : 'flat');
+    const t = WP.i18n.t;
+    return '<div class="ex-spark" title="' + t('execTrend') + ': ' + first + '% -> ' + last + '%">' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true" preserveAspectRatio="none">' +
+        '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<circle cx="' + ((pts.length - 1) * step).toFixed(1) + '" cy="' + y(last).toFixed(1) + '" r="2.2" fill="currentColor"/>' +
+      '</svg>' +
+      '<span class="ex-spark-l ex-spark-l--' + dir + '">' + t('execTrend') + '</span>' +
+    '</div>';
+  }
+
   function launcherHTML(data) {
     const t = WP.i18n.t;
     const c = (data && data.cover) || {};
@@ -109,6 +135,7 @@
         '<span style="width:' + Math.max(0, w(total - done - next)) + '%;background:' + COLORS.grey + '"></span>' +
       '</div>' +
       '<div class="ex-launch-sum">' + summary + '</div>' +
+      sparklineHTML(data && data.history) +
     '</div>';
   }
 

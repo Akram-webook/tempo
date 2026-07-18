@@ -65,6 +65,7 @@ const PAYLOAD = {
   ok: true,
   generatedAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),  // 3h ago
   cover: { done: 6, next: 3, later: 1, total: 10, pct: 60 },
+  history: [{ date: '2026-07-14', progress: 50 }, { date: '2026-07-16', progress: 55 }, { date: '2026-07-18', progress: 60 }],
   waves: [
     { wave: 'Wave 3.1', focus: 'Settings', status: 'Done', inside: 'Members; Security; Privacy', why: 'Self-serve', needs: 'SHOULD-BE-IGNORED-FOR-NEEDS' },
     { wave: 'Wave 3.2', focus: 'Exec', status: 'Next', inside: 'Native status', why: 'One click' },
@@ -167,6 +168,9 @@ const PAYLOAD = {
     assert(open && open.querySelector('svg'), 'Open-deck uses an inline SVG icon');
     assert(!el.querySelector('.ex-rows') && !el.querySelector('.ex-waves'), 'the full requests table + waves grid are NO LONGER rendered in-page (deck owns them)');
     assert(el.querySelector('.ex-launch-sum'), 'launcher shows a one-line summary');
+    // #3 trend sparkline: renders an SVG path from history[] (rising 50->60 => up)
+    assert(el.querySelector('.ex-spark svg path'), 'trend sparkline renders from history[]');
+    assert(el.querySelector('.ex-spark-l--up'), 'sparkline marks a rising trend as up');
 
     // --- TIMELINE: calendar-style WEEK NAVIGATOR (segment + stepper + Today) -------
     const modes = [...el.querySelectorAll('.ex-seg-btn')].map(b => b.getAttribute('data-mode'));
