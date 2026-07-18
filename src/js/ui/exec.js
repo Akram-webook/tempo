@@ -351,7 +351,15 @@
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = skeleton();
     const url = (WP.config.execStatusEndpoint || '').trim();
-    if (!url) { paintError(host); return; }
+    // No live endpoint (the prototype has no backend) -> paint the baked sample
+    // payload so the page is honest + self-contained. The "Sample data" badge
+    // already tells the viewer this is demo data. Real data is a later job.
+    if (!url) {
+      if (my !== token) return;
+      if (WP.data && WP.data.EXEC_SAMPLE) { paintBody(host, WP.data.EXEC_SAMPLE); }
+      else { paintError(host); }
+      return;
+    }
     loadJSONP(url).then(function (data) {
       if (my !== token) return;                 // superseded by a newer load
       if (!data || data.ok === false) { paintError(host); return; }
