@@ -1,0 +1,62 @@
+name: Exec status (derive from PRs)
+
+# Recompute the exec/project-delivery status from real merged-PR counts and
+# push it to the Google Sheet + deck. Fires on every merge to main and daily
+# at 07:00 UTC as a catch-all. Health is COMPUTED, never asserted.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  exec-status:
+    runs-on: ubuntu-latest
+    env:
+      # The endpoint comes from the GAS_ENDPOINT secret (Akram's deployed /exec
+      # Web App). Falls back to the known public URL if the secret is unset so a
+      # fork / early run still has a target. The secret wins.
+      EXEC_ENDPOINT: ${{ secrets.GAS_ENDPOINT || 'https://script.google.com/macros/s/AKfycbzcvghQNmEFZ5fNSjPIYONrNZVV8fjiboi93_cffS1vrfXPy9Cx4fskGmeVRhjFGu3Krw/exec' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Reachability probe FIRST — reads the real HTTP response from the runner
+      # so the logs show exactly what the endpoint does with a POST (a 405 +
+      # HTML means doPost is not deployed / not public). Never fails the job:
+      # it is diagnostic only, the Node step owns the real success/failure.
+      - name: Probe endpoint reachability (diagnostic, never fails)
+        run: |
+          echo "POST probe (keep method across the Apps Script 302):"
+          code=$(curl -s -L --post301 --post302 -o /tmp/probe.body -w '%{http_code}' \
+            -X POST "$EXEC_ENDPOINT" \
+            -H 'Content-Type: application/json' \
+            --data '{"ship":{"date":"probe","agent":"ci-probe","cover":{"status":"In Progress","health":0,"narrative":"reachability probe"}}}') || true
+          echo "  http_code=$code"
+          echo "  body (first 300 chars):"; head -c 300 /tmp/probe.body || true; echo
+          if [ "$code" = "200" ]; then echo "  -> endpoint accepts POST"; else
+            echo "  -> endpoint NOT accepting POST (doPost undeployed or non-public). Node step will report the real failure."; fi
+
+      # Prove the machine end-to-end against a local mock that mimics Apps
+      # Script (302 -> {"ok":true}). Green here == compute + redirect-aware POST
+      # are correct, independent of the live endpoint's deployment state.
+      - name: Self-test (compute + redirect-aware POST)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+        run: node scripts/compute-exec-status.js --selftest
+
+      - name: Compute + push exec status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          # Set to '1' once doPost is deployed to make a failed live POST fail the job.
+          EXEC_REQUIRE_POST: ''
+        run: node scripts/compute-exec-status.js
