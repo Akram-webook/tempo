@@ -57,6 +57,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
-          # Set to '1' once doPost is deployed to make a failed live POST fail the job.
-          EXEC_REQUIRE_POST: ''
+          # Strict: a failed live POST now FAILS the job (endpoint is expected to
+          # be deployed + public). A red run here means status is NOT flowing.
+          EXEC_REQUIRE_POST: '1'
         run: node scripts/compute-exec-status.js
