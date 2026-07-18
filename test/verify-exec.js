@@ -48,7 +48,11 @@ WP.render = function () {};   // neutralize app.js's DOMContentLoaded bootstrap
 function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 
 const REAL_DECK = WP.config.execDeckUrl;
-const ENDPOINT = WP.config.execStatusEndpoint;
+// The prototype ships with an EMPTY endpoint (no backend) + a baked sample.
+// The JSONP-render half of this suite needs a live endpoint to exercise the
+// loader, so set a test one here explicitly.
+const ENDPOINT = 'https://script.example/exec';
+WP.config.execStatusEndpoint = ENDPOINT;
 
 // ISO date helpers for the timeline buckets (deterministic vs "today").
 const DAY = 86400000;
@@ -95,9 +99,17 @@ const PAYLOAD = {
     assert(WP.execDeckVisible() === false, 'hidden for a non-admin');
     WP.can = function (cap) { return cap === 'viewSettings'; };
     const saveEp = WP.config.execStatusEndpoint;
+    const saveSample = WP.data && WP.data.EXEC_SAMPLE;
+    // Data source is endpoint OR the baked sample. Blank endpoint alone does NOT
+    // hide the page while the sample exists (that IS the no-backend demo path).
     WP.config.execStatusEndpoint = '   ';
-    assert(WP.execDeckVisible() === false, 'hidden when endpoint blank');
+    if (WP.data) WP.data.EXEC_SAMPLE = { ok: true, cover: {}, requests: [] };
+    assert(WP.execDeckVisible() === true, 'visible via baked sample when endpoint blank');
+    // Only hidden when there is NO source at all.
+    if (WP.data) WP.data.EXEC_SAMPLE = null;
+    assert(WP.execDeckVisible() === false, 'hidden when no endpoint AND no sample');
     WP.config.execStatusEndpoint = saveEp;
+    if (WP.data) WP.data.EXEC_SAMPLE = saveSample;
 
     // --- render: header renders immediately with a loading skeleton + open/present --
     WP.state.lang = 'en';

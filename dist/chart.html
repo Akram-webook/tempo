@@ -3555,8 +3555,12 @@ const EMAIL_HASHES = {};
    * (WP.can('viewSettings')). Keep the deck + sheet shared to Director + Akram.
    * The endpoint URL is not a secret; it returns only status data.
    * -------------------------------------------------------------- */
+  // Empty for the prototype: NO live backend. The exec/Project-delivery page
+  // reads the baked WP.data.EXEC_SAMPLE payload instead (honest demo, "Sample
+  // data" badge). Set this to a deployed /exec URL only when real data goes
+  // live (a later Next.js job) to switch the page back to the live source.
   if (WP.config.execStatusEndpoint === undefined)
-    WP.config.execStatusEndpoint = 'https://script.google.com/macros/s/AKfycbzcvghQNmEFZ5fNSjPIYONrNZVV8fjiboi93_cffS1vrfXPy9Cx4fskGmeVRhjFGu3Krw/exec';
+    WP.config.execStatusEndpoint = '';
 
   if (WP.config.execDeckUrl === undefined)
     WP.config.execDeckUrl = 'https://docs.google.com/presentation/d/1zDbpunKFqiO6AoCZs6O7hH_S6oLUEGI0xiM1vVmZS7A/edit?usp=sharing';
@@ -3565,9 +3569,12 @@ const EMAIL_HASHES = {};
   // Single source of truth for the dashboard card, the nav item and the view:
   // a non-empty live endpoint AND the admin/director gate (same engine as Settings).
   WP.execDeckVisible = function () {
-    return typeof WP.config.execStatusEndpoint === 'string' &&
-      WP.config.execStatusEndpoint.trim() !== '' &&
-      WP.can && WP.can('viewSettings');
+    // Data source is EITHER a live endpoint OR the baked demo sample (the
+    // prototype ships with no backend, so the sample keeps the page alive).
+    var hasEndpoint = typeof WP.config.execStatusEndpoint === 'string' &&
+      WP.config.execStatusEndpoint.trim() !== '';
+    var hasSample = !!(WP.data && WP.data.EXEC_SAMPLE);
+    return (hasEndpoint || hasSample) && WP.can && WP.can('viewSettings');
   };
 
   /* ----------------------------------------------------------------
