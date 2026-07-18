@@ -714,6 +714,34 @@
       document.addEventListener('mousemove', mv);
       document.addEventListener('mouseup', up);
     });
+
+    // "Scroll twice" fix: .tree-scroll is a tall overflow:auto region that, when
+    // the tree fits (no vertical overflow) or is already at a vertical edge,
+    // still swallows the FIRST wheel gesture instead of letting the PAGE scroll.
+    // Forward that vertical intent to the real scroll container so one gesture
+    // scrolls it. The tree's own horizontal pan (trackpad-x) is left untouched.
+    // NOTE: the page scroller here is .view-main (main{overflow-y:auto}), NOT
+    // the document — body is overflow:hidden — so walk up to the true scroll
+    // parent rather than assuming document.scrollingElement.
+    function scrollParent(el) {
+      for (var n = el.parentElement; n; n = n.parentElement) {
+        var oy = getComputedStyle(n).overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) return n;
+      }
+      return document.scrollingElement || document.documentElement;
+    }
+    sc.addEventListener('wheel', function (e) {
+      if (e.ctrlKey) return;                              // pinch-zoom, leave it
+      const dy = e.deltaY;
+      if (!dy) return;                                    // pure horizontal → tree pans
+      const canDown = sc.scrollTop + sc.clientHeight < sc.scrollHeight - 1;
+      const canUp = sc.scrollTop > 0;
+      const treeCanTake = (dy > 0 && canDown) || (dy < 0 && canUp);
+      if (!treeCanTake) {                                 // tree can't use it → give it to the page
+        scrollParent(sc).scrollTop += dy;
+        e.preventDefault();
+      }
+    }, { passive: false });
   }
 
   // Generic dropdown menu wiring (View / Period). One open at a time; full keyboard support.
