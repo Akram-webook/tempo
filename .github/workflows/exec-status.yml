@@ -34,6 +34,12 @@ jobs:
       # it is diagnostic only, the Node step owns the real success/failure.
       - name: Probe endpoint reachability (diagnostic, never fails)
         run: |
+          # Identity check: which deployment is the secret actually pointing at?
+          # Print only the LAST 12 chars of the /exec id (safe, not the secret) so
+          # a stale/empty GAS_ENDPOINT is obvious without guessing. If this tail
+          # is "l9mD-JU5GVMrf/exec" the OLD fallback URL is in use (secret unset
+          # or unchanged); a working new deployment shows a DIFFERENT tail.
+          echo "endpoint tail: ...${EXEC_ENDPOINT: -18}"
           echo "POST probe (keep method across the Apps Script 302):"
           code=$(curl -s -L --post301 --post302 -o /tmp/probe.body -w '%{http_code}' \
             -X POST "$EXEC_ENDPOINT" \
