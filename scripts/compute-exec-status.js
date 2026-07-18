@@ -42,6 +42,7 @@ const WAVES = [
 
 function today_() { return new Date().toISOString().slice(0, 10); }
 const TODAY_ISO = today_();   // one stable "today" per run (used for age math + date stamp)
+const GEN_TS = Date.now();    // one stable generation timestamp per run
 
 // --- GitHub API: all PRs with a given label (open + closed) ------------------
 function ghGet(path) {
@@ -142,7 +143,7 @@ function healthFlagFor(prs) {
 function narrativeFor(waves, cover) {
   const done = waves.filter((w) => w.status === 'Done').length;
   const active = waves.filter((w) => w.status === 'In Progress').length;
-  const unhealthy = waves.filter((w) => w.healthFlag && w.healthFlag !== 'green').length;
+  const unhealthy = waves.filter((w) => w.health && w.health !== 'green').length;
   const tail = unhealthy ? ` - ${unhealthy} wave(s) need attention.` : '';
   return `${cover.progress}% delivered across ${waves.length} waves - ` +
     `${done} done, ${active} in progress (weighted by change size).${tail}`;
@@ -163,119 +164,239 @@ async function computeShip() {
     const pct = wChurnTotal > 0 ? Math.round((wChurnMerged / wChurnTotal) * 100)
       : (t === 0 ? 0 : Math.round((m / t) * 100));   // fallback: count-based
     const { flag, blockers } = healthFlagFor(prs);
+    const openPRs = prs.filter((p) => p.open).map((p) => ({
+      number: p.number, title: p.title,
+      blockedOn: p.blockedOn || null,
+      daysSinceActivity: p.stuckDays,
+    }));
     waves.push({
       name: w.name,
+      label: w.label,
       status: statusFor(pct, t),
-      percent: pct,
-      healthFlag: flag,                               // #2 green/amber/red
-      blockedOn: blockers.join('; '),                 // #2 whose move is it
-      notes: `${m}/${t} PRs merged, ${Math.round(wChurnMerged / 1000)}k/${Math.round(wChurnTotal / 1000)}k lines.`,
-      needs: blockers.length ? blockers[0] : '',
+      progress: pct,
+      health: flag,                                   // #2 green/amber/red
+      openPRs: openPRs,
+      notes: `${m}/${t} PRs merged, ${Math.round(wChurnMerged / 1000)}k/${Math.round(wChurnTotal / 1000)}k lines.` +
+        (blockers.length ? ' ' + blockers[0] + '.' : ''),
     });
   }
   // Overall progress = effort-weighted, not a mean of percentages.
   const progress = totalChurn > 0 ? Math.round((mergedChurn / totalChurn) * 100) : 0;
-  const anyRed = waves.some((w) => w.healthFlag === 'red');
+  const anyRed = waves.some((w) => w.health === 'red');
   const cover = {
     status: progress >= 100 ? 'Done' : (anyRed ? 'Needs input' : 'In Progress'),
     progress,                                         // #1 the effort-weighted number
-    health: anyRed ? 'red' : (waves.some((w) => w.healthFlag === 'amber') ? 'amber' : 'green'),  // #2 flag, not %
+    health: anyRed ? 'red' : (waves.some((w) => w.health === 'amber') ? 'amber' : 'green'),  // #2 flag, not %
     narrative: '',
   };
   cover.narrative = narrativeFor(waves, cover);
-  return { date: TODAY_ISO, agent: 'exec-status-bot', cover, waves };
+  // needsYou = one line per unhealthy wave (whose move it is).
+  const needsYou = waves
+    .filter((w) => w.health !== 'green' && w.openPRs.length)
+    .map((w) => `${w.name}: ${w.notes}`);
+  return { generated: new Date(GEN_TS).toISOString(), cover, waves, needsYou };
 }
 
-// --- POST to Apps Script, redirect-aware (Apps Script always 302s once) ------
-// Delegates to the shared postShipTo() transport so live + selftest use the
-// exact same redirect handling — no divergence.
-function postShip(ship) {
-  return postShipTo(ENDPOINT, ship);
+/*═══════════════════ GITHUB WAREHOUSE (replaces Apps Script) ═══════════════════
+ * Data lives IN the repo: data/exec-status.json (the warehouse, git = audit log)
+ * + src/status.html (the shareable report, replaces Slides). Both are committed
+ * via the GitHub Contents API using the built-in GITHUB_TOKEN. No Google, no
+ * JSONP, no external secret. GitHub Pages then serves them with no auth/CORS. */
+
+function ghApi(method, path, token, bodyObj) {
+  const body = bodyObj ? JSON.stringify(bodyObj) : null;
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      { hostname: 'api.github.com', path, method,
+        headers: {
+          'User-Agent': 'tempo-exec-status',
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'token ' + token,
+          ...(body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {}),
+        } },
+      (res) => {
+        let data = '';
+        res.on('data', (c) => (data += c));
+        res.on('end', () => {
+          if (res.statusCode === 404) return resolve(null);          // missing file → null (first run)
+          if (res.statusCode >= 400) return reject(new Error(`GitHub ${method} ${path} → ${res.statusCode}: ${data.slice(0, 200)}`));
+          try { resolve(data ? JSON.parse(data) : {}); } catch (e) { reject(e); }
+        });
+      });
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
+const b64 = (s) => Buffer.from(s, 'utf8').toString('base64');
+
+// Commit a file to the repo (create or update). Returns the new content SHA.
+async function commitFile(repo, token, filePath, contentStr, message) {
+  const existing = await ghApi('GET', `/repos/${repo}/contents/${filePath}`, token);
+  const sha = existing && existing.sha ? existing.sha : undefined;
+  const res = await ghApi('PUT', `/repos/${repo}/contents/${filePath}`, token, {
+    message, content: b64(contentStr), ...(sha ? { sha } : {}),
+  });
+  return res && res.content ? res.content.sha : null;
 }
 
-// --- Self-test: prove compute + redirect-aware POST end-to-end -------------
-// Spins a throwaway local server that mimics Apps Script exactly (a 302 to a
-// second path that returns {"ok":true}), then runs the REAL postShip against
-// it. Green here == the machine works, independent of the live endpoint's
-// deployment state. Run with: node compute-exec-status.js --selftest
+// Read the current warehouse JSON from the repo (for history append). null if absent.
+async function readStatusJson(repo, token) {
+  const existing = await ghApi('GET', `/repos/${repo}/contents/data/exec-status.json`, token);
+  if (!existing || !existing.content) return null;
+  try { return JSON.parse(Buffer.from(existing.content, 'base64').toString('utf8')); }
+  catch (e) { return null; }
+}
+
+// Append one history entry, keep the last 30, newest last.
+function appendHistory(prev, status) {
+  const hist = (prev && Array.isArray(prev.history)) ? prev.history.slice() : [];
+  hist.push({ ts: status.generated, progress: status.cover.progress, health: status.cover.health });
+  return hist.slice(-30);
+}
+
+// Apply optional manual overrides from workflow_dispatch inputs (Option B).
+function applyOverrides(status) {
+  const nar = (process.env.OVERRIDE_NARRATIVE || '').trim();
+  if (nar) status.cover.narrative = nar;
+  const notesRaw = (process.env.OVERRIDE_WAVE_NOTES || '').trim();
+  if (notesRaw) {
+    try {
+      const map = JSON.parse(notesRaw);
+      status.waves.forEach((w) => { if (map[w.name]) w.notes = String(map[w.name]); });
+    } catch (e) { console.warn('OVERRIDE_WAVE_NOTES not valid JSON — ignored:', e.message); }
+  }
+  const ny = (process.env.OVERRIDE_NEEDSYOU || '').trim();
+  if (ny) status.needsYou = ny.split(',').map((s) => s.trim()).filter(Boolean);
+  return status;
+}
+
+/*───────────────────────── status.html (replaces Slides) ─────────────────────
+ * Self-contained leadership brief: data BAKED IN (no fetch at view time), WBK
+ * design, print/PDF button, prominent freshness stamp. Works offline. */
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+function healthDot(h) {
+  const c = h === 'red' ? '#ef4444' : h === 'amber' ? '#f59e0b' : '#22c55e';
+  return `<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="${c}"/></svg>`;
+}
+function renderStatusHtml(status) {
+  const c = status.cover;
+  const gen = status.generated ? new Date(status.generated) : null;
+  const genStr = gen ? gen.toISOString().replace('T', ' ').slice(0, 16) + ' UTC' : 'not yet run';
+  const waveRows = (status.waves || []).map((w) => `
+      <tr>
+        <td class="wn">${esc(w.name)}</td>
+        <td>${esc(w.status)}</td>
+        <td class="num">${esc(w.progress)}%
+          <span class="bar"><span style="width:${Math.max(0, Math.min(100, +w.progress || 0))}%"></span></span>
+        </td>
+        <td class="hc">${healthDot(w.health)} ${esc(w.health)}</td>
+        <td class="notes">${esc(w.notes || '')}</td>
+      </tr>`).join('');
+  const needs = (status.needsYou || []).length
+    ? `<ul>${status.needsYou.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>`
+    : `<p class="clear">Nothing needs you right now.</p>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tembo - Project Delivery</title>
+<style>
+  :root{--pink:#ff2c79;--bg:#09090b;--l2:#27272a;--fg:#e4e4e7;--fg2:#a1a1aa;--bd:rgba(255,255,255,.10);--g:#22c55e;--a:#f59e0b;--r:#ef4444}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:Figtree,system-ui,sans-serif;line-height:1.5;padding:32px}
+  .wrap{max-width:900px;margin:0 auto}
+  .eyebrow{color:var(--pink);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+  h1{font-family:Gellix,Figtree,sans-serif;font-size:30px;margin:6px 0 2px}
+  .gen{color:var(--fg2);font-size:13px}
+  .cover{background:var(--l2);border:1px solid var(--bd);border-radius:8px;padding:20px;margin:18px 0}
+  .cover .big{font-size:40px;font-weight:700;color:var(--pink)}
+  .cover .nar{color:var(--fg2);margin-top:6px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--bd);vertical-align:top;font-size:14px}
+  th{color:var(--fg2);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .wn{font-weight:600}
+  .num{white-space:nowrap}
+  .bar{display:inline-block;width:80px;height:6px;border-radius:4px;background:var(--l2);vertical-align:middle;margin-inline-start:6px;overflow:hidden}
+  .bar span{display:block;height:100%;background:var(--pink)}
+  .hc{white-space:nowrap;text-transform:capitalize}
+  .notes{color:var(--fg2)}
+  h2{font-size:16px;margin:24px 0 4px}
+  .clear{color:var(--g)}
+  .actions{margin:18px 0}
+  button{background:var(--pink);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+  @media print{body{background:#fff;color:#111}.actions{display:none}.cover{background:#f6f6f7}.cover .big,.eyebrow{color:#c81e63}}
+</style></head><body><div class="wrap">
+  <div class="eyebrow">WEBOOK · TEMBO - PROJECT DELIVERY</div>
+  <h1>Project delivery</h1>
+  <div class="gen">Generated ${esc(genStr)} · computed from merged PRs</div>
+  <div class="actions"><button onclick="window.print()">Print / Export PDF</button></div>
+  <div class="cover">
+    <div class="big">${esc(c.progress)}% delivered</div>
+    <div>${healthDot(c.health)} ${esc(c.status)}</div>
+    <div class="nar">${esc(c.narrative)}</div>
+  </div>
+  <h2>Waves</h2>
+  <table><thead><tr><th>Wave</th><th>Status</th><th>Progress</th><th>Health</th><th>Notes</th></tr></thead>
+  <tbody>${waveRows || '<tr><td colspan="5" class="notes">No waves yet.</td></tr>'}</tbody></table>
+  <h2>What needs you</h2>
+  ${needs}
+</div></body></html>`;
+}
+
+// --- Self-test: prove compute + history + commit shape against a MOCK GitHub API.
 function selftest() {
   const http = require('http');
+  const files = {};   // in-memory "repo"
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
-      let body = '';
-      req.on('data', (c) => (body += c));
+      let body = ''; req.on('data', (c) => (body += c));
       req.on('end', () => {
-        const port = server.address().port;
-        if (req.url === '/exec') {
-          // mimic Apps Script: 302 to the echo path, preserving nothing but Location
-          res.writeHead(302, { Location: `http://127.0.0.1:${port}/echo` });
-          return res.end();
+        const m = req.url.match(/\/repos\/[^/]+\/[^/]+\/contents\/(.+)$/);
+        const key = m ? decodeURIComponent(m[1]) : null;
+        if (req.method === 'GET') {
+          if (key && files[key]) { res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ sha: 'sha_' + key, content: Buffer.from(files[key]).toString('base64') })); }
+          res.writeHead(404); return res.end('{}');
         }
-        if (req.url === '/echo') {
-          // a real doPost would return its ContentService JSON here
-          if (req.method !== 'POST') { res.writeHead(405); return res.end('method'); }
-          const payload = JSON.parse(body);
-          if (!payload.ship || typeof payload.ship.cover.progress !== 'number' ||
-              typeof payload.ship.cover.health !== 'string') {
-            res.writeHead(400); return res.end('bad payload');
-          }
+        if (req.method === 'PUT') {
+          const p = JSON.parse(body);
+          files[key] = Buffer.from(p.content, 'base64').toString('utf8');
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ ok: true, rebuilt: true, date: payload.ship.date }));
+          return res.end(JSON.stringify({ content: { sha: 'newsha_' + key } }));
         }
-        res.writeHead(404); res.end();
+        res.writeHead(400); res.end();
       });
     });
     server.listen(0, '127.0.0.1', async () => {
       const port = server.address().port;
-      const endpoint = `http://127.0.0.1:${port}/exec`;
+      const realRequest = https.request;
       try {
-        const ship = await computeShip();
-        console.log('SELFTEST computed ship:\n', JSON.stringify(ship, null, 2));
-        // Same transport the live path uses (postShip -> postShipTo), aimed at the mock.
-        const res = await postShipTo(endpoint, ship);
-        console.log('SELFTEST response:', JSON.stringify(res));
-        if (!res.ok) throw new Error('selftest response not ok');
-        console.log('SELFTEST PASS — compute + redirect-aware POST verified end-to-end.');
+        // Compute FIRST against the real GitHub API (before the shim redirects it).
+        const status = await computeShip();
+        // Now redirect only the commit/read (contents API) calls to the mock repo.
+        https.request = function (opts, cb) { opts.hostname = '127.0.0.1'; opts.port = port; opts.protocol = 'http:';
+          return http.request(opts, cb); };
+        const prev = await readStatusJson('x/y', 'tok');   // null first
+        status.history = appendHistory(prev, status);
+        const html = renderStatusHtml(status);
+        if (!/Print \/ Export PDF/.test(html)) throw new Error('status.html missing print button');
+        if (typeof status.cover.progress !== 'number' || typeof status.cover.health !== 'string')
+          throw new Error('bad status shape');
+        await commitFile('x/y', 'tok', 'data/exec-status.json', JSON.stringify(status, null, 2), 'test json');
+        await commitFile('x/y', 'tok', 'src/status.html', html, 'test html');
+        // second run appends a 2nd history entry
+        const prev2 = await readStatusJson('x/y', 'tok');
+        const h2 = appendHistory(prev2, status);
+        if (h2.length !== 2) throw new Error('history did not append on 2nd run (got ' + h2.length + ')');
+        https.request = realRequest;
+        console.log('SELFTEST computed status:\n', JSON.stringify(status, null, 2).slice(0, 600));
+        console.log('SELFTEST PASS - compute + history append + commit (json+html) verified against mock GitHub API.');
         server.close(); resolve();
-      } catch (e) { server.close(); reject(e); }
+      } catch (e) { https.request = realRequest; server.close(); reject(e); }
     });
   });
-}
-
-// postShip parameterised by URL so both live + selftest share the SAME transport.
-function postShipTo(url0, ship) {
-  const body = JSON.stringify({ ship });
-  const proto = url0.startsWith('https') ? require('https') : require('http');
-  function doRequest(url) {
-    return new Promise((resolve, reject) => {
-      const u = new URL(url);
-      const req = proto.request(
-        { hostname: u.hostname, port: u.port || undefined, path: u.pathname + u.search, method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
-        (res) => {
-          if (res.statusCode === 301 || res.statusCode === 302) {
-            const loc = res.headers.location;
-            if (!loc) return reject(new Error('Redirect with no Location header'));
-            res.resume();
-            return doRequest(loc).then(resolve).catch(reject);
-          }
-          let data = '';
-          res.on('data', (c) => (data += c));
-          res.on('end', () => {
-            if (res.statusCode === 405) return reject(new Error('405 — check Apps Script deployment settings'));
-            if (res.statusCode >= 400) return reject(new Error(`SHIP failed ${res.statusCode}: ${data}`));
-            const parsed = JSON.parse(data);
-            if (!parsed.ok) return reject(new Error(`SHIP returned ok:false — ${parsed.error}`));
-            resolve(parsed);
-          });
-        }
-      );
-      req.on('error', reject);
-      req.write(body);
-      req.end();
-    });
-  }
-  return doRequest(url0);
 }
 
 (async () => {
@@ -283,28 +404,28 @@ function postShipTo(url0, ship) {
     try { await selftest(); process.exit(0); }
     catch (e) { console.error('SELFTEST FAIL:', e.message); process.exit(1); }
   }
-  // Compute is REQUIRED to succeed (a failure here is a real code/API bug).
-  let ship;
-  try {
-    ship = await computeShip();
-  } catch (err) {
-    console.error('exec-status COMPUTE failed (hard error):', err.message);
-    process.exit(1);
-  }
-  console.log('Computed ship:\n', JSON.stringify(ship, null, 2));
+  // Compute is REQUIRED (a failure here is a real code/API bug).
+  let status;
+  try { status = await computeShip(); }
+  catch (err) { console.error('exec-status COMPUTE failed:', err.message); process.exit(1); }
+  status = applyOverrides(status);
 
-  // The live POST is BEST-EFFORT. The Apps Script doPost is a server-side
-  // prerequisite outside this repo's control; while it is undeployed the
-  // endpoint returns 405. That is a known-pending state, NOT a code defect, so
-  // it must not fail the run forever (a permanently-red job is ignored noise).
-  // The real result is always logged. Set EXEC_REQUIRE_POST=1 to make a failed
-  // POST hard-fail the job once the endpoint is expected to be live.
+  const repo = process.env.GITHUB_REPOSITORY || REPO;
+  const token = TOKEN;
+  if (!token) { console.error('No GITHUB_TOKEN - cannot commit.'); if (process.env.EXEC_REQUIRE_COMMIT === '1') process.exit(1); return; }
+
   try {
-    const res = await postShip(ship);
-    console.log('SHIP live POST ok:', JSON.stringify(res));
+    const prev = await readStatusJson(repo, token);
+    status.history = appendHistory(prev, status);
+    const json = JSON.stringify(status, null, 2);
+    const html = renderStatusHtml(status);
+    console.log('Computed status:\n', json.slice(0, 800));
+    const stamp = new Date(GEN_TS).toISOString().slice(0, 16);
+    await commitFile(repo, token, 'data/exec-status.json', json, `chore: exec-status update [${stamp}]`);
+    await commitFile(repo, token, 'src/status.html', html, `chore: status report update [${stamp}]`);
+    console.log('Committed data/exec-status.json and src/status.html to', repo, '(history:', status.history.length, 'entries)');
   } catch (err) {
-    console.warn('SHIP live POST did not succeed:', err.message);
-    console.warn('  (endpoint prerequisite: doPost must be deployed as a public Web App.)');
-    if (process.env.EXEC_REQUIRE_POST === '1') process.exit(1);
+    console.error('COMMIT failed:', err.message);
+    if (process.env.EXEC_REQUIRE_COMMIT === '1') process.exit(1);
   }
 })();

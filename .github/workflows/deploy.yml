@@ -21,7 +21,15 @@ jobs:
       - run: npm ci || npm install
       - run: node build.js
       - run: npm test
-      - run: mkdir -p _site && cp dist/index.html _site/index.html && cp dist/chart.html _site/chart.html
+      - run: |
+          mkdir -p _site _site/data
+          cp dist/index.html _site/index.html
+          cp dist/chart.html _site/chart.html
+          # GitHub-warehouse: serve the committed status data + shareable report.
+          # The app fetch()es /tempo/data/exec-status.json; /tempo/status.html is
+          # the leadership report (both committed by the exec-status workflow).
+          cp data/exec-status.json _site/data/exec-status.json
+          cp src/status.html _site/status.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

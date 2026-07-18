@@ -1,0 +1,55 @@
+{
+  "generated": "2026-07-18T18:20:32.361Z",
+  "cover": {
+    "status": "In Progress",
+    "progress": 68,
+    "health": "green",
+    "narrative": "68% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
+  },
+  "waves": [
+    {
+      "name": "Executive Status Deck",
+      "label": "wave:exec-status",
+      "status": "In Progress",
+      "progress": 68,
+      "health": "green",
+      "openPRs": [],
+      "notes": "5/6 PRs merged, 1k/1k lines."
+    },
+    {
+      "name": "Capacity Engine",
+      "label": "wave:capacity",
+      "status": "Later",
+      "progress": 0,
+      "health": "green",
+      "openPRs": [],
+      "notes": "0/0 PRs merged, 0k/0k lines."
+    },
+    {
+      "name": "Real Data Go-live",
+      "label": "wave:real-data",
+      "status": "Later",
+      "progress": 0,
+      "health": "green",
+      "openPRs": [],
+      "notes": "0/0 PRs merged, 0k/0k lines."
+    },
+    {
+      "name": "Slack Integration",
+      "label": "wave:slack",
+      "status": "Later",
+      "progress": 0,
+      "health": "green",
+      "openPRs": [],
+      "notes": "0/0 PRs merged, 0k/0k lines."
+    }
+  ],
+  "needsYou": [],
+  "history": [
+    {
+      "ts": "2026-07-18T18:20:32.361Z",
+      "progress": 68,
+      "health": "green"
+    }
+  ]
+}
