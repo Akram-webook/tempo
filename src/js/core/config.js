@@ -130,31 +130,38 @@
   if (WP.config.notificationsEnabled === undefined) WP.config.notificationsEnabled = true;
 
   /* ----------------------------------------------------------------
-   * Global Feedback widget — endpoint + key + AI helper (all reversible).
+   * Global Feedback widget — GitHub-warehouse transport (all reversible).
    * ----------------------------------------------------------------
-   * A floating "Feedback" button on every authed page. Submit sends a plain
-   * fetch() FormData POST (one row per comment) to the "Feedback" tab endpoint.
-   * FormData with no custom Content-Type means NO CORS preflight, so a normal
-   * fetch() works cross-origin (no JSONP, no hidden-iframe form — that Google-
-   * coupled transport was retired with the exec-status warehouse switch).
+   * A floating "Feedback" button on every authed page. Submit dispatches ONE
+   * workflow_dispatch per comment to the Receive Feedback GitHub Action, which
+   * appends the item to data/feedback.json (the warehouse; git history = audit
+   * log) and commits it back; GitHub Pages then serves it at
+   *   https://akram-webook.github.io/tempo/data/feedback.json
+   * No Google, no Apps Script, no external service - GitHub only, matching the
+   * exec-status warehouse.
    *
-   *  - feedbackEndpoint : write endpoint that accepts a FormData POST
-   *    (key,submittedAt,owner,area,context,url,status,items=JSON) and writes one
-   *    row per item, returning {ok:true,count:N}. EMPTY ⇒ the FAB STILL renders;
-   *    Submit shows "Not configured yet" (compose is always available so nothing
-   *    is lost while the endpoint is being wired).
-   *  - feedbackKey      : shared key sent with the payload. It lives in the
-   *    PUBLIC bundle, so it only deters CASUAL spam — the REAL protection is a
-   *    server-side per-owner rate limit, which must also DEFAULT the priority
-   *    (blank/Medium) for any caller it can't verify as a director.
+   *  - feedbackEndpoint : the workflow_dispatch API URL. Kept EMPTY by default;
+   *    the value below in the comment is the target for when a SAFE transport
+   *    exists. The dispatch payload is
+   *      { ref:'main', inputs:{ note,type,priority,owner,area,context,url,submittedAt } }
+   *    GitHub returns 204 on success. One dispatch per comment.
+   *  - feedbackDispatchToken : the GitHub token used as `Authorization: Bearer`.
+   *    ⚠ A raw PAT here would ship in the PUBLIC Pages bundle where anyone could
+   *    read it - and an Actions:write PAT can cancel/rerun/delete runs and poison
+   *    caches, so we do NOT hardcode one. EMPTY by default. Until BOTH endpoint
+   *    and token are set, Submit shows "Not configured yet" (compose still works,
+   *    nothing is lost). The safe way to fill this is a tiny server-side proxy
+   *    that holds the token, not a token in the bundle.
+   *  - feedbackKey : legacy (unused by the GitHub transport). Left empty.
    *  - aiPolishEndpoint : optional Suggest/Polish helper — a JSON fetch() POST
    *    {action:'suggest'|'polish', note, page} returning {text}. EMPTY ⇒ the AI
    *    buttons are hidden (never a dead affordance). AI never blocks Submit.
    *
-   * The server side (write handler, columns, rate limit, deploy) is the
-   * orchestrator's job; we build against these keys now. Set them post-deploy.
+   * Target endpoint (do NOT set live until a token-safe transport exists):
+   *   'https://api.github.com/repos/akram-webook/tempo/actions/workflows/receive-feedback.yml/dispatches'
    * -------------------------------------------------------------- */
   if (WP.config.feedbackEndpoint === undefined) WP.config.feedbackEndpoint = '';
+  if (WP.config.feedbackDispatchToken === undefined) WP.config.feedbackDispatchToken = '';
   if (WP.config.feedbackKey === undefined)      WP.config.feedbackKey = '';
   if (WP.config.aiPolishEndpoint === undefined) WP.config.aiPolishEndpoint = '';
 

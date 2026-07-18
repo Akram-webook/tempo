@@ -9,23 +9,27 @@
  * it is all-or-nothing).
  *
  * ARCHITECTURE (why this lives in ui/, not core/): it owns DOM + network. The
- * cross-origin POST is a plain fetch() with a FormData body and NO custom
- * headers — the browser sets the multipart boundary, so there is no CORS
- * preflight and a normal fetch() succeeds cross-origin. (The old hidden-iframe
- * form + JSONP-callback transport was retired with the Google layer; there is
- * no JSONP anywhere in the app now.) The endpoint returns {ok:true,count:N}.
+ * transport is the GitHub warehouse: each comment is ONE workflow_dispatch to
+ * the Receive Feedback Action (JSON POST + Authorization: Bearer), which appends
+ * the item to data/feedback.json and commits it back; Pages serves the file.
+ * GitHub returns HTTP 204 on success. No Google, no Apps Script, no JSONP.
+ * Submit requires BOTH feedbackEndpoint AND feedbackDispatchToken - a token in
+ * the PUBLIC bundle is a hole, so until a token-safe transport exists this stays
+ * "Not configured yet" and never sends (compose still works, nothing is lost).
  *
  * NEVER LOSE WORK: the queue + composer are mirrored to sessionStorage per
  * page and restored on reopen; the draft is cleared only after a successful
  * submit. Closing with unsent content asks to confirm.
  *
  * CONFIG (never hardcoded — read at call time):
- *   WP.config.feedbackEndpoint  — Apps Script /exec (POST). Empty ⇒ compose
- *                                 works, Submit surfaces "not configured yet".
- *   WP.config.feedbackKey       — shared key sent with the payload (deters
- *                                 casual spam only; real limit is server-side).
- *   WP.config.aiPolishEndpoint  — Suggest/Polish helper. Empty ⇒ AI buttons
- *                                 are hidden (never a dead affordance).
+ *   WP.config.feedbackEndpoint       — the Receive Feedback workflow_dispatch
+ *                                      URL. Empty ⇒ Submit shows "Not configured".
+ *   WP.config.feedbackDispatchToken  — GitHub token for the dispatch. Empty ⇒
+ *                                      "Not configured" (never ship a real token
+ *                                      in the public bundle — use a proxy).
+ *   WP.config.feedbackKey            — legacy, unused by the GitHub transport.
+ *   WP.config.aiPolishEndpoint       — Suggest/Polish helper. Empty ⇒ AI buttons
+ *                                      are hidden (never a dead affordance).
  * ========================================================== */
 (function (WP) {
   'use strict';
@@ -296,7 +300,9 @@
         '</label>';
 
     var addLabel = t('fbAddComment').replace('{n}', String(m.queue.length + 1));
-    var configured = cfg('feedbackEndpoint') !== '';
+    // Configured = both the dispatch URL and a token are present (a token-safe
+    // transport is wired). Either missing ⇒ "Not configured yet".
+    var configured = cfg('feedbackEndpoint') !== '' && cfg('feedbackDispatchToken') !== '';
     // When the write endpoint is not wired yet, the button reads "Not configured
     // yet" with an explainer tooltip - compose still works, nothing is lost.
     var submitLabel = configured
@@ -568,24 +574,33 @@
     setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 1600);
   }
 
-  /* -------- submit (batch, one request; guard double-submit) -------- */
+  /* -------- submit (GitHub warehouse: one dispatch per comment) -------- */
+  // Transport = the Receive Feedback GitHub Action. Each comment is ONE
+  // workflow_dispatch; the Action appends it to data/feedback.json and commits
+  // it back (git history = audit log), Pages serves the file. We require BOTH a
+  // configured endpoint AND a token before sending - a token in the PUBLIC
+  // bundle is a security hole, so until a token-safe transport exists this stays
+  // in the "Not configured yet" state and Submit never fires (compose still works).
   function submit() {
     var t = WP.i18n.t;
     if (panelState && panelState.submitting) return;   // double-submit guard (QA B)
     var m = loadModel();
 
-    // Fold any composed-but-not-added note into the batch (so nothing is dropped).
+    // Fold any composed-but-not-added note in (so nothing is dropped).
     var items = m.queue.slice();
     var pending = (m.composer.note || '').trim();
     if (pending) {
-      var it = { note: pending.slice(0, NOTE_MAX), type: m.composer.type, image: m.composer.image || null };
+      var it = { note: pending.slice(0, NOTE_MAX), type: m.composer.type };
       if (canSetPriority()) it.priority = m.composer.priority;
       items.push(it);
     }
     if (!items.length) { toastErr(t('fbNoteRequired')); focusNote(); return; }
 
+    // Warehouse transport needs both the dispatch URL and a token. Either missing
+    // ⇒ "Not configured yet" (never a silent drop, never a leaked-token send).
     var endpoint = cfg('feedbackEndpoint');
-    if (!endpoint) { toastErr(t('fbNotConfigured')); return; }   // graceful when unset (acceptance)
+    var token = cfg('feedbackDispatchToken');
+    if (!endpoint || !token) { toastErr(t('fbNotConfigured')); return; }
 
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       toastErr(t('fbOffline')); return;                          // offline (QA A)
@@ -598,49 +613,45 @@
     var owner = viewer ? (WP.auth && WP.auth.emailOf ? WP.auth.emailOf(viewer) : (viewer.name || viewer.id)) : '';
     var screen = (window.screen ? window.screen.width + '×' + window.screen.height : '');
     var context = browserInfo() + (screen ? ' · ' + screen : '');
+    var when = new Date().toISOString();
 
-    // One row per comment. priority is blanked for a non-director (never trust a
-    // client priority from a caller we can't verify as a director — QA F).
-    var itemsPayload = items.map(function (it) {
+    // Build one dispatch payload per comment. priority blanked for a non-director
+    // (never trust a client priority we can't verify - QA F). NOTE: images are not
+    // carried by the dispatch transport (workflow_dispatch inputs are small string
+    // fields; a base64 image would blow the input limit and bloat git history).
+    var dispatches = items.map(function (it) {
       return {
-        note: it.note,
-        type: it.type,
-        priority: canSetPriority() ? (it.priority || 'Medium') : '',
-        image: it.image || '',
-        imageName: it.imageName || '',
+        ref: 'main',
+        inputs: {
+          note: it.note,
+          type: it.type,
+          priority: canSetPriority() ? (it.priority || 'Medium') : '',
+          owner: owner,
+          area: areaName(),
+          context: context,
+          url: (location && location.href) || '',
+          submittedAt: when,
+        },
       };
     });
 
-    // FormData with no custom Content-Type ⇒ browser sets the multipart boundary
-    // ⇒ a "simple" request with no CORS preflight. Shared silent fields:
-    // who/when/page/context/url apply to every row in the batch (QA G).
-    var fd = new FormData();
-    fd.append('key', cfg('feedbackKey'));
-    fd.append('submittedAt', new Date().toISOString());
-    fd.append('owner', owner);
-    fd.append('area', areaName());
-    fd.append('context', context);
-    fd.append('url', (location && location.href) || '');
-    fd.append('status', 'New');
-    fd.append('items', JSON.stringify(itemsPayload));
-
-    postBatch(endpoint, fd).then(function (res) {
-      var count = (res && (res.count != null ? res.count : res.ok ? items.length : 0)) || 0;
-      if (!res || res.ok === false) throw new Error('endpoint');
-      clearDraft();                                     // clear ONLY on success (QA A/B)
-      setSubmitting(false);
-      toastOk(WP.i18n.plural('fbSentN', count || items.length));
-      live(WP.i18n.plural('fbSentN', count || items.length));
-      closePanel();
-    }).catch(function () {
-      // Keep the queue intact; offer retry (QA A/B).
-      setSubmitting(false);
-      var msg = (typeof navigator !== 'undefined' && navigator.onLine === false) ? t('fbOffline') : t('fbSendFail');
-      toastErr(msg);
-      live(msg);
-      var btn = panelState && panelState.host.querySelector('.fb-submit-txt');
-      if (btn) btn.textContent = t('fbRetry');
-    });
+    // All dispatches must succeed (each returns HTTP 204). If any fails, keep the
+    // whole queue and let the user retry - never a partial silent success.
+    Promise.all(dispatches.map(function (p) { return dispatchOne(endpoint, token, p); }))
+      .then(function () {
+        clearDraft();                                   // clear ONLY on full success (QA A/B)
+        setSubmitting(false);
+        toastOk(WP.i18n.plural('fbSentN', items.length));
+        live(WP.i18n.plural('fbSentN', items.length));
+        closePanel();
+      }).catch(function () {
+        setSubmitting(false);
+        var msg = (typeof navigator !== 'undefined' && navigator.onLine === false) ? t('fbOffline') : t('fbSendFail');
+        toastErr(msg);
+        live(msg);
+        var btn = panelState && panelState.host.querySelector('.fb-submit-txt');
+        if (btn) btn.textContent = t('fbRetry');
+      });
   }
 
   function setSubmitting(on) {
@@ -658,20 +669,29 @@
     });
   }
 
-  // Cross-origin batch POST via plain fetch() with a FormData body. No custom
-  // headers ⇒ the browser sets the multipart boundary ⇒ a "simple" request with
-  // NO CORS preflight, so this works cross-origin without any Google/iframe hack.
-  // Endpoint returns {ok:true,count:N}. A hard timeout keeps a hung request from
-  // pinning the panel; the queue is preserved on any failure so Submit can retry.
-  function postBatch(url, fd) {
+  // One workflow_dispatch to the Receive Feedback Action. GitHub's dispatch API
+  // returns HTTP 204 (No Content) on success - anything else is a failure. This
+  // fetch DOES carry an Authorization header, so a CORS preflight fires; GitHub's
+  // API supports browser CORS, so that is fine. A hard timeout keeps a hung
+  // request from pinning the panel; the queue is preserved on any failure.
+  function dispatchOne(url, token, payload) {
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
-    var opts = { method: 'POST', body: fd };
+    var opts = {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    };
     if (ctrl) opts.signal = ctrl.signal;
     return fetch(url, opts).then(function (res) {
       clearTimeout(timer);
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
+      if (res.status !== 204) throw new Error('dispatch http ' + res.status);
+      return true;
     }, function (err) { clearTimeout(timer); throw err; });
   }
 

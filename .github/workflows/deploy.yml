@@ -2,11 +2,13 @@ name: Build & deploy to Pages
 on:
   push:
     branches: [main]
-  # Also deploy after the Executive Status workflow commits new data/report -
-  # those commits are made with GITHUB_TOKEN, which does NOT trigger `push`, so
-  # without this the fresh data/exec-status.json would never reach Pages.
+  # Also deploy after a bot workflow commits new data - those commits are made
+  # with GITHUB_TOKEN, which does NOT trigger `push`, so without this the fresh
+  # data/exec-status.json or data/feedback.json would never reach Pages.
+  #   Executive Status  -> data/exec-status.json + src/status.html
+  #   Receive Feedback  -> data/feedback.json
   workflow_run:
-    workflows: ["Executive Status"]
+    workflows: ["Executive Status", "Receive Feedback"]
     types: [completed]
   workflow_dispatch:
 permissions:
@@ -35,6 +37,7 @@ jobs:
           # The app fetch()es /tempo/data/exec-status.json; /tempo/status.html is
           # the leadership report (both committed by the exec-status workflow).
           cp data/exec-status.json _site/data/exec-status.json
+          cp data/feedback.json _site/data/feedback.json
           cp src/status.html _site/status.html
       - uses: actions/upload-pages-artifact@v3
         with:

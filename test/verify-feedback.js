@@ -67,23 +67,19 @@ window.fetch = function (url, opts) {
   if (fbFetch.next) return fbFetch.next(url, opts || {});
   return Promise.reject(new Error('no fetch handler set'));
 };
-// Read the FormData body of the most recent fetch as a plain object. jsdom ships
-// a native FormData (with .get()), so read via .get() for the known fields; fall
-// back to the ._d bag if the polyfill was used.
-const FORM_FIELDS = ['key', 'submittedAt', 'owner', 'area', 'context', 'url', 'status', 'items'];
-function lastForm() {
+// The GitHub-warehouse transport is one workflow_dispatch per comment: a JSON
+// POST with an Authorization header, body { ref:'main', inputs:{...} }, and a 204
+// success. Helpers to inspect the dispatched calls.
+function dispatchCalls() { return fbFetch.calls.filter(c => /\/dispatches$/.test(c.url)); }
+function lastDispatchBody() {
   const c = fbFetch.calls[fbFetch.calls.length - 1];
-  const body = c && c.opts && c.opts.body;
-  if (!body) return null;
-  if (body._d) return body._d;
-  if (typeof body.get === 'function') {
-    const o = {};
-    FORM_FIELDS.forEach(k => { const v = body.get(k); if (v !== null && v !== undefined) o[k] = v; });
-    return o;
-  }
-  return null;
+  try { return JSON.parse(c.opts.body); } catch (e) { return null; }
 }
+function ok204() { return Promise.resolve({ ok: true, status: 204, json: () => Promise.resolve(null) }); }
 function okJson(obj) { return function () { return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(obj) }); }; }
+// The dispatch endpoint used across tests + a stub token so the guard lets Submit fire.
+const DISPATCH_URL = 'https://api.github.com/repos/akram-webook/tempo/actions/workflows/receive-feedback.yml/dispatches';
+const STUB_TOKEN = 'stub-token-xyz';
 
 for (const s of srcs) {
   const code = fs.readFileSync(path.join(root, s), 'utf8');
@@ -278,65 +274,83 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     // Submit: graceful when endpoint empty — button reads "Not configured yet"
     // with an explainer tip; clicking still surfaces the message and clears nothing.
     // ========================================================================
+    // Not configured = endpoint set but TOKEN empty (the token-safe transport
+    // isn't wired). Submit must not fire a dispatch and must not leak.
     toastMsg = null; WP.ui.toast = (m, s) => { toastMsg = m; };
-    WP.config.feedbackEndpoint = '';
-    fb._close(); await tick(); fb.open(); await tick();   // re-render with empty endpoint
-    assert(/not configured|configured|مُهيأ/i.test($('.fb-submit-txt').textContent), 'Submit reads "Not configured yet" when endpoint empty');
+    WP.config.feedbackEndpoint = DISPATCH_URL;
+    WP.config.feedbackDispatchToken = '';
+    fb._close(); await tick(); fb.open(); await tick();   // re-render with empty token
+    assert(/not configured|configured|مُهيأ/i.test($('.fb-submit-txt').textContent), 'Submit reads "Not configured yet" when token empty');
     assert($('#fb-submit').getAttribute('data-tip'), 'Submit has an explainer tooltip when not configured');
+    fbFetch.calls = [];
     $('#fb-submit').click();
     await tick();
-    assert(toastMsg && /not configured|configured|مُهيأ/i.test(toastMsg), 'empty endpoint → graceful "not configured" message');
-    assert(fb._model().queue.length >= 1, 'nothing cleared when endpoint empty');
+    assert(dispatchCalls().length === 0, 'no dispatch fired without a token (no leak)');
+    assert(toastMsg && /not configured|configured|مُهيأ/i.test(toastMsg), 'empty token → graceful "not configured" message');
+    assert(fb._model().queue.length >= 1, 'nothing cleared when not configured');
     WP.ui.toast = realToast;
 
     // ========================================================================
-    // Submit: batch of queue + composer as SEPARATE items, one request, count
+    // Submit: ONE workflow_dispatch per comment, JSON {ref,inputs}, Auth header,
+    // 204 = success. Queue + composer sent as SEPARATE dispatches.
     // ========================================================================
-    WP.config.feedbackEndpoint = 'https://script.example/exec';
+    WP.config.feedbackEndpoint = DISPATCH_URL;
+    WP.config.feedbackDispatchToken = STUB_TOKEN;
     Object.defineProperty(window.navigator, "onLine", { configurable: true, value: true });
-    // Force a fresh render now the endpoint is configured (the prior block left the
-    // panel open showing the "Not configured" submit button).
+    // Force a fresh render now both endpoint + token are set.
     fb._close(); await tick(); fb.open(); await tick();
-    // Intercept fetch: capture the FormData body, resolve {ok,count}.
     fbFetch.calls = [];
-    fbFetch.next = (url, opts) => {
-      const items = JSON.parse(opts.body.get('items'));
-      return okJson({ ok: true, count: items.length })();
-    };
-    // Ensure a composed-but-not-added note is folded into the batch too.
+    fbFetch.next = () => ok204();
+    // Ensure a composed-but-not-added note is folded in too.
     fireInput($('#fb-note'), 'plus a pending one');
     const expectItems = fb._model().queue.length + 1;
     $('#fb-submit').click();
-    await tick(); await tick();
-    const postCalls = fbFetch.calls.filter(c => c.url === 'https://script.example/exec');
-    assert(postCalls.length === 1, 'exactly ONE fetch for the whole batch');
-    const sentForm = lastForm();
-    const sentItems = sentForm && JSON.parse(sentForm.items);
-    assert(sentItems && sentItems.length === expectItems, 'queue + composer sent as separate items (count ' + expectItems + ')');
-    assert(sentForm.status === 'New', 'status="New" in the FormData');
+    await tick(); await tick(); await tick();
+    const dCalls = dispatchCalls();
+    assert(dCalls.length === expectItems, 'one dispatch per comment (' + expectItems + ' got ' + dCalls.length + ')');
+    assert(dCalls.every(c => c.url === DISPATCH_URL), 'all dispatches hit the receive-feedback workflow URL');
+    assert(dCalls.every(c => /^Bearer /.test((c.opts.headers || {})['Authorization'] || '')), 'each dispatch carries Authorization: Bearer');
+    assert(dCalls.every(c => (c.opts.headers || {})['Content-Type'] === 'application/json'), 'each dispatch is JSON');
+    const body = lastDispatchBody();
+    assert(body && body.ref === 'main', "dispatch body has ref:'main'");
+    assert(body && body.inputs && typeof body.inputs.note === 'string' && 'type' in body.inputs && 'priority' in body.inputs, 'dispatch inputs carry note/type/priority');
+    assert(body.inputs.owner !== undefined && body.inputs.submittedAt && body.inputs.area && body.inputs.context && body.inputs.url, 'silent metadata in dispatch inputs');
     assert(!window.sessionStorage.getItem(key), 'draft cleared after successful submit');
     assert(!$('.fb-panel'), 'panel closed after successful submit');
+
+    // A non-204 response is a FAILURE - queue kept, no silent success.
+    fb._reset(); WP.state.route = 'dashboard';
+    fb.open(); await tick();
+    fireInput($('#fb-note'), 'server said no'); $('#fb-add').click(); await tick();
+    fbFetch.next = () => Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve(null) });
+    toastMsg = null; WP.ui.toast = (m) => { toastMsg = m; };
+    $('#fb-submit').click(); await tick(); await tick(); await tick();
+    assert(fb._model().queue.length === 1, 'non-204 keeps the queue (no silent drop)');
+    assert(!!window.sessionStorage.getItem('tempo_fb_draft:dashboard'), 'draft kept after a failed dispatch');
+    WP.ui.toast = realToast;
 
     // ========================================================================
     // Double-submit guard (QA B): a slow endpoint, two clicks → one request
     // ========================================================================
+    fb._close(); await tick();
     fb._reset();
     WP.state.route = 'settings';
     fb.open(); await tick();
     fireInput($('#fb-note'), 'guarded submit');
     fbFetch.calls = [];
     let resolveHeld = null;
-    fbFetch.next = () => new Promise(res => { resolveHeld = () => res({ ok: true, status: 200, json: () => Promise.resolve({ ok: true, count: 1 }) }); });
+    fbFetch.next = () => new Promise(res => { resolveHeld = () => res({ ok: true, status: 204, json: () => Promise.resolve(null) }); });
     $('#fb-submit').click();
     $('#fb-submit').click();   // second click while in-flight
     await tick();
-    assert(fbFetch.calls.length === 1, 'double-submit guarded (only one request in flight)');
+    assert(dispatchCalls().length === 1, 'double-submit guarded (only one request in flight)');
     if (resolveHeld) resolveHeld();
     await tick(); await tick();
 
     // ========================================================================
     // Submit FAILURE keeps the queue (QA A/B)
     // ========================================================================
+    fb._close(); await tick();
     fb._reset();
     WP.state.route = 'me';
     fb.open(); await tick();
@@ -369,25 +383,23 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(prioOpts.length === 4 && prioOpts.indexOf('Critical') >= 0, 'priority has Low/Medium/High/Critical');
     fireChange($('#fb-priority'), 'Critical');
     fireInput($('#fb-note'), 'director note');
-    WP.config.feedbackEndpoint = 'https://script.example/exec';
-    fbFetch.next = okJson({ ok: true, count: 1 });
-    $('#fb-submit').click(); await tick(); await tick();
-    let dirForm = lastForm();
-    let dirItems = dirForm && JSON.parse(dirForm.items);
-    assert(dirItems && dirItems[0].priority === 'Critical', 'director priority carried in payload');
+    WP.config.feedbackEndpoint = DISPATCH_URL; WP.config.feedbackDispatchToken = STUB_TOKEN;
+    fbFetch.calls = []; fbFetch.next = () => ok204();
+    $('#fb-submit').click(); await tick(); await tick(); await tick();
+    let dirBody = lastDispatchBody();
+    assert(dirBody && dirBody.inputs.priority === 'Critical', 'director priority carried in dispatch inputs');
 
-    // Member: priority forced blank in the payload even if model somehow held one.
+    // Member: priority forced blank in the dispatch even if model somehow held one.
     fb._reset();
     WP.state.viewerId = member.id; WP.state.route = 'dashboard';
     fb.open(); await tick();
     fireInput($('#fb-note'), 'member note');
-    fbFetch.next = okJson({ ok: true, count: 1 });
-    $('#fb-submit').click(); await tick(); await tick();
-    const memForm = lastForm();
-    const memItems = memForm && JSON.parse(memForm.items);
-    assert(memItems && memItems[0].priority === '', 'member priority defaulted BLANK in payload (QA F)');
+    fbFetch.calls = []; fbFetch.next = () => ok204();
+    $('#fb-submit').click(); await tick(); await tick(); await tick();
+    const memBody = lastDispatchBody();
+    assert(memBody && memBody.inputs.priority === '', 'member priority defaulted BLANK in dispatch (QA F)');
     // Silent metadata present but never rendered (owner/submittedAt/area/context/url).
-    assert(memForm.owner !== undefined && memForm.submittedAt && memForm.area && memForm.context && memForm.url, 'silent metadata rides in FormData');
+    assert(memBody.inputs.owner !== undefined && memBody.inputs.submittedAt && memBody.inputs.area && memBody.inputs.context && memBody.inputs.url, 'silent metadata rides in dispatch inputs');
 
     // ========================================================================
     // AI helpers (QA H): Suggest works empty, Polish disabled empty, both Undo
@@ -435,12 +447,37 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     WP.state.lang = 'en';
     fb._close();
 
+    // ========================================================================
+    // Warehouse files: feedback.json schema + it is NOT exec-status.json.
+    // ========================================================================
+    const dataDir = path.join(root, 'data');
+    const fbJson = JSON.parse(fs.readFileSync(path.join(dataDir, 'feedback.json'), 'utf8'));
+    assert(Array.isArray(fbJson.items), 'feedback.json has an items array');
+    assert(typeof fbJson.generated === 'string', 'feedback.json has a generated timestamp');
+    // Every item (if any) carries the warehouse fields.
+    const ITEM_FIELDS = ['id', 'submittedAt', 'owner', 'area', 'type', 'priority', 'note', 'context', 'url', 'status'];
+    assert(fbJson.items.every(it => ITEM_FIELDS.every(f => f in it)), 'each feedback item has the full field set');
+    // exec-status.json is a DIFFERENT file: it has waves + its own feedback array
+    // (curated director notes), and must not be the raw-submission warehouse.
+    const execJson = JSON.parse(fs.readFileSync(path.join(dataDir, 'exec-status.json'), 'utf8'));
+    assert(Array.isArray(execJson.waves), 'exec-status.json still has waves (untouched schema)');
+    assert(!('items' in execJson) || execJson.waves, 'exec-status.json is not the feedback warehouse');
+    assert(JSON.stringify(fbJson) !== JSON.stringify(execJson), 'the two warehouse files are distinct');
+
+    // The appender logic self-test (pure core: enum coercion, cap, tolerant read).
+    const appender = require(path.join(root, 'scripts', 'append-feedback.js'));
+    const built = appender.buildItem({ note: 'x', type: 'Bug', priority: 'Critical' }, '7', 'NOW');
+    assert(built.status === 'New' && built.type === 'Bug' && built.priority === 'Critical' && built.id === '7', 'append-feedback buildItem maps fields correctly');
+    let acc = { generated: '', items: [] };
+    for (let i = 0; i < appender.MAX_ITEMS + 3; i++) acc = appender.appendItem(acc, appender.buildItem({ note: 'n' }, String(i), 'T'), 'T');
+    assert(acc.items.length === appender.MAX_ITEMS, 'append-feedback caps at MAX_ITEMS');
+
     // --- done -------------------------------------------------------------------
     if (errors.length) {
       console.log('FAIL — verify-feedback:\n' + errors.join('\n'));
       process.exit(1);
     }
-    console.log('PASS — feedback widget: FAB when authed (hidden signed-out), renders even if endpoint unset; feedback-first composer, 4 types (no Question); priority director-only incl. Critical + defaulted blank for members; note required + capped + escaped; Suggest posts {action,note,page} + Polish-disabled-empty + Undo; add queues+resets+marker; edit reloads, remove drops; batch submit = separate items in ONE fetch() FormData POST (status=New); double-submit guarded; failure keeps the queue; close persists + reopen restores (sessionStorage); wrong-type + >5MB images rejected; empty endpoint → "Not configured yet" + tip; silent metadata (owner/context/url) in FormData; EN + AR/RTL; no console errors.');
+    console.log('PASS — feedback widget (GitHub warehouse): FAB when authed; feedback-first composer, 4 types (no Question); priority director-only incl. Critical + blank for members; note required + capped + escaped; Suggest/Polish + Undo; queue add/edit/remove; submit = ONE workflow_dispatch per comment (JSON {ref,inputs}, Bearer auth, 204=success), separate dispatches, non-204 keeps queue; double-submit guarded; offline keeps queue; close/reopen restore; images rejected type/>5MB; unset token → "Not configured yet" + tip + NO dispatch (no token leak); silent metadata in dispatch inputs; data/feedback.json schema + distinct from exec-status.json; append-feedback core (coerce+cap); EN + AR/RTL; no console errors.');
   } catch (e) {
     console.log('FAIL — verify-feedback threw: ' + e.stack);
     process.exit(1);

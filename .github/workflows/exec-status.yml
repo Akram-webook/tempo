@@ -13,6 +13,8 @@ on:
     paths-ignore:
       - 'data/exec-status.json'
       - 'src/status.html'
+      # A feedback submission commit must not trigger an exec-status recompute.
+      - 'data/feedback.json'
   schedule:
     - cron: '0 7 * * *'
   workflow_dispatch:
