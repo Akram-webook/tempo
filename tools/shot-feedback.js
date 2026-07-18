@@ -27,20 +27,24 @@ async function initStubs(page) {
         window.WP.config.aiPolishEndpoint = 'https://stub.example/ai';
       }
     };
-    // Stub AI: exec.js-style jsonp override once WP.ui exists is unreliable (captured
-    // at call time here, so a direct override works). We patch after load via evaluate.
-    // Intercept the submit form so success/failure are deterministic offline.
+    // Intercept fetch() so the AI helper + batch submit are deterministic offline
+    // (the widget now uses plain fetch() FormData/JSON — no JSONP, no iframe form).
     window.__failSubmit = false;
-    const realSubmit = window.HTMLFormElement.prototype.submit;
-    window.HTMLFormElement.prototype.submit = function () {
-      const cbInput = this.querySelector('input[name="callback"]');
-      const payloadInput = this.querySelector('input[name="payload"]');
-      window.__lastPayload = payloadInput ? payloadInput.value : null;
-      const cb = cbInput ? cbInput.value : null;
-      if (window.__failSubmit) return;   // never resolve → widget shows Retry after timeout; we assert on state instead
-      Promise.resolve().then(function () {
-        try { const b = JSON.parse(payloadInput.value); if (window[cb]) window[cb]({ ok: true, count: b.items.length }); } catch (e) {}
-      });
+    window.fetch = function (url, opts) {
+      opts = opts || {};
+      // AI helper: JSON body {action,note,page} → {text}.
+      if (typeof opts.body === 'string') {
+        var lang = (window.WP && window.WP.state && window.WP.state.lang) || 'en';
+        var txt = lang === 'ar' ? 'اقتراح مصقول واضح للملاحظة حول هذه الصفحة.'
+          : 'A clear, specific piece of feedback about this page.';
+        return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ text: txt }); } });
+      }
+      // Batch submit: FormData body with an "items" field.
+      var items = [];
+      try { items = JSON.parse(opts.body.get('items') || '[]'); } catch (e) {}
+      window.__lastItems = items;
+      if (window.__failSubmit) return Promise.reject(new Error('stub network fail'));
+      return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ ok: true, count: items.length }); } });
     };
   });
 }
@@ -58,8 +62,7 @@ async function boot(page, { lang, theme, director }) {
     WP.state.lang = lang; WP.state.theme = theme; WP.state.route = 'dashboard';
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    // Override jsonp for AI (deterministic).
-    WP.ui.jsonp = function () { return Promise.resolve({ text: lang === 'ar' ? 'اقتراح مصقول للملاحظة.' : 'A clear, specific piece of feedback about this page.' }); };
+    // AI is stubbed at the fetch layer in initStubs (deterministic, no JSONP).
     if (WP.ui.feedback) WP.ui.feedback._reset();
     WP.render();
   }, { lang, theme, director });
@@ -160,7 +163,7 @@ async function add(page) { await page.click('#fb-add'); await page.waitForTimeou
   const closedOnSuccess = !(await page.$('.fb-panel'));
   await shot(page, 'submit-success.png');   // toast visible, panel closed
   if (!closedOnSuccess) { console.log('SHOT FAIL — panel did not close on success'); process.exit(1); }
-  const payloadCount = await page.evaluate(() => { try { return JSON.parse(window.__lastPayload).items.length; } catch (e) { return -1; } });
+  const payloadCount = await page.evaluate(() => { try { return (window.__lastItems || []).length; } catch (e) { return -1; } });
   if (payloadCount < 3) { console.log('SHOT FAIL — batch payload had ' + payloadCount + ' items'); process.exit(1); }
 
   // ---- Submit failure keeps the queue (offline) ----

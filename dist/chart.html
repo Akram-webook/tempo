@@ -3606,22 +3606,26 @@ const EMAIL_HASHES = {};
   /* ----------------------------------------------------------------
    * Global Feedback widget — endpoint + key + AI helper (all reversible).
    * ----------------------------------------------------------------
-   * A floating "Feedback" button on every authed page. Submit POSTs a batch
-   * (one row per comment) to the "Feedback" tab via an Apps Script web app.
+   * A floating "Feedback" button on every authed page. Submit sends a plain
+   * fetch() FormData POST (one row per comment) to the "Feedback" tab endpoint.
+   * FormData with no custom Content-Type means NO CORS preflight, so a normal
+   * fetch() works cross-origin (no JSONP, no hidden-iframe form — that Google-
+   * coupled transport was retired with the exec-status warehouse switch).
    *
-   *  - feedbackEndpoint : Apps Script /exec that accepts a POST {payload,callback}
-   *    and writes one row per item, returning {ok,count}. EMPTY ⇒ the FAB does
-   *    NOT render at all (no half-feature on the live site). The button appears
-   *    only when a user is signed in AND this endpoint is set.
+   *  - feedbackEndpoint : write endpoint that accepts a FormData POST
+   *    (key,submittedAt,owner,area,context,url,status,items=JSON) and writes one
+   *    row per item, returning {ok:true,count:N}. EMPTY ⇒ the FAB STILL renders;
+   *    Submit shows "Not configured yet" (compose is always available so nothing
+   *    is lost while the endpoint is being wired).
    *  - feedbackKey      : shared key sent with the payload. It lives in the
    *    PUBLIC bundle, so it only deters CASUAL spam — the REAL protection is a
-   *    server-side per-owner rate limit in doPost, which must also DEFAULT the
-   *    priority (blank/Medium) for any caller it can't verify as a director.
-   *  - aiPolishEndpoint : optional Suggest/Polish helper (JSONP GET). EMPTY ⇒
-   *    the AI buttons are hidden (never a dead affordance). AI is always
-   *    optional and never blocks Submit.
+   *    server-side per-owner rate limit, which must also DEFAULT the priority
+   *    (blank/Medium) for any caller it can't verify as a director.
+   *  - aiPolishEndpoint : optional Suggest/Polish helper — a JSON fetch() POST
+   *    {action:'suggest'|'polish', note, page} returning {text}. EMPTY ⇒ the AI
+   *    buttons are hidden (never a dead affordance). AI never blocks Submit.
    *
-   * The Google side (doPost, columns, rate limit, Web App deploy) is the
+   * The server side (write handler, columns, rate limit, deploy) is the
    * orchestrator's job; we build against these keys now. Set them post-deploy.
    * -------------------------------------------------------------- */
   if (WP.config.feedbackEndpoint === undefined) WP.config.feedbackEndpoint = '';
@@ -4072,14 +4076,19 @@ const EMAIL_HASHES = {};
     fbPrio_Low:     { en: 'Low',                     ar: 'منخفضة' },
     fbPrio_Medium:  { en: 'Medium',                  ar: 'متوسطة' },
     fbPrio_High:    { en: 'High',                    ar: 'عالية' },
+    fbPrio_Critical:{ en: 'Critical',                ar: 'حرجة' },
     fbAddImage:     { en: 'Add image',               ar: 'إضافة صورة' },
     fbRemoveImage:  { en: 'Remove image',            ar: 'إزالة الصورة' },
     fbImgAdded:     { en: 'Image added.',            ar: 'تمت إضافة الصورة.' },
     fbImgType:      { en: "That file isn't an image.", ar: 'هذا الملف ليس صورة.' },
     fbImgTooBig:    { en: 'That image is too large (max 5 MB).', ar: 'هذه الصورة كبيرة جداً (الحد الأقصى ٥ ميجابايت).' },
     fbAiGroup:      { en: 'AI writing helpers',      ar: 'مساعدات الكتابة بالذكاء الاصطناعي' },
-    fbSuggest:      { en: 'Suggest feedback',        ar: 'اقترح ملاحظة' },
-    fbPolish:       { en: 'Polish my wording',       ar: 'حسّن صياغتي' },
+    fbSuggest:      { en: 'Suggest a starter',       ar: 'اقترح نصاً أولياً' },
+    fbSuggestTip:   { en: "Suggest — writes a clear first draft for you from this page. Use it when you're not sure how to phrase it, then edit.",
+                      ar: 'اقتراح — يكتب لك مسودة أولى واضحة من هذه الصفحة. استخدمه عندما لا تعرف كيف تصيغ، ثم عدّل.' },
+    fbPolish:       { en: 'Polish my note',          ar: 'حسّن ملاحظتي' },
+    fbPolishTip:    { en: "Polish — rewrites what you typed so it's clear and easy for the team to act on. Keeps your meaning; you can Undo.",
+                      ar: 'تحسين — يعيد صياغة ما كتبته ليكون واضحاً وسهل التنفيذ للفريق. يحافظ على معناك؛ ويمكنك التراجع.' },
     fbUndo:         { en: 'Undo',                    ar: 'تراجع' },
     fbAiWorking:    { en: 'Working…',                ar: 'جارٍ العمل…' },
     fbAiDone:       { en: 'Done.',                   ar: 'تم.' },
@@ -4095,7 +4104,8 @@ const EMAIL_HASHES = {};
     fbRetry:        { en: 'Retry',                   ar: 'إعادة المحاولة' },
     fbSendFail:     { en: "Couldn't send — Retry.",  ar: 'تعذّر الإرسال — أعد المحاولة.' },
     fbOffline:      { en: "You're offline — we kept your comments, try again.", ar: 'أنت غير متصل — احتفظنا بتعليقاتك، حاول مرة أخرى.' },
-    fbNotConfigured:{ en: 'Feedback sending is not set up yet.', ar: 'إرسال الملاحظات غير مُفعّل بعد.' },
+    fbNotConfigured:{ en: 'Not configured yet',      ar: 'غير مُهيأ بعد' },
+    fbNotConfiguredTip: { en: 'Ask the admin to set the feedback endpoint in config.', ar: 'اطلب من المسؤول ضبط وجهة إرسال الملاحظات في الإعدادات.' },
     fbDiscardTitle: { en: 'Keep your feedback?',     ar: 'الاحتفاظ بملاحظاتك؟' },
     fbDiscardMsg:   { en: "We saved a draft on this page — it'll be here when you come back.", ar: 'حفظنا مسودة على هذه الصفحة — ستجدها عند عودتك.' },
     fbKeepEditing:  { en: 'Keep editing',            ar: 'متابعة التحرير' },

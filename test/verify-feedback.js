@@ -8,7 +8,8 @@
  *  - Suggest works when empty / Polish disabled when empty / both provide Undo;
  *  - Add queues + resets composer + shows "New comment #N" marker + confirmation;
  *  - edit reloads a card into the composer, remove drops it;
- *  - Submit sends queue + composer as SEPARATE items in ONE batch (correct count);
+ *  - Submit sends queue + composer as SEPARATE items in ONE fetch() FormData
+ *    POST (correct count, status="New", no JSONP/iframe);
  *  - double-submit guarded (one request);
  *  - submit-FAILURE keeps the queue intact (draft not cleared);
  *  - close-with-content persists to sessionStorage + restores on reopen;
@@ -49,6 +50,41 @@ if (!window.sessionStorage) {
 // back to the original data URL (size guard still applies), which is what we test.
 window.HTMLCanvasElement.prototype.getContext = function () { return null; };
 
+// jsdom has no fetch/FormData/AbortController — provide test doubles. The default
+// fetch double is a controllable mock: each test sets fbFetch.next (a function that
+// returns a Promise given (url, opts)) and reads fbFetch.calls to inspect requests.
+if (!window.FormData) {
+  window.FormData = function () { this._d = {}; };
+  window.FormData.prototype.append = function (k, v) { this._d[k] = v; };
+  window.FormData.prototype.get = function (k) { return this._d[k]; };
+}
+if (!window.AbortController) {
+  window.AbortController = function () { this.signal = {}; this.abort = function () {}; };
+}
+const fbFetch = { calls: [], next: null };
+window.fetch = function (url, opts) {
+  fbFetch.calls.push({ url: url, opts: opts || {} });
+  if (fbFetch.next) return fbFetch.next(url, opts || {});
+  return Promise.reject(new Error('no fetch handler set'));
+};
+// Read the FormData body of the most recent fetch as a plain object. jsdom ships
+// a native FormData (with .get()), so read via .get() for the known fields; fall
+// back to the ._d bag if the polyfill was used.
+const FORM_FIELDS = ['key', 'submittedAt', 'owner', 'area', 'context', 'url', 'status', 'items'];
+function lastForm() {
+  const c = fbFetch.calls[fbFetch.calls.length - 1];
+  const body = c && c.opts && c.opts.body;
+  if (!body) return null;
+  if (body._d) return body._d;
+  if (typeof body.get === 'function') {
+    const o = {};
+    FORM_FIELDS.forEach(k => { const v = body.get(k); if (v !== null && v !== undefined) o[k] = v; });
+    return o;
+  }
+  return null;
+}
+function okJson(obj) { return function () { return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(obj) }); }; }
+
 for (const s of srcs) {
   const code = fs.readFileSync(path.join(root, s), 'utf8');
   const script = new window.Function(code);
@@ -87,21 +123,20 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     fb._reset();
 
     // ========================================================================
-    // FAB visibility (QA G) — signed-in AND endpoint configured, else nothing.
+    // FAB visibility (QA G) — signed-in only. Compose is always available; the
+    // endpoint being unset only changes the Submit button (see below), never the
+    // FAB, so a user's typed feedback is never blocked by config.
     // ========================================================================
-    WP.config.feedbackEndpoint = 'https://script.example/exec';   // configured for the visible-state tests
+    WP.config.feedbackEndpoint = 'https://script.example/exec';
     WP.state.authed = false;
     fb.mount();
     assert(!$('.fb-fab'), 'FAB hidden when signed out');
 
-    // Signed in but endpoint EMPTY → still no FAB (no half-feature on live).
+    // Signed in but endpoint EMPTY → FAB STILL renders (Submit will read "not configured").
     WP.state.authed = true; WP.state.viewerId = member.id; WP.state.route = 'dashboard';
     WP.config.feedbackEndpoint = '';
     fb.mount();
-    assert(!$('.fb-fab'), 'FAB hidden when feedbackEndpoint is empty (signed in)');
-    WP.config.feedbackEndpoint = '   ';   // whitespace-only counts as empty
-    fb.mount();
-    assert(!$('.fb-fab'), 'FAB hidden when feedbackEndpoint is whitespace only');
+    assert(!!$('.fb-fab'), 'FAB renders when authed even if endpoint empty');
 
     // Signed in AND endpoint set → FAB renders.
     WP.config.feedbackEndpoint = 'https://script.example/exec';
@@ -240,13 +275,17 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     WP.ui.toast = realToast;
 
     // ========================================================================
-    // Submit: graceful when endpoint empty (acceptance)
+    // Submit: graceful when endpoint empty — button reads "Not configured yet"
+    // with an explainer tip; clicking still surfaces the message and clears nothing.
     // ========================================================================
     toastMsg = null; WP.ui.toast = (m, s) => { toastMsg = m; };
     WP.config.feedbackEndpoint = '';
+    fb._close(); await tick(); fb.open(); await tick();   // re-render with empty endpoint
+    assert(/not configured|configured|مُهيأ/i.test($('.fb-submit-txt').textContent), 'Submit reads "Not configured yet" when endpoint empty');
+    assert($('#fb-submit').getAttribute('data-tip'), 'Submit has an explainer tooltip when not configured');
     $('#fb-submit').click();
     await tick();
-    assert(toastMsg && /set up|not|مُفعّل/i.test(toastMsg), 'empty endpoint → graceful "not set up" message');
+    assert(toastMsg && /not configured|configured|مُهيأ/i.test(toastMsg), 'empty endpoint → graceful "not configured" message');
     assert(fb._model().queue.length >= 1, 'nothing cleared when endpoint empty');
     WP.ui.toast = realToast;
 
@@ -255,27 +294,26 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     // ========================================================================
     WP.config.feedbackEndpoint = 'https://script.example/exec';
     Object.defineProperty(window.navigator, "onLine", { configurable: true, value: true });
-    // Intercept the hidden-form POST. Instead of really submitting, capture the
-    // payload and fire the callback with {ok,count}.
-    let postCount = 0, lastBody = null;
-    const realSubmit = window.HTMLFormElement.prototype.submit;
-    window.HTMLFormElement.prototype.submit = function () {
-      postCount++;
-      const payloadInput = this.querySelector('input[name="payload"]');
-      const cbInput = this.querySelector('input[name="callback"]');
-      lastBody = JSON.parse(payloadInput.value);
-      const cb = cbInput.value;
-      setTimeout(() => { if (window[cb]) window[cb]({ ok: true, count: lastBody.items.length }); }, 0);
+    // Force a fresh render now the endpoint is configured (the prior block left the
+    // panel open showing the "Not configured" submit button).
+    fb._close(); await tick(); fb.open(); await tick();
+    // Intercept fetch: capture the FormData body, resolve {ok,count}.
+    fbFetch.calls = [];
+    fbFetch.next = (url, opts) => {
+      const items = JSON.parse(opts.body.get('items'));
+      return okJson({ ok: true, count: items.length })();
     };
     // Ensure a composed-but-not-added note is folded into the batch too.
-    fb.open(); await tick();   // ensure panel is open (it was after reopen)
-    if (!$('.fb-panel')) { fb.open(); await tick(); }
     fireInput($('#fb-note'), 'plus a pending one');
     const expectItems = fb._model().queue.length + 1;
     $('#fb-submit').click();
     await tick(); await tick();
-    assert(postCount === 1, 'exactly ONE request for the whole batch');
-    assert(lastBody && lastBody.items.length === expectItems, 'queue + composer sent as separate items (count ' + expectItems + ')');
+    const postCalls = fbFetch.calls.filter(c => c.url === 'https://script.example/exec');
+    assert(postCalls.length === 1, 'exactly ONE fetch for the whole batch');
+    const sentForm = lastForm();
+    const sentItems = sentForm && JSON.parse(sentForm.items);
+    assert(sentItems && sentItems.length === expectItems, 'queue + composer sent as separate items (count ' + expectItems + ')');
+    assert(sentForm.status === 'New', 'status="New" in the FormData');
     assert(!window.sessionStorage.getItem(key), 'draft cleared after successful submit');
     assert(!$('.fb-panel'), 'panel closed after successful submit');
 
@@ -286,19 +324,15 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     WP.state.route = 'settings';
     fb.open(); await tick();
     fireInput($('#fb-note'), 'guarded submit');
-    postCount = 0;
-    let heldCb = null;
-    window.HTMLFormElement.prototype.submit = function () {
-      postCount++;
-      heldCb = this.querySelector('input[name="callback"]').value;   // do NOT resolve yet
-    };
+    fbFetch.calls = [];
+    let resolveHeld = null;
+    fbFetch.next = () => new Promise(res => { resolveHeld = () => res({ ok: true, status: 200, json: () => Promise.resolve({ ok: true, count: 1 }) }); });
     $('#fb-submit').click();
     $('#fb-submit').click();   // second click while in-flight
     await tick();
-    assert(postCount === 1, 'double-submit guarded (only one request in flight)');
-    // resolve it
-    if (heldCb && window[heldCb]) window[heldCb]({ ok: true, count: 1 });
-    await tick();
+    assert(fbFetch.calls.length === 1, 'double-submit guarded (only one request in flight)');
+    if (resolveHeld) resolveHeld();
+    await tick(); await tick();
 
     // ========================================================================
     // Submit FAILURE keeps the queue (QA A/B)
@@ -308,14 +342,10 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     fb.open(); await tick();
     fireInput($('#fb-note'), 'will fail'); $('#fb-add').click(); await tick();
     const failKey = 'tempo_fb_draft:me';
-    window.HTMLFormElement.prototype.submit = function () {
-      const cb = this.querySelector('input[name="callback"]').value;
-      // simulate a network failure: never call the callback; module times out —
-      // to keep the test fast, directly invoke onerror path via a rejected cb.
-      setTimeout(() => { /* no resolve */ }, 0);
-    };
-    // Force offline to get a deterministic immediate failure instead of waiting 20s.
+    // Force offline to get a deterministic immediate failure (module checks navigator.onLine
+    // before it even calls fetch), so nothing hangs.
     Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    fbFetch.next = () => Promise.reject(new Error('network'));
     toastMsg = null; WP.ui.toast = (m) => { toastMsg = m; };
     $('#fb-submit').click();
     await tick();
@@ -323,7 +353,6 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(fb._model().queue.length === 1, 'queue intact after failed submit');
     assert(!!window.sessionStorage.getItem(failKey), 'draft kept after failed submit');
     Object.defineProperty(window.navigator, "onLine", { configurable: true, value: true });
-    window.HTMLFormElement.prototype.submit = realSubmit;
     WP.ui.toast = realToast;
 
     // ========================================================================
@@ -335,35 +364,30 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(fb._canSetPriority() === true, 'director can set priority');
     fb.open(); await tick();
     assert(!!$('#fb-priority'), 'Priority shown for a director');
-    fireChange($('#fb-priority'), 'High');
+    // Priority has all four levels including Critical (spec).
+    const prioOpts = $$('#fb-priority option').map(o => o.value);
+    assert(prioOpts.length === 4 && prioOpts.indexOf('Critical') >= 0, 'priority has Low/Medium/High/Critical');
+    fireChange($('#fb-priority'), 'Critical');
     fireInput($('#fb-note'), 'director note');
-    // Capture the payload.
-    let dirBody = null;
-    window.HTMLFormElement.prototype.submit = function () {
-      dirBody = JSON.parse(this.querySelector('input[name="payload"]').value);
-      const cb = this.querySelector('input[name="callback"]').value;
-      setTimeout(() => window[cb] && window[cb]({ ok: true, count: 1 }), 0);
-    };
     WP.config.feedbackEndpoint = 'https://script.example/exec';
+    fbFetch.next = okJson({ ok: true, count: 1 });
     $('#fb-submit').click(); await tick(); await tick();
-    assert(dirBody && dirBody.items[0].priority === 'High', 'director priority carried in payload');
+    let dirForm = lastForm();
+    let dirItems = dirForm && JSON.parse(dirForm.items);
+    assert(dirItems && dirItems[0].priority === 'Critical', 'director priority carried in payload');
 
     // Member: priority forced blank in the payload even if model somehow held one.
     fb._reset();
     WP.state.viewerId = member.id; WP.state.route = 'dashboard';
     fb.open(); await tick();
     fireInput($('#fb-note'), 'member note');
-    let memBody = null;
-    window.HTMLFormElement.prototype.submit = function () {
-      memBody = JSON.parse(this.querySelector('input[name="payload"]').value);
-      const cb = this.querySelector('input[name="callback"]').value;
-      setTimeout(() => window[cb] && window[cb]({ ok: true, count: 1 }), 0);
-    };
+    fbFetch.next = okJson({ ok: true, count: 1 });
     $('#fb-submit').click(); await tick(); await tick();
-    assert(memBody && memBody.items[0].priority === '', 'member priority defaulted BLANK in payload (QA F)');
-    // Silent metadata present but never rendered.
-    assert(memBody.owner !== undefined && memBody.submittedAt && memBody.area && memBody.browser, 'silent metadata rides in payload');
-    window.HTMLFormElement.prototype.submit = realSubmit;
+    const memForm = lastForm();
+    const memItems = memForm && JSON.parse(memForm.items);
+    assert(memItems && memItems[0].priority === '', 'member priority defaulted BLANK in payload (QA F)');
+    // Silent metadata present but never rendered (owner/submittedAt/area/context/url).
+    assert(memForm.owner !== undefined && memForm.submittedAt && memForm.area && memForm.context && memForm.url, 'silent metadata rides in FormData');
 
     // ========================================================================
     // AI helpers (QA H): Suggest works empty, Polish disabled empty, both Undo
@@ -375,24 +399,27 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(!!$('#fb-suggest') && !!$('#fb-polish'), 'AI buttons shown when aiPolishEndpoint set');
     assert($('#fb-polish').disabled === true, 'Polish disabled when note empty');
     assert($('#fb-suggest').disabled !== true, 'Suggest enabled when note empty');
-    // Stub jsonp for AI: resolve with text.
-    const realJsonp = WP.ui.jsonp;
-    WP.ui.jsonp = () => Promise.resolve({ text: 'A polished suggestion.' });
+    // Suggest sends a fetch POST {action:'suggest', note, page}; endpoint returns {text}.
+    fbFetch.calls = [];
+    fbFetch.next = okJson({ text: 'A polished suggestion.' });
     $('#fb-suggest').click();
     await tick(); await tick();
+    const aiCall = fbFetch.calls[fbFetch.calls.length - 1];
+    const aiBody = aiCall && JSON.parse(aiCall.opts.body);
+    assert(aiBody && aiBody.action === 'suggest' && 'note' in aiBody && 'page' in aiBody, 'Suggest posts {action,note,page}');
     assert($('#fb-note').value === 'A polished suggestion.', 'Suggest filled the empty note');
     assert($('#fb-undo').hidden === false, 'Undo available after an AI action');
     $('#fb-undo').click();
     assert($('#fb-note').value === '', 'Undo restored pre-action text');
     // AI failure keeps original text.
     fireInput($('#fb-note'), 'keep me');
-    WP.ui.jsonp = () => Promise.reject(new Error('boom'));
+    fbFetch.next = () => Promise.reject(new Error('boom'));
     toastMsg = null; WP.ui.toast = (m) => { toastMsg = m; };
     $('#fb-polish').click();
     await tick(); await tick();
     assert($('#fb-note').value === 'keep me', 'AI failure keeps the original text');
     assert(toastMsg && /again|أخرى/i.test(toastMsg), 'AI failure shows a friendly retry message');
-    WP.ui.jsonp = realJsonp; WP.ui.toast = realToast;
+    WP.ui.toast = realToast;
     WP.config.aiPolishEndpoint = '';
 
     // ========================================================================
@@ -413,7 +440,7 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
       console.log('FAIL — verify-feedback:\n' + errors.join('\n'));
       process.exit(1);
     }
-    console.log('PASS — feedback widget: FAB only when authed AND endpoint set (hidden otherwise); feedback-first composer, 4 types (no Question); priority director-only + defaulted blank for members in payload; note required + capped + escaped; Suggest-empty/Polish-disabled/Undo; add queues+resets+marker; edit reloads, remove drops; batch submit = separate items in ONE request; double-submit guarded; failure keeps the queue; close persists + reopen restores (sessionStorage); wrong-type + >5MB images rejected; empty endpoint graceful; silent metadata in payload; EN + AR/RTL; no console errors.');
+    console.log('PASS — feedback widget: FAB when authed (hidden signed-out), renders even if endpoint unset; feedback-first composer, 4 types (no Question); priority director-only incl. Critical + defaulted blank for members; note required + capped + escaped; Suggest posts {action,note,page} + Polish-disabled-empty + Undo; add queues+resets+marker; edit reloads, remove drops; batch submit = separate items in ONE fetch() FormData POST (status=New); double-submit guarded; failure keeps the queue; close persists + reopen restores (sessionStorage); wrong-type + >5MB images rejected; empty endpoint → "Not configured yet" + tip; silent metadata (owner/context/url) in FormData; EN + AR/RTL; no console errors.');
   } catch (e) {
     console.log('FAIL — verify-feedback threw: ' + e.stack);
     process.exit(1);
