@@ -1,20 +1,20 @@
 {
-  "generated": "2026-07-18T18:20:32.361Z",
+  "generated": "2026-07-18T18:40:57.342Z",
   "cover": {
     "status": "In Progress",
-    "progress": 68,
+    "progress": 89,
     "health": "green",
-    "narrative": "68% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
+    "narrative": "89% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
   },
   "waves": [
     {
       "name": "Executive Status Deck",
       "label": "wave:exec-status",
       "status": "In Progress",
-      "progress": 68,
+      "progress": 89,
       "health": "green",
       "openPRs": [],
-      "notes": "5/6 PRs merged, 1k/1k lines."
+      "notes": "6/7 PRs merged, 2k/3k lines."
     },
     {
       "name": "Capacity Engine",
@@ -49,6 +49,11 @@
     {
       "ts": "2026-07-18T18:20:32.361Z",
       "progress": 68,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-18T18:40:57.342Z",
+      "progress": 89,
       "health": "green"
     }
   ]
