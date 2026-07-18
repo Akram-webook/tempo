@@ -2,6 +2,12 @@ name: Build & deploy to Pages
 on:
   push:
     branches: [main]
+  # Also deploy after the Executive Status workflow commits new data/report -
+  # those commits are made with GITHUB_TOKEN, which does NOT trigger `push`, so
+  # without this the fresh data/exec-status.json would never reach Pages.
+  workflow_run:
+    workflows: ["Executive Status"]
+    types: [completed]
   workflow_dispatch:
 permissions:
   contents: read
