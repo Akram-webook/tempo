@@ -132,22 +132,26 @@
   /* ----------------------------------------------------------------
    * Global Feedback widget — endpoint + key + AI helper (all reversible).
    * ----------------------------------------------------------------
-   * A floating "Feedback" button on every authed page. Submit POSTs a batch
-   * (one row per comment) to the "Feedback" tab via an Apps Script web app.
+   * A floating "Feedback" button on every authed page. Submit sends a plain
+   * fetch() FormData POST (one row per comment) to the "Feedback" tab endpoint.
+   * FormData with no custom Content-Type means NO CORS preflight, so a normal
+   * fetch() works cross-origin (no JSONP, no hidden-iframe form — that Google-
+   * coupled transport was retired with the exec-status warehouse switch).
    *
-   *  - feedbackEndpoint : Apps Script /exec that accepts a POST {payload,callback}
-   *    and writes one row per item, returning {ok,count}. EMPTY ⇒ the FAB does
-   *    NOT render at all (no half-feature on the live site). The button appears
-   *    only when a user is signed in AND this endpoint is set.
+   *  - feedbackEndpoint : write endpoint that accepts a FormData POST
+   *    (key,submittedAt,owner,area,context,url,status,items=JSON) and writes one
+   *    row per item, returning {ok:true,count:N}. EMPTY ⇒ the FAB STILL renders;
+   *    Submit shows "Not configured yet" (compose is always available so nothing
+   *    is lost while the endpoint is being wired).
    *  - feedbackKey      : shared key sent with the payload. It lives in the
    *    PUBLIC bundle, so it only deters CASUAL spam — the REAL protection is a
-   *    server-side per-owner rate limit in doPost, which must also DEFAULT the
-   *    priority (blank/Medium) for any caller it can't verify as a director.
-   *  - aiPolishEndpoint : optional Suggest/Polish helper (JSONP GET). EMPTY ⇒
-   *    the AI buttons are hidden (never a dead affordance). AI is always
-   *    optional and never blocks Submit.
+   *    server-side per-owner rate limit, which must also DEFAULT the priority
+   *    (blank/Medium) for any caller it can't verify as a director.
+   *  - aiPolishEndpoint : optional Suggest/Polish helper — a JSON fetch() POST
+   *    {action:'suggest'|'polish', note, page} returning {text}. EMPTY ⇒ the AI
+   *    buttons are hidden (never a dead affordance). AI never blocks Submit.
    *
-   * The Google side (doPost, columns, rate limit, Web App deploy) is the
+   * The server side (write handler, columns, rate limit, deploy) is the
    * orchestrator's job; we build against these keys now. Set them post-deploy.
    * -------------------------------------------------------------- */
   if (WP.config.feedbackEndpoint === undefined) WP.config.feedbackEndpoint = '';

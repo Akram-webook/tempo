@@ -9,10 +9,11 @@
  * it is all-or-nothing).
  *
  * ARCHITECTURE (why this lives in ui/, not core/): it owns DOM + network. The
- * cross-origin POST reuses the ui-layer transport rule — Apps Script web apps
- * 302-redirect with no CORS headers, so a browser fetch() fails; we submit via
- * a hidden <form target=iframe> POST (CORS-exempt, like the JSONP GET helper),
- * and read {ok,count} back through a JSONP-style callback the endpoint calls.
+ * cross-origin POST is a plain fetch() with a FormData body and NO custom
+ * headers — the browser sets the multipart boundary, so there is no CORS
+ * preflight and a normal fetch() succeeds cross-origin. (The old hidden-iframe
+ * form + JSONP-callback transport was retired with the Google layer; there is
+ * no JSONP anywhere in the app now.) The endpoint returns {ok:true,count:N}.
  *
  * NEVER LOSE WORK: the queue + composer are mirrored to sessionStorage per
  * page and restored on reopen; the draft is cleared only after a successful
@@ -39,7 +40,7 @@
 
   // The four allowed types (NO "Question"), feedback-first ordering.
   var TYPES = ['Improvement', 'Bug', 'New idea', 'Design'];
-  var PRIORITIES = ['Low', 'Medium', 'High'];
+  var PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];
 
   /* -------- per-page draft persistence (sessionStorage) -------- */
   function pageKey() {
@@ -65,7 +66,7 @@
   var model = null;   // { queue:[{note,type,image}], composer:{note,type,priority,image} }
 
   function blankComposer() {
-    return { note: '', type: TYPES[0], priority: 'Medium', image: null };
+    return { note: '', type: TYPES[0], priority: 'Medium', image: null, imageName: '' };
   }
   function loadModel() {
     if (model) return model;
@@ -125,10 +126,10 @@
   function mount() {
     var h = host();
     var authed = !!(WP.state && WP.state.authed);
-    // Signed-in AND the sheet endpoint is configured — otherwise render NOTHING
-    // (no half-feature on the live site: a FAB with nowhere to send is worse than
-    // no FAB). Hidden on login/signed-out (QA G) and until the endpoint is wired.
-    if (!authed || cfg('feedbackEndpoint') === '') { h.innerHTML = ''; return; }
+    // Signed-in only. The FAB renders even when the endpoint is not yet wired -
+    // compose is always available and Submit surfaces "Not configured yet", so a
+    // user's typed feedback is never blocked by config. Hidden on login/signed-out.
+    if (!authed) { h.innerHTML = ''; return; }
     if (h.querySelector('.fb-fab')) return;      // already mounted; survive re-renders
     var t = WP.i18n.t;
     h.innerHTML =
@@ -273,10 +274,10 @@
     var aiBar = aiEnabled()
       ? '<div class="fb-ai" role="group" aria-label="' + esc(t('fbAiGroup')) + '">' +
           '<button type="button" class="fb-ai-btn" id="fb-suggest" ' +
-            'aria-label="' + esc(t('fbSuggest')) + '" data-tip="' + esc(t('fbSuggest')) + '">' +
+            'aria-label="' + esc(t('fbSuggest')) + '" data-tip="' + esc(t('fbSuggestTip')) + '">' +
             ui.icon('sparkles', 16) + '</button>' +
           '<button type="button" class="fb-ai-btn" id="fb-polish" ' +
-            'aria-label="' + esc(t('fbPolish')) + '" data-tip="' + esc(t('fbPolish')) + '"' +
+            'aria-label="' + esc(t('fbPolish')) + '" data-tip="' + esc(t('fbPolishTip')) + '"' +
             (m.composer.note.trim() ? '' : ' disabled') + '>' +
             ui.icon('pencil', 16) + '</button>' +
           '<button type="button" class="fb-ai-btn fb-undo" id="fb-undo" hidden ' +
@@ -295,7 +296,13 @@
         '</label>';
 
     var addLabel = t('fbAddComment').replace('{n}', String(m.queue.length + 1));
-    var submitLabel = WP.i18n.plural('fbSubmitN', m.queue.length + 1);
+    var configured = cfg('feedbackEndpoint') !== '';
+    // When the write endpoint is not wired yet, the button reads "Not configured
+    // yet" with an explainer tooltip - compose still works, nothing is lost.
+    var submitLabel = configured
+      ? WP.i18n.plural('fbSubmitN', m.queue.length + 1)
+      : t('fbNotConfigured');
+    var submitTip = configured ? '' : ' data-tip="' + esc(t('fbNotConfiguredTip')) + '" aria-describedby="fb-submit-tip"';
 
     body.innerHTML =
       queueHTML +
@@ -319,7 +326,7 @@
         '</div>' +
       '</div>' +
       '<div class="fb-submit-row">' +
-        '<button type="button" class="btn primary fb-submit" id="fb-submit">' +
+        '<button type="button" class="btn primary fb-submit' + (configured ? '' : ' fb-submit--unconfigured') + '" id="fb-submit"' + submitTip + '>' +
           '<span class="fb-submit-txt">' + esc(submitLabel) + '</span>' +
           '<span class="fb-spin" aria-hidden="true" hidden></span>' +
         '</button>' +
@@ -375,7 +382,7 @@
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); imgInput.click(); }
     });
     var imgRm = wrap.querySelector('#fb-img-rm');
-    if (imgRm) imgRm.addEventListener('click', function () { m.composer.image = null; saveModel(); renderBody(); });
+    if (imgRm) imgRm.addEventListener('click', function () { m.composer.image = null; m.composer.imageName = ''; saveModel(); renderBody(); });
 
     // AI buttons
     var suggest = wrap.querySelector('#fb-suggest');
@@ -411,7 +418,10 @@
     reader.onload = function () {
       downscale(reader.result, function (dataUrl, bytes) {
         if (bytes > IMG_MAX_BYTES) { toastErr(t('fbImgTooBig')); return; }
-        loadModel().composer.image = dataUrl; saveModel(); renderBody();
+        var m = loadModel();
+        m.composer.image = dataUrl;
+        m.composer.imageName = file.name || 'image';
+        saveModel(); renderBody();
         live(t('fbImgAdded'));
       });
     };
@@ -460,10 +470,12 @@
     live(t('fbAiWorking'));
 
     var url = cfg('aiPolishEndpoint');
-    var payload = { mode: mode, text: current, area: areaName(), key: cfg('feedbackKey') };
+    // Spec payload: {action:'suggest'|'polish', note, page}. Suggest drafts from
+    // the page when the note is empty; Polish rewrites what was typed.
+    var payload = { action: mode, note: current, page: areaName(), key: cfg('feedbackKey') };
 
     aiRequest(url, payload).then(function (res) {
-      var out = res && (res.text || res.result);
+      var out = res && (res.text || res.result || res.note);
       if (!out) throw new Error('empty');
       aiUndo = note.value;                 // enable undo
       note.value = out;
@@ -490,10 +502,19 @@
     var undo = wrap.querySelector('#fb-undo'); if (undo) undo.hidden = true;
     var polish = wrap.querySelector('#fb-polish'); if (polish) polish.disabled = !note.value.trim();
   }
-  // JSONP GET to the AI endpoint with a hard timeout; never blocks Submit.
+  // fetch() JSON POST to the AI endpoint with a hard timeout; never blocks Submit.
+  // Text/plain content-type keeps it a "simple" request (no CORS preflight).
   function aiRequest(url, payload) {
-    var q = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'p=' + encodeURIComponent(JSON.stringify(payload));
-    return ui.jsonp(q, { timeoutMs: AI_TIMEOUT_MS });
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, AI_TIMEOUT_MS);
+    var opts = { method: 'POST', body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' } };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(url, opts).then(function (res) {
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('ai http ' + res.status);
+      return res.json();
+    }, function (err) { clearTimeout(timer); throw err; });
   }
 
   /* -------- queue ops -------- */
@@ -502,7 +523,7 @@
     var m = loadModel();
     var note = (m.composer.note || '').trim();
     if (!note) { toastErr(t('fbNoteRequired')); focusNote(); return; }
-    var item = { note: note.slice(0, NOTE_MAX), type: m.composer.type, image: m.composer.image || null };
+    var item = { note: note.slice(0, NOTE_MAX), type: m.composer.type, image: m.composer.image || null, imageName: m.composer.imageName || '' };
     if (canSetPriority()) item.priority = m.composer.priority;
     m.queue.push(item);
     m.composer = blankComposer();
@@ -517,7 +538,7 @@
     var item = m.queue[i];
     if (!item) return;
     // Reload into composer; drop from queue (edit = reopen).
-    m.composer = { note: item.note, type: item.type, priority: item.priority || 'Medium', image: item.image || null };
+    m.composer = { note: item.note, type: item.type, priority: item.priority || 'Medium', image: item.image || null, imageName: item.imageName || '' };
     m.queue.splice(i, 1);
     saveModel();
     renderBody();
@@ -574,28 +595,36 @@
     live(t('fbSending'));
 
     var viewer = WP.viewer && WP.viewer();
-    var body = {
-      key: cfg('feedbackKey'),
-      items: items.map(function (it) {
-        return {
-          area: areaName(),
-          type: it.type,
-          note: it.note,
-          priority: canSetPriority() ? (it.priority || 'Medium') : '',   // never trust client priority from a non-director (QA F)
-          attachment: it.image || '',
-        };
-      }),
-      // Silent metadata — shown nowhere (QA G).
-      owner: viewer ? (WP.auth && WP.auth.emailOf ? WP.auth.emailOf(viewer) : viewer.id) : '',
-      ownerName: viewer ? viewer.name : '',
-      submittedAt: new Date().toISOString(),
-      area: areaName(),
-      browser: browserInfo(),
-      screen: (window.screen ? window.screen.width + 'x' + window.screen.height : ''),
-      url: (location && location.href) || '',
-    };
+    var owner = viewer ? (WP.auth && WP.auth.emailOf ? WP.auth.emailOf(viewer) : (viewer.name || viewer.id)) : '';
+    var screen = (window.screen ? window.screen.width + '×' + window.screen.height : '');
+    var context = browserInfo() + (screen ? ' · ' + screen : '');
 
-    postBatch(endpoint, body).then(function (res) {
+    // One row per comment. priority is blanked for a non-director (never trust a
+    // client priority from a caller we can't verify as a director — QA F).
+    var itemsPayload = items.map(function (it) {
+      return {
+        note: it.note,
+        type: it.type,
+        priority: canSetPriority() ? (it.priority || 'Medium') : '',
+        image: it.image || '',
+        imageName: it.imageName || '',
+      };
+    });
+
+    // FormData with no custom Content-Type ⇒ browser sets the multipart boundary
+    // ⇒ a "simple" request with no CORS preflight. Shared silent fields:
+    // who/when/page/context/url apply to every row in the batch (QA G).
+    var fd = new FormData();
+    fd.append('key', cfg('feedbackKey'));
+    fd.append('submittedAt', new Date().toISOString());
+    fd.append('owner', owner);
+    fd.append('area', areaName());
+    fd.append('context', context);
+    fd.append('url', (location && location.href) || '');
+    fd.append('status', 'New');
+    fd.append('items', JSON.stringify(itemsPayload));
+
+    postBatch(endpoint, fd).then(function (res) {
       var count = (res && (res.count != null ? res.count : res.ok ? items.length : 0)) || 0;
       if (!res || res.ok === false) throw new Error('endpoint');
       clearDraft();                                     // clear ONLY on success (QA A/B)
@@ -629,40 +658,21 @@
     });
   }
 
-  // Cross-origin batch POST. Apps Script 302-redirects with no CORS headers, so a
-  // browser fetch() to /exec fails on the redirect; we POST via a hidden form to a
-  // hidden iframe (CORS-exempt) and receive {ok,count} through a JSONP-style global
-  // callback the endpoint invokes (doPost returns an HTML page that calls it).
-  var postSeq = 0;
-  function postBatch(url, body) {
-    return new Promise(function (resolve, reject) {
-      var cb = 'WP_fb_' + (++postSeq) + '_' + Math.floor((Date.now ? Date.now() : 0) % 1e7);
-      var iframe = document.createElement('iframe');
-      iframe.name = cb + '_frame'; iframe.style.display = 'none';
-      var form = document.createElement('form');
-      form.method = 'POST'; form.action = url; form.target = iframe.name; form.style.display = 'none';
-      var payload = document.createElement('input');
-      payload.type = 'hidden'; payload.name = 'payload';
-      payload.value = JSON.stringify(body); form.appendChild(payload);
-      var cbField = document.createElement('input');
-      cbField.type = 'hidden'; cbField.name = 'callback'; cbField.value = cb; form.appendChild(cbField);
-
-      var done = false;
-      var timer = setTimeout(function () {
-        if (done) return; done = true; cleanup(); reject(new Error('timeout'));
-      }, 20000);
-      function cleanup() {
-        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
-        if (timer) clearTimeout(timer);
-        if (form.parentNode) form.parentNode.removeChild(form);
-        setTimeout(function () { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 0);
-      }
-      window[cb] = function (res) { if (done) return; done = true; cleanup(); resolve(res); };
-      iframe.onerror = function () { if (done) return; done = true; cleanup(); reject(new Error('network')); };
-      document.body.appendChild(iframe);
-      document.body.appendChild(form);
-      try { form.submit(); } catch (e) { if (!done) { done = true; cleanup(); reject(e); } }
-    });
+  // Cross-origin batch POST via plain fetch() with a FormData body. No custom
+  // headers ⇒ the browser sets the multipart boundary ⇒ a "simple" request with
+  // NO CORS preflight, so this works cross-origin without any Google/iframe hack.
+  // Endpoint returns {ok:true,count:N}. A hard timeout keeps a hung request from
+  // pinning the panel; the queue is preserved on any failure so Submit can retry.
+  function postBatch(url, fd) {
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+    var opts = { method: 'POST', body: fd };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(url, opts).then(function (res) {
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('http ' + res.status);
+      return res.json();
+    }, function (err) { clearTimeout(timer); throw err; });
   }
 
   /* -------- small ui utils -------- */
