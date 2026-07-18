@@ -6862,13 +6862,15 @@ const EMAIL_HASHES = {};
   }
 
   // Employment / status chip (used in the LIST view, where there's room for a full label).
+  // Feedback: the routine Full-time / Freelance pill is clutter on the people page
+  // (that distinction lives in the admin view). Only the ACTIONABLE states surface
+  // here - Open role and Joining soon; a plain full-time/freelance person shows none.
   function empBadge(person) {
     const t = WP.i18n.t;
     if (person.tbc) return '<span class="emp emp-open">' + t('openRole') + '</span>';
     const js = joiningSoon(person);
     if (js) return '<span class="emp emp-join">' + t('joining') + ' ' + WP.i18n.shortDate(js) + '</span>';
-    if (person.employment === 'freelance') return '<span class="emp emp-free">' + t('freelance') + '</span>';
-    return '<span class="emp emp-ft">' + t('fullTime') + '</span>';
+    return '';
   }
 
   // Clean one-line status for the TREE card — a small color-coded dot + word, so it's
@@ -6880,8 +6882,9 @@ const EMAIL_HASHES = {};
     if (person.tbc) return '<div class="statusline sl-open"><span class="sl-dot"></span>' + t('openRole') + '</div>';
     const js = joiningSoon(person);
     if (js) return '<div class="statusline sl-join"><span class="sl-dot"></span>' + t('joining') + ' ' + WP.i18n.shortDate(js) + '</div>';
-    if (person.employment === 'freelance') return '<div class="statusline sl-free"><span class="sl-dot"></span>' + t('freelance') + '</div>';
-    return '<div class="statusline sl-ft"><span class="sl-dot"></span>' + t('fullTime') + '</div>';
+    // Routine Full-time / Freelance removed from the card (feedback: pill clutter;
+    // that distinction lives in the admin view). Actionable states only above.
+    return '';
   }
 
   // Tier dot color for an account/event (Tier 1 = brand, 2 = near, 3 = muted).

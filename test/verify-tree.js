@@ -121,8 +121,12 @@ try {
   expandAll(el);
   assert(el.querySelector('.tree .node .ttl'), 'detailed density shows the full card (title line back)');
   const txt = el.textContent;
-  assert(/Full-time/.test(txt), 'detailed shows Full-time label');
-  assert(/Freelance/.test(txt), 'detailed shows Freelance label');
+  // Feedback: the routine Full-time / Freelance pill was removed from the cards
+  // (it lives in the admin view). Actionable states (Open role / Joining) remain.
+  assert(!/Full-time/.test(txt), 'Full-time pill removed from the tree cards');
+  assert(!/\bFreelance\b/.test(txt), 'Freelance pill removed from the tree cards');
+  assert(!el.querySelector('.statusline.sl-ft, .statusline.sl-free, .emp-ft, .emp-free'),
+    'no routine full-time/freelance chip renders on the people page');
 
   // --- toggle PERSISTS per signed-in user (namespaced key, not a global one) ---------
   let stored = null;
