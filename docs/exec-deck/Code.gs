@@ -129,13 +129,14 @@ function installTrigger() {
   // clear our own triggers first (idempotent)
   ScriptApp.getProjectTriggers().forEach(function (t) {
     var fn = t.getHandlerFunction();
-    if (fn === 'onEditRebuild_' || fn === 'buildDeck') ScriptApp.deleteTrigger(t);
+    if (fn === 'onEditRebuild_' || fn === 'onSheetChange' || fn === 'buildDeck') ScriptApp.deleteTrigger(t);
   });
   var ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   ScriptApp.newTrigger('onEditRebuild_').forSpreadsheet(ss).onEdit().create();
+  ScriptApp.newTrigger('onSheetChange').forSpreadsheet(ss).onChange().create();   // structural changes too
   ScriptApp.newTrigger('buildDeck').timeBased().everyDays(1)
     .atHour(withSettings_(CONFIG).REFRESH_HOUR).create();
-  Logger.log('Triggers installed: on-edit (debounced) + daily @ ' + withSettings_(CONFIG).REFRESH_HOUR + ':00');
+  Logger.log('Triggers installed: on-edit + on-change (debounced) + daily @ ' + withSettings_(CONFIG).REFRESH_HOUR + ':00');
 }
 
 /*═══════════════════════ WEEKLY HISTORY (snapshot) ════════════════════════
@@ -204,6 +205,32 @@ function rebuildIfDirty_() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'rebuildIfDirty_') ScriptApp.deleteTrigger(t);
   });
+}
+
+/**
+ * On-CHANGE handler (structural: row insert/delete, paste, format) - the
+ * companion to onEditRebuild_ (cell-value edits). onEdit misses changes that
+ * onChange catches, so registering BOTH means a manual Sheet edit ALWAYS rebuilds
+ * the deck. Only the tracked tabs (Exec Dashboard / Waves) trigger a rebuild;
+ * reuses the same 60s debounce so a burst of changes = one rebuild.
+ *
+ * needsYou: Register this as an installable trigger (or just run installTrigger()
+ * which now wires it): Apps Script -> Triggers (clock icon) -> Add trigger ->
+ *   Function: onSheetChange | Event source: From spreadsheet | Event type: On change
+ */
+function onSheetChange(e) {
+  try {
+    // Tracked tabs, from the repo's real config (CFG.TABS), not a separate const.
+    var tracked = [CONFIG.TABS.execRoll.name, CONFIG.TABS.waves.name];  // 'Exec Dashboard', 'Waves'
+    var sheet = (e && e.source) ? e.source.getActiveSheet() : SpreadsheetApp.getActiveSheet();
+    if (!sheet || tracked.indexOf(sheet.getName()) === -1) return;
+    // Same debounce path as onEditRebuild_: mark dirty + schedule one rebuild.
+    onEditRebuild_();
+    try { CacheService.getScriptCache().remove('execStatusData'); } catch (_) {}
+    Logger.log('onSheetChange: rebuild scheduled - tab: ' + sheet.getName());
+  } catch (err) {
+    Logger.log('onSheetChange ERROR: ' + err.message);   // never throw - one bad change must not break the sheet
+  }
 }
 
 /*═══════════════════════════ DATA LAYER ═══════════════════════════════════*/
