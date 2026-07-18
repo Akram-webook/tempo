@@ -159,6 +159,24 @@ try {
   WP.ui.workloadMap.render(el);
   assert(el.querySelector('.tree .node'), 'tree still renders in AR/RTL');
   assert(/تركيز على الفريق|العودة إلى المؤسسة|مُوجز|مفصّل/.test(el.innerHTML), 'AR labels present (focus / back / density)');
+
+  // --- "scroll twice" fix: a wheel the tree can't use is forwarded to the page
+  // Re-render LTR, then dispatch a cancelable wheel over .tree-scroll. In jsdom
+  // the tree has no scrollable overflow (0 metrics), so the tree cannot take the
+  // wheel and the handler must preventDefault (forwarding it to the page scroll
+  // container) instead of letting the container silently swallow the gesture.
+  WP.state.lang = 'en';
+  WP.ui.workloadMap.render(el);
+  const scroller = el.querySelector('.tree-scroll');
+  assert(scroller, 'tree-scroll present for wheel-forwarding test');
+  let defaultPrevented = false;
+  const wheel = new window.Event('wheel', { bubbles: true, cancelable: true });
+  wheel.deltaY = 120; wheel.ctrlKey = false;
+  // capture whether the handler called preventDefault
+  const realPD = wheel.preventDefault.bind(wheel);
+  wheel.preventDefault = function () { defaultPrevented = true; realPD(); };
+  scroller.dispatchEvent(wheel);
+  assert(defaultPrevented, 'a wheel the tree cannot scroll is forwarded to the page (preventDefault), not swallowed');
 } catch (e) {
   errors.push('[run] ' + e.message + '\n' + e.stack);
 }
