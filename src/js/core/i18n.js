@@ -626,6 +626,7 @@
     execPlanned:    { en: 'Planned', ar: 'مخطّط' },
     execTotalWaves: { en: 'Total waves', ar: 'إجمالي الموجات' },
     execDelivered:  { en: 'delivered', ar: 'مُنجز' },
+    execTrend:      { en: 'trend', ar: 'الاتجاه' },
     execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
     execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },
     execNoRequests: { en: 'No requests on the sheet yet.', ar: 'لا توجد طلبات على الورقة بعد.' },
