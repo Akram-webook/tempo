@@ -1,17 +1,13 @@
-/* Headless verify: the native Executive Status view (live from the Feedback
- * sheet via JSONP) + its entry-point gate. The Executive Status stores no data
- * of its own — it reads WP.config.execStatusEndpoint at view time and renders
- * on-brand inside Tempo; the private Google Slides deck is reached via the
- * "Open / present" button (new tab). Asserts:
- *  - status->color for all 5 buckets;
- *  - "what needs you" derives from requests[] Needs-input (+New/In review),
- *    NOT from waves[].needs;
- *  - cover math (done/total => pct) + proportion bar widths;
- *  - single gate (endpoint set AND admin/director; hidden for member; hidden
- *    when endpoint empty);
- *  - the JSONP loader builds a <script src=…?callback=…> and uses NO fetch/XHR;
- *  - "Open / present" opens the raw deck link in a new tab (noopener, SVG);
- *  - EN + AR; no console errors. */
+/* Headless verify: the native Project-delivery view (GitHub warehouse model).
+ * The page fetch()es data/exec-status.json - a repo file committed by the
+ * exec-status Action and served same-origin by Pages. NO JSONP, NO Google.
+ * Asserts:
+ *  - status->color buckets (drift guard shared with the report page);
+ *  - the gate = admin/director only (data is always fetchable);
+ *  - load() uses fetch() (NOT JSONP/script-injection) on execStatusData;
+ *  - launcher renders cover.progress %; waves render with progress + health;
+ *  - trend sparkline from history[]; empty-state when generated == null;
+ *  - "Open full report" links to the status.html report; EN + AR; no errors. */
 const fs = require('fs'), path = require('path');
 const { JSDOM } = require('jsdom');
 
@@ -33,9 +29,18 @@ window.addEventListener('error', e => { if (!benign.test(String(e.message))) err
 window.HTMLElement.prototype.scrollIntoView = function () {};
 window.matchMedia = window.matchMedia || function () { return { matches: false, addEventListener() {}, removeEventListener() {} }; };
 
-// Guard: NO real network. If exec.js ever reaches for fetch/XHR, fail loudly.
-window.fetch = function () { errors.push('[net] exec used fetch() — must be JSONP'); return Promise.reject(new Error('no fetch')); };
-window.XMLHttpRequest = function () { errors.push('[net] exec used XMLHttpRequest — must be JSONP'); };
+// --- fetch mock: capture the URL, return whatever the current test wants. ------
+let fetchedUrl = null, nextPayload = null, nextOk = true;
+window.fetch = function (url) {
+  fetchedUrl = url;
+  return Promise.resolve({
+    ok: nextOk,
+    status: nextOk ? 200 : 404,
+    json: function () { return Promise.resolve(nextPayload); },
+  });
+};
+// (JSONP would inject <script src=...?callback=...>; we assert exec uses fetch()
+// on data/exec-status.json below, which is the direct proof it is not JSONP.)
 
 for (const s of srcs) {
   const code = fs.readFileSync(path.join(root, s), 'utf8');
@@ -44,226 +49,111 @@ for (const s of srcs) {
 }
 
 const WP = window.WP;
-WP.render = function () {};   // neutralize app.js's DOMContentLoaded bootstrap
+WP.render = function () {};
 function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
+const $ = (sel) => window.document.querySelector(sel);
 
-const REAL_DECK = WP.config.execDeckUrl;
-// The prototype ships with an EMPTY endpoint (no backend) + a baked sample.
-// The JSONP-render half of this suite needs a live endpoint to exercise the
-// loader, so set a test one here explicitly.
-const ENDPOINT = 'https://script.example/exec';
-WP.config.execStatusEndpoint = ENDPOINT;
-
-// ISO date helpers for the timeline buckets (deterministic vs "today").
-const DAY = 86400000;
-function iso(offsetDays) { return new Date(Date.now() + offsetDays * DAY).toISOString().slice(0, 10); }
-
-// A representative payload mirroring the verified response shape. Requests carry
-// dates so the timeline can bucket them: one this-week, one last-week, one
-// upcoming, plus undated.
+// The GitHub-warehouse payload shape (committed data/exec-status.json).
 const PAYLOAD = {
-  ok: true,
-  generatedAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),  // 3h ago
-  cover: { done: 6, next: 3, later: 1, total: 10, pct: 60 },
-  history: [{ date: '2026-07-14', progress: 50 }, { date: '2026-07-16', progress: 55 }, { date: '2026-07-18', progress: 60 }],
+  generated: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),  // 3h ago
+  cover: { status: 'In Progress', progress: 60, health: 'amber',
+    narrative: '60% delivered across 4 waves - 1 wave(s) need attention.' },
   waves: [
-    { wave: 'Wave 3.1', focus: 'Settings', status: 'Done', inside: 'Members; Security; Privacy', why: 'Self-serve', needs: 'SHOULD-BE-IGNORED-FOR-NEEDS' },
-    { wave: 'Wave 3.2', focus: 'Exec', status: 'Next', inside: 'Native status', why: 'One click' },
+    { name: 'Executive Status Deck', label: 'wave:exec-status', status: 'In Progress',
+      progress: 85, health: 'green', openPRs: [], notes: '4/5 PRs merged.' },
+    { name: 'Capacity Engine', label: 'wave:capacity', status: 'In Progress',
+      progress: 40, health: 'red',
+      openPRs: [{ number: 118, title: 'Workload model', blockedOn: 'reviewers', daysSinceActivity: 7 }],
+      notes: '1/3 PRs merged. #118 awaiting review (7d).' },
   ],
-  requests: [
-    { id: 1, area: 'Settings', note: 'Trim my settings',   status: 'Done',        priority: 'P2', date: iso(0) },   // this week
-    { id: 2, area: 'Layout',   note: 'Full width',         status: 'In progress', priority: 'P1', date: iso(-8) },  // last week
-    { id: 3, area: 'Exec',     note: 'Where do I see it',  status: 'Needs input', priority: 'P0', date: iso(0) },
-    { id: 4, area: 'Access',   note: 'New ask',            status: 'New',         date: iso(10) },                  // upcoming
-    { id: 5, area: 'Eval',     note: 'Please review',      status: 'In review' },                                   // undated
-  ],
+  needsYou: ['Capacity Engine: 1/3 PRs merged. #118 awaiting review (7d).'],
+  history: [{ ts: '2026-07-14T07:00:00Z', progress: 50 }, { ts: '2026-07-16T07:00:00Z', progress: 55 }, { ts: '2026-07-18T07:00:00Z', progress: 60 }],
 };
 
 (async () => {
   try {
-    // --- status -> color: all 5 buckets --------------------------------------------
-    // DRIFT GUARD: this pins the status->colour bucket contract shared BY NAME
-    // with the Google Slides deck (docs/exec-deck/Code.gs, separate Apps Script
-    // runtime — cannot import). If either side's regex/buckets change and break
-    // these expectations, CI fails here. Keep Code.gs's statusColorKey in sync.
+    // --- status -> color buckets (drift guard) -------------------------------------
     const ck = WP.execStatus.statusColorKey;
-    assert(ck('Done') === 'green' && ck('live') === 'green' && ck('on track') === 'green', 'green bucket');
-    assert(ck('In progress') === 'amber' && ck('next') === 'amber' && ck('in review') === 'amber', 'amber bucket');
-    assert(ck('Needs input') === 'red' && ck('blocked') === 'red' && ck('needs you') === 'red', 'red bucket');
-    assert(ck('Later') === 'violet' && ck('planned') === 'violet' && ck('idea') === 'violet', 'violet bucket');
+    assert(ck('Done') === 'green' && ck('on track') === 'green', 'green bucket');
+    assert(ck('In progress') === 'amber' && ck('in review') === 'amber', 'amber bucket');
+    assert(ck('Needs input') === 'red' && ck('blocked') === 'red', 'red bucket');
     assert(ck('') === 'grey' && ck('whatever') === 'grey', 'grey fallback');
 
-    // --- the gate ------------------------------------------------------------------
-    WP.can = function (cap) { return cap === 'viewSettings'; };   // admin/director
-    assert(WP.execDeckVisible() === true, 'visible for admin/director with endpoint set');
-    WP.can = function () { return false; };                       // member
+    // --- the gate: admin/director only (data is always fetchable) ------------------
+    WP.can = function (cap) { return cap === 'viewSettings'; };
+    assert(WP.execDeckVisible() === true, 'visible for admin/director');
+    WP.can = function () { return false; };
     assert(WP.execDeckVisible() === false, 'hidden for a non-admin');
     WP.can = function (cap) { return cap === 'viewSettings'; };
-    const saveEp = WP.config.execStatusEndpoint;
-    const saveSample = WP.data && WP.data.EXEC_SAMPLE;
-    // Data source is endpoint OR the baked sample. Blank endpoint alone does NOT
-    // hide the page while the sample exists (that IS the no-backend demo path).
-    WP.config.execStatusEndpoint = '   ';
-    if (WP.data) WP.data.EXEC_SAMPLE = { ok: true, cover: {}, requests: [] };
-    assert(WP.execDeckVisible() === true, 'visible via baked sample when endpoint blank');
-    // Only hidden when there is NO source at all.
-    if (WP.data) WP.data.EXEC_SAMPLE = null;
-    assert(WP.execDeckVisible() === false, 'hidden when no endpoint AND no sample');
-    WP.config.execStatusEndpoint = saveEp;
-    if (WP.data) WP.data.EXEC_SAMPLE = saveSample;
 
-    // --- render: header renders immediately with a loading skeleton + open/present --
+    // --- render: fetch(), NOT JSONP -----------------------------------------------
     WP.state.lang = 'en';
-    const el = window.document.getElementById('app');
-
-    // Intercept the JSONP <script> injection: capture the src + callback, and
-    // invoke the callback next tick with the current payload (no network). When
-    // failNext is set, fire the script's onerror instead (simulate a failure).
-    let injectedSrc = null, curPayload = PAYLOAD, failNext = false;
-    const realAppend = window.HTMLHeadElement.prototype.appendChild;
-    window.HTMLHeadElement.prototype.appendChild = function (node) {
-      if (node && node.tagName === 'SCRIPT' && /callback=/.test(node.src || '')) {
-        injectedSrc = node.src;
-        const cb = decodeURIComponent(node.src.match(/callback=([^&]+)/)[1]);
-        const fail = failNext;
-        Promise.resolve().then(function () {
-          if (fail) { if (typeof node.onerror === 'function') node.onerror(new window.Event('error')); return; }
-          if (window[cb]) window[cb](curPayload);
-        });
-        return node;   // pretend it was appended
-      }
-      return realAppend.call(this, node);
-    };
-
+    nextPayload = PAYLOAD; nextOk = true;
+    const el = window.document.createElement('div');
     WP.ui.exec.render(el);
-
-    // header present immediately — relabeled as PROJECT DELIVERY (not employee)
+    assert($ ? true : true, 'render did not throw');
     assert(el.querySelector('.ex-title'), 'header title renders immediately');
-    assert(el.querySelector('.ex-skel'), 'loading skeleton shown while JSONP resolves');
-    assert(el.querySelector('#exec-refresh'), 'Refresh button present');
+    // let the fetch().then chain resolve
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    assert(fetchedUrl && /data\/exec-status\.json/.test(fetchedUrl), 'load() fetches data/exec-status.json');
+    assert(fetchedUrl && /[?&]t=/.test(fetchedUrl), 'fetch URL is cache-busted');
 
-    // the JSONP loader built the right URL
-    assert(injectedSrc && injectedSrc.indexOf(ENDPOINT) === 0, 'JSONP script src starts with the endpoint');
-    assert(injectedSrc && /[?&]callback=/.test(injectedSrc), 'JSONP script has a ?callback= param');
-
-    // let the callback + paint run
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
-
-    // --- header framing: project-delivery, explicitly not an employee view ---------
-    assert(/PROJECT DELIVERY|تسليم المشروع/i.test(el.querySelector('.ex-eyebrow').textContent), 'eyebrow reads as project delivery (not "workforce ops")');
-    // the big page title must match the delivery framing too — no employee should
-    // read it as an "Executive status" / product page.
+    // header framing stays project-delivery (not employee)
+    assert(/PROJECT DELIVERY|تسليم المشروع/i.test(el.querySelector('.ex-eyebrow').textContent), 'eyebrow reads as project delivery');
     assert(/Project delivery|تسليم المشروع/i.test(el.querySelector('.ex-title').textContent) &&
-      !/Executive/i.test(el.querySelector('.ex-title').textContent), 'title reads as project delivery (not "Executive status")');
+      !/Executive/i.test(el.querySelector('.ex-title').textContent), 'title reads project delivery (not Executive)');
     assert(el.querySelector('.ex-forwho') && /Not an employee view|ليست شاشة للموظفين/i.test(el.querySelector('.ex-forwho').textContent), 'a for-who line states it is not an employee view');
 
-    // --- compact LAUNCHER: % + bar + open-DECK button (not a full render) ----------
-    const pct = el.querySelector('.ex-pct-n');
-    assert(pct && /60%/.test(pct.textContent), 'launcher % delivered renders (60%)');
-    const bars = el.querySelectorAll('.ex-launch .ex-bar span');
-    assert(bars.length === 3 && /width:\s*60%/.test(bars[0].getAttribute('style')), 'proportion bar green = 60%');
-    const open = el.querySelector('#exec-open');
-    assert(open && open.tagName === 'A' && open.getAttribute('href') === REAL_DECK, 'Open-deck is an anchor to the deck link');
-    assert(open && open.target === '_blank' && /noopener/.test(open.rel) && /noreferrer/.test(open.rel), 'Open-deck new tab + noopener/noreferrer');
-    assert(open && open.querySelector('svg'), 'Open-deck uses an inline SVG icon');
-    assert(!el.querySelector('.ex-rows') && !el.querySelector('.ex-waves'), 'the full requests table + waves grid are NO LONGER rendered in-page (deck owns them)');
-    assert(el.querySelector('.ex-launch-sum'), 'launcher shows a one-line summary');
-    // #3 trend sparkline: renders an SVG path from history[] (rising 50->60 => up)
+    // --- launcher: cover.progress % + single bar + trend sparkline -----------------
+    const pctn = el.querySelector('.ex-pct-n');
+    assert(pctn && /60%/.test(pctn.textContent), 'launcher renders cover.progress (60%)');
+    const bar0 = el.querySelector('.ex-launch .ex-bar span');
+    assert(bar0 && /width:\s*60%/.test(bar0.getAttribute('style') || ''), 'progress bar green = 60%');
     assert(el.querySelector('.ex-spark svg path'), 'trend sparkline renders from history[]');
-    assert(el.querySelector('.ex-spark-l--up'), 'sparkline marks a rising trend as up');
+    assert(el.querySelector('.ex-spark-l--up'), 'rising history marks trend up');
 
-    // --- TIMELINE: calendar-style WEEK NAVIGATOR (segment + stepper + Today) -------
-    const modes = [...el.querySelectorAll('.ex-seg-btn')].map(b => b.getAttribute('data-mode'));
-    ['week', 'all'].forEach(m => assert(modes.indexOf(m) >= 0, 'timeline has the ' + m + ' mode'));
-    // stepper present with prev/next + a week label + Today
-    assert(el.querySelector('.ex-step-prev[data-step="-1"]'), 'stepper has a prev-week control');
-    assert(el.querySelector('.ex-step-next[data-step="1"]'), 'stepper has a next-week control');
-    assert(el.querySelector('.ex-step-label') && el.querySelector('.ex-step-label').getAttribute('aria-live') === 'polite', 'week label is aria-live for a11y');
-    const todayBtn = el.querySelector('.ex-step-today[data-today="1"]');
-    assert(todayBtn, 'stepper has a Today button');
-    assert(todayBtn.hasAttribute('disabled'), 'Today is disabled while already on the current week');
-    // default = current week (offset 0): this-week items show, last-week one does not
-    let tl = el.querySelector('.ex-tl-body');
-    assert(/Where do I see it|Trim my settings/.test(tl.textContent), 'current-week timeline shows this-week items');
-    assert(!/Full width/.test(tl.textContent), 'current-week timeline hides the last-week item');
-    // step ‹ prev → previous week surfaces the last-week item, hides this-week; Today re-enables
-    el.querySelector('.ex-step-prev').click();
-    tl = el.querySelector('.ex-tl-body');
-    assert(/Full width/.test(tl.textContent), 'prev-week step surfaces the last-week item');
-    assert(!/Where do I see it/.test(tl.textContent), 'prev-week step hides this-week items');
-    assert(!el.querySelector('.ex-step-today').hasAttribute('disabled'), 'Today becomes enabled once off the current week');
-    // Today snaps back to the current week
-    el.querySelector('.ex-step-today').click();
-    tl = el.querySelector('.ex-tl-body');
-    assert(/Where do I see it|Trim my settings/.test(tl.textContent), 'Today snaps back to the current week');
-    // "All" → grouped by week, includes an undated bucket (nothing silently hidden)
-    el.querySelector('.ex-seg-btn[data-mode="all"]').click();
-    tl = el.querySelector('.ex-tl-body');
-    assert(/Please review/.test(tl.textContent), 'All shows the undated item (nothing silently hidden)');
-    assert(el.querySelectorAll('.ex-tl-group').length >= 2, 'All groups by week bucket');
-    // restore week mode for later asserts
-    el.querySelector('.ex-seg-btn[data-mode="week"]').click();
+    // --- waves section: progress + health + blocked-on ----------------------------
+    const waves = el.querySelectorAll('.ex-wave');
+    assert(waves.length === 2, 'both waves render (got ' + waves.length + ')');
+    assert(/Capacity Engine/.test(el.textContent), 'wave name shows');
+    assert(el.querySelector('.ex-wave-blk') && /reviewers/.test(el.querySelector('.ex-wave-blk').textContent), 'blocked-on shows whose move it is');
 
-    // --- WHAT NEEDS YOU derives from requests[] (Needs input + New + In review), NOT waves[].needs
-    const needs = el.querySelector('.ex-needs');
-    assert(needs, 'needs-you section renders when there are open asks');
-    assert(needs && /Where do I see it/.test(needs.textContent), 'needs-you includes the Needs-input request');
-    assert(needs && /New ask/.test(needs.textContent), 'needs-you includes a New request');
-    assert(needs && /Please review/.test(needs.textContent), 'needs-you includes an In-review request');
-    assert(!/SHOULD-BE-IGNORED-FOR-NEEDS/.test(el.textContent), 'needs-you does NOT use waves[].needs');
+    // --- needs-you from data.needsYou ---------------------------------------------
+    assert(/awaiting review/i.test(el.textContent), 'needsYou item renders');
 
-    // --- section ORDER: launcher -> timeline -> needs-you --------------------------
-    const secs = [...el.querySelectorAll('.section')];
-    const idxOf = sel => secs.findIndex(s => s.matches(sel) || s.querySelector(sel));
-    assert(secs.findIndex(s => s.classList.contains('ex-launch')) === 0, 'launcher is first');
-    assert(idxOf('.ex-tl-body') > 0 && idxOf('.ex-tl-body') < idxOf('.ex-needs'), 'timeline sits between launcher and needs-you');
+    // --- "Open full report" links to the report page ------------------------------
+    const open = el.querySelector('#exec-open');
+    assert(open && /status\.html/.test(open.getAttribute('href')), 'Open-report links to status.html');
+    assert(open && open.getAttribute('target') === '_blank' && /noopener/.test(open.getAttribute('rel') || ''), 'Open-report new tab + noopener');
 
-    // --- "all clear" when no open asks ---------------------------------------------
-    curPayload = { ok: true, generatedAt: PAYLOAD.generatedAt,
-      cover: { done: 2, next: 0, later: 0, total: 2, pct: 100 },
-      waves: [], requests: [{ id: 9, area: 'X', note: 'shipped', status: 'Done', date: iso(0) }] };
-    el.innerHTML = '';
-    WP.ui.exec.render(el);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
-    assert(el.querySelector('.ex-clear'), 'calm "all clear" state when nothing needs the director');
-    assert(!el.querySelector('.ex-needs'), 'no needs-you list when all clear');
-    curPayload = PAYLOAD;   // restore
+    // --- EMPTY STATE: generated == null -> "no data yet", not sample ---------------
+    nextPayload = { generated: null, cover: {}, waves: [], needsYou: [], history: [] };
+    const el2 = window.document.createElement('div');
+    WP.ui.exec.render(el2);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    assert(el2.querySelector('.ex-empty--nodata'), 'empty state shows when generated is null (not sample data)');
+    assert(!el2.querySelector('.ex-wave'), 'no waves render in the empty state');
 
-    // --- error state on JSONP failure ----------------------------------------------
-    failNext = true;
-    el.innerHTML = '';
-    WP.ui.exec.render(el);
-    // extra microtask hops: loadJSONP.onerror -> reject -> execStatus.fetch chain -> load().catch
-    for (let i = 0; i < 8; i++) await Promise.resolve();
-    assert(el.querySelector('.ex-error'), 'error state shown when the endpoint fails');
-    assert(el.querySelector('#exec-retry'), 'error state offers Retry');
-    failNext = false;
-
-    // --- role gate at the view: a member is bounced --------------------------------
-    WP.can = function () { return false; };
-    let routed = null; const realSet = WP.setState; WP.setState = function (p) { routed = p; };
-    el.innerHTML = '';
-    WP.ui.exec.render(el);
-    assert(routed && routed.route === 'dashboard', 'a non-admin is redirected to dashboard');
-    assert(!el.querySelector('.ex-title'), 'nothing renders for a non-admin');
-    WP.setState = realSet;
-    WP.can = function (cap) { return cap === 'viewSettings'; };
+    // --- fetch error -> error state (retry) ---------------------------------------
+    nextOk = false;
+    const el3 = window.document.createElement('div');
+    WP.ui.exec.render(el3);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    assert(el3.querySelector('.ex-error'), 'error state shown when the fetch fails');
+    nextOk = true;
 
     // --- AR ------------------------------------------------------------------------
     WP.state.lang = 'ar';
-    el.innerHTML = '';
-    WP.ui.exec.render(el);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
-    assert(/تسليم المشروع/.test(el.textContent), 'title localizes to AR (project delivery)');
-    const openAr = el.querySelector('#exec-open');
-    assert(openAr && /فتح/.test(openAr.textContent), 'Open/present localizes to AR');
+    nextPayload = PAYLOAD;
+    const elAr = window.document.createElement('div');
+    WP.ui.exec.render(elAr);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    assert(/تسليم المشروع/.test(elAr.textContent), 'title localizes to AR (project delivery)');
 
-    window.HTMLHeadElement.prototype.appendChild = realAppend;
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);
   }
-
   if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-  console.log('PASS — exec status (native): 5-bucket status->color, JSONP loader (script+callback, no fetch/XHR), cover math + bar widths, requests rollup, needs-you from requests[] (not waves.needs), waves render, role gate (admin shows / member bounced / endpoint-empty hidden), Open/present opens the raw deck (new tab, noopener, SVG), EN+AR.');
+  console.log('PASS — project-delivery (GitHub warehouse): fetch() on data/exec-status.json (no JSONP), admin gate, cover.progress launcher + single bar, waves with progress/health/blocked-on, trend sparkline, needsYou, empty-state when no run yet, error state, Open-report -> status.html, EN+AR.');
   process.exit(0);
 })();

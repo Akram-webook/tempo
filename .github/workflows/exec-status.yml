@@ -1,69 +1,66 @@
-name: Exec status (derive from PRs)
+name: Executive Status
 
-# Recompute the exec/project-delivery status from real merged-PR counts and
-# push it to the Google Sheet + deck. Fires on every merge to main and daily
-# at 07:00 UTC as a catch-all. Health is COMPUTED, never asserted.
+# Derive Project-delivery status from merged PRs and COMMIT it into the repo:
+#   data/exec-status.json  (the warehouse; git history = audit log)
+#   src/status.html        (the shareable report; replaces Google Slides)
+# GitHub Pages then serves both with no auth / no CORS / no JSONP. No Google.
 on:
   push:
     branches: [main]
+    # Its OWN commits write these two files - ignore them so the workflow does
+    # not trigger itself in an infinite loop. A real PR merge touches other paths
+    # and still fires.
+    paths-ignore:
+      - 'data/exec-status.json'
+      - 'src/status.html'
   schedule:
     - cron: '0 7 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      override_narrative:
+        description: 'Override narrative text (optional)'
+        required: false
+      override_wave_notes:
+        description: 'JSON object of wave name -> note override (optional)'
+        required: false
+      override_needsYou:
+        description: 'Comma-separated needsYou items (optional)'
+        required: false
 
-permissions:
-  contents: read
-  pull-requests: read
+env:
+  EXEC_REQUIRE_COMMIT: '1'   # job FAILS if the commit does not land. Green = data in repo.
+
+# Avoid overlapping runs racing on the same two files (each commit needs the
+# latest SHA); newer run wins.
+concurrency:
+  group: exec-status
+  cancel-in-progress: false
 
 jobs:
-  exec-status:
+  update-exec-status:
     runs-on: ubuntu-latest
-    env:
-      # The endpoint comes from the GAS_ENDPOINT secret (Akram's deployed /exec
-      # Web App). Falls back to the known public URL if the secret is unset so a
-      # fork / early run still has a target. The secret wins.
-      EXEC_ENDPOINT: ${{ secrets.GAS_ENDPOINT || 'https://script.google.com/macros/s/AKfycbzcvghQNmEFZ5fNSjPIYONrNZVV8fjiboi93_cffS1vrfXPy9Cx4fskGmeVRhjFGu3Krw/exec' }}
+    permissions:
+      contents: write        # needed to commit data/exec-status.json + src/status.html
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Reachability probe FIRST — reads the real HTTP response from the runner
-      # so the logs show exactly what the endpoint does with a POST (a 405 +
-      # HTML means doPost is not deployed / not public). Never fails the job:
-      # it is diagnostic only, the Node step owns the real success/failure.
-      - name: Probe endpoint reachability (diagnostic, never fails)
-        run: |
-          # Identity check: which deployment is the secret actually pointing at?
-          # Print only the LAST 12 chars of the /exec id (safe, not the secret) so
-          # a stale/empty GAS_ENDPOINT is obvious without guessing. If this tail
-          # is "l9mD-JU5GVMrf/exec" the OLD fallback URL is in use (secret unset
-          # or unchanged); a working new deployment shows a DIFFERENT tail.
-          echo "endpoint tail: ...${EXEC_ENDPOINT: -18}"
-          echo "POST probe (keep method across the Apps Script 302):"
-          code=$(curl -s -L --post301 --post302 -o /tmp/probe.body -w '%{http_code}' \
-            -X POST "$EXEC_ENDPOINT" \
-            -H 'Content-Type: application/json' \
-            --data '{"ship":{"date":"probe","agent":"ci-probe","cover":{"status":"In Progress","health":0,"narrative":"reachability probe"}}}') || true
-          echo "  http_code=$code"
-          echo "  body (first 300 chars):"; head -c 300 /tmp/probe.body || true; echo
-          if [ "$code" = "200" ]; then echo "  -> endpoint accepts POST"; else
-            echo "  -> endpoint NOT accepting POST (doPost undeployed or non-public). Node step will report the real failure."; fi
-
-      # Prove the machine end-to-end against a local mock that mimics Apps
-      # Script (302 -> {"ok":true}). Green here == compute + redirect-aware POST
-      # are correct, independent of the live endpoint's deployment state.
-      - name: Self-test (compute + redirect-aware POST)
+      # Prove the pipeline end-to-end against a mock GitHub API (compute +
+      # history append + commit json/html). Green here == the machine is correct.
+      - name: Self-test (compute + history + commit)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
         run: node scripts/compute-exec-status.js --selftest
 
-      - name: Compute + push exec status
+      - name: Compute + commit exec status
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
-          # Strict: a failed live POST now FAILS the job (endpoint is expected to
-          # be deployed + public). A red run here means status is NOT flowing.
-          EXEC_REQUIRE_POST: '1'
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          OVERRIDE_NARRATIVE: ${{ inputs.override_narrative }}
+          OVERRIDE_WAVE_NOTES: ${{ inputs.override_wave_notes }}
+          OVERRIDE_NEEDSYOU: ${{ inputs.override_needsYou }}
         run: node scripts/compute-exec-status.js

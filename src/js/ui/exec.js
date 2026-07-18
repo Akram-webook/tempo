@@ -20,6 +20,7 @@
 (function (WP) {
   'use strict';
   const ui = WP.ui;
+  const esc = function (s) { return ui.esc(String(s == null ? '' : s)); };
 
   // status -> colour bucket. NOTE: the Google Slides deck (docs/exec-deck/Code.gs)
   // is a SEPARATE Apps Script runtime and keeps its OWN copy of this rule — it
@@ -60,11 +61,9 @@
     return days + t('execDayAgo');
   }
 
-  // Cross-origin GET uses the shared ui-layer JSONP helper (WP.ui.jsonp) — the
-  // transport lives in the ui layer (DOM-legal) and is reused, not buried here.
-  // WHY JSONP: the Apps Script endpoint 302-redirects with no CORS headers, so
-  // fetch() from GitHub Pages fails; a <script> tag is CORS-exempt.
-  const loadJSONP = WP.ui.jsonp;
+  // Data comes from data/exec-status.json - a repo file committed by the
+  // exec-status GitHub Action and served same-origin by Pages. Plain fetch(),
+  // no JSONP, no CORS, no Google. See load() below.
 
   // ---- small on-brand pieces --------------------------------------------------
   // Status icon per bucket — so status is conveyed by SHAPE + colour, never
@@ -112,13 +111,16 @@
   function launcherHTML(data) {
     const t = WP.i18n.t;
     const c = (data && data.cover) || {};
-    const done = +c.done || 0, next = +c.next || 0, later = +c.later || 0;
-    const total = +c.total || 0;
-    const pct = (c.pct != null && !isNaN(+c.pct)) ? Math.round(+c.pct)
-      : (total ? Math.round((done / total) * 100) : 0);
-    const w = function (n) { return total ? (n / total * 100) : 0; };
-    // needs-count from the live requests (red bucket) for the rollup
-    const need = ((data && data.requests) || []).filter(function (r) { return statusColorKey(r.status) === 'red'; }).length;
+    const waves = (data && data.waves) || [];
+    // GitHub-warehouse shape: cover.progress (number) + cover.health (green/amber/red).
+    // Progress bar = the single effort-weighted % ; the rest is remaining.
+    const pct = (c.progress != null && !isNaN(+c.progress)) ? Math.round(+c.progress)
+      : (c.pct != null ? Math.round(+c.pct) : 0);
+    // Rollup counts derived from the waves list.
+    const done = waves.filter(function (x) { return x.status === 'Done'; }).length;
+    const next = waves.filter(function (x) { return x.status === 'In Progress'; }).length;
+    const need = ((data && data.needsYou) || []).length;
+    const w = function (v) { return v; };   // bar segments are already percentages
     const summary = t('execSummary').replace('{done}', done).replace('{next}', next).replace('{need}', need);
     const openUrl = ui.esc((WP.config.execDeckUrl || '').trim());
     const openBtn = openUrl
@@ -130,9 +132,8 @@
         openBtn +
       '</div>' +
       '<div class="ex-bar" role="img" aria-label="' + pct + '% ' + t('execDelivered') + '">' +
-        '<span style="width:' + w(done) + '%;background:' + COLORS.green + '"></span>' +
-        '<span style="width:' + w(next) + '%;background:' + COLORS.amber + '"></span>' +
-        '<span style="width:' + Math.max(0, w(total - done - next)) + '%;background:' + COLORS.grey + '"></span>' +
+        '<span style="width:' + Math.max(0, Math.min(100, pct)) + '%;background:' + COLORS.green + '"></span>' +
+        '<span style="width:' + Math.max(0, 100 - pct) + '%;background:' + COLORS.grey + '"></span>' +
       '</div>' +
       '<div class="ex-launch-sum">' + summary + '</div>' +
       sparklineHTML(data && data.history) +
@@ -320,19 +321,48 @@
   let refWeekOffset = 0; // current week = 0; ‹prev = -1, next› = +1 … (time-navigator reference)
   let lastData = null;   // last payload (so a nav change repaints without refetch)
 
+  // WAVES section (GitHub-warehouse shape): one row per wave with progress bar +
+  // health dot + notes + any open-PR blockers. This is the heart of the page now.
+  function wavesHTML(data) {
+    const t = WP.i18n.t;
+    const waves = (data && data.waves) || [];
+    if (!waves.length) return '';
+    const rows = waves.map(function (w) {
+      const pct = Math.max(0, Math.min(100, +w.progress || 0));
+      const h = w.health || 'green';
+      const blockers = (w.openPRs || []).filter(function (p) { return p.blockedOn; })
+        .map(function (p) { return '#' + p.number + ' ' + esc(p.blockedOn) + (p.daysSinceActivity ? ' (' + p.daysSinceActivity + 'd)' : ''); })
+        .join(' · ');
+      return '<div class="ex-wave">' +
+        '<div class="ex-wave-h">' + statusIcon(h === 'red' ? 'red' : h === 'amber' ? 'amber' : 'green') +
+          '<span class="ex-wave-n">' + esc(w.name) + '</span>' +
+          '<span class="ex-wave-p">' + pct + '%</span></div>' +
+        '<div class="ex-bar ex-bar--sm"><span style="width:' + pct + '%;background:' + COLORS.green + '"></span>' +
+          '<span style="width:' + (100 - pct) + '%;background:' + COLORS.grey + '"></span></div>' +
+        (w.notes ? '<div class="ex-wave-note">' + esc(w.notes) + '</div>' : '') +
+        (blockers ? '<div class="ex-wave-blk">' + esc(t('execBlockedOn')) + ': ' + blockers + '</div>' : '') +
+      '</div>';
+    }).join('');
+    return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' + rows + '</div>';
+  }
+
   function paintBody(host, data) {
     lastData = data;
-    // Order for a director/PM scan: 1) compact launcher (summary + open deck),
-    // 2) TIMELINE (what shipped / is coming, by week), 3) WHAT NEEDS YOU.
-    const body = launcherHTML(data) + timelineHTML(data, tlMode, refWeekOffset) + needsHTML(data.requests);
+    // 1) launcher (progress + trend), 2) WAVES (health/blocked-on), 3) needs-you,
+    // 4) any dated timeline items (empty in the warehouse shape, renders nothing).
+    const needsList = (data.needsYou || []).map(function (n) { return { note: n, status: 'Needs input' }; });
+    const body = launcherHTML(data) + wavesHTML(data) +
+      (needsList.length ? needsHTML(needsList) : '') +
+      timelineHTML(data, tlMode, refWeekOffset);
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = body;
     wireBody(host);
-    // refresh the "updated" stamp with the payload's generatedAt
+    // refresh the "updated" stamp with the payload's generated time
+    const gen = data.generated || data.generatedAt;
     const headEl = host.querySelector('.ex-head');
-    if (headEl && data.generatedAt) {
+    if (headEl && gen) {
       const oldU = headEl.querySelector('.ex-updated');
-      const html = '<span class="ex-updated">' + WP.i18n.t('execUpdated') + ' ' + ui.esc(relTime(data.generatedAt)) + '</span>';
+      const html = '<span class="ex-updated">' + WP.i18n.t('execUpdated') + ' ' + ui.esc(relTime(gen)) + '</span>';
       if (oldU) oldU.outerHTML = html;
       else headEl.querySelector('.ex-head-t').insertAdjacentHTML('beforeend', html);
     }
@@ -373,23 +403,31 @@
     if (retry) retry.onclick = function () { load(host); };
   }
 
+  // Empty state - a real "no data yet" message, NOT sample data. Shown when the
+  // warehouse file is missing or has no run yet (generated == null).
+  function emptyHTML() {
+    const t = WP.i18n.t;
+    return '<div class="ex-empty ex-empty--nodata">' + ui.icon('clock', 20) +
+      ' <span>' + esc(t('execNoData')) + '</span></div>';
+  }
+  function paintEmpty(host) {
+    const bodyEl = host.querySelector('.ex-body');
+    if (bodyEl) bodyEl.innerHTML = emptyHTML();
+  }
+
   function load(host) {
     const my = ++token;
     const bodyEl = host.querySelector('.ex-body');
     if (bodyEl) bodyEl.innerHTML = skeleton();
-    const url = (WP.config.execStatusEndpoint || '').trim();
-    // No live endpoint (the prototype has no backend) -> paint the baked sample
-    // payload so the page is honest + self-contained. The "Sample data" badge
-    // already tells the viewer this is demo data. Real data is a later job.
-    if (!url) {
-      if (my !== token) return;
-      if (WP.data && WP.data.EXEC_SAMPLE) { paintBody(host, WP.data.EXEC_SAMPLE); }
-      else { paintError(host); }
-      return;
-    }
-    loadJSONP(url).then(function (data) {
+    // GitHub warehouse: fetch the committed JSON directly (no JSONP, no CORS -
+    // same-origin file on Pages). Cache-busted so a fresh commit shows at once.
+    const url = (WP.config.execStatusData || 'data/exec-status.json') + '?t=' + Date.now();
+    fetch(url, { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) throw new Error('http ' + res.status);
+      return res.json();
+    }).then(function (data) {
       if (my !== token) return;                 // superseded by a newer load
-      if (!data || data.ok === false) { paintError(host); return; }
+      if (!data || data.generated == null) { paintEmpty(host); return; }  // first run pending
       paintBody(host, data);
     }).catch(function () {
       if (my !== token) return;

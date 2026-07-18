@@ -100,26 +100,22 @@
    * (WP.can('viewSettings')). Keep the deck + sheet shared to Director + Akram.
    * The endpoint URL is not a secret; it returns only status data.
    * -------------------------------------------------------------- */
-  // Empty for the prototype: NO live backend. The exec/Project-delivery page
-  // reads the baked WP.data.EXEC_SAMPLE payload instead (honest demo, "Sample
-  // data" badge). Set this to a deployed /exec URL only when real data goes
-  // live (a later Next.js job) to switch the page back to the live source.
-  if (WP.config.execStatusEndpoint === undefined)
-    WP.config.execStatusEndpoint = '';
+  // GitHub warehouse: the Project-delivery page fetch()es this committed JSON
+  // directly from GitHub Pages (no Google, no JSONP, no CORS). Relative path so
+  // it works on Pages (/tempo/data/...) and from a local file:// build.
+  if (WP.config.execStatusData === undefined)
+    WP.config.execStatusData = 'data/exec-status.json';
 
+  // The shareable report page (replaces Google Slides) - committed by the
+  // workflow, served by Pages. The "Open full report" button links here.
   if (WP.config.execDeckUrl === undefined)
-    WP.config.execDeckUrl = 'https://docs.google.com/presentation/d/1zDbpunKFqiO6AoCZs6O7hH_S6oLUEGI0xiM1vVmZS7A/edit?usp=sharing';
+    WP.config.execDeckUrl = 'status.html';
 
-  // True ⇒ the Executive-status entry points should render for this viewer.
-  // Single source of truth for the dashboard card, the nav item and the view:
-  // a non-empty live endpoint AND the admin/director gate (same engine as Settings).
+  // True ⇒ the Project-delivery entry points render for this viewer. Data is
+  // always fetchable (a committed repo file), so the ONLY gate is the
+  // admin/director check - the empty state handles "no run yet" gracefully.
   WP.execDeckVisible = function () {
-    // Data source is EITHER a live endpoint OR the baked demo sample (the
-    // prototype ships with no backend, so the sample keeps the page alive).
-    var hasEndpoint = typeof WP.config.execStatusEndpoint === 'string' &&
-      WP.config.execStatusEndpoint.trim() !== '';
-    var hasSample = !!(WP.data && WP.data.EXEC_SAMPLE);
-    return (hasEndpoint || hasSample) && WP.can && WP.can('viewSettings');
+    return WP.can && WP.can('viewSettings');
   };
 
   /* ----------------------------------------------------------------
