@@ -22,29 +22,32 @@ async function initStubs(page) {
   await page.addInitScript(() => {
     window.__seedConfig = function () {
       if (window.WP && window.WP.config) {
-        window.WP.config.feedbackEndpoint = 'https://stub.example/exec';
-        window.WP.config.feedbackKey = 'stub-key';
+        // GitHub-warehouse transport: dispatch URL + a stub token so the guard
+        // lets Submit fire in the shot run (never a real token).
+        window.WP.config.feedbackEndpoint = 'https://api.github.com/repos/akram-webook/tempo/actions/workflows/receive-feedback.yml/dispatches';
+        window.WP.config.feedbackDispatchToken = 'stub-token';
+        window.WP.config.feedbackKey = '';
         window.WP.config.aiPolishEndpoint = 'https://stub.example/ai';
       }
     };
-    // Intercept fetch() so the AI helper + batch submit are deterministic offline
-    // (the widget now uses plain fetch() FormData/JSON — no JSONP, no iframe form).
+    // Intercept fetch() so the AI helper + the workflow_dispatch submit are
+    // deterministic offline. AI = JSON {action,note,page} -> {text}; submit =
+    // one dispatch per comment, GitHub returns 204.
     window.__failSubmit = false;
+    window.__dispatchCount = 0;
     window.fetch = function (url, opts) {
       opts = opts || {};
-      // AI helper: JSON body {action,note,page} → {text}.
-      if (typeof opts.body === 'string') {
-        var lang = (window.WP && window.WP.state && window.WP.state.lang) || 'en';
-        var txt = lang === 'ar' ? 'اقتراح مصقول واضح للملاحظة حول هذه الصفحة.'
-          : 'A clear, specific piece of feedback about this page.';
-        return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ text: txt }); } });
+      // The dispatch call: JSON body { ref, inputs } + Authorization header.
+      if (/\/dispatches$/.test(String(url))) {
+        window.__dispatchCount++;
+        if (window.__failSubmit) return Promise.reject(new Error('stub network fail'));
+        return Promise.resolve({ ok: true, status: 204, json: function () { return Promise.resolve(null); } });
       }
-      // Batch submit: FormData body with an "items" field.
-      var items = [];
-      try { items = JSON.parse(opts.body.get('items') || '[]'); } catch (e) {}
-      window.__lastItems = items;
-      if (window.__failSubmit) return Promise.reject(new Error('stub network fail'));
-      return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ ok: true, count: items.length }); } });
+      // AI helper: JSON body {action,note,page} -> {text}.
+      var lang = (window.WP && window.WP.state && window.WP.state.lang) || 'en';
+      var txt = lang === 'ar' ? 'اقتراح مصقول واضح للملاحظة حول هذه الصفحة.'
+        : 'A clear, specific piece of feedback about this page.';
+      return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve({ text: txt }); } });
     };
   });
 }
@@ -159,14 +162,14 @@ async function add(page) { await page.click('#fb-add'); await page.waitForTimeou
   await add(page);   // put it back
 
   // ---- Submit success (batch) ----
-  await page.evaluate(() => { window.__failSubmit = false; });
+  await page.evaluate(() => { window.__failSubmit = false; window.__dispatchCount = 0; });
   await page.click('#fb-submit');
   await page.waitForTimeout(300);
   const closedOnSuccess = !(await page.$('.fb-panel'));
   await shot(page, 'submit-success.png');   // toast visible, panel closed
   if (!closedOnSuccess) { console.log('SHOT FAIL — panel did not close on success'); process.exit(1); }
-  const payloadCount = await page.evaluate(() => { try { return (window.__lastItems || []).length; } catch (e) { return -1; } });
-  if (payloadCount < 3) { console.log('SHOT FAIL — batch payload had ' + payloadCount + ' items'); process.exit(1); }
+  const payloadCount = await page.evaluate(() => { try { return window.__dispatchCount || 0; } catch (e) { return -1; } });
+  if (payloadCount < 3) { console.log('SHOT FAIL — expected >=3 dispatches, got ' + payloadCount); process.exit(1); }
 
   // ---- Submit failure keeps the queue (offline) ----
   await boot(page, { lang: 'en', theme: 'light', director: true });

@@ -1,0 +1,100 @@
+name: Receive Feedback
+
+# Receive ONE feedback submission from the FAB widget (via workflow_dispatch),
+# append it to data/feedback.json (the GitHub warehouse for raw user feedback),
+# and commit it back to main. GitHub Pages then serves it at
+#   https://akram-webook.github.io/tempo/data/feedback.json
+# No Google, no Apps Script, no external service - GITHUB_TOKEN only.
+#
+# data/feedback.json is DISTINCT from data/exec-status.json (curated director
+# notes for the executive brief). This workflow never touches exec-status.json.
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: 'Feedback text (required)'
+        required: true
+      type:
+        description: 'Improvement | Bug | New idea | Design'
+        required: false
+        default: 'Improvement'
+      priority:
+        description: 'Low | Medium | High | Critical | "" (blank for non-directors)'
+        required: false
+        default: ''
+      owner:
+        description: 'Signed-in user name/email'
+        required: false
+        default: ''
+      area:
+        description: 'Current page/route'
+        required: false
+        default: ''
+      context:
+        description: 'Browser / OS / screen string'
+        required: false
+        default: ''
+      url:
+        description: 'Page URL'
+        required: false
+        default: ''
+      submittedAt:
+        description: 'ISO timestamp'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+# Each run commits the same file against the latest SHA; serialize so two
+# submissions never race. Never cancel an in-flight append (would lose data).
+concurrency:
+  group: receive-feedback
+  cancel-in-progress: false
+
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Prove the append logic before it runs for real.
+      - name: Self-test the appender
+        run: node scripts/append-feedback.js --selftest
+
+      # Inputs are passed as ENV (never interpolated into the shell), so a
+      # submission's note/url can contain any characters without breaking YAML
+      # or shell parsing. The Node script validates + normalizes.
+      - name: Append submission to data/feedback.json
+        env:
+          FB_RUN_ID: ${{ github.run_number }}
+          FB_NOTE: ${{ github.event.inputs.note }}
+          FB_TYPE: ${{ github.event.inputs.type }}
+          FB_PRIORITY: ${{ github.event.inputs.priority }}
+          FB_OWNER: ${{ github.event.inputs.owner }}
+          FB_AREA: ${{ github.event.inputs.area }}
+          FB_CONTEXT: ${{ github.event.inputs.context }}
+          FB_URL: ${{ github.event.inputs.url }}
+          FB_SUBMITTED_AT: ${{ github.event.inputs.submittedAt }}
+        run: node scripts/append-feedback.js
+
+      - name: Commit + push
+        run: |
+          git config user.name "tempo-bot"
+          git config user.email "tempo-bot@users.noreply.github.com"
+          if git diff --quiet -- data/feedback.json; then
+            echo "No change to data/feedback.json - nothing to commit."
+            exit 0
+          fi
+          git add data/feedback.json
+          git commit -m "data: feedback submission [run ${{ github.run_number }}]"
+          # Rebase onto any concurrent commit before pushing (serialized by the
+          # concurrency group, but be robust to the exec-status bot landing first).
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
