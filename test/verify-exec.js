@@ -61,6 +61,13 @@ function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 const $ = (sel) => window.document.querySelector(sel);
 // Flush enough microtasks for the two-stage load (exec-status -> feedback -> paint).
 async function settle() { for (let i = 0; i < 16; i++) await Promise.resolve(); }
+// The Status filter is a <select> (Delivered / In progress / To decide). Drive it.
+function setStatus(el, val) {
+  const s = el.querySelector('[data-filter-select="status"]');
+  if (!s) return false;
+  s.value = val; s.dispatchEvent(new window.Event('change', { bubbles: true }));
+  return true;
+}
 
 // The GitHub-warehouse payload shape (committed data/exec-status.json).
 const PAYLOAD = {
@@ -130,11 +137,16 @@ const PAYLOAD = {
     assert(el.querySelector('.ex-filters'), 'filter bar renders');
     const groups = el.querySelectorAll('.ex-fgroup');
     assert(groups.length === 2, 'two filter groups (Type + Status)');
+    // Type is chips; Status is now a dropdown.
     const chipVals = [...el.querySelectorAll('.ex-fchip')].map(c => c.getAttribute('data-val'));
-    ['all', 'bug', 'feature', 'improvement', 'done', 'working', 'planned']
-      .forEach(v => assert(chipVals.indexOf(v) >= 0, 'filter chip present: ' + v));
-    // Default: All is on in both groups.
-    assert([...el.querySelectorAll('.ex-fchip.is-on')].length === 2, 'exactly the two "All" chips are on by default');
+    ['all', 'bug', 'feature', 'improvement']
+      .forEach(v => assert(chipVals.indexOf(v) >= 0, 'Type filter chip present: ' + v));
+    const statusOpts = [...el.querySelectorAll('[data-filter-select="status"] option')].map(o => o.value);
+    ['all', 'done', 'working', 'planned']
+      .forEach(v => assert(statusOpts.indexOf(v) >= 0, 'Status filter option present: ' + v));
+    // Default: Type=All chip is on; Status dropdown is on "all".
+    assert([...el.querySelectorAll('.ex-fchip.is-on')].length === 1, 'the Type "All" chip is on by default');
+    assert(el.querySelector('[data-filter-select="status"]').value === 'all', 'the Status dropdown defaults to All');
 
     // --- waves section: progress + health + blocked-on ----------------------------
     const waves = el.querySelectorAll('.ex-wave-card');
@@ -142,16 +154,18 @@ const PAYLOAD = {
     assert(/Capacity Engine/.test(el.textContent), 'wave name shows');
     assert(el.querySelector('.ex-wave-blk') && /reviewers/.test(el.querySelector('.ex-wave-blk').textContent), 'blocked-on shows whose move it is');
 
-    // --- filter interaction: Status=Done hides the two non-done waves --------------
-    // (both PAYLOAD waves are "In Progress" → Done should empty the waves grid.)
-    const doneChip = [...el.querySelectorAll('.ex-fchip[data-filter="status"]')].find(c => c.getAttribute('data-val') === 'done');
-    assert(doneChip, 'Status=Done chip exists');
-    doneChip.click();
+    // --- filter interaction: Status=Delivered hides the two non-done waves ---------
+    // The Status filter is now a DROPDOWN (Delivered / In progress / To decide).
+    // (both PAYLOAD waves are "In Progress" → Delivered should empty the waves grid.)
+    const filterStatusSel = el.querySelector('[data-filter-select="status"]');
+    assert(filterStatusSel, 'Status filter is a dropdown (select)');
+    assert([...filterStatusSel.options].some(o => /Delivered/i.test(o.textContent)), 'the dropdown uses the band label "Delivered"');
+    setStatus(el, 'done');
     await Promise.resolve(); await Promise.resolve();
-    assert(el.querySelectorAll('.ex-wave-card').length === 0, 'Status=Done filters out the in-progress waves');
-    assert(el.querySelector('.ex-fchip[data-filter="status"][data-val="done"]').classList.contains('is-on'), 'Done chip is now active');
+    assert(el.querySelectorAll('.ex-wave-card').length === 0, 'Status=Delivered filters out the in-progress waves');
+    assert(el.querySelector('[data-filter-select="status"]').value === 'done', 'the dropdown reflects the selected value');
     // Reset back to All so later assertions see the full set.
-    el.querySelector('.ex-fchip[data-filter="status"][data-val="all"]').click();
+    setStatus(el, 'all');
     await Promise.resolve(); await Promise.resolve();
     assert(el.querySelectorAll('.ex-wave-card').length === 2, 'Status=All restores both waves');
 
@@ -296,13 +310,13 @@ const PAYLOAD = {
     elFb.querySelector('.ex-fchip[data-filter="type"][data-val="all"]').click();
     await Promise.resolve(); await Promise.resolve();
 
-    // Status=Working shows the Assigned feedback; Planned shows New + Discarded.
-    elFb.querySelector('.ex-fchip[data-filter="status"][data-val="working"]').click();
+    // Status=In progress shows the Assigned feedback; To decide shows New + Discarded.
+    setStatus(elFb, 'working');
     await Promise.resolve(); await Promise.resolve();
-    assert(/Sync should retry/.test(elFb.textContent), 'Status=Working shows the assigned feedback');
-    elFb.querySelector('.ex-fchip[data-filter="status"][data-val="planned"]').click();
+    assert(/Sync should retry/.test(elFb.textContent), 'Status=In progress shows the assigned feedback');
+    setStatus(elFb, 'planned');
     await Promise.resolve(); await Promise.resolve();
-    assert(/Export button/.test(elFb.textContent), 'Status=Planned shows the not-yet-decided feedback');
+    assert(/Export button/.test(elFb.textContent), 'Status=To decide shows the not-yet-decided feedback');
 
     // BUG-003 regression: when a filter matches nothing, the message must say so -
     // NOT "Nothing in this range" (which implies a date/week problem, not a filter).
@@ -310,7 +324,7 @@ const PAYLOAD = {
     // PR, and the bug feedback is New/Testing - so the timeline is filter-empty.
     elFb.querySelector('.ex-fchip[data-filter="type"][data-val="bug"]').click();
     await Promise.resolve(); await Promise.resolve();
-    elFb.querySelector('.ex-fchip[data-filter="status"][data-val="done"]').click();
+    setStatus(elFb, 'done');
     await Promise.resolve(); await Promise.resolve();
     const fbEmpty = (elFb.querySelector('.ex-tl-body') || {}).textContent || '';
     assert(/match your filters|تطابق عوامل التصفية/i.test(fbEmpty), 'filtered-empty says "No items match your filters" (BUG-003)');
@@ -332,7 +346,7 @@ const PAYLOAD = {
     // then move to "All" so the item is visible regardless of the week window.
     const resetFilters = function (el) {
       const ta = el.querySelector('.ex-fchip[data-filter="type"][data-val="all"]'); if (ta) ta.click();
-      const sa = el.querySelector('.ex-fchip[data-filter="status"][data-val="all"]'); if (sa) sa.click();
+      setStatus(el, 'all');   // Status is a dropdown now
     };
     const goAll = function (el) { const a = [...el.querySelectorAll('.ex-seg-btn')].find(b => /all/i.test(b.textContent)); if (a) a.click(); };
     resetFilters(elT); goAll(elT);
