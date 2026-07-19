@@ -162,6 +162,17 @@ const PAYLOAD = {
     // area prefix: fixture spans 2 areas (Exec Deck + Capacity) so it IS shown.
     assert(/Exec Deck\s+—/.test(el.textContent), 'area prefix shows when timeline spans >1 area');
 
+    // --- status bands: the timeline is split into ordered sections, Delivered first --
+    const bands = [...el.querySelectorAll('.ex-tl-band')].map(b => b.textContent.replace(/\s+/g, ' ').trim());
+    assert(bands.length >= 2, 'timeline splits into status bands (Delivered / In progress ...)');
+    assert(/Delivered/i.test(bands[0]), 'the first band is Delivered (done work at the top)');
+    assert(bands.some(b => /In progress/i.test(b)), 'an In progress band renders');
+    assert(/Delivered\s*2/.test(bands.join(' | ')), 'the Delivered band shows its count (2)');
+    // Delivered must appear ABOVE In progress in the DOM order.
+    const bodyHTML = el.querySelector('.ex-tl-body').innerHTML;
+    assert(bodyHTML.indexOf('Delivered') < bodyHTML.indexOf('In progress'),
+      'Delivered band is ordered before In progress');
+
     // stats strip counts ITEMS not waves: 2 Done, 1 Working.
     const sum = el.querySelector('.ex-launch-sum');
     assert(sum && /2 shipped/.test(sum.textContent), 'stats strip counts items: 2 shipped');
