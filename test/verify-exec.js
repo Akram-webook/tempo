@@ -174,6 +174,25 @@ const PAYLOAD = {
     assert(open && /status\.html/.test(open.getAttribute('href')), 'Open-report links to status.html');
     assert(open && open.getAttribute('target') === '_blank' && /noopener/.test(open.getAttribute('rel') || ''), 'Open-report new tab + noopener');
 
+    // --- STALE vs EMPTY timeline (QA BUG-001) -------------------------------------
+    // items[] ABSENT (payload predates the feature) -> a distinct "will appear
+    // after the next update" message, NOT "Nothing in this range" (which reads as
+    // "nothing shipped" and misleads on stale data).
+    nextPayload = { generated: new Date().toISOString(), cover: { progress: 40, health: 'green' }, waves: [], needsYou: [], history: [] };
+    const elStale = window.document.createElement('div');
+    WP.ui.exec.render(elStale);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    const staleBody = (elStale.querySelector('.ex-tl-body') || {}).textContent || '';
+    assert(/after the next|بعد تحديث/i.test(staleBody) && !/Nothing in this range/i.test(staleBody),
+      'items[] absent -> stale message, not "Nothing in this range" (got "' + staleBody.trim() + '")');
+    // items:[] PRESENT but empty -> legitimate empty, "Nothing in this range".
+    nextPayload = { generated: new Date().toISOString(), cover: { progress: 40, health: 'green' }, waves: [], needsYou: [], history: [], items: [] };
+    const elEmpty = window.document.createElement('div');
+    WP.ui.exec.render(elEmpty);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    assert(/Nothing in this range|لا شيء/i.test((elEmpty.querySelector('.ex-tl-body') || {}).textContent || ''),
+      'items:[] present-but-empty -> "Nothing in this range" (legitimate empty)');
+
     // --- EMPTY STATE: generated == null -> "no data yet", not sample ---------------
     nextPayload = { generated: null, cover: {}, waves: [], needsYou: [], history: [] };
     const el2 = window.document.createElement('div');
