@@ -84,3 +84,8 @@ A running log of what worked, what nearly broke, and the rule to remember. Appen
 - Fix: gh pr edit 139 --add-label wave:exec-status, then gh workflow run exec-status.yml (workflow_dispatch) to re-derive now instead of waiting for the 7am cron, then let the chained Pages deploy publish. Confirmed live.
 - Gotcha: there is NO type:* label - inferType reads the PR TITLE. "fix Save" in the title made it classify as Bug. Keep the title clean if you want the right type badge.
 - Rule to remember: label the PR (wave:*) BEFORE or immediately AFTER merge, every time. If it is already merged and missing, add the label then trigger exec-status.yml manually - do not wait for the cron. Verify with curl of data/exec-status.json.
+
+## 2026-07-19 - Seeding ideas as pre-triaged feedback items
+- What worked: building the items in a Node script (not hand-JSON) guaranteed valid JSON + the exact append-only shape, and cross-checking each hand-triage against WP.fbTriage.suggest() proved my decisions were consistent, not arbitrary.
+- Gotcha: pre-triaged items must carry status+wave+triagedAt/By/Note AND match the appender enums (klass in the allowed set) or a future real submission could look inconsistent next to them.
+- Rule to remember: when seeding the warehouse, verify the fold renders (row count + wave-chip count + panel count in jsdom) before shipping - a bad field silently renders untagged.
