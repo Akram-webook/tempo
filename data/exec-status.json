@@ -1,20 +1,20 @@
 {
-  "generated": "2026-07-19T16:55:46.672Z",
+  "generated": "2026-07-19T17:02:53.809Z",
   "cover": {
     "status": "In Progress",
-    "progress": 93,
+    "progress": 94,
     "health": "green",
-    "narrative": "93% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
+    "narrative": "94% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
   },
   "waves": [
     {
       "name": "Executive Status Deck",
       "label": "wave:exec-status",
       "status": "In Progress",
-      "progress": 93,
+      "progress": 94,
       "health": "green",
       "openPRs": [],
-      "notes": "12/13 PRs merged, 4k/4k lines."
+      "notes": "13/14 PRs merged, 4k/5k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-139",
+      "area": "Exec Deck",
+      "title": "Smart feedback triage: suggest status+wave, fix Save, polish panel",
+      "status": "Done",
+      "type": "Bug",
+      "ts": "2026-07-19T16:55:29Z"
+    },
     {
       "id": "pr-138",
       "area": "Exec Deck",
@@ -222,6 +230,11 @@
     {
       "ts": "2026-07-19T16:55:46.672Z",
       "progress": 93,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T17:02:53.809Z",
+      "progress": 94,
       "health": "green"
     }
   ]
