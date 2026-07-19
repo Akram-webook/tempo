@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T19:28:28.683Z",
+  "generated": "2026-07-19T19:49:25.643Z",
   "cover": {
     "status": "In Progress",
     "progress": 95,
@@ -14,7 +14,7 @@
       "progress": 95,
       "health": "green",
       "openPRs": [],
-      "notes": "23/24 PRs merged, 5k/6k lines."
+      "notes": "24/25 PRs merged, 6k/6k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-150",
+      "area": "Exec Deck",
+      "title": "Brand every native select (Show-N pager + all)",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T19:49:04Z"
+    },
     {
       "id": "pr-149",
       "area": "Exec Deck",
@@ -354,6 +362,11 @@
     },
     {
       "ts": "2026-07-19T19:28:28.683Z",
+      "progress": 95,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T19:49:25.643Z",
       "progress": 95,
       "health": "green"
     }
