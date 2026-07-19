@@ -4339,6 +4339,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execAll:        { en: 'All', ar: 'الكل' },
     execUndated:    { en: 'No date yet', ar: 'بدون تاريخ' },
     execTlEmpty:    { en: 'Nothing in this range.', ar: 'لا شيء في هذا النطاق.' },
+    execTlFiltered: { en: 'No items match your filters.', ar: 'لا عناصر تطابق عوامل التصفية.' },
     execTlStale:    { en: 'Items will appear after the next status update.', ar: 'ستظهر العناصر بعد تحديث الحالة التالي.' },
     execToday:      { en: 'Today', ar: 'اليوم' },
     execPrevWeek:   { en: 'Previous week', ar: 'الأسبوع السابق' },
@@ -10968,7 +10969,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       : (c.pct != null ? Math.round(+c.pct) : 0);
     // Rollup counts: prefer the timeline items[] (per-PR, so "8 shipped" is real
     // delivered work), and fall back to the wave rollup when no items[] exist yet.
-    const items = (data && Array.isArray(data.items)) ? data.items : null;
+    // IMPORTANT: count DELIVERY items only - folded-in feedback (source:'feedback')
+    // is incoming triage, not shipped/in-flight work, so it must NOT inflate the
+    // stats strip (an Assigned feedback item maps to status 'Working').
+    const allItems = (data && Array.isArray(data.items)) ? data.items : null;
+    const items = allItems ? allItems.filter(function (x) { return x.source !== 'feedback'; }) : null;
     const done = items ? items.filter(function (x) { return x.status === 'Done'; }).length
       : waves.filter(function (x) { return x.status === 'Done'; }).length;
     const next = items ? items.filter(function (x) { return x.status === 'Working'; }).length
@@ -11180,7 +11185,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       groups = rows.length ? [{ label: null, rows: rows }] : [];
     }
 
-    const emptyMsg = staleNoSource ? t('execTlStale') : t('execTlEmpty');
+    // Three distinct empty reasons, so the message never misleads:
+    //  - stale JSON (no items[] field at all) -> "will appear after next update"
+    //  - a filter is active and matched nothing -> "no items match your filters"
+    //    (NOT "Nothing in this range", which wrongly implies a date/week problem)
+    //  - genuinely nothing in this week -> "Nothing in this range"
+    const emptyMsg = staleNoSource ? t('execTlStale')
+      : (anyFilterActive() ? t('execTlFiltered') : t('execTlEmpty'));
     const body = groups.length
       ? groups.map(function (g) {
           return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
@@ -14251,8 +14262,30 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   // Build the structured story locally. Returns the SAME shape a remote model is
   // expected to return, so the two are interchangeable.
+  // Recognise a note this engine already produced, so a SECOND Polish is a no-op
+  // instead of re-wrapping (which nested "[Bug] [Bug] ... Context: ..." - a real
+  // bug: directors click Polish twice). Matches a leading "[Area] Title" line.
+  function looksPolished(raw) {
+    return /^\s*\[[^\]]+\]\s*.+/.test(raw) && /(^|\n)\s*(Context|Impact|Suggestion|السياق|الأثر|الاقتراح)\s*:/.test(raw);
+  }
+  // Parse an already-polished note back into a story object (idempotency path).
+  function parseStory(raw, page) {
+    var m = /^\s*\[([^\]]+)\]\s*(.*)$/.exec((raw.split('\n')[0] || '').trim());
+    var area = (m && m[1]) || classifyArea(raw + ' ' + (page || ''));
+    var title = (m && m[2]) || deriveTitle(raw);
+    // Pull the first Context:/Impact:/Suggestion: value if present (EN or AR label).
+    function field(re) { var x = re.exec(raw); return x ? x[1].trim() : ''; }
+    var context = field(/(?:^|\n)\s*(?:Context|السياق)\s*:\s*([^\n]*)/i);
+    var impact = field(/(?:^|\n)\s*(?:Impact|الأثر)\s*:\s*([^\n]*)/i);
+    var suggestion = field(/(?:^|\n)\s*(?:Suggestion|الاقتراح)\s*:\s*([^\n]*)/i);
+    return { v: STORY_VERSION, title: title, area: area, context: context || title,
+      impact: impact, suggestion: suggestion, type: AREA_TO_TYPE[area] || 'New idea' };
+  }
+
   function polishLocally(note, page) {
     var raw = String(note || '').trim();
+    // Idempotency: re-polishing an already-structured note must not nest/duplicate.
+    if (looksPolished(raw)) return parseStory(raw, page);
     var area = classifyArea(raw + ' ' + (page || ''));
     var ss = sentences(raw);
     var title = deriveTitle(raw);

@@ -456,6 +456,12 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     const noteOut = WP.fbStory.storyToNote(story);
     assert(/^\[Bug\]/.test(noteOut), 'story note starts with the [Area] tag');
 
+    // BUG-002 regression: double-Polish must be idempotent - re-polishing an
+    // already-structured note must NOT nest/duplicate ("[Bug] [Bug] ... Context:").
+    const twice = WP.fbStory.storyToNote(WP.fbStory.polishLocally(noteOut, 'Daily Check-in'));
+    assert(twice === noteOut, 'double-Polish is idempotent (no re-wrap)');
+    assert(!/\[Bug\]\s*\[Bug\]/.test(twice), 'double-Polish does not nest the [Area] tag');
+
     // End-to-end: with NO endpoint, clicking Polish rewrites the note locally AND
     // auto-selects the Type dropdown.
     fb._reset();
