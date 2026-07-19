@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T17:13:28.636Z",
+  "generated": "2026-07-19T17:31:57.044Z",
   "cover": {
     "status": "In Progress",
     "progress": 94,
@@ -14,7 +14,7 @@
       "progress": 94,
       "health": "green",
       "openPRs": [],
-      "notes": "14/15 PRs merged, 5k/5k lines."
+      "notes": "16/17 PRs merged, 5k/5k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,22 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-142",
+      "area": "Exec Deck",
+      "title": "docs: log seeded ideas + lesson",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T17:31:34Z"
+    },
+    {
+      "id": "pr-141",
+      "area": "Exec Deck",
+      "title": "Seed 9 pre-triaged product ideas into Project delivery",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T17:29:15Z"
+    },
     {
       "id": "pr-140",
       "area": "Exec Deck",
@@ -247,6 +263,11 @@
     },
     {
       "ts": "2026-07-19T17:13:28.636Z",
+      "progress": 94,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T17:31:57.044Z",
       "progress": 94,
       "health": "green"
     }
