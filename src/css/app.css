@@ -1570,10 +1570,26 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* it's a <button> now (click to focus a wave) - reset button chrome */
+  width: 100%; text-align: start; font: inherit; color: inherit; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .05s;
 }
+.ex-wave-card:hover { border-color: var(--text-muted); }
+.ex-wave-card:active { transform: translateY(1px); }
+.ex-wave-card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ex-wave-card.is-focused { border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 30%, transparent); }
 .ex-wave-card.ex-wc--active { border-color: color-mix(in srgb, var(--brand) 30%, transparent); }
 .ex-wave-card.ex-wc--done   { border-color: color-mix(in srgb, var(--exec-green) 30%, transparent); }
 .ex-wave-card.ex-wc--next   { border-color: color-mix(in srgb, var(--exec-amber) 30%, transparent); }
+/* Focus banner under the grid when one wave is focused. */
+.ex-wave-focus { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; color: var(--text);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent); }
+.ex-wave-clear { appearance: none; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 12px;
+  font-weight: 600; cursor: pointer; }
+.ex-wave-clear:hover { border-color: var(--brand); color: var(--brand-text); }
 .ex-wc-top { display: flex; justify-content: space-between; align-items: center; }
 .ex-wc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .07em; }
 .ex-wc-health { width: 8px; height: 8px; border-radius: 50%; flex: none; }

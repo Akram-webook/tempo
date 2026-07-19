@@ -81,13 +81,16 @@
     'under review': 'execChip_review', 'planned': 'execChip_planned',
     'testing': 'execChip_testing', 'discarded': 'execChip_discarded',
     'needs you': 'execChip_needs', 'blocked': 'execChip_blocked',
+    'later': 'execChip_later', 'next': 'execChip_next',
   };
+  // A localized label for a status string (EN + AR); unknown -> raw text.
+  function chipLabelFor(raw) {
+    const k = CHIP_I18N[String(raw || '').toLowerCase().trim()];
+    return k ? WP.i18n.t(k) : String(raw || '—');
+  }
   function chip(raw) {
     const key = statusColorKey(raw);
-    const slug = String(raw || '').toLowerCase().trim();
-    const k = CHIP_I18N[slug];
-    const label = ui.esc(k ? WP.i18n.t(k) : (String(raw || '—')));
-    return '<span class="ex-chip ex-chip--' + key + '">' + label + '</span>';
+    return '<span class="ex-chip ex-chip--' + key + '">' + ui.esc(chipLabelFor(raw)) + '</span>';
   }
 
   // ---- section builders -------------------------------------------------------
@@ -202,8 +205,8 @@
         if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
       });
     }
-    // Apply the view-local Type + Status filters to the timeline items.
-    return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status); });
+    // Apply the view-local Type + Status + Wave filters to the timeline items.
+    return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status) && matchesWave(it); });
   }
 
   // Map a raw feedback warehouse item (data/feedback.json) into the SAME shape as
@@ -652,6 +655,7 @@
   // the view shows everything until the user narrows it.
   let filterType = 'all';    // all | bug | feature | improvement
   let filterStatus = 'all';  // all | done | working | planned
+  let filterWave = 'all';    // 'all' | a 1-based wave index (as string) - focus one wave
   // Map a filter bucket to the raw status words the data uses (via statusColorKey
   // buckets, so "In Progress"/"in review" -> working, "Later"/"planned" -> planned).
   function matchesStatus(raw) {
@@ -673,7 +677,14 @@
     if (filterType === 'improvement') return /improv|design|enhanc/.test(s);
     return true;
   }
-  const anyFilterActive = function () { return filterType !== 'all' || filterStatus !== 'all'; };
+  // Wave focus: when a wave is selected, show only items assigned to that wave.
+  // Delivery items (from PRs) carry no wave index yet, so wave focus scopes the
+  // feedback/idea rows that DO carry one; a delivery item is shown only under 'all'.
+  function matchesWave(it) {
+    if (filterWave === 'all') return true;
+    return String(it && it.wave || '') === String(filterWave);
+  }
+  const anyFilterActive = function () { return filterType !== 'all' || filterStatus !== 'all' || filterWave !== 'all'; };
 
   // WAVES section (GitHub-warehouse shape): one row per wave with progress bar +
   // health dot + notes + any open-PR blockers. This is the heart of the page now.
@@ -708,13 +719,20 @@
       const blockers = (w.openPRs || []).filter(function (p) { return p.blockedOn; })
         .map(function (p) { return '#' + p.number + ' ' + esc(p.blockedOn) + (p.daysSinceActivity ? ' (' + p.daysSinceActivity + 'd)' : ''); })
         .join(' · ');
-      return '<div class="ex-wave-card ex-wc--' + sk + '">' +
+      const waveNo = idx + 1;
+      const focused = String(filterWave) === String(waveNo);
+      // Each card is a button: click to FOCUS that wave (filter the timeline to it),
+      // click again to clear. A done wave stays visible - being 100% is a reason to
+      // SEE it, not to hide it. aria-pressed announces the focus state.
+      return '<button type="button" class="ex-wave-card ex-wc--' + sk + (focused ? ' is-focused' : '') + '"' +
+          ' data-wave="' + waveNo + '" aria-pressed="' + (focused ? 'true' : 'false') + '"' +
+          ' title="' + esc(t('execWaveFocusTip')) + '">' +
         '<div class="ex-wc-top">' +
-          '<span class="ex-wc-num">' + t('execWave') + ' ' + (idx + 1) + '</span>' +
+          '<span class="ex-wc-num">' + t('execWave') + ' ' + waveNo + '</span>' +
           '<span class="ex-wc-health ex-wc-health--' + h + '" title="' + esc(w.health || 'green') + '"></span>' +
         '</div>' +
         '<div class="ex-wc-name">' + esc(w.name) + '</div>' +
-        '<span class="ex-wc-badge">' + esc(w.status) + '</span>' +
+        '<span class="ex-wc-badge">' + esc(chipLabelFor(w.status)) + '</span>' +
         '<div class="ex-wc-bar"><div class="ex-wc-fill" style="width:' + pct + '%"></div></div>' +
         '<div class="ex-wc-meta">' +
           '<span class="ex-wc-pct">' + pct + '%</span>' +
@@ -722,10 +740,20 @@
           (openCount ? '<span class="ex-wc-open">' + openCount + ' ' + t('execOpen') + '</span>' : '') +
         '</div>' +
         (blockers ? '<div class="ex-wave-blk">' + esc(t('execBlockedOn')) + ': ' + blockers + '</div>' : '') +
-      '</div>';
+      '</button>';
     }).join('');
+    // When a wave is focused, a clear banner tells the user + offers "show all".
+    var focusBar = '';
+    if (filterWave !== 'all') {
+      var fw = waves[+filterWave - 1];
+      var fname = fw ? fw.name : (t('execWave') + ' ' + filterWave);
+      focusBar = '<div class="ex-wave-focus">' +
+        '<span>' + esc(t('execWaveFocused').replace('{n}', filterWave).replace('{name}', fname)) + '</span>' +
+        '<button type="button" class="ex-wave-clear" data-wave-clear>' + esc(t('execWaveShowAll')) + '</button>' +
+      '</div>';
+    }
     return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
-      '<div class="ex-waves-grid">' + cards + '</div></div>';
+      '<div class="ex-waves-grid">' + cards + '</div>' + focusBar + '</div>';
   }
 
   // Filter bar: Type (All/Bugs/Features/Improvements) + Status (All/Done/Working/
@@ -822,6 +850,17 @@
         if (lastBaseData) paintBody(host, lastBaseData);
       };
     });
+    // Wave cards: click to FOCUS that wave (filter the timeline to its items),
+    // click the focused one again (or "Show all") to clear. View-local.
+    host.querySelectorAll('.ex-wave-card[data-wave]').forEach(function (card) {
+      card.onclick = function () {
+        const w = card.getAttribute('data-wave');
+        filterWave = (String(filterWave) === String(w)) ? 'all' : w;
+        if (lastBaseData) paintBody(host, lastBaseData);
+      };
+    });
+    var clearBtn = host.querySelector('[data-wave-clear]');
+    if (clearBtn) clearBtn.onclick = function () { filterWave = 'all'; if (lastBaseData) paintBody(host, lastBaseData); };
     wireTriage(host);
   }
 
