@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T19:01:02.682Z",
+  "generated": "2026-07-19T19:02:27.133Z",
   "cover": {
     "status": "In Progress",
     "progress": 95,
@@ -14,7 +14,7 @@
       "progress": 95,
       "health": "green",
       "openPRs": [],
-      "notes": "20/21 PRs merged, 5k/5k lines."
+      "notes": "21/22 PRs merged, 5k/5k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-147",
+      "area": "Exec Deck",
+      "title": "docs: log timeline status-bands",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T19:02:06Z"
+    },
     {
       "id": "pr-146",
       "area": "Exec Deck",
@@ -315,6 +323,11 @@
     },
     {
       "ts": "2026-07-19T19:01:02.682Z",
+      "progress": 95,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T19:02:27.133Z",
       "progress": 95,
       "health": "green"
     }
