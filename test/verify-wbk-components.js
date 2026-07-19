@@ -218,6 +218,15 @@ try{
   ['--radius-lg','--sp-4','--fs-l','--state-negative','--state-positive','--state-notice'].forEach(function(v){
     assert(css.indexOf(v)>=0,'token '+v+' is defined in tokens.css');
   });
+  // Branded <select>: every native select is reset (appearance:none) and given a
+  // token-coloured caret + surface look, so no raw OS widget leaks (e.g. the table
+  // "Show N" pager). Guards against a bare native select reappearing.
+  const appcssSel=fs.readFileSync(path.join(root,'src/css/app.css'),'utf8');
+  assert(/select:not\(\[multiple\]\)\s*\{[^}]*appearance:\s*none/.test(appcssSel),
+    'native selects are reset to the branded look (appearance:none baseline)');
+  assert(/select:not\(\[multiple\]\)[^{]*\{[^}]*var\(--text-muted\)/.test(appcssSel),
+    'the select caret uses a token colour (var(--text-muted)), not raw hex');
+
   // no raw Figma hex leaked into the atom styles (must map to tokens)
   const appcss=fs.readFileSync(path.join(root,'src/css/app.css'),'utf8');
   const pinBlock=appcss.slice(appcss.indexOf('.wbk-pin'),appcss.indexOf('.wbk-blabel--negative'));
