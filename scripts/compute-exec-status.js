@@ -15,22 +15,20 @@
  *                         green = nothing stuck
  *   BLOCKED-ON per PR   = build | author | reviewers (whose move is it).
  *
- * Then it POSTs the computed {ship} to the Apps Script endpoint, which
- * writes the Google Sheet + rebuilds the Slides deck; the in-app page
- * reads the sheet over JSONP.
+ * Then it COMMITS the computed status into the repo (GitHub-as-warehouse):
+ * data/exec-status.json + src/status.html, via the GitHub Contents API using
+ * GITHUB_TOKEN. GitHub Pages serves them; the in-app page fetch()es the JSON.
+ * No Google, no Apps Script, no Slides, no JSONP - that layer was cut (PR #125).
  *
  * Env:
- *   GITHUB_TOKEN  — provided by Actions (read PRs)
+ *   GITHUB_TOKEN  — provided by Actions (read PRs + commit the warehouse files)
  *   GITHUB_REPO   — "owner/repo" (defaults to Akram-webook/tempo)
- *   EXEC_ENDPOINT — Apps Script /exec (defaults to the known URL)
  * ========================================================== */
 'use strict';
 const https = require('https');
 
 const REPO     = process.env.GITHUB_REPO  || 'Akram-webook/tempo';
 const TOKEN    = process.env.GITHUB_TOKEN || '';
-const ENDPOINT = process.env.EXEC_ENDPOINT ||
-  'https://script.google.com/macros/s/AKfycbzcvghQNmEFZ5fNSjPIYONrNZVV8fjiboi93_cffS1vrfXPy9Cx4fskGmeVRhjFGu3Krw/exec';
 
 // Wave name (EXACT — sheet matches by name) -> the GitHub label on its PRs.
 const WAVES = [
