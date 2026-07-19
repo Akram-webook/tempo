@@ -1847,6 +1847,17 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-row:last-child { border-bottom: 0; }
 .ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
 
+/* Timeline tags on a feedback (incoming idea) row: a small "Feedback" pill, the
+ * classified lane, and the assigned wave. Tokens only (token-purity gate). */
+.ex-tl-tag { flex: none; font-size: 10.5px; font-weight: 600; line-height: 1; letter-spacing: .02em;
+  padding: 3px 7px; border-radius: 999px; white-space: nowrap; }
+.ex-tl-tag--fb { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 14%, transparent); }
+.ex-tl-tag--lane { color: var(--text-muted); background: var(--surface-2); }
+.ex-tl-tag--wave { color: var(--exec-green); background: color-mix(in srgb, var(--exec-green) 14%, transparent); }
+/* A discarded idea stays visible for the audit trail but reads clearly "dropped". */
+.ex-tl-row--discarded { opacity: .55; }
+.ex-tl-row--discarded .ex-tl-title { text-decoration: line-through; }
+
 /* Cover rollup */
 .ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .ex-tile { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
@@ -3628,6 +3639,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   if (WP.config.execStatusData === undefined)
     WP.config.execStatusData = 'data/exec-status.json';
 
+  // Raw user feedback warehouse (data/feedback.json), committed by the Receive
+  // Feedback Action. The Project delivery view folds its triaged items into the
+  // same timeline + filters. Same relative-path rules as execStatusData.
+  if (WP.config.feedbackData === undefined)
+    WP.config.feedbackData = 'data/feedback.json';
+
   // The shareable report page (replaces Google Slides) - committed by the
   // workflow, served by Pages. The "Open full report" button links here.
   if (WP.config.execDeckUrl === undefined)
@@ -4141,9 +4158,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     fbSuggest:      { en: 'Suggest a starter',       ar: 'اقترح نصاً أولياً' },
     fbSuggestTip:   { en: "Suggest — writes a clear first draft for you from this page. Use it when you're not sure how to phrase it, then edit.",
                       ar: 'اقتراح — يكتب لك مسودة أولى واضحة من هذه الصفحة. استخدمه عندما لا تعرف كيف تصيغ، ثم عدّل.' },
-    fbPolish:       { en: 'Polish my note',          ar: 'حسّن ملاحظتي' },
-    fbPolishTip:    { en: "Polish — rewrites what you typed so it's clear and easy for the team to act on. Keeps your meaning; you can Undo.",
-                      ar: 'تحسين — يعيد صياغة ما كتبته ليكون واضحاً وسهل التنفيذ للفريق. يحافظ على معناك؛ ويمكنك التراجع.' },
+    fbPolish:       { en: 'Polish into a story',     ar: 'حوِّلها إلى قصة' },
+    fbPolishTip:    { en: "Polish — turns your note into a clear story (Context, Impact, Suggestion), labels what it affects (Front-end, Back-end, Bug, Feature…) and sets the Type, so the team can triage it fast. Keeps your meaning; Undo any time.",
+                      ar: 'تحسين — يحوّل ملاحظتك إلى قصة واضحة (السياق، الأثر، الاقتراح)، ويصنّف ما تؤثر عليه (واجهة، خلفية، خلل، ميزة…) ويحدد النوع، ليسهل على الفريق فرزها. يحافظ على معناك؛ ويمكنك التراجع في أي وقت.' },
+    fbStoryContext:    { en: 'Context',    ar: 'السياق' },
+    fbStoryImpact:     { en: 'Impact',     ar: 'الأثر' },
+    fbStorySuggestion: { en: 'Suggestion', ar: 'الاقتراح' },
     fbUndo:         { en: 'Undo',                    ar: 'تراجع' },
     fbAiWorking:    { en: 'Working…',                ar: 'جارٍ العمل…' },
     fbAiDone:       { en: 'Done.',                   ar: 'تم.' },
@@ -4351,6 +4371,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execWaves:      { en: 'Waves', ar: 'الموجات' },
     execWave:       { en: 'WAVE', ar: 'موجة' },
     execOpen:       { en: 'open', ar: 'مفتوح' },
+    execFbTag:      { en: 'Feedback', ar: 'ملاحظة' },
     execBlockedOn:  { en: 'Blocked on', ar: 'بانتظار' },
     execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
     execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },
@@ -10884,9 +10905,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   function statusColorKey(raw) {
     const s = String(raw || '').toLowerCase();
     if (/done|live|shipped|on.?track/.test(s)) return 'green';
-    if (/working|in.?progress|in.?review|next/.test(s)) return 'amber';
+    if (/working|in.?progress|in.?review|next|testing/.test(s)) return 'amber';
     if (/needs?.?input|needs?.?you|blocked/.test(s)) return 'red';
-    if (/later|planned|idea/.test(s)) return 'violet';
+    if (/later|planned|idea|under.?review|new\b/.test(s)) return 'violet';
+    if (/discard|reject|won'?t|dropped/.test(s)) return 'grey';
     return 'grey';
   }
   // Back-compat + test hook + a stable data surface for the buckets.
@@ -11020,6 +11042,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
           status: it.status,
           date: it.ts || it.date || null,
           type: it.type || '',
+          source: it.source || '',       // 'feedback' rows get the tag + lane treatment
+          lane: it.lane || '',
+          wave: it.wave || null,
         });
       });
     } else {
@@ -11036,10 +11061,64 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status); });
   }
 
+  // Map a raw feedback warehouse item (data/feedback.json) into the SAME shape as
+  // an exec timeline item, so triaged user feedback shows on the Project delivery
+  // timeline and answers the existing Type + Status filter chips. The triage
+  // lifecycle (New/Testing/Review/Assigned/Discarded) folds onto the exec status
+  // buckets so a director can filter to "Planned" and see everything still to
+  // decide, or "Working" for what's been assigned to a wave.
+  //   New | Testing | Review  -> 'Planned'   (violet/grey bucket: not yet decided)
+  //   Assigned                 -> 'Working'   (accepted, in a wave)
+  //   Discarded                -> 'Discarded' (grey bucket; shown dimmed)
+  var FB_STATUS_TO_EXEC = { New: 'Planned', Testing: 'Testing', Review: 'Under review',
+    Assigned: 'Working', Discarded: 'Discarded' };
+  // Its classified lane -> the Type the exec filter understands (bug/feature/improvement).
+  function fbTypeFor(fb) {
+    var k = String(fb.klass || fb.type || '').toLowerCase();
+    if (/bug/.test(k)) return 'Bug';
+    if (/frontend|design/.test(k)) return 'Design';
+    if (/backend|enhanc|improv/.test(k)) return 'Improvement';
+    return 'Feature';   // Feature / New skill / New idea
+  }
+  function feedbackAsItems(fb) {
+    if (!fb || !Array.isArray(fb.items)) return [];
+    return fb.items.map(function (it) {
+      // Title: prefer the polished "[Area] Title" first line; else the raw note.
+      var firstLine = String(it.note || '').split('\n')[0].trim();
+      var lane = it.klass || '';
+      var title = firstLine || '(empty)';
+      // Strip a leading "[Area] " so we can render the lane as its own tag.
+      var m = /^\[([^\]]+)\]\s*(.*)$/.exec(title);
+      if (m) { lane = lane || m[1]; title = m[2] || m[1]; }
+      return {
+        title: title,
+        status: FB_STATUS_TO_EXEC[it.status] || 'Planned',
+        date: it.submittedAt || null,
+        type: fbTypeFor(it),
+        source: 'feedback',            // marks it as an incoming idea, not shipped work
+        lane: lane,                    // Frontend | Backend | Bug | Feature | ...
+        wave: it.wave || null,
+      };
+    });
+  }
+
   function tlRow(it) {
+    const t = WP.i18n.t;
     const k = statusColorKey(it.status);
-    return '<div class="ex-tl-row">' + statusIcon(k) +
-      '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + chip(it.status) + '</div>';
+    const isFb = it.source === 'feedback';
+    const discarded = isFb && /discard/i.test(it.status);
+    // A feedback row carries a small "Feedback" tag + its classified lane, and a
+    // wave chip once it's been assigned - so the director sees, at a glance, what
+    // it is and whether it's been placed in a wave. Discarded rows read dimmed.
+    var tags = '';
+    if (isFb) {
+      tags += '<span class="ex-tl-tag ex-tl-tag--fb">' + esc(t('execFbTag')) + '</span>';
+      if (it.lane) tags += '<span class="ex-tl-tag ex-tl-tag--lane">' + esc(it.lane) + '</span>';
+      if (it.wave) tags += '<span class="ex-tl-tag ex-tl-tag--wave">' + esc(t('execWave') + ' ' + it.wave) + '</span>';
+    }
+    return '<div class="ex-tl-row' + (isFb ? ' ex-tl-row--fb' : '') + (discarded ? ' ex-tl-row--discarded' : '') + '">' +
+      statusIcon(k) +
+      '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + tags + chip(it.status) + '</div>';
   }
 
   // Navigator control: [Week | All] granularity segment + (in Week mode) the
@@ -11380,11 +11459,31 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     }).then(function (data) {
       if (my !== token) return;                 // superseded by a newer load
       if (!data || data.generated == null) { paintEmpty(host); return; }  // first run pending
-      paintBody(host, data);
+      // Also fold in triaged user feedback (data/feedback.json), so the SAME
+      // timeline + filters show incoming ideas alongside shipped delivery. This
+      // is best-effort: a missing/failed feedback file must never break the page.
+      loadFeedback().then(function (fbItems) {
+        if (my !== token) return;
+        if (fbItems && fbItems.length) {
+          var merged = (Array.isArray(data.items) ? data.items.slice() : []).concat(fbItems);
+          data = Object.assign({}, data, { items: merged });
+        }
+        paintBody(host, data);
+      });
     }).catch(function () {
       if (my !== token) return;
       paintError(host);
     });
+  }
+
+  // Fetch + map the feedback warehouse. Resolves to [] on any problem (missing
+  // file, bad JSON, offline) - the Project delivery page stands on its own data.
+  function loadFeedback() {
+    var url = (WP.config.feedbackData || 'data/feedback.json') + '?t=' + Date.now();
+    return fetch(url, { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) return [];
+      return res.json();
+    }).then(function (fb) { return feedbackAsItems(fb); }).catch(function () { return []; });
   }
 
   function render(root) {
@@ -14096,6 +14195,99 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return map[r] || 'App';
   }
 
+  /* -------- Local story engine (Polish): classify + structure ----------------
+   * Turns a raw note into a triage-ready STORY - so a director can look at the
+   * feedback later and immediately see WHAT it is (front-end? back-end? a bug? a
+   * new skill?), what it affects, and what's being asked for. This is a local,
+   * dependency-free heuristic that runs in the bundle (no backend, no token). It
+   * is deliberately structured so a real model can replace `polishLocally` later
+   * with NO other change: when aiPolishEndpoint is set, runAI() POSTs instead and
+   * the remote result is expected in the SAME { story, area, type } shape.
+   *
+   * Honest limit: keyword rules, not an LLM. It is transparent and good enough to
+   * pre-sort the triage queue; the director always confirms before it ships. */
+  var STORY_VERSION = 1;
+
+  // Ordered so the FIRST match wins for area (most specific signal first). Each
+  // area = a lane the director triages into. Kept small + legible on purpose.
+  var AREA_RULES = [
+    { area: 'Bug',        re: /\b(bug|broken|crash|error|fails?|failing|doesn'?t work|not working|wrong|glitch|freezes?|blank|nan|undefined|500|404|regression)\b/i },
+    { area: 'Backend',    re: /\b(api|endpoint|server|database|db|query|sql|auth|token|webhook|sync|job|cron|payload|latency|timeout|rate.?limit|cache|schema|migration)\b/i },
+    { area: 'Frontend',   re: /\b(button|screen|page|layout|css|style|colou?r|font|icon|modal|dropdown|scroll|responsive|mobile|dark mode|rtl|align|spacing|render|ui|ux|click|hover|tooltip)\b/i },
+    { area: 'New skill',  re: /\b(new (feature|skill|ability|capability)|add (a )?(new )?(feature|skill|ability)|we (need|should have)|it should be able to|support for|integrate|integration|connect to)\b/i },
+    { area: 'Enhancement',re: /\b(improve|enhance|better|faster|easier|polish|refine|optimi[sz]e|streamline|simplif|cleaner|nicer|smoother|reduce)\b/i },
+    { area: 'Feature',    re: /\b(feature|filter|export|report|dashboard|view|search|sort|notification|reminder|shortcut|bulk|toggle)\b/i },
+  ];
+
+  // Map the classified area to the composer's Type dropdown (TYPES), so Polish
+  // can auto-select the right Type. area -> one of TYPES.
+  var AREA_TO_TYPE = {
+    Bug: 'Bug', Backend: 'Improvement', Frontend: 'Design',
+    Feature: 'New idea', 'New skill': 'New idea', Enhancement: 'Improvement',
+  };
+
+  function classifyArea(text) {
+    var s = String(text || '');
+    for (var i = 0; i < AREA_RULES.length; i++) {
+      if (AREA_RULES[i].re.test(s)) return AREA_RULES[i].area;
+    }
+    return 'Feature';   // neutral default: an idea worth reviewing
+  }
+
+  // Split into sentences, cheaply. Keeps it framework-free.
+  function sentences(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim()
+      .split(/(?<=[.!?])\s+/).map(function (x) { return x.trim(); }).filter(Boolean);
+  }
+  function titleCaseFirst(s) { s = String(s || '').trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  // A short, human title from the note (first strong clause, capped).
+  function deriveTitle(text) {
+    var first = (sentences(text)[0] || String(text || '')).trim();
+    first = first.replace(/^(i (think|feel|want|wish|would like)|can (we|you)|please|it would be (nice|good|great) (if|to)|we (need|should))\b[\s,:-]*/i, '');
+    first = titleCaseFirst(first).replace(/[.!?]+$/, '');
+    if (first.length > 80) first = first.slice(0, 77).replace(/\s+\S*$/, '') + '...';
+    return first || 'Untitled feedback';
+  }
+
+  // Build the structured story locally. Returns the SAME shape a remote model is
+  // expected to return, so the two are interchangeable.
+  function polishLocally(note, page) {
+    var raw = String(note || '').trim();
+    var area = classifyArea(raw + ' ' + (page || ''));
+    var ss = sentences(raw);
+    var title = deriveTitle(raw);
+    // Impact = a sentence that mentions a consequence/why; else the first line.
+    var impact = ss.filter(function (x) { return /\b(so that|because|which means|impact|slows?|confus|hard|can'?t|unable|lose|risk|wastes?)\b/i.test(x); })[0] || '';
+    // Suggestion = a sentence phrased as an ask; else empty (director decides).
+    var suggestion = ss.filter(function (x) { return /\b(should|could|add|make|allow|let|enable|need|want|please|instead|rather)\b/i.test(x); })[0] || '';
+    var context = raw;
+    return {
+      v: STORY_VERSION,
+      title: title,
+      area: area,
+      context: context,
+      impact: impact,
+      suggestion: suggestion,
+      type: AREA_TO_TYPE[area] || 'New idea',
+    };
+  }
+
+  // Render a story object back into a clean note the composer shows + submits.
+  function storyToNote(story) {
+    if (!story) return '';
+    var L = WP.i18n.t;
+    var lines = [];
+    lines.push('[' + (story.area || 'Feature') + '] ' + (story.title || ''));
+    lines.push('');
+    if (story.context)    lines.push(L('fbStoryContext') + ': ' + story.context);
+    if (story.impact)     lines.push(L('fbStoryImpact') + ': ' + story.impact);
+    if (story.suggestion) lines.push(L('fbStorySuggestion') + ': ' + story.suggestion);
+    return lines.join('\n');
+  }
+  // Export the pure pieces for tests + the warehouse compute to reuse.
+  WP.fbStory = { classifyArea: classifyArea, polishLocally: polishLocally,
+    storyToNote: storyToNote, deriveTitle: deriveTitle, AREA_TO_TYPE: AREA_TO_TYPE };
+
   // In-memory model (source of truth); mirrored to sessionStorage on every change.
   var model = null;   // { queue:[{note,type,image}], composer:{note,type,priority,image} }
 
@@ -14306,20 +14498,24 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         '</label>'
       : '';
 
-    var aiBar = aiEnabled()
-      ? '<div class="fb-ai" role="group" aria-label="' + esc(t('fbAiGroup')) + '">' +
-          '<button type="button" class="fb-ai-btn" id="fb-suggest" ' +
-            'aria-label="' + esc(t('fbSuggest')) + '" data-tip="' + esc(t('fbSuggestTip')) + '">' +
-            ui.icon('sparkles', 16) + '</button>' +
-          '<button type="button" class="fb-ai-btn" id="fb-polish" ' +
-            'aria-label="' + esc(t('fbPolish')) + '" data-tip="' + esc(t('fbPolishTip')) + '"' +
-            (m.composer.note.trim() ? '' : ' disabled') + '>' +
-            ui.icon('pencil', 16) + '</button>' +
-          '<button type="button" class="fb-ai-btn fb-undo" id="fb-undo" hidden ' +
-            'aria-label="' + esc(t('fbUndo')) + '" data-tip="' + esc(t('fbUndo')) + '">' +
-            ui.icon('arrowLeft', 16) + '</button>' +
-        '</div>'
+    // Polish always shows - it runs locally (structures the note into a triage
+    // story + auto-classifies the Type), no backend needed. Suggest (draft from an
+    // empty note by reading the page) needs the remote endpoint, so it's gated.
+    var suggestBtn = aiEnabled()
+      ? '<button type="button" class="fb-ai-btn" id="fb-suggest" ' +
+          'aria-label="' + esc(t('fbSuggest')) + '" data-tip="' + esc(t('fbSuggestTip')) + '">' +
+          ui.icon('bulb', 16) + '</button>'
       : '';
+    var aiBar = '<div class="fb-ai" role="group" aria-label="' + esc(t('fbAiGroup')) + '">' +
+        suggestBtn +
+        '<button type="button" class="fb-ai-btn" id="fb-polish" ' +
+          'aria-label="' + esc(t('fbPolish')) + '" data-tip="' + esc(t('fbPolishTip')) + '"' +
+          (m.composer.note.trim() ? '' : ' disabled') + '>' +
+          ui.icon('sparkles', 16) + '</button>' +
+        '<button type="button" class="fb-ai-btn fb-undo" id="fb-undo" hidden ' +
+          'aria-label="' + esc(t('fbUndo')) + '" data-tip="' + esc(t('fbUndo')) + '">' +
+          ui.icon('arrowLeft', 16) + '</button>' +
+      '</div>';
 
     var imgBlock = m.composer.image
       ? '<div class="fb-img"><img src="' + esc(m.composer.image) + '" alt="" />' +
@@ -14494,14 +14690,43 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   /* -------- AI helpers (Suggest / Polish) -------- */
   var aiUndo = null;   // pre-action note text
+  // Apply a finished story to the composer: replace the note with the structured
+  // version AND auto-select the Type the classifier inferred. Shared by the local
+  // and the remote path so they behave identically.
+  function applyStory(story) {
+    var wrap = panelState.host;
+    var note = wrap.querySelector('#fb-note');
+    var out = WP.fbStory.storyToNote(story);
+    aiUndo = note.value;                 // enable undo
+    note.value = out;
+    var m = loadModel();
+    m.composer.note = out;
+    if (story.type) m.composer.type = story.type;   // auto-classify the Type dropdown
+    saveModel();
+    // reflect the new Type in the <select> if it's mounted
+    var typeSel = wrap.querySelector('#fb-type');
+    if (typeSel && story.type) typeSel.value = story.type;
+    var undo = wrap.querySelector('#fb-undo'); if (undo) undo.hidden = false;
+  }
+
   function runAI(mode) {
     var t = WP.i18n.t;
-    if (!aiEnabled()) return;
     var wrap = panelState.host;
     var note = wrap.querySelector('#fb-note');
     var current = note.value.trim();
     if (mode === 'polish' && !current) return;   // Polish needs text; Suggest works empty
     var suggest = wrap.querySelector('#fb-suggest'), polish = wrap.querySelector('#fb-polish');
+
+    // LOCAL Polish path: no AI endpoint wired -> build the story in the bundle.
+    // (Suggest still needs the remote endpoint to draft from an empty note.)
+    if (mode === 'polish' && !aiEnabled()) {
+      var story = WP.fbStory.polishLocally(current, areaName());
+      applyStory(story);
+      if (polish) polish.disabled = !note.value.trim();
+      live(t('fbAiDone'));
+      return;
+    }
+    if (!aiEnabled()) return;   // Suggest with no endpoint: nothing to do
     setDisabled([suggest, polish], true);
     wrap.querySelector('.fb-ai').classList.add('is-loading');
     live(t('fbAiWorking'));
@@ -14512,6 +14737,15 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     var payload = { action: mode, note: current, page: areaName(), key: cfg('feedbackKey') };
 
     aiRequest(url, payload).then(function (res) {
+      // Preferred: the endpoint returns a structured story ({title,area,...}).
+      // Fallback: plain text (older endpoint) -> classify it locally so Type is
+      // still set. Either way the composer ends up with a story + a Type.
+      var story = (res && res.story && typeof res.story === 'object') ? res.story : null;
+      if (mode === 'polish' && !story) {
+        var out0 = res && (res.text || res.result || res.note);
+        if (out0) story = WP.fbStory.polishLocally(out0, areaName());
+      }
+      if (story) { applyStory(story); polish.disabled = !note.value.trim(); live(t('fbAiDone')); return; }
       var out = res && (res.text || res.result || res.note);
       if (!out) throw new Error('empty');
       aiUndo = note.value;                 // enable undo
@@ -14651,14 +14885,19 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // carried by the dispatch transport (workflow_dispatch inputs are small string
     // fields; a base64 image would blow the input limit and bloat git history).
     var dispatches = items.map(function (it) {
+      // classified lane: a Polished note starts with "[Area] Title". Fall back to
+      // classifying the raw note so even an un-polished submission is triage-ready.
+      var m2 = /^\[([^\]]+)\]/.exec(it.note || '');
+      var klass = (m2 && m2[1]) || WP.fbStory.classifyArea(it.note || '');
       return {
         ref: 'main',
         inputs: {
           note: it.note,
           type: it.type,
+          klass: klass,                       // Frontend|Backend|Bug|Feature|Enhancement|New skill
           priority: canSetPriority() ? (it.priority || 'Medium') : '',
           owner: owner,
-          area: areaName(),
+          area: areaName(),                   // which PAGE it came from
           context: context,
           url: (location && location.href) || '',
           submittedAt: when,

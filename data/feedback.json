@@ -1,4 +1,47 @@
 {
-  "generated": "2026-07-18T20:15:00.000Z",
-  "items": []
+  "generated": "2026-07-19T10:30:00.000Z",
+  "items": [
+    {
+      "id": "sample-1",
+      "submittedAt": "2026-07-19T08:05:00.000Z",
+      "owner": "demo.user@example.com",
+      "area": "Workload Map",
+      "type": "Improvement",
+      "klass": "Backend",
+      "priority": "High",
+      "note": "[Backend] Workload sync should retry on failure\nContext: the nightly capacity sync sometimes leaves a team with no numbers.\nImpact: managers open the map to an empty state and lose trust in it.\nSuggestion: retry the sync a few times before giving up, and show the last-good data meanwhile.",
+      "context": "Chrome / macOS",
+      "url": "",
+      "status": "Assigned",
+      "wave": 3
+    },
+    {
+      "id": "sample-2",
+      "submittedAt": "2026-07-19T09:20:00.000Z",
+      "owner": "demo.user@example.com",
+      "area": "Weekly Report",
+      "type": "Bug",
+      "klass": "Bug",
+      "priority": "Medium",
+      "note": "[Bug] Export button does nothing on the weekly report\nContext: clicking Export gives no file and no error.\nImpact: I can't share the week with my director.\nSuggestion: it should download a PDF or show why it can't.",
+      "context": "Safari / iOS",
+      "url": "",
+      "status": "Testing",
+      "wave": null
+    },
+    {
+      "id": "sample-3",
+      "submittedAt": "2026-07-19T09:55:00.000Z",
+      "owner": "demo.user@example.com",
+      "area": "Dashboard",
+      "type": "New idea",
+      "klass": "Feature",
+      "priority": "Low",
+      "note": "[Feature] Dark mode for the printed report\nContext: the report is bright white when printed at night.\nImpact: minor, cosmetic.\nSuggestion: a dark theme for the report page.",
+      "context": "Firefox / Windows",
+      "url": "",
+      "status": "New",
+      "wave": null
+    }
+  ]
 }

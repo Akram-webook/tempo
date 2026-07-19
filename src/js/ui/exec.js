@@ -30,9 +30,10 @@
   function statusColorKey(raw) {
     const s = String(raw || '').toLowerCase();
     if (/done|live|shipped|on.?track/.test(s)) return 'green';
-    if (/working|in.?progress|in.?review|next/.test(s)) return 'amber';
+    if (/working|in.?progress|in.?review|next|testing/.test(s)) return 'amber';
     if (/needs?.?input|needs?.?you|blocked/.test(s)) return 'red';
-    if (/later|planned|idea/.test(s)) return 'violet';
+    if (/later|planned|idea|under.?review|new\b/.test(s)) return 'violet';
+    if (/discard|reject|won'?t|dropped/.test(s)) return 'grey';
     return 'grey';
   }
   // Back-compat + test hook + a stable data surface for the buckets.
@@ -166,6 +167,9 @@
           status: it.status,
           date: it.ts || it.date || null,
           type: it.type || '',
+          source: it.source || '',       // 'feedback' rows get the tag + lane treatment
+          lane: it.lane || '',
+          wave: it.wave || null,
         });
       });
     } else {
@@ -182,10 +186,64 @@
     return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status); });
   }
 
+  // Map a raw feedback warehouse item (data/feedback.json) into the SAME shape as
+  // an exec timeline item, so triaged user feedback shows on the Project delivery
+  // timeline and answers the existing Type + Status filter chips. The triage
+  // lifecycle (New/Testing/Review/Assigned/Discarded) folds onto the exec status
+  // buckets so a director can filter to "Planned" and see everything still to
+  // decide, or "Working" for what's been assigned to a wave.
+  //   New | Testing | Review  -> 'Planned'   (violet/grey bucket: not yet decided)
+  //   Assigned                 -> 'Working'   (accepted, in a wave)
+  //   Discarded                -> 'Discarded' (grey bucket; shown dimmed)
+  var FB_STATUS_TO_EXEC = { New: 'Planned', Testing: 'Testing', Review: 'Under review',
+    Assigned: 'Working', Discarded: 'Discarded' };
+  // Its classified lane -> the Type the exec filter understands (bug/feature/improvement).
+  function fbTypeFor(fb) {
+    var k = String(fb.klass || fb.type || '').toLowerCase();
+    if (/bug/.test(k)) return 'Bug';
+    if (/frontend|design/.test(k)) return 'Design';
+    if (/backend|enhanc|improv/.test(k)) return 'Improvement';
+    return 'Feature';   // Feature / New skill / New idea
+  }
+  function feedbackAsItems(fb) {
+    if (!fb || !Array.isArray(fb.items)) return [];
+    return fb.items.map(function (it) {
+      // Title: prefer the polished "[Area] Title" first line; else the raw note.
+      var firstLine = String(it.note || '').split('\n')[0].trim();
+      var lane = it.klass || '';
+      var title = firstLine || '(empty)';
+      // Strip a leading "[Area] " so we can render the lane as its own tag.
+      var m = /^\[([^\]]+)\]\s*(.*)$/.exec(title);
+      if (m) { lane = lane || m[1]; title = m[2] || m[1]; }
+      return {
+        title: title,
+        status: FB_STATUS_TO_EXEC[it.status] || 'Planned',
+        date: it.submittedAt || null,
+        type: fbTypeFor(it),
+        source: 'feedback',            // marks it as an incoming idea, not shipped work
+        lane: lane,                    // Frontend | Backend | Bug | Feature | ...
+        wave: it.wave || null,
+      };
+    });
+  }
+
   function tlRow(it) {
+    const t = WP.i18n.t;
     const k = statusColorKey(it.status);
-    return '<div class="ex-tl-row">' + statusIcon(k) +
-      '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + chip(it.status) + '</div>';
+    const isFb = it.source === 'feedback';
+    const discarded = isFb && /discard/i.test(it.status);
+    // A feedback row carries a small "Feedback" tag + its classified lane, and a
+    // wave chip once it's been assigned - so the director sees, at a glance, what
+    // it is and whether it's been placed in a wave. Discarded rows read dimmed.
+    var tags = '';
+    if (isFb) {
+      tags += '<span class="ex-tl-tag ex-tl-tag--fb">' + esc(t('execFbTag')) + '</span>';
+      if (it.lane) tags += '<span class="ex-tl-tag ex-tl-tag--lane">' + esc(it.lane) + '</span>';
+      if (it.wave) tags += '<span class="ex-tl-tag ex-tl-tag--wave">' + esc(t('execWave') + ' ' + it.wave) + '</span>';
+    }
+    return '<div class="ex-tl-row' + (isFb ? ' ex-tl-row--fb' : '') + (discarded ? ' ex-tl-row--discarded' : '') + '">' +
+      statusIcon(k) +
+      '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + tags + chip(it.status) + '</div>';
   }
 
   // Navigator control: [Week | All] granularity segment + (in Week mode) the
@@ -526,11 +584,31 @@
     }).then(function (data) {
       if (my !== token) return;                 // superseded by a newer load
       if (!data || data.generated == null) { paintEmpty(host); return; }  // first run pending
-      paintBody(host, data);
+      // Also fold in triaged user feedback (data/feedback.json), so the SAME
+      // timeline + filters show incoming ideas alongside shipped delivery. This
+      // is best-effort: a missing/failed feedback file must never break the page.
+      loadFeedback().then(function (fbItems) {
+        if (my !== token) return;
+        if (fbItems && fbItems.length) {
+          var merged = (Array.isArray(data.items) ? data.items.slice() : []).concat(fbItems);
+          data = Object.assign({}, data, { items: merged });
+        }
+        paintBody(host, data);
+      });
     }).catch(function () {
       if (my !== token) return;
       paintError(host);
     });
+  }
+
+  // Fetch + map the feedback warehouse. Resolves to [] on any problem (missing
+  // file, bad JSON, offline) - the Project delivery page stands on its own data.
+  function loadFeedback() {
+    var url = (WP.config.feedbackData || 'data/feedback.json') + '?t=' + Date.now();
+    return fetch(url, { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) return [];
+      return res.json();
+    }).then(function (fb) { return feedbackAsItems(fb); }).catch(function () { return []; });
   }
 
   function render(root) {
