@@ -90,9 +90,13 @@
     // Progress bar = the single effort-weighted % ; the rest is remaining.
     const pct = (c.progress != null && !isNaN(+c.progress)) ? Math.round(+c.progress)
       : (c.pct != null ? Math.round(+c.pct) : 0);
-    // Rollup counts derived from the waves list.
-    const done = waves.filter(function (x) { return x.status === 'Done'; }).length;
-    const next = waves.filter(function (x) { return x.status === 'In Progress'; }).length;
+    // Rollup counts: prefer the timeline items[] (per-PR, so "8 shipped" is real
+    // delivered work), and fall back to the wave rollup when no items[] exist yet.
+    const items = (data && Array.isArray(data.items)) ? data.items : null;
+    const done = items ? items.filter(function (x) { return x.status === 'Done'; }).length
+      : waves.filter(function (x) { return x.status === 'Done'; }).length;
+    const next = items ? items.filter(function (x) { return x.status === 'Working'; }).length
+      : waves.filter(function (x) { return x.status === 'In Progress'; }).length;
     const need = ((data && data.needsYou) || []).length;
     const w = function (v) { return v; };   // bar segments are already percentages
     const summary = t('execSummary').replace('{done}', done).replace('{next}', next).replace('{need}', need);
@@ -145,17 +149,30 @@
     return left + ' – ' + b.toLocaleDateString(loc, full);
   }
 
-  // Normalize the timeline items from the payload (requests + any dated features).
+  // Normalize the timeline items from the payload. Preferred shape is the
+  // GitHub-warehouse items[] (one per PR, written by compute-exec-status.js);
+  // requests[]/features[] are kept as a fallback for older/sample payloads.
   function timelineItems(data) {
     const out = [];
-    ((data && data.requests) || []).forEach(function (r) {
-      out.push({ title: (r.area ? r.area + ' — ' : '') + (r.note || '—'), status: r.status, date: r.date || null, type: r.type || r.Type || '' });
-    });
-    ((data && data.features) || []).forEach(function (f) {
-      const d = f.date || f.Reviewed || f.reviewed || null;
-      const title = (f.area || f.Area || '') ? ((f.area || f.Area) + ' — ' + (f.feature || f.Feature || '')) : (f.feature || f.Feature || '');
-      if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
-    });
+    if (data && Array.isArray(data.items) && data.items.length) {
+      data.items.forEach(function (it) {
+        out.push({
+          title: (it.area ? it.area + ' — ' : '') + (it.title || '—'),
+          status: it.status,
+          date: it.ts || it.date || null,
+          type: it.type || '',
+        });
+      });
+    } else {
+      ((data && data.requests) || []).forEach(function (r) {
+        out.push({ title: (r.area ? r.area + ' — ' : '') + (r.note || '—'), status: r.status, date: r.date || null, type: r.type || r.Type || '' });
+      });
+      ((data && data.features) || []).forEach(function (f) {
+        const d = f.date || f.Reviewed || f.reviewed || null;
+        const title = (f.area || f.Area || '') ? ((f.area || f.Area) + ' — ' + (f.feature || f.Feature || '')) : (f.feature || f.Feature || '');
+        if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
+      });
+    }
     // Apply the view-local Type + Status filters to the timeline items.
     return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status); });
   }
@@ -339,23 +356,41 @@
       // Don't leave a bare heading when a filter empties the grid.
       return anyFilterActive() ? '' : '';
     }
-    const rows = waves.map(function (w) {
+    // Per-status card class drives the border tint + badge colour (all via CSS
+    // tokens - no raw hex here, so the token-purity gate stays green).
+    const stKey = function (st) {
+      return st === 'Done' ? 'done' : st === 'In Progress' ? 'active'
+        : st === 'Next' ? 'next' : 'later';
+    };
+    const cards = waves.map(function (w, idx) {
       const pct = Math.max(0, Math.min(100, +w.progress || 0));
-      const h = w.health || 'green';
+      const h = w.health === 'red' ? 'red' : w.health === 'amber' ? 'amber' : 'green';
+      const sk = stKey(w.status);
+      const openCount = (w.openPRs || []).length;
+      // "N/M PRs" pulled from the notes string the compute step writes.
+      const m = (w.notes || '').match(/(\d+)\/(\d+) PRs merged/);
+      const prLabel = m ? (m[1] + '/' + m[2] + ' PRs') : '';
       const blockers = (w.openPRs || []).filter(function (p) { return p.blockedOn; })
         .map(function (p) { return '#' + p.number + ' ' + esc(p.blockedOn) + (p.daysSinceActivity ? ' (' + p.daysSinceActivity + 'd)' : ''); })
         .join(' · ');
-      return '<div class="ex-wave">' +
-        '<div class="ex-wave-h">' + statusIcon(h === 'red' ? 'red' : h === 'amber' ? 'amber' : 'green') +
-          '<span class="ex-wave-n">' + esc(w.name) + '</span>' +
-          '<span class="ex-wave-p">' + pct + '%</span></div>' +
-        '<div class="ex-bar ex-bar--sm"><span style="width:' + pct + '%;background:' + COLORS.green + '"></span>' +
-          '<span style="width:' + (100 - pct) + '%;background:' + COLORS.grey + '"></span></div>' +
-        (w.notes ? '<div class="ex-wave-note">' + esc(w.notes) + '</div>' : '') +
+      return '<div class="ex-wave-card ex-wc--' + sk + '">' +
+        '<div class="ex-wc-top">' +
+          '<span class="ex-wc-num">' + t('execWave') + ' ' + (idx + 1) + '</span>' +
+          '<span class="ex-wc-health ex-wc-health--' + h + '" title="' + esc(w.health || 'green') + '"></span>' +
+        '</div>' +
+        '<div class="ex-wc-name">' + esc(w.name) + '</div>' +
+        '<span class="ex-wc-badge">' + esc(w.status) + '</span>' +
+        '<div class="ex-wc-bar"><div class="ex-wc-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="ex-wc-meta">' +
+          '<span class="ex-wc-pct">' + pct + '%</span>' +
+          (prLabel ? '<span>· ' + esc(prLabel) + '</span>' : '') +
+          (openCount ? '<span class="ex-wc-open">' + openCount + ' ' + t('execOpen') + '</span>' : '') +
+        '</div>' +
         (blockers ? '<div class="ex-wave-blk">' + esc(t('execBlockedOn')) + ': ' + blockers + '</div>' : '') +
       '</div>';
     }).join('');
-    return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' + rows + '</div>';
+    return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
+      '<div class="ex-waves-grid">' + cards + '</div></div>';
   }
 
   // Filter bar: Type (All/Bugs/Features/Improvements) + Status (All/Done/Working/
