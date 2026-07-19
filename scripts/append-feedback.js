@@ -25,6 +25,8 @@ const FILE = path.join(__dirname, '..', 'data', 'feedback.json');
 // malformed dispatch can never write a bogus type/priority into the warehouse.
 const TYPES = ['Improvement', 'Bug', 'New idea', 'Design'];
 const PRIORITIES = ['Low', 'Medium', 'High', 'Critical', ''];
+// Classified lane (from the widget's local Polish, or classified server-side).
+const KLASSES = ['Frontend', 'Backend', 'Bug', 'Feature', 'Enhancement', 'New skill', ''];
 
 function str(v) { return v == null ? '' : String(v); }
 function oneOf(v, allowed, fallback) { return allowed.indexOf(v) >= 0 ? v : fallback; }
@@ -40,11 +42,15 @@ function buildItem(raw, runId, nowIso) {
     owner: str(raw.owner),
     area: str(raw.area),
     type: oneOf(str(raw.type), TYPES, 'Improvement'),
+    klass: oneOf(str(raw.klass), KLASSES, ''),
     priority: oneOf(str(raw.priority), PRIORITIES, ''),
     note: str(raw.note),
     context: str(raw.context),
     url: str(raw.url),
+    // Triage lifecycle: New -> Testing -> Review -> Assigned | Discarded.
+    // A submission starts at New; a director advances it in the triage board.
     status: 'New',
+    wave: null,          // set when Assigned to a delivery wave
   };
 }
 
@@ -68,6 +74,7 @@ function run() {
   const raw = {
     note: process.env.FB_NOTE,
     type: process.env.FB_TYPE,
+    klass: process.env.FB_KLASS,
     priority: process.env.FB_PRIORITY,
     owner: process.env.FB_OWNER,
     area: process.env.FB_AREA,
@@ -91,17 +98,20 @@ function selftest() {
   const assert = (c, m) => { if (!c) { ok = false; console.error('FAIL: ' + m); } };
 
   // buildItem: enum coercion + status New + run id.
-  const it = buildItem({ note: 'hi', type: 'Bogus', priority: 'Nope', owner: 'a@b.c',
+  const it = buildItem({ note: 'hi', type: 'Bogus', klass: 'Nonsense', priority: 'Nope', owner: 'a@b.c',
     area: 'Dashboard', context: 'Chrome', url: 'https://x', submittedAt: '2026-01-01T00:00:00Z' }, '42', 'NOW');
   assert(it.id === '42', 'run id used as item id');
   assert(it.type === 'Improvement', 'bad type coerced to Improvement');
+  assert(it.klass === '', 'bad klass coerced to blank');
   assert(it.priority === '', 'bad priority coerced to blank');
   assert(it.status === 'New', 'status is New');
+  assert(it.wave === null, 'wave starts null (unassigned)');
   assert(it.submittedAt === '2026-01-01T00:00:00Z', 'submittedAt preserved');
 
   // valid enums pass through.
-  const it2 = buildItem({ note: 'x', type: 'Bug', priority: 'Critical' }, '', 'NOW');
+  const it2 = buildItem({ note: 'x', type: 'Bug', klass: 'Backend', priority: 'Critical' }, '', 'NOW');
   assert(it2.type === 'Bug' && it2.priority === 'Critical', 'valid enums pass through');
+  assert(it2.klass === 'Backend', 'valid klass passes through');
   assert(it2.id === 'NOW', 'no run id -> falls back to submittedAt/now');
 
   // appendItem: append + refresh generated.

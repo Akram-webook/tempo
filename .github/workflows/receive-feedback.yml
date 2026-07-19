@@ -18,6 +18,10 @@ on:
         description: 'Improvement | Bug | New idea | Design'
         required: false
         default: 'Improvement'
+      klass:
+        description: 'Classified lane: Frontend | Backend | Bug | Feature | Enhancement | New skill'
+        required: false
+        default: ''
       priority:
         description: 'Low | Medium | High | Critical | "" (blank for non-directors)'
         required: false
@@ -76,6 +80,7 @@ jobs:
           FB_RUN_ID: ${{ github.run_number }}
           FB_NOTE: ${{ github.event.inputs.note }}
           FB_TYPE: ${{ github.event.inputs.type }}
+          FB_KLASS: ${{ github.event.inputs.klass }}
           FB_PRIORITY: ${{ github.event.inputs.priority }}
           FB_OWNER: ${{ github.event.inputs.owner }}
           FB_AREA: ${{ github.event.inputs.area }}

@@ -158,8 +158,11 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     // Priority hidden for a member (QA context: director/admin only)
     assert(!$('#fb-priority'), 'Priority hidden for a member');
 
-    // AI buttons hidden when aiPolishEndpoint empty (default)
-    assert(!$('#fb-suggest') && !$('#fb-polish'), 'AI buttons hidden when aiPolishEndpoint empty');
+    // With no AI endpoint: Polish STILL shows (it runs locally - structures the
+    // note into a triage story). Suggest (drafts from an empty note via the remote
+    // endpoint) stays hidden until aiPolishEndpoint is set.
+    assert(!$('#fb-suggest'), 'Suggest hidden when aiPolishEndpoint empty');
+    assert(!!$('#fb-polish'), 'Polish shows even with no AI endpoint (runs locally)');
 
     // Queue card actions are REAL buttons (QA E) — verify after we add one below.
 
@@ -433,6 +436,57 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(toastMsg && /again|أخرى/i.test(toastMsg), 'AI failure shows a friendly retry message');
     WP.ui.toast = realToast;
     WP.config.aiPolishEndpoint = '';
+
+    // ========================================================================
+    // LOCAL Polish (no AI endpoint): classify + structure into a triage story
+    // ========================================================================
+    // Pure engine: classifyArea routes by keyword; polishLocally returns a story.
+    assert(WP.fbStory.classifyArea('the button is broken and crashes') === 'Bug', 'classify: bug wins');
+    assert(WP.fbStory.classifyArea('the sync job runs against the wrong database schema') === 'Bug', 'classify: "wrong" reads as a bug');
+    assert(WP.fbStory.classifyArea('add a webhook to the api so we can push updates') === 'Backend', 'classify: backend');
+    assert(WP.fbStory.classifyArea('the dropdown layout looks off on mobile') === 'Frontend', 'classify: frontend');
+    assert(WP.fbStory.classifyArea('we need a new skill to connect to Slack') === 'New skill', 'classify: new skill');
+    assert(WP.fbStory.classifyArea('please make export faster and cleaner') === 'Enhancement', 'classify: enhancement');
+    const story = WP.fbStory.polishLocally('The save button is broken so I lose my work. It should show an error instead.', 'Daily Check-in');
+    assert(story.area === 'Bug', 'local polish classified area = Bug');
+    assert(story.type === 'Bug', 'local polish set Type = Bug');
+    assert(story.title && story.title.length > 0, 'local polish derived a title');
+    assert(/lose my work/i.test(story.impact), 'local polish captured impact');
+    assert(/should show an error/i.test(story.suggestion), 'local polish captured suggestion');
+    const noteOut = WP.fbStory.storyToNote(story);
+    assert(/^\[Bug\]/.test(noteOut), 'story note starts with the [Area] tag');
+
+    // End-to-end: with NO endpoint, clicking Polish rewrites the note locally AND
+    // auto-selects the Type dropdown.
+    fb._reset();
+    fb._close(); await tick();
+    fb.open(); await tick();
+    assert(!$('#fb-suggest'), 'Suggest hidden with no endpoint');
+    assert(!!$('#fb-polish'), 'Polish present with no endpoint');
+    fireInput($('#fb-note'), 'please add a webhook to the api so managers get an alert');
+    assert($('#fb-polish').disabled !== true, 'Polish enabled once there is text');
+    $('#fb-polish').click();
+    await tick();
+    assert(/^\[Backend\]/.test($('#fb-note').value), 'local Polish rewrote the note into a [Backend] story');
+    assert($('#fb-type').value === 'Improvement', 'local Polish auto-selected the Type (Backend -> Improvement)');
+    assert($('#fb-undo').hidden === false, 'Undo available after local Polish');
+    $('#fb-undo').click();
+    assert(/webhook to the api/.test($('#fb-note').value) && !/^\[Backend\]/.test($('#fb-note').value), 'Undo restores the raw note');
+
+    // Submit carries the classified lane (klass) so the warehouse can triage it.
+    fb._reset();
+    fb._close(); await tick(); fb.open(); await tick();
+    WP.config.feedbackEndpoint = 'https://api.github.com/repos/x/y/actions/workflows/receive-feedback.yml/dispatches';
+    WP.config.feedbackDispatchToken = 'test-token';
+    fireInput($('#fb-note'), '[Bug] Save crashes\nContext: it crashes on save');
+    fbFetch.calls = [];
+    fbFetch.next = function () { return ok204(); };
+    $('#fb-submit').click();
+    await tick(); await tick();
+    const disp = fbFetch.calls[fbFetch.calls.length - 1];
+    const dispBody = disp && JSON.parse(disp.opts.body);
+    assert(dispBody && dispBody.inputs && dispBody.inputs.klass === 'Bug', 'dispatch carries the classified lane (klass=Bug)');
+    WP.config.feedbackEndpoint = ''; WP.config.feedbackDispatchToken = '';
 
     // ========================================================================
     // Arabic / RTL render (QA I)

@@ -30,8 +30,15 @@ window.HTMLElement.prototype.scrollIntoView = function () {};
 window.matchMedia = window.matchMedia || function () { return { matches: false, addEventListener() {}, removeEventListener() {} }; };
 
 // --- fetch mock: capture the URL, return whatever the current test wants. ------
-let fetchedUrl = null, nextPayload = null, nextOk = true;
+let fetchedUrl = null, nextPayload = null, nextOk = true, nextFeedback = null;
 window.fetch = function (url) {
+  // The view fetches exec-status.json (primary) AND feedback.json (best-effort).
+  // Route the feedback URL to its own payload so exec assertions aren't polluted;
+  // default = empty feedback so existing tests are unaffected.
+  if (/feedback\.json/.test(String(url))) {
+    return Promise.resolve({ ok: true, status: 200,
+      json: function () { return Promise.resolve(nextFeedback || { generated: null, items: [] }); } });
+  }
   fetchedUrl = url;
   return Promise.resolve({
     ok: nextOk,
@@ -52,6 +59,8 @@ const WP = window.WP;
 WP.render = function () {};
 function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 const $ = (sel) => window.document.querySelector(sel);
+// Flush enough microtasks for the two-stage load (exec-status -> feedback -> paint).
+async function settle() { for (let i = 0; i < 16; i++) await Promise.resolve(); }
 
 // The GitHub-warehouse payload shape (committed data/exec-status.json).
 const PAYLOAD = {
@@ -100,7 +109,7 @@ const PAYLOAD = {
     assert($ ? true : true, 'render did not throw');
     assert(el.querySelector('.ex-title'), 'header title renders immediately');
     // let the fetch().then chain resolve
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    await settle();
     assert(fetchedUrl && /data\/exec-status\.json/.test(fetchedUrl), 'load() fetches data/exec-status.json');
     assert(fetchedUrl && /[?&]t=/.test(fetchedUrl), 'fetch URL is cache-busted');
 
@@ -184,7 +193,7 @@ const PAYLOAD = {
     nextPayload = { generated: new Date().toISOString(), cover: { progress: 40, health: 'green' }, waves: [], needsYou: [], history: [] };
     const elStale = window.document.createElement('div');
     WP.ui.exec.render(elStale);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    await settle();
     const staleBody = (elStale.querySelector('.ex-tl-body') || {}).textContent || '';
     assert(/after the next|بعد تحديث/i.test(staleBody) && !/Nothing in this range/i.test(staleBody),
       'items[] absent -> stale message, not "Nothing in this range" (got "' + staleBody.trim() + '")');
@@ -192,7 +201,7 @@ const PAYLOAD = {
     nextPayload = { generated: new Date().toISOString(), cover: { progress: 40, health: 'green' }, waves: [], needsYou: [], history: [], items: [] };
     const elEmpty = window.document.createElement('div');
     WP.ui.exec.render(elEmpty);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    await settle();
     assert(/Nothing in this range|لا شيء/i.test((elEmpty.querySelector('.ex-tl-body') || {}).textContent || ''),
       'items:[] present-but-empty -> "Nothing in this range" (legitimate empty)');
 
@@ -200,7 +209,7 @@ const PAYLOAD = {
     nextPayload = { generated: null, cover: {}, waves: [], needsYou: [], history: [] };
     const el2 = window.document.createElement('div');
     WP.ui.exec.render(el2);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    await settle();
     assert(el2.querySelector('.ex-empty--nodata'), 'empty state shows when generated is null (not sample data)');
     assert(!el2.querySelector('.ex-wave-card'), 'no waves render in the empty state');
 
@@ -208,7 +217,7 @@ const PAYLOAD = {
     nextOk = false;
     const el3 = window.document.createElement('div');
     WP.ui.exec.render(el3);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    await settle();
     assert(el3.querySelector('.ex-error'), 'error state shown when the fetch fails');
     nextOk = true;
 
@@ -217,7 +226,7 @@ const PAYLOAD = {
     nextPayload = PAYLOAD;
     const elAr = window.document.createElement('div');
     WP.ui.exec.render(elAr);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    await settle();
     assert(/تسليم المشروع/.test(elAr.textContent), 'title localizes to AR (project delivery)');
 
     // --- single-area timeline drops the redundant repeated prefix (run LAST so it ---
@@ -229,9 +238,48 @@ const PAYLOAD = {
     ] });
     const elOne = window.document.createElement('div');
     WP.ui.exec.render(elOne);
-    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    await settle();
     assert(/First exec change/.test(elOne.textContent), 'single-area timeline still renders titles');
     assert(!/Exec Deck\s+—/.test(elOne.textContent), 'single-area timeline drops the redundant area prefix');
+
+    // --- triaged FEEDBACK folds into the SAME timeline + answers the filters -------
+    // feedback.json items map onto the exec buckets: Assigned->Working, New/Review->
+    // Planned, Discarded->grey(Planned). They carry a "Feedback" tag + lane + wave.
+    WP.state.lang = 'en';
+    nextPayload = Object.assign({}, PAYLOAD, { items: [
+      { id: 'pr-x', area: 'Exec Deck', title: 'A shipped PR', status: 'Done', type: 'Feature', ts: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
+    ] });
+    nextFeedback = { generated: new Date().toISOString(), items: [
+      { id: 'fb-1', note: '[Backend] Sync should retry on failure', klass: 'Backend', type: 'Improvement', status: 'Assigned', wave: 3, submittedAt: new Date(Date.now() - 1 * 3600 * 1000).toISOString() },
+      { id: 'fb-2', note: '[Bug] Export button does nothing', klass: 'Bug', type: 'Bug', status: 'New', wave: null, submittedAt: new Date(Date.now() - 90 * 60 * 1000).toISOString() },
+      { id: 'fb-3', note: '[Feature] Dark mode for the report', klass: 'Feature', type: 'New idea', status: 'Discarded', wave: null, submittedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
+    ] };
+    const elFb = window.document.createElement('div');
+    WP.ui.exec.render(elFb);
+    await settle();
+    assert(/Sync should retry/.test(elFb.textContent), 'feedback item renders in the timeline');
+    assert(elFb.querySelector('.ex-tl-row--fb'), 'feedback rows are tagged as feedback');
+    assert(elFb.querySelector('.ex-tl-tag--fb'), 'a "Feedback" tag shows on a feedback row');
+    assert(elFb.querySelector('.ex-tl-tag--wave'), 'an assigned feedback item shows its wave chip');
+    assert(elFb.querySelector('.ex-tl-row--discarded'), 'a discarded item renders dimmed/struck');
+    const fbRows = elFb.querySelectorAll('.ex-tl-row--fb').length;
+    assert(fbRows === 3, 'all 3 feedback items surface (got ' + fbRows + ')');
+
+    // Type=Bugs filters the timeline to the bug feedback (+ any bug PRs).
+    elFb.querySelector('.ex-fchip[data-filter="type"][data-val="bug"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    assert(/Export button/.test(elFb.textContent) && !/Sync should retry/.test(elFb.textContent), 'Type=Bugs keeps the bug feedback, drops the backend one');
+    elFb.querySelector('.ex-fchip[data-filter="type"][data-val="all"]').click();
+    await Promise.resolve(); await Promise.resolve();
+
+    // Status=Working shows the Assigned feedback; Planned shows New + Discarded.
+    elFb.querySelector('.ex-fchip[data-filter="status"][data-val="working"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    assert(/Sync should retry/.test(elFb.textContent), 'Status=Working shows the assigned feedback');
+    elFb.querySelector('.ex-fchip[data-filter="status"][data-val="planned"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    assert(/Export button/.test(elFb.textContent), 'Status=Planned shows the not-yet-decided feedback');
+    nextFeedback = null;   // restore default empty feedback for any later work
 
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);

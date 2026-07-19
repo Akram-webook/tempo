@@ -106,6 +106,12 @@
   if (WP.config.execStatusData === undefined)
     WP.config.execStatusData = 'data/exec-status.json';
 
+  // Raw user feedback warehouse (data/feedback.json), committed by the Receive
+  // Feedback Action. The Project delivery view folds its triaged items into the
+  // same timeline + filters. Same relative-path rules as execStatusData.
+  if (WP.config.feedbackData === undefined)
+    WP.config.feedbackData = 'data/feedback.json';
+
   // The shareable report page (replaces Google Slides) - committed by the
   // workflow, served by Pages. The "Open full report" button links here.
   if (WP.config.execDeckUrl === undefined)

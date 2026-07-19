@@ -1603,6 +1603,17 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-row:last-child { border-bottom: 0; }
 .ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
 
+/* Timeline tags on a feedback (incoming idea) row: a small "Feedback" pill, the
+ * classified lane, and the assigned wave. Tokens only (token-purity gate). */
+.ex-tl-tag { flex: none; font-size: 10.5px; font-weight: 600; line-height: 1; letter-spacing: .02em;
+  padding: 3px 7px; border-radius: 999px; white-space: nowrap; }
+.ex-tl-tag--fb { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 14%, transparent); }
+.ex-tl-tag--lane { color: var(--text-muted); background: var(--surface-2); }
+.ex-tl-tag--wave { color: var(--exec-green); background: color-mix(in srgb, var(--exec-green) 14%, transparent); }
+/* A discarded idea stays visible for the audit trail but reads clearly "dropped". */
+.ex-tl-row--discarded { opacity: .55; }
+.ex-tl-row--discarded .ex-tl-title { text-decoration: line-through; }
+
 /* Cover rollup */
 .ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .ex-tile { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }

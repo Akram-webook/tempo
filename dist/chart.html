@@ -1843,6 +1843,17 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-row:last-child { border-bottom: 0; }
 .ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
 
+/* Timeline tags on a feedback (incoming idea) row: a small "Feedback" pill, the
+ * classified lane, and the assigned wave. Tokens only (token-purity gate). */
+.ex-tl-tag { flex: none; font-size: 10.5px; font-weight: 600; line-height: 1; letter-spacing: .02em;
+  padding: 3px 7px; border-radius: 999px; white-space: nowrap; }
+.ex-tl-tag--fb { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 14%, transparent); }
+.ex-tl-tag--lane { color: var(--text-muted); background: var(--surface-2); }
+.ex-tl-tag--wave { color: var(--exec-green); background: color-mix(in srgb, var(--exec-green) 14%, transparent); }
+/* A discarded idea stays visible for the audit trail but reads clearly "dropped". */
+.ex-tl-row--discarded { opacity: .55; }
+.ex-tl-row--discarded .ex-tl-title { text-decoration: line-through; }
+
 /* Cover rollup */
 .ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .ex-tile { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
@@ -3633,6 +3644,12 @@ const EMAIL_HASHES = {};
   if (WP.config.execStatusData === undefined)
     WP.config.execStatusData = 'data/exec-status.json';
 
+  // Raw user feedback warehouse (data/feedback.json), committed by the Receive
+  // Feedback Action. The Project delivery view folds its triaged items into the
+  // same timeline + filters. Same relative-path rules as execStatusData.
+  if (WP.config.feedbackData === undefined)
+    WP.config.feedbackData = 'data/feedback.json';
+
   // The shareable report page (replaces Google Slides) - committed by the
   // workflow, served by Pages. The "Open full report" button links here.
   if (WP.config.execDeckUrl === undefined)
@@ -4146,9 +4163,12 @@ const EMAIL_HASHES = {};
     fbSuggest:      { en: 'Suggest a starter',       ar: 'اقترح نصاً أولياً' },
     fbSuggestTip:   { en: "Suggest — writes a clear first draft for you from this page. Use it when you're not sure how to phrase it, then edit.",
                       ar: 'اقتراح — يكتب لك مسودة أولى واضحة من هذه الصفحة. استخدمه عندما لا تعرف كيف تصيغ، ثم عدّل.' },
-    fbPolish:       { en: 'Polish my note',          ar: 'حسّن ملاحظتي' },
-    fbPolishTip:    { en: "Polish — rewrites what you typed so it's clear and easy for the team to act on. Keeps your meaning; you can Undo.",
-                      ar: 'تحسين — يعيد صياغة ما كتبته ليكون واضحاً وسهل التنفيذ للفريق. يحافظ على معناك؛ ويمكنك التراجع.' },
+    fbPolish:       { en: 'Polish into a story',     ar: 'حوِّلها إلى قصة' },
+    fbPolishTip:    { en: "Polish — turns your note into a clear story (Context, Impact, Suggestion), labels what it affects (Front-end, Back-end, Bug, Feature…) and sets the Type, so the team can triage it fast. Keeps your meaning; Undo any time.",
+                      ar: 'تحسين — يحوّل ملاحظتك إلى قصة واضحة (السياق، الأثر، الاقتراح)، ويصنّف ما تؤثر عليه (واجهة، خلفية، خلل، ميزة…) ويحدد النوع، ليسهل على الفريق فرزها. يحافظ على معناك؛ ويمكنك التراجع في أي وقت.' },
+    fbStoryContext:    { en: 'Context',    ar: 'السياق' },
+    fbStoryImpact:     { en: 'Impact',     ar: 'الأثر' },
+    fbStorySuggestion: { en: 'Suggestion', ar: 'الاقتراح' },
     fbUndo:         { en: 'Undo',                    ar: 'تراجع' },
     fbAiWorking:    { en: 'Working…',                ar: 'جارٍ العمل…' },
     fbAiDone:       { en: 'Done.',                   ar: 'تم.' },
@@ -4356,6 +4376,7 @@ const EMAIL_HASHES = {};
     execWaves:      { en: 'Waves', ar: 'الموجات' },
     execWave:       { en: 'WAVE', ar: 'موجة' },
     execOpen:       { en: 'open', ar: 'مفتوح' },
+    execFbTag:      { en: 'Feedback', ar: 'ملاحظة' },
     execBlockedOn:  { en: 'Blocked on', ar: 'بانتظار' },
     execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
     execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },

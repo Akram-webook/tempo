@@ -66,6 +66,99 @@
     return map[r] || 'App';
   }
 
+  /* -------- Local story engine (Polish): classify + structure ----------------
+   * Turns a raw note into a triage-ready STORY - so a director can look at the
+   * feedback later and immediately see WHAT it is (front-end? back-end? a bug? a
+   * new skill?), what it affects, and what's being asked for. This is a local,
+   * dependency-free heuristic that runs in the bundle (no backend, no token). It
+   * is deliberately structured so a real model can replace `polishLocally` later
+   * with NO other change: when aiPolishEndpoint is set, runAI() POSTs instead and
+   * the remote result is expected in the SAME { story, area, type } shape.
+   *
+   * Honest limit: keyword rules, not an LLM. It is transparent and good enough to
+   * pre-sort the triage queue; the director always confirms before it ships. */
+  var STORY_VERSION = 1;
+
+  // Ordered so the FIRST match wins for area (most specific signal first). Each
+  // area = a lane the director triages into. Kept small + legible on purpose.
+  var AREA_RULES = [
+    { area: 'Bug',        re: /\b(bug|broken|crash|error|fails?|failing|doesn'?t work|not working|wrong|glitch|freezes?|blank|nan|undefined|500|404|regression)\b/i },
+    { area: 'Backend',    re: /\b(api|endpoint|server|database|db|query|sql|auth|token|webhook|sync|job|cron|payload|latency|timeout|rate.?limit|cache|schema|migration)\b/i },
+    { area: 'Frontend',   re: /\b(button|screen|page|layout|css|style|colou?r|font|icon|modal|dropdown|scroll|responsive|mobile|dark mode|rtl|align|spacing|render|ui|ux|click|hover|tooltip)\b/i },
+    { area: 'New skill',  re: /\b(new (feature|skill|ability|capability)|add (a )?(new )?(feature|skill|ability)|we (need|should have)|it should be able to|support for|integrate|integration|connect to)\b/i },
+    { area: 'Enhancement',re: /\b(improve|enhance|better|faster|easier|polish|refine|optimi[sz]e|streamline|simplif|cleaner|nicer|smoother|reduce)\b/i },
+    { area: 'Feature',    re: /\b(feature|filter|export|report|dashboard|view|search|sort|notification|reminder|shortcut|bulk|toggle)\b/i },
+  ];
+
+  // Map the classified area to the composer's Type dropdown (TYPES), so Polish
+  // can auto-select the right Type. area -> one of TYPES.
+  var AREA_TO_TYPE = {
+    Bug: 'Bug', Backend: 'Improvement', Frontend: 'Design',
+    Feature: 'New idea', 'New skill': 'New idea', Enhancement: 'Improvement',
+  };
+
+  function classifyArea(text) {
+    var s = String(text || '');
+    for (var i = 0; i < AREA_RULES.length; i++) {
+      if (AREA_RULES[i].re.test(s)) return AREA_RULES[i].area;
+    }
+    return 'Feature';   // neutral default: an idea worth reviewing
+  }
+
+  // Split into sentences, cheaply. Keeps it framework-free.
+  function sentences(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim()
+      .split(/(?<=[.!?])\s+/).map(function (x) { return x.trim(); }).filter(Boolean);
+  }
+  function titleCaseFirst(s) { s = String(s || '').trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  // A short, human title from the note (first strong clause, capped).
+  function deriveTitle(text) {
+    var first = (sentences(text)[0] || String(text || '')).trim();
+    first = first.replace(/^(i (think|feel|want|wish|would like)|can (we|you)|please|it would be (nice|good|great) (if|to)|we (need|should))\b[\s,:-]*/i, '');
+    first = titleCaseFirst(first).replace(/[.!?]+$/, '');
+    if (first.length > 80) first = first.slice(0, 77).replace(/\s+\S*$/, '') + '...';
+    return first || 'Untitled feedback';
+  }
+
+  // Build the structured story locally. Returns the SAME shape a remote model is
+  // expected to return, so the two are interchangeable.
+  function polishLocally(note, page) {
+    var raw = String(note || '').trim();
+    var area = classifyArea(raw + ' ' + (page || ''));
+    var ss = sentences(raw);
+    var title = deriveTitle(raw);
+    // Impact = a sentence that mentions a consequence/why; else the first line.
+    var impact = ss.filter(function (x) { return /\b(so that|because|which means|impact|slows?|confus|hard|can'?t|unable|lose|risk|wastes?)\b/i.test(x); })[0] || '';
+    // Suggestion = a sentence phrased as an ask; else empty (director decides).
+    var suggestion = ss.filter(function (x) { return /\b(should|could|add|make|allow|let|enable|need|want|please|instead|rather)\b/i.test(x); })[0] || '';
+    var context = raw;
+    return {
+      v: STORY_VERSION,
+      title: title,
+      area: area,
+      context: context,
+      impact: impact,
+      suggestion: suggestion,
+      type: AREA_TO_TYPE[area] || 'New idea',
+    };
+  }
+
+  // Render a story object back into a clean note the composer shows + submits.
+  function storyToNote(story) {
+    if (!story) return '';
+    var L = WP.i18n.t;
+    var lines = [];
+    lines.push('[' + (story.area || 'Feature') + '] ' + (story.title || ''));
+    lines.push('');
+    if (story.context)    lines.push(L('fbStoryContext') + ': ' + story.context);
+    if (story.impact)     lines.push(L('fbStoryImpact') + ': ' + story.impact);
+    if (story.suggestion) lines.push(L('fbStorySuggestion') + ': ' + story.suggestion);
+    return lines.join('\n');
+  }
+  // Export the pure pieces for tests + the warehouse compute to reuse.
+  WP.fbStory = { classifyArea: classifyArea, polishLocally: polishLocally,
+    storyToNote: storyToNote, deriveTitle: deriveTitle, AREA_TO_TYPE: AREA_TO_TYPE };
+
   // In-memory model (source of truth); mirrored to sessionStorage on every change.
   var model = null;   // { queue:[{note,type,image}], composer:{note,type,priority,image} }
 
@@ -276,20 +369,24 @@
         '</label>'
       : '';
 
-    var aiBar = aiEnabled()
-      ? '<div class="fb-ai" role="group" aria-label="' + esc(t('fbAiGroup')) + '">' +
-          '<button type="button" class="fb-ai-btn" id="fb-suggest" ' +
-            'aria-label="' + esc(t('fbSuggest')) + '" data-tip="' + esc(t('fbSuggestTip')) + '">' +
-            ui.icon('sparkles', 16) + '</button>' +
-          '<button type="button" class="fb-ai-btn" id="fb-polish" ' +
-            'aria-label="' + esc(t('fbPolish')) + '" data-tip="' + esc(t('fbPolishTip')) + '"' +
-            (m.composer.note.trim() ? '' : ' disabled') + '>' +
-            ui.icon('pencil', 16) + '</button>' +
-          '<button type="button" class="fb-ai-btn fb-undo" id="fb-undo" hidden ' +
-            'aria-label="' + esc(t('fbUndo')) + '" data-tip="' + esc(t('fbUndo')) + '">' +
-            ui.icon('arrowLeft', 16) + '</button>' +
-        '</div>'
+    // Polish always shows - it runs locally (structures the note into a triage
+    // story + auto-classifies the Type), no backend needed. Suggest (draft from an
+    // empty note by reading the page) needs the remote endpoint, so it's gated.
+    var suggestBtn = aiEnabled()
+      ? '<button type="button" class="fb-ai-btn" id="fb-suggest" ' +
+          'aria-label="' + esc(t('fbSuggest')) + '" data-tip="' + esc(t('fbSuggestTip')) + '">' +
+          ui.icon('bulb', 16) + '</button>'
       : '';
+    var aiBar = '<div class="fb-ai" role="group" aria-label="' + esc(t('fbAiGroup')) + '">' +
+        suggestBtn +
+        '<button type="button" class="fb-ai-btn" id="fb-polish" ' +
+          'aria-label="' + esc(t('fbPolish')) + '" data-tip="' + esc(t('fbPolishTip')) + '"' +
+          (m.composer.note.trim() ? '' : ' disabled') + '>' +
+          ui.icon('sparkles', 16) + '</button>' +
+        '<button type="button" class="fb-ai-btn fb-undo" id="fb-undo" hidden ' +
+          'aria-label="' + esc(t('fbUndo')) + '" data-tip="' + esc(t('fbUndo')) + '">' +
+          ui.icon('arrowLeft', 16) + '</button>' +
+      '</div>';
 
     var imgBlock = m.composer.image
       ? '<div class="fb-img"><img src="' + esc(m.composer.image) + '" alt="" />' +
@@ -464,14 +561,43 @@
 
   /* -------- AI helpers (Suggest / Polish) -------- */
   var aiUndo = null;   // pre-action note text
+  // Apply a finished story to the composer: replace the note with the structured
+  // version AND auto-select the Type the classifier inferred. Shared by the local
+  // and the remote path so they behave identically.
+  function applyStory(story) {
+    var wrap = panelState.host;
+    var note = wrap.querySelector('#fb-note');
+    var out = WP.fbStory.storyToNote(story);
+    aiUndo = note.value;                 // enable undo
+    note.value = out;
+    var m = loadModel();
+    m.composer.note = out;
+    if (story.type) m.composer.type = story.type;   // auto-classify the Type dropdown
+    saveModel();
+    // reflect the new Type in the <select> if it's mounted
+    var typeSel = wrap.querySelector('#fb-type');
+    if (typeSel && story.type) typeSel.value = story.type;
+    var undo = wrap.querySelector('#fb-undo'); if (undo) undo.hidden = false;
+  }
+
   function runAI(mode) {
     var t = WP.i18n.t;
-    if (!aiEnabled()) return;
     var wrap = panelState.host;
     var note = wrap.querySelector('#fb-note');
     var current = note.value.trim();
     if (mode === 'polish' && !current) return;   // Polish needs text; Suggest works empty
     var suggest = wrap.querySelector('#fb-suggest'), polish = wrap.querySelector('#fb-polish');
+
+    // LOCAL Polish path: no AI endpoint wired -> build the story in the bundle.
+    // (Suggest still needs the remote endpoint to draft from an empty note.)
+    if (mode === 'polish' && !aiEnabled()) {
+      var story = WP.fbStory.polishLocally(current, areaName());
+      applyStory(story);
+      if (polish) polish.disabled = !note.value.trim();
+      live(t('fbAiDone'));
+      return;
+    }
+    if (!aiEnabled()) return;   // Suggest with no endpoint: nothing to do
     setDisabled([suggest, polish], true);
     wrap.querySelector('.fb-ai').classList.add('is-loading');
     live(t('fbAiWorking'));
@@ -482,6 +608,15 @@
     var payload = { action: mode, note: current, page: areaName(), key: cfg('feedbackKey') };
 
     aiRequest(url, payload).then(function (res) {
+      // Preferred: the endpoint returns a structured story ({title,area,...}).
+      // Fallback: plain text (older endpoint) -> classify it locally so Type is
+      // still set. Either way the composer ends up with a story + a Type.
+      var story = (res && res.story && typeof res.story === 'object') ? res.story : null;
+      if (mode === 'polish' && !story) {
+        var out0 = res && (res.text || res.result || res.note);
+        if (out0) story = WP.fbStory.polishLocally(out0, areaName());
+      }
+      if (story) { applyStory(story); polish.disabled = !note.value.trim(); live(t('fbAiDone')); return; }
       var out = res && (res.text || res.result || res.note);
       if (!out) throw new Error('empty');
       aiUndo = note.value;                 // enable undo
@@ -621,14 +756,19 @@
     // carried by the dispatch transport (workflow_dispatch inputs are small string
     // fields; a base64 image would blow the input limit and bloat git history).
     var dispatches = items.map(function (it) {
+      // classified lane: a Polished note starts with "[Area] Title". Fall back to
+      // classifying the raw note so even an un-polished submission is triage-ready.
+      var m2 = /^\[([^\]]+)\]/.exec(it.note || '');
+      var klass = (m2 && m2[1]) || WP.fbStory.classifyArea(it.note || '');
       return {
         ref: 'main',
         inputs: {
           note: it.note,
           type: it.type,
+          klass: klass,                       // Frontend|Backend|Bug|Feature|Enhancement|New skill
           priority: canSetPriority() ? (it.priority || 'Medium') : '',
           owner: owner,
-          area: areaName(),
+          area: areaName(),                   // which PAGE it came from
           context: context,
           url: (location && location.href) || '',
           submittedAt: when,
