@@ -77,3 +77,10 @@ A running log of what worked, what nearly broke, and the rule to remember. Appen
 - What nearly broke / the gotcha: the new "auto-prefill suggested wave on switch to Assigned" silently broke the existing "Assigned without a wave does not save" test - the item now HAD a suggested wave. Right call was to update the test to clear the wavesel explicitly (the guard still matters) + add suggestion assertions, not to weaken the guard.
 - What I would do differently: I added klass/area/priority to the folded item AND had to remember to copy them through timelineItems (the same field-drop trap the skill already warns about). Next time, grep timelineItems the moment I add a feedback field.
 - Rule to remember: when a user says "it is not saving", verify whether the write actually happened before assuming a write bug - often the write works and the FEEDBACK is missing, or the write target is wrong (local vs shared). Fix the felt experience and be honest about scope.
+
+## 2026-07-19 - Merged a PR unlabelled -> it vanished from Project delivery
+- What broke: PR #139 merged with NO wave: label. compute-exec-status.js only derives items from PRs carrying a wave:* label, so #139 never appeared on Project delivery - Akram asked "where is it?" and it genuinely was not there.
+- Root cause: I ran the ship loop but skipped the label step; the labelled-PR-flow rule exists exactly for this and I did not follow it.
+- Fix: gh pr edit 139 --add-label wave:exec-status, then gh workflow run exec-status.yml (workflow_dispatch) to re-derive now instead of waiting for the 7am cron, then let the chained Pages deploy publish. Confirmed live.
+- Gotcha: there is NO type:* label - inferType reads the PR TITLE. "fix Save" in the title made it classify as Bug. Keep the title clean if you want the right type badge.
+- Rule to remember: label the PR (wave:*) BEFORE or immediately AFTER merge, every time. If it is already merged and missing, add the label then trigger exec-status.yml manually - do not wait for the cron. Verify with curl of data/exec-status.json.
