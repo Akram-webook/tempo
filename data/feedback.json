@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T14:00:00.000Z",
+  "generated": "2026-07-19T16:15:00.000Z",
   "items": [
     {
       "id": "sample-1",
@@ -14,9 +14,9 @@
       "url": "",
       "status": "Assigned",
       "wave": 3,
-      "triagedAt": "2026-07-19T14:00:00.000Z",
+      "triagedAt": "2026-07-19T16:15:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Sync reliability is core to Real Data Go-live. Correctly placed."
+      "triageNote": "Real defect that erodes trust in the map. Assigned to Wave 3 (Real Data Go-live) - sync reliability + last-good fallback belong to the data-go-live work."
     },
     {
       "id": "sample-2",
@@ -31,9 +31,9 @@
       "url": "",
       "status": "Assigned",
       "wave": 1,
-      "triagedAt": "2026-07-19T14:00:00.000Z",
+      "triagedAt": "2026-07-19T16:15:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Real defect (dead export button), not a nice-to-have. Assigned to Wave 1 (reporting) to fix now."
+      "triageNote": "A dead button is a real bug, not a nice-to-have. Moved from Testing to Assigned. The weekly report is an Executive-deck surface, so it belongs to Wave 1 (Executive Status Deck) to fix now."
     },
     {
       "id": "sample-3",
@@ -48,9 +48,9 @@
       "url": "",
       "status": "Review",
       "wave": null,
-      "triagedAt": "2026-07-19T14:00:00.000Z",
+      "triagedAt": "2026-07-19T16:15:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Legitimate but low-value cosmetic idea. Acknowledged (Under review); not worth a wave yet, not discarded."
+      "triageNote": "Valid but low-value and cosmetic, with no wave it clearly serves. Parked under Review - acknowledged, not inflated into a wave and not discarded. Revisit if it recurs or a print-polish wave opens."
     }
   ]
 }
