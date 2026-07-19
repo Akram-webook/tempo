@@ -1814,10 +1814,26 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* it's a <button> now (click to focus a wave) - reset button chrome */
+  width: 100%; text-align: start; font: inherit; color: inherit; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .05s;
 }
+.ex-wave-card:hover { border-color: var(--text-muted); }
+.ex-wave-card:active { transform: translateY(1px); }
+.ex-wave-card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ex-wave-card.is-focused { border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 30%, transparent); }
 .ex-wave-card.ex-wc--active { border-color: color-mix(in srgb, var(--brand) 30%, transparent); }
 .ex-wave-card.ex-wc--done   { border-color: color-mix(in srgb, var(--exec-green) 30%, transparent); }
 .ex-wave-card.ex-wc--next   { border-color: color-mix(in srgb, var(--exec-amber) 30%, transparent); }
+/* Focus banner under the grid when one wave is focused. */
+.ex-wave-focus { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-top: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; color: var(--text);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent); }
+.ex-wave-clear { appearance: none; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 12px;
+  font-weight: 600; cursor: pointer; }
+.ex-wave-clear:hover { border-color: var(--brand); color: var(--brand-text); }
 .ex-wc-top { display: flex; justify-content: space-between; align-items: center; }
 .ex-wc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .07em; }
 .ex-wc-health { width: 8px; height: 8px; border-radius: 50%; flex: none; }
@@ -4468,6 +4484,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execWaves:      { en: 'Waves', ar: 'الموجات' },
     execWave:       { en: 'WAVE', ar: 'موجة' },
     execOpen:       { en: 'open', ar: 'مفتوح' },
+    execWaveFocusTip: { en: 'Focus this wave', ar: 'التركيز على هذه الموجة' },
+    execWaveFocused:  { en: 'Focused on Wave {n}: {name}', ar: 'التركيز على الموجة {n}: {name}' },
+    execWaveShowAll:  { en: 'Show all waves', ar: 'عرض كل الموجات' },
+    execChip_later:   { en: 'Later', ar: 'لاحقاً' },
+    execChip_next:    { en: 'Next', ar: 'التالي' },
     execFbTag:      { en: 'Feedback', ar: 'ملاحظة' },
     execTriageOpen:   { en: 'Triage this feedback', ar: 'فرز هذه الملاحظة' },
     execTriageStatus: { en: 'Status', ar: 'الحالة' },
@@ -11077,13 +11098,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     'under review': 'execChip_review', 'planned': 'execChip_planned',
     'testing': 'execChip_testing', 'discarded': 'execChip_discarded',
     'needs you': 'execChip_needs', 'blocked': 'execChip_blocked',
+    'later': 'execChip_later', 'next': 'execChip_next',
   };
+  // A localized label for a status string (EN + AR); unknown -> raw text.
+  function chipLabelFor(raw) {
+    const k = CHIP_I18N[String(raw || '').toLowerCase().trim()];
+    return k ? WP.i18n.t(k) : String(raw || '—');
+  }
   function chip(raw) {
     const key = statusColorKey(raw);
-    const slug = String(raw || '').toLowerCase().trim();
-    const k = CHIP_I18N[slug];
-    const label = ui.esc(k ? WP.i18n.t(k) : (String(raw || '—')));
-    return '<span class="ex-chip ex-chip--' + key + '">' + label + '</span>';
+    return '<span class="ex-chip ex-chip--' + key + '">' + ui.esc(chipLabelFor(raw)) + '</span>';
   }
 
   // ---- section builders -------------------------------------------------------
@@ -11198,8 +11222,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
       });
     }
-    // Apply the view-local Type + Status filters to the timeline items.
-    return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status); });
+    // Apply the view-local Type + Status + Wave filters to the timeline items.
+    return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status) && matchesWave(it); });
   }
 
   // Map a raw feedback warehouse item (data/feedback.json) into the SAME shape as
@@ -11648,6 +11672,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   // the view shows everything until the user narrows it.
   let filterType = 'all';    // all | bug | feature | improvement
   let filterStatus = 'all';  // all | done | working | planned
+  let filterWave = 'all';    // 'all' | a 1-based wave index (as string) - focus one wave
   // Map a filter bucket to the raw status words the data uses (via statusColorKey
   // buckets, so "In Progress"/"in review" -> working, "Later"/"planned" -> planned).
   function matchesStatus(raw) {
@@ -11669,7 +11694,14 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     if (filterType === 'improvement') return /improv|design|enhanc/.test(s);
     return true;
   }
-  const anyFilterActive = function () { return filterType !== 'all' || filterStatus !== 'all'; };
+  // Wave focus: when a wave is selected, show only items assigned to that wave.
+  // Delivery items (from PRs) carry no wave index yet, so wave focus scopes the
+  // feedback/idea rows that DO carry one; a delivery item is shown only under 'all'.
+  function matchesWave(it) {
+    if (filterWave === 'all') return true;
+    return String(it && it.wave || '') === String(filterWave);
+  }
+  const anyFilterActive = function () { return filterType !== 'all' || filterStatus !== 'all' || filterWave !== 'all'; };
 
   // WAVES section (GitHub-warehouse shape): one row per wave with progress bar +
   // health dot + notes + any open-PR blockers. This is the heart of the page now.
@@ -11704,13 +11736,20 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       const blockers = (w.openPRs || []).filter(function (p) { return p.blockedOn; })
         .map(function (p) { return '#' + p.number + ' ' + esc(p.blockedOn) + (p.daysSinceActivity ? ' (' + p.daysSinceActivity + 'd)' : ''); })
         .join(' · ');
-      return '<div class="ex-wave-card ex-wc--' + sk + '">' +
+      const waveNo = idx + 1;
+      const focused = String(filterWave) === String(waveNo);
+      // Each card is a button: click to FOCUS that wave (filter the timeline to it),
+      // click again to clear. A done wave stays visible - being 100% is a reason to
+      // SEE it, not to hide it. aria-pressed announces the focus state.
+      return '<button type="button" class="ex-wave-card ex-wc--' + sk + (focused ? ' is-focused' : '') + '"' +
+          ' data-wave="' + waveNo + '" aria-pressed="' + (focused ? 'true' : 'false') + '"' +
+          ' title="' + esc(t('execWaveFocusTip')) + '">' +
         '<div class="ex-wc-top">' +
-          '<span class="ex-wc-num">' + t('execWave') + ' ' + (idx + 1) + '</span>' +
+          '<span class="ex-wc-num">' + t('execWave') + ' ' + waveNo + '</span>' +
           '<span class="ex-wc-health ex-wc-health--' + h + '" title="' + esc(w.health || 'green') + '"></span>' +
         '</div>' +
         '<div class="ex-wc-name">' + esc(w.name) + '</div>' +
-        '<span class="ex-wc-badge">' + esc(w.status) + '</span>' +
+        '<span class="ex-wc-badge">' + esc(chipLabelFor(w.status)) + '</span>' +
         '<div class="ex-wc-bar"><div class="ex-wc-fill" style="width:' + pct + '%"></div></div>' +
         '<div class="ex-wc-meta">' +
           '<span class="ex-wc-pct">' + pct + '%</span>' +
@@ -11718,10 +11757,20 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
           (openCount ? '<span class="ex-wc-open">' + openCount + ' ' + t('execOpen') + '</span>' : '') +
         '</div>' +
         (blockers ? '<div class="ex-wave-blk">' + esc(t('execBlockedOn')) + ': ' + blockers + '</div>' : '') +
-      '</div>';
+      '</button>';
     }).join('');
+    // When a wave is focused, a clear banner tells the user + offers "show all".
+    var focusBar = '';
+    if (filterWave !== 'all') {
+      var fw = waves[+filterWave - 1];
+      var fname = fw ? fw.name : (t('execWave') + ' ' + filterWave);
+      focusBar = '<div class="ex-wave-focus">' +
+        '<span>' + esc(t('execWaveFocused').replace('{n}', filterWave).replace('{name}', fname)) + '</span>' +
+        '<button type="button" class="ex-wave-clear" data-wave-clear>' + esc(t('execWaveShowAll')) + '</button>' +
+      '</div>';
+    }
     return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
-      '<div class="ex-waves-grid">' + cards + '</div></div>';
+      '<div class="ex-waves-grid">' + cards + '</div>' + focusBar + '</div>';
   }
 
   // Filter bar: Type (All/Bugs/Features/Improvements) + Status (All/Done/Working/
@@ -11818,6 +11867,17 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         if (lastBaseData) paintBody(host, lastBaseData);
       };
     });
+    // Wave cards: click to FOCUS that wave (filter the timeline to its items),
+    // click the focused one again (or "Show all") to clear. View-local.
+    host.querySelectorAll('.ex-wave-card[data-wave]').forEach(function (card) {
+      card.onclick = function () {
+        const w = card.getAttribute('data-wave');
+        filterWave = (String(filterWave) === String(w)) ? 'all' : w;
+        if (lastBaseData) paintBody(host, lastBaseData);
+      };
+    });
+    var clearBtn = host.querySelector('[data-wave-clear]');
+    if (clearBtn) clearBtn.onclick = function () { filterWave = 'all'; if (lastBaseData) paintBody(host, lastBaseData); };
     wireTriage(host);
   }
 

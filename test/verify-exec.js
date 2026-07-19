@@ -173,6 +173,12 @@ const PAYLOAD = {
     assert(bodyHTML.indexOf('Delivered') < bodyHTML.indexOf('In progress'),
       'Delivered band is ordered before In progress');
 
+    // --- wave focus: a wave card is a button that filters the timeline to its wave --
+    const waveCards = el.querySelectorAll('.ex-wave-card[data-wave]');
+    assert(waveCards.length >= 1, 'wave cards are clickable buttons (data-wave)');
+    assert([...waveCards].every(c => c.tagName === 'BUTTON'), 'each wave card is a real <button> (keyboard + a11y)');
+    assert([...waveCards].every(c => c.getAttribute('aria-pressed') === 'false'), 'no wave is focused by default');
+
     // stats strip counts ITEMS not waves: 2 Done, 1 Working.
     const sum = el.querySelector('.ex-launch-sum');
     assert(sum && /2 shipped/.test(sum.textContent), 'stats strip counts items: 2 shipped');
@@ -414,6 +420,28 @@ const PAYLOAD = {
     };
     assert(/In progress|قيد التنفيذ/i.test(bandOf(elB, 'being tested')), 'a Testing item sits in the In progress band (not To decide)');
     assert(/To decide|بانتظار/i.test(bandOf(elB, 'to decide')), 'a Review item sits in the To decide band');
+    nextFeedback = null;
+
+    // --- wave focus round-trip: click a wave card -> timeline scopes to it -------
+    const elW = window.document.createElement('div');
+    nextFeedback = { generated: new Date().toISOString(), items: [
+      { id: 'w1a', note: '[Feature] in wave one', klass: 'Feature', status: 'Assigned', wave: 1, submittedAt: new Date().toISOString() },
+      { id: 'w2a', note: '[Feature] in wave two', klass: 'Feature', status: 'Assigned', wave: 2, submittedAt: new Date(Date.now() - 60000).toISOString() },
+    ] };
+    WP.ui.exec.render(elW); await settle(); goAll(elW); await Promise.resolve(); await Promise.resolve();
+    const beforeN = elW.querySelectorAll('.ex-tl-item').length;
+    assert(beforeN >= 2, 'both wave items show before focusing');
+    const card1 = [...elW.querySelectorAll('.ex-wave-card[data-wave]')].find(c => c.getAttribute('data-wave') === '1');
+    assert(card1, 'a Wave 1 card exists to click');
+    card1.click(); await settle(); await Promise.resolve();
+    assert(elW.querySelector('.ex-wave-card.is-focused'), 'clicking a wave card marks it focused');
+    assert(elW.querySelector('.ex-wave-focus'), 'a focus banner appears');
+    const waveTags = [...elW.querySelectorAll('.ex-tl-tag--wave')].map(t => t.textContent);
+    assert(waveTags.length && waveTags.every(t => /1/.test(t)), 'timeline now shows ONLY Wave 1 items');
+    // a done/other wave card is still visible while focused (not hidden)
+    assert(elW.querySelectorAll('.ex-wave-card[data-wave]').length >= 2, 'other wave cards stay visible while one is focused');
+    elW.querySelector('[data-wave-clear]').click(); await settle(); await Promise.resolve();
+    assert(elW.querySelectorAll('.ex-tl-item').length === beforeN, 'Show all restores every item');
     nextFeedback = null;
 
     // --- status chips localize (EN + AR), not raw English in Arabic --------------
