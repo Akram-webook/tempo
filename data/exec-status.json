@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T17:02:53.809Z",
+  "generated": "2026-07-19T17:13:28.636Z",
   "cover": {
     "status": "In Progress",
     "progress": 94,
@@ -14,7 +14,7 @@
       "progress": 94,
       "health": "green",
       "openPRs": [],
-      "notes": "13/14 PRs merged, 4k/5k lines."
+      "notes": "14/15 PRs merged, 5k/5k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-140",
+      "area": "Exec Deck",
+      "title": "docs: full Project delivery build prompt (for other agents)",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T17:13:07Z"
+    },
     {
       "id": "pr-139",
       "area": "Exec Deck",
@@ -234,6 +242,11 @@
     },
     {
       "ts": "2026-07-19T17:02:53.809Z",
+      "progress": 94,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T17:13:28.636Z",
       "progress": 94,
       "health": "green"
     }
