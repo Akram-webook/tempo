@@ -81,5 +81,71 @@
       "progress": 89,
       "health": "green"
     }
+  ],
+  "items": [
+    {
+      "id": "pr-126",
+      "area": "Exec Deck",
+      "title": "ci(deploy): publish Pages after Executive Status commits new data",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-18T18:52:57Z"
+    },
+    {
+      "id": "pr-125",
+      "area": "Exec Deck",
+      "title": "feat(exec): GitHub-as-warehouse - cut Google entirely",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-18T18:40:42Z"
+    },
+    {
+      "id": "pr-124",
+      "area": "Exec Deck",
+      "title": "feat(exec-status): effort-weighted progress + blocked-on health + trend sparkline",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-18T14:59:15Z"
+    },
+    {
+      "id": "pr-123",
+      "area": "Exec Deck",
+      "title": "feat(exec-deck): rebuild Slides on structural Sheet changes (onSheetChange)",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-18T14:28:58Z"
+    },
+    {
+      "id": "pr-122",
+      "area": "Exec Deck",
+      "title": "chore(exec-status): log endpoint tail to expose a stale GAS_ENDPOINT",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-18T14:04:42Z"
+    },
+    {
+      "id": "pr-121",
+      "area": "Exec Deck",
+      "title": "chore(exec-status): require a successful live POST (strict)",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-18T08:03:24Z"
+    },
+    {
+      "id": "pr-120",
+      "area": "Exec Deck",
+      "title": "feat(exec-status): derive project-delivery status from merged PRs (live)",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-18T07:52:04Z"
+    },
+    {
+      "id": "pr-115",
+      "area": "Exec Deck",
+      "title": "feat(exec-status): derive project-delivery status from merged-PR counts",
+      "status": "Working",
+      "type": "Feature",
+      "ts": "2026-07-17T22:42:01Z"
+    }
   ]
 }

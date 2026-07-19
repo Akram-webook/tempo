@@ -109,9 +109,22 @@ async function prsForLabel(label) {
         else blockedOn = '';
       }
     } catch (e) { /* detail fetch failed — fall back to count-only for this PR */ }
-    prs.push({ number: it.number, title: it.title, merged, open, additions, blockedOn, stuckDays });
+    prs.push({
+      number: it.number, title: it.title, merged, open, additions, blockedOn, stuckDays,
+      mergedAt: (it.pull_request && it.pull_request.merged_at) || null,
+      createdAt: it.created_at || null,
+    });
   }
   return prs;
+}
+
+// Coarse item type inferred from the PR title (no new data source). Feature is
+// the default so anything not clearly a fix/cleanup reads as delivered scope.
+function inferType(title) {
+  const t = (title || '').toLowerCase();
+  if (/fix|bug|repair|broken|crash|error|revert/.test(t)) return 'Bug';
+  if (/improv|polish|refactor|clean|perf|optim|simplif/.test(t)) return 'Improvement';
+  return 'Feature';
 }
 
 function statusFor(pct, total) {
@@ -151,9 +164,11 @@ function narrativeFor(waves, cover) {
 
 async function computeShip() {
   const waves = [];
+  const wavesPrs = [];   // keep each wave's PRs so we can build timeline items below
   let mergedChurn = 0, totalChurn = 0;
   for (const w of WAVES) {
     const prs = await prsForLabel(w.label);
+    wavesPrs.push({ wave: w, prs });
     const m = prs.filter((p) => p.merged).length;
     const t = prs.length;
     // #1 PROGRESS = merged churn / total churn (effort-weighted), NOT PR count.
@@ -194,7 +209,34 @@ async function computeShip() {
   const needsYou = waves
     .filter((w) => w.health !== 'green' && w.openPRs.length)
     .map((w) => `${w.name}: ${w.notes}`);
-  return { generated: new Date(GEN_TS).toISOString(), cover, waves, needsYou };
+
+  // Timeline items - one per PR across all waves. status = merged->Done else
+  // Working; type inferred from the title; ts = merged or created. Newest first.
+  const SHORT = {
+    'Executive Status Deck': 'Exec Deck',
+    'Capacity Engine': 'Capacity',
+    'Real Data Go-live': 'Real Data',
+    'Slack Integration': 'Slack',
+  };
+  const items = [];
+  for (const { wave, prs } of wavesPrs) {
+    const area = SHORT[wave.name] || wave.name;
+    for (const pr of prs) {
+      const ts = pr.mergedAt || pr.createdAt;
+      if (!ts) continue;
+      items.push({
+        id: `pr-${pr.number}`,
+        area,
+        title: pr.title,
+        status: pr.merged ? 'Done' : 'Working',
+        type: inferType(pr.title),
+        ts,
+      });
+    }
+  }
+  items.sort((a, b) => Date.parse(b.ts) - Date.parse(a.ts));
+
+  return { generated: new Date(GEN_TS).toISOString(), cover, waves, needsYou, items };
 }
 
 /*═══════════════════ GITHUB WAREHOUSE (replaces Apps Script) ═══════════════════

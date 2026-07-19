@@ -1766,6 +1766,55 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-bar--sm { height: 6px; }
 .ex-wave-note { font-size: 13px; color: var(--text-muted); }
 .ex-wave-blk { font-size: 12.5px; color: var(--state-negative); }
+
+/* Wave cards (redesign) — status-tinted border + badge, health dot, PR count.
+   All colours come from tokens (--brand / --exec-* / --surface-2), so the
+   token-purity gate stays green and the cards are theme-aware. */
+.ex-waves-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  margin: 4px 0 0;
+}
+.ex-wave-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 8px);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ex-wave-card.ex-wc--active { border-color: color-mix(in srgb, var(--brand) 30%, transparent); }
+.ex-wave-card.ex-wc--done   { border-color: color-mix(in srgb, var(--exec-green) 30%, transparent); }
+.ex-wave-card.ex-wc--next   { border-color: color-mix(in srgb, var(--exec-amber) 30%, transparent); }
+.ex-wc-top { display: flex; justify-content: space-between; align-items: center; }
+.ex-wc-num { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .07em; }
+.ex-wc-health { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ex-wc-health--green { background: var(--exec-green); }
+.ex-wc-health--amber { background: var(--exec-amber); }
+.ex-wc-health--red   { background: var(--exec-red); }
+.ex-wc-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.ex-wc-badge {
+  display: inline-flex; align-items: center; align-self: flex-start;
+  font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px;
+  background: var(--surface-3, rgba(127,127,127,.12)); color: var(--text-muted);
+}
+.ex-wc--active .ex-wc-badge { background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); }
+.ex-wc--done   .ex-wc-badge { background: color-mix(in srgb, var(--exec-green) 16%, transparent); color: var(--exec-green); }
+.ex-wc--next   .ex-wc-badge { background: color-mix(in srgb, var(--exec-amber) 16%, transparent); color: var(--exec-amber-ink, var(--exec-amber)); }
+.ex-wc-bar { height: 3px; background: color-mix(in srgb, var(--text) 10%, transparent); border-radius: 2px; overflow: hidden; }
+.ex-wc-fill { height: 100%; border-radius: 2px; background: var(--exec-grey); transition: width .35s ease; }
+.ex-wc--active .ex-wc-fill { background: var(--brand); }
+.ex-wc--done   .ex-wc-fill { background: var(--exec-green); }
+.ex-wc--next   .ex-wc-fill { background: var(--exec-amber); }
+.ex-wc-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.ex-wc-pct { font-variant-numeric: tabular-nums; }
+.ex-wc-open {
+  margin-inline-start: auto;
+  background: color-mix(in srgb, var(--exec-amber) 14%, transparent); color: var(--exec-amber-ink, var(--exec-amber));
+  padding: 1px 6px; border-radius: 99px; font-size: 10px; font-weight: 600;
+}
 .ex-empty--nodata { display: flex; align-items: center; gap: 8px; justify-content: center;
   color: var(--text-muted); padding: 40px 16px; }
 
@@ -1844,8 +1893,9 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-chip--violet { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 16%, transparent); }
 .ex-chip--grey   { color: var(--text-muted); background: var(--surface-1); }
 
-/* Waves */
-.ex-waves { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+/* Waves — the section wraps an h3 + the .ex-waves-grid of cards, so it is a
+   plain block (the grid lives on .ex-waves-grid above, not here). */
+.ex-waves { display: block; }
 .ex-wave { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
 .ex-wave-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ex-wave-title { font-weight: 600; }
@@ -4298,6 +4348,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execFilterPlanned:      { en: 'Planned', ar: 'مخطط' },
     execNoData:     { en: 'No data yet - first run pending.', ar: 'لا توجد بيانات بعد - في انتظار أول تشغيل.' },
     execWaves:      { en: 'Waves', ar: 'الموجات' },
+    execWave:       { en: 'WAVE', ar: 'موجة' },
+    execOpen:       { en: 'open', ar: 'مفتوح' },
     execBlockedOn:  { en: 'Blocked on', ar: 'بانتظار' },
     execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
     execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },
@@ -10891,9 +10943,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // Progress bar = the single effort-weighted % ; the rest is remaining.
     const pct = (c.progress != null && !isNaN(+c.progress)) ? Math.round(+c.progress)
       : (c.pct != null ? Math.round(+c.pct) : 0);
-    // Rollup counts derived from the waves list.
-    const done = waves.filter(function (x) { return x.status === 'Done'; }).length;
-    const next = waves.filter(function (x) { return x.status === 'In Progress'; }).length;
+    // Rollup counts: prefer the timeline items[] (per-PR, so "8 shipped" is real
+    // delivered work), and fall back to the wave rollup when no items[] exist yet.
+    const items = (data && Array.isArray(data.items)) ? data.items : null;
+    const done = items ? items.filter(function (x) { return x.status === 'Done'; }).length
+      : waves.filter(function (x) { return x.status === 'Done'; }).length;
+    const next = items ? items.filter(function (x) { return x.status === 'Working'; }).length
+      : waves.filter(function (x) { return x.status === 'In Progress'; }).length;
     const need = ((data && data.needsYou) || []).length;
     const w = function (v) { return v; };   // bar segments are already percentages
     const summary = t('execSummary').replace('{done}', done).replace('{next}', next).replace('{need}', need);
@@ -10946,17 +11002,30 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return left + ' – ' + b.toLocaleDateString(loc, full);
   }
 
-  // Normalize the timeline items from the payload (requests + any dated features).
+  // Normalize the timeline items from the payload. Preferred shape is the
+  // GitHub-warehouse items[] (one per PR, written by compute-exec-status.js);
+  // requests[]/features[] are kept as a fallback for older/sample payloads.
   function timelineItems(data) {
     const out = [];
-    ((data && data.requests) || []).forEach(function (r) {
-      out.push({ title: (r.area ? r.area + ' — ' : '') + (r.note || '—'), status: r.status, date: r.date || null, type: r.type || r.Type || '' });
-    });
-    ((data && data.features) || []).forEach(function (f) {
-      const d = f.date || f.Reviewed || f.reviewed || null;
-      const title = (f.area || f.Area || '') ? ((f.area || f.Area) + ' — ' + (f.feature || f.Feature || '')) : (f.feature || f.Feature || '');
-      if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
-    });
+    if (data && Array.isArray(data.items) && data.items.length) {
+      data.items.forEach(function (it) {
+        out.push({
+          title: (it.area ? it.area + ' — ' : '') + (it.title || '—'),
+          status: it.status,
+          date: it.ts || it.date || null,
+          type: it.type || '',
+        });
+      });
+    } else {
+      ((data && data.requests) || []).forEach(function (r) {
+        out.push({ title: (r.area ? r.area + ' — ' : '') + (r.note || '—'), status: r.status, date: r.date || null, type: r.type || r.Type || '' });
+      });
+      ((data && data.features) || []).forEach(function (f) {
+        const d = f.date || f.Reviewed || f.reviewed || null;
+        const title = (f.area || f.Area || '') ? ((f.area || f.Area) + ' — ' + (f.feature || f.Feature || '')) : (f.feature || f.Feature || '');
+        if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
+      });
+    }
     // Apply the view-local Type + Status filters to the timeline items.
     return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status); });
   }
@@ -11140,23 +11209,41 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       // Don't leave a bare heading when a filter empties the grid.
       return anyFilterActive() ? '' : '';
     }
-    const rows = waves.map(function (w) {
+    // Per-status card class drives the border tint + badge colour (all via CSS
+    // tokens - no raw hex here, so the token-purity gate stays green).
+    const stKey = function (st) {
+      return st === 'Done' ? 'done' : st === 'In Progress' ? 'active'
+        : st === 'Next' ? 'next' : 'later';
+    };
+    const cards = waves.map(function (w, idx) {
       const pct = Math.max(0, Math.min(100, +w.progress || 0));
-      const h = w.health || 'green';
+      const h = w.health === 'red' ? 'red' : w.health === 'amber' ? 'amber' : 'green';
+      const sk = stKey(w.status);
+      const openCount = (w.openPRs || []).length;
+      // "N/M PRs" pulled from the notes string the compute step writes.
+      const m = (w.notes || '').match(/(\d+)\/(\d+) PRs merged/);
+      const prLabel = m ? (m[1] + '/' + m[2] + ' PRs') : '';
       const blockers = (w.openPRs || []).filter(function (p) { return p.blockedOn; })
         .map(function (p) { return '#' + p.number + ' ' + esc(p.blockedOn) + (p.daysSinceActivity ? ' (' + p.daysSinceActivity + 'd)' : ''); })
         .join(' · ');
-      return '<div class="ex-wave">' +
-        '<div class="ex-wave-h">' + statusIcon(h === 'red' ? 'red' : h === 'amber' ? 'amber' : 'green') +
-          '<span class="ex-wave-n">' + esc(w.name) + '</span>' +
-          '<span class="ex-wave-p">' + pct + '%</span></div>' +
-        '<div class="ex-bar ex-bar--sm"><span style="width:' + pct + '%;background:' + COLORS.green + '"></span>' +
-          '<span style="width:' + (100 - pct) + '%;background:' + COLORS.grey + '"></span></div>' +
-        (w.notes ? '<div class="ex-wave-note">' + esc(w.notes) + '</div>' : '') +
+      return '<div class="ex-wave-card ex-wc--' + sk + '">' +
+        '<div class="ex-wc-top">' +
+          '<span class="ex-wc-num">' + t('execWave') + ' ' + (idx + 1) + '</span>' +
+          '<span class="ex-wc-health ex-wc-health--' + h + '" title="' + esc(w.health || 'green') + '"></span>' +
+        '</div>' +
+        '<div class="ex-wc-name">' + esc(w.name) + '</div>' +
+        '<span class="ex-wc-badge">' + esc(w.status) + '</span>' +
+        '<div class="ex-wc-bar"><div class="ex-wc-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="ex-wc-meta">' +
+          '<span class="ex-wc-pct">' + pct + '%</span>' +
+          (prLabel ? '<span>· ' + esc(prLabel) + '</span>' : '') +
+          (openCount ? '<span class="ex-wc-open">' + openCount + ' ' + t('execOpen') + '</span>' : '') +
+        '</div>' +
         (blockers ? '<div class="ex-wave-blk">' + esc(t('execBlockedOn')) + ': ' + blockers + '</div>' : '') +
       '</div>';
     }).join('');
-    return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' + rows + '</div>';
+    return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' +
+      '<div class="ex-waves-grid">' + cards + '</div></div>';
   }
 
   // Filter bar: Type (All/Bugs/Features/Improvements) + Status (All/Done/Working/

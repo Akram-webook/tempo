@@ -643,6 +643,8 @@
     execFilterPlanned:      { en: 'Planned', ar: 'مخطط' },
     execNoData:     { en: 'No data yet - first run pending.', ar: 'لا توجد بيانات بعد - في انتظار أول تشغيل.' },
     execWaves:      { en: 'Waves', ar: 'الموجات' },
+    execWave:       { en: 'WAVE', ar: 'موجة' },
+    execOpen:       { en: 'open', ar: 'مفتوح' },
     execBlockedOn:  { en: 'Blocked on', ar: 'بانتظار' },
     execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
     execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },

@@ -68,6 +68,12 @@ const PAYLOAD = {
   ],
   needsYou: ['Capacity Engine: 1/3 PRs merged. #118 awaiting review (7d).'],
   history: [{ ts: '2026-07-14T07:00:00Z', progress: 50 }, { ts: '2026-07-16T07:00:00Z', progress: 55 }, { ts: '2026-07-18T07:00:00Z', progress: 60 }],
+  // Timeline items[] (per-PR) - the warehouse shape the compute script now writes.
+  items: [
+    { id: 'pr-1', area: 'Exec Deck', title: 'Fix the broken workload scroll', status: 'Done', type: 'Bug', ts: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
+    { id: 'pr-2', area: 'Exec Deck', title: 'Add Type and Status filters', status: 'Working', type: 'Feature', ts: new Date(Date.now() - 4 * 3600 * 1000).toISOString() },
+    { id: 'pr-3', area: 'Capacity', title: 'Refactor the capacity engine', status: 'Done', type: 'Improvement', ts: new Date(Date.now() - 6 * 3600 * 1000).toISOString() },
+  ],
 };
 
 (async () => {
@@ -122,7 +128,7 @@ const PAYLOAD = {
     assert([...el.querySelectorAll('.ex-fchip.is-on')].length === 2, 'exactly the two "All" chips are on by default');
 
     // --- waves section: progress + health + blocked-on ----------------------------
-    const waves = el.querySelectorAll('.ex-wave');
+    const waves = el.querySelectorAll('.ex-wave-card');
     assert(waves.length === 2, 'both waves render (got ' + waves.length + ')');
     assert(/Capacity Engine/.test(el.textContent), 'wave name shows');
     assert(el.querySelector('.ex-wave-blk') && /reviewers/.test(el.querySelector('.ex-wave-blk').textContent), 'blocked-on shows whose move it is');
@@ -133,12 +139,32 @@ const PAYLOAD = {
     assert(doneChip, 'Status=Done chip exists');
     doneChip.click();
     await Promise.resolve(); await Promise.resolve();
-    assert(el.querySelectorAll('.ex-wave').length === 0, 'Status=Done filters out the in-progress waves');
+    assert(el.querySelectorAll('.ex-wave-card').length === 0, 'Status=Done filters out the in-progress waves');
     assert(el.querySelector('.ex-fchip[data-filter="status"][data-val="done"]').classList.contains('is-on'), 'Done chip is now active');
     // Reset back to All so later assertions see the full set.
     el.querySelector('.ex-fchip[data-filter="status"][data-val="all"]').click();
     await Promise.resolve(); await Promise.resolve();
-    assert(el.querySelectorAll('.ex-wave').length === 2, 'Status=All restores both waves');
+    assert(el.querySelectorAll('.ex-wave-card').length === 2, 'Status=All restores both waves');
+
+    // --- timeline items[] render (the fix: was empty because items[] was missing) --
+    const tlRows = el.querySelectorAll('.ex-tl-row');
+    assert(tlRows.length === 3, 'timeline renders all 3 items[] in the current week (got ' + tlRows.length + ')');
+    assert(/broken workload scroll/i.test(el.textContent), 'an item title renders');
+    // stats strip counts ITEMS not waves: 2 Done, 1 Working.
+    const sum = el.querySelector('.ex-launch-sum');
+    assert(sum && /2 shipped/.test(sum.textContent), 'stats strip counts items: 2 shipped');
+    assert(sum && /1 in progress/.test(sum.textContent), 'stats strip counts items: 1 in progress');
+
+    // --- Type filter on the timeline: Bugs shows only the Bug item ----------------
+    el.querySelector('.ex-fchip[data-filter="type"][data-val="bug"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    const bugRows = el.querySelectorAll('.ex-tl-row');
+    assert(bugRows.length === 1 && /broken workload scroll/i.test(el.textContent), 'Type=Bugs shows only the Bug item');
+    // Type also hides the waves grid (a wave has no type) - matches PR #130 behaviour.
+    assert(el.querySelectorAll('.ex-wave-card').length === 0, 'Type=Bugs hides the (untyped) waves');
+    el.querySelector('.ex-fchip[data-filter="type"][data-val="all"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    assert(el.querySelectorAll('.ex-tl-row').length === 3, 'Type=All restores all timeline items');
 
     // --- needs-you from data.needsYou ---------------------------------------------
     assert(/awaiting review/i.test(el.textContent), 'needsYou item renders');
@@ -154,7 +180,7 @@ const PAYLOAD = {
     WP.ui.exec.render(el2);
     await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
     assert(el2.querySelector('.ex-empty--nodata'), 'empty state shows when generated is null (not sample data)');
-    assert(!el2.querySelector('.ex-wave'), 'no waves render in the empty state');
+    assert(!el2.querySelector('.ex-wave-card'), 'no waves render in the empty state');
 
     // --- fetch error -> error state (retry) ---------------------------------------
     nextOk = false;
@@ -176,6 +202,6 @@ const PAYLOAD = {
     errors.push('[run] ' + e.message + '\n' + e.stack);
   }
   if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-  console.log('PASS — project-delivery (GitHub warehouse): fetch() on data/exec-status.json (no JSONP), admin gate, cover.progress launcher + single bar, sparkline REMOVED, Type+Status filter bar (chips + Status=Done filters waves), waves with progress/health/blocked-on, needsYou, empty-state when no run yet, error state, Open-report -> status.html, EN+AR.');
+  console.log('PASS — project-delivery (GitHub warehouse): fetch() on data/exec-status.json (no JSONP), admin gate, cover.progress launcher + single bar, sparkline REMOVED, Type+Status filter bar (chips + Status=Done filters waves), timeline renders items[] (per-PR) + Type=Bugs filters them, stats strip counts items not waves, wave CARDS (WAVE N + badge + health dot + PR count), needsYou, empty-state when no run yet, error state, Open-report -> status.html, EN+AR.');
   process.exit(0);
 })();
