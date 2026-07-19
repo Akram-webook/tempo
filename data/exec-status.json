@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T19:02:27.133Z",
+  "generated": "2026-07-19T19:25:56.539Z",
   "cover": {
     "status": "In Progress",
     "progress": 95,
@@ -14,7 +14,7 @@
       "progress": 95,
       "health": "green",
       "openPRs": [],
-      "notes": "21/22 PRs merged, 5k/5k lines."
+      "notes": "22/23 PRs merged, 5k/6k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-148",
+      "area": "Exec Deck",
+      "title": "Review fixes: wave over-match, Testing band, localized chips, Esc re-entry",
+      "status": "Done",
+      "type": "Bug",
+      "ts": "2026-07-19T19:25:32Z"
+    },
     {
       "id": "pr-147",
       "area": "Exec Deck",
@@ -328,6 +336,11 @@
     },
     {
       "ts": "2026-07-19T19:02:27.133Z",
+      "progress": 95,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T19:25:56.539Z",
       "progress": 95,
       "health": "green"
     }
