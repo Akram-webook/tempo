@@ -99,11 +99,13 @@ async function add(page) { await page.click('#fb-add'); await page.waitForTimeou
   await page.setViewportSize({ width: 400, height: 780 });
   await boot(page, { lang: 'en', theme: 'light', director: false });
   await shot(page, 'fab-mobile.png');
+  // Icon-only FAB: there is no text label element at all now. Assert it's absent
+  // (or, if present, hidden) - either way, no visible text.
   const txtVisible = await page.evaluate(() => {
     const t = document.querySelector('.fb-fab-txt');
-    return t ? getComputedStyle(t).display !== 'none' : true;
+    return t ? getComputedStyle(t).display !== 'none' : false;
   });
-  if (txtVisible) { console.log('SHOT FAIL — FAB label not collapsed on mobile'); process.exit(1); }
+  if (txtVisible) { console.log('SHOT FAIL — FAB shows a text label (should be icon-only)'); process.exit(1); }
   await page.setViewportSize({ width: 1280, height: 900 });
 
   // ---- Panel: member (no priority), light + dark ----

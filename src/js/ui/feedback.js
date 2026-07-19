@@ -133,10 +133,11 @@
     if (h.querySelector('.fb-fab')) return;      // already mounted; survive re-renders
     var t = WP.i18n.t;
     h.innerHTML =
+      // Icon-only round FAB - minimal footprint so it never covers content. The
+      // aria-label + title keep it fully labelled for screen readers + hover.
       '<button type="button" class="fb-fab" id="fb-fab" aria-haspopup="dialog" ' +
         'aria-label="' + esc(t('fbTitle')) + '" title="' + esc(t('fbTitle')) + '">' +
-        ui.icon('bulb', 18) +
-        '<span class="fb-fab-txt">' + esc(t('fbFab')) + '</span>' +
+        ui.icon('bulb', 20) +
       '</button>';
     h.querySelector('#fb-fab').addEventListener('click', open);
   }
