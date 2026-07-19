@@ -2456,25 +2456,21 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 /* ============================================================
  * Global Feedback widget (floating FAB + panel + queue)
  * ========================================================== */
-/* FAB — bottom-end, discoverable but not covering critical controls. */
+/* FAB — small round icon-only button, bottom-end. No text label (aria-label +
+   title keep it accessible), so it stays a 48px circle and never covers content. */
 .fb-fab {
-  position: fixed; inset-block-end: 20px; inset-inline-end: 20px; z-index: 900;
-  display: inline-flex; align-items: center; gap: 8px;
+  position: fixed; inset-block-end: 24px; inset-inline-end: 24px; z-index: 900;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; padding: 0;
   background: var(--brand); color: var(--brand-contrast);
-  border: 0; border-radius: 100px; padding: 12px 18px;
-  font: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
+  border: 0; border-radius: 50%;
+  cursor: pointer;
   box-shadow: 0 8px 22px rgba(0,0,0,.22); transition: transform .15s ease, box-shadow .15s ease;
-  min-height: 44px;
 }
 .fb-fab:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(0,0,0,.28); }
 .fb-fab:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 .fb-fab svg { flex: none; }
 @media (prefers-reduced-motion: reduce) { .fb-fab { transition: none; } }
-/* Icon-only FAB on small screens (aria-label kept). */
-@media (max-width: 560px) {
-  .fb-fab-txt { display: none; }
-  .fb-fab { padding: 0; width: 52px; height: 52px; justify-content: center; }
-}
 
 /* Overlay + backdrop + panel (drawer from the end edge). */
 .fb-overlay { position: fixed; inset: 0; z-index: 1000; }
