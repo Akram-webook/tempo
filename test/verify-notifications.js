@@ -49,6 +49,15 @@ const EXEC_REQS = [
   { id: 3, area: 'Access', note: 'New role gate', status: 'Blocked' },   // red bucket too
   { id: 4, area: 'Org', note: 'done thing', status: 'Done' },
 ];
+const EXEC_WAVES = [
+  { name: 'Executive Status Deck', status: 'Done', progress: 100 },
+  { name: 'Capacity Engine', status: 'Later', progress: 0 },
+];
+// The notif panel now fetch()es the warehouse JSON (waves + requests). Stub it so
+// mount() resolves instead of throwing "fetch is not defined" in jsdom.
+window.fetch = function () {
+  return Promise.resolve({ json: function () { return Promise.resolve({ requests: EXEC_REQS, waves: EXEC_WAVES }); } });
+};
 
 (async () => {
   try {
@@ -66,10 +75,20 @@ const EXEC_REQS = [
     const dNeeds = dItems.filter(i => i.type === 'needsInput');
     assert(dNeeds.length === 2, 'director sees the 2 red needs-input items (got ' + dNeeds.length + ')');
 
+    // --- wave-completion alert: a director is told when a wave hits 100% ------------
+    const dWaveItems = WP.notifications.buildItems(dir, { execRequests: EXEC_REQS, execWaves: EXEC_WAVES });
+    const done = dWaveItems.filter(i => i.type === 'waveCompleted');
+    assert(done.length === 1, 'director gets ONE wave-completed alert (the 100% wave), got ' + done.length);
+    assert(/100%|Executive Status Deck|مُنجزة/.test(done[0].text), 'the alert names the completed wave');
+    assert(done[0].route === 'exec', 'the alert deep-links to Project delivery');
+    // stable, dismissible id (no nagging)
+    assert(/^waveDone:/.test(done[0].id), 'wave-complete alert has a stable dismissible id');
+
     WP.can = function () { return false; };                       // member
     WP.state.viewerId = MEMBER;
     const mItems = WP.notifications.buildItems(mem, { execRequests: EXEC_REQS });
     assert(mItems.filter(i => i.type === 'needsInput').length === 0, 'member sees NONE of the director needs-input items');
+    assert(WP.notifications.buildItems(mem, { execWaves: EXEC_WAVES }).filter(i => i.type === 'waveCompleted').length === 0, 'member sees NO wave-completed alerts (director-gated)');
     assert(WP.notifications.needsExecData(mem) === false, 'member does not trigger an exec fetch');
 
     // --- self-assessment-due: only when the viewer OWN self is not completed --------
@@ -148,9 +167,16 @@ const EXEC_REQS = [
     window.document.dispatchEvent(esc);
     assert(!wrap.classList.contains('open'), 'Esc closes the inbox');
 
-    // empty state -> "all caught up" (dismiss everything, reopen, no endpoint items)
-    WP.config.execStatusEndpoint = '';   // no needs-input source
-    WP.data.SELF[DIRECTOR] = { status: 'Completed' };   // no self-assessment item
+    // empty state -> "all caught up". Seat a MEMBER (gets no director items -
+    // no needs-input, no wave-completed) and complete their self-assessment, so
+    // the inbox is genuinely empty regardless of the cached warehouse waves.
+    window.fetch = function () {
+      return Promise.resolve({ json: function () { return Promise.resolve({ requests: [], waves: [] }); } });
+    };
+    WP.can = function () { return false; };              // member (no director alerts)
+    WP.state.viewerId = MEMBER;
+    WP.config.execStatusEndpoint = '';
+    WP.data.SELF[MEMBER] = { status: 'Completed' };      // no self-assessment item
     WP.notifications._resetDismissed();
     btn.click();
     const panel = window.document.getElementById('notif-panel');

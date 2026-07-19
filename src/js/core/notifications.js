@@ -94,6 +94,36 @@
       },
     },
 
+    // DIRECTOR / ADMIN — a delivery WAVE just reached 100%. Source: ctx.execWaves
+    // (waves[] from the warehouse). One item per completed wave; the id is stable
+    // per wave name so it can be dismissed and won't nag. This is the "tell Ahmed
+    // when it's done" alert (Ahmed is a director, so it lands in his feed).
+    waveCompleted: {
+      build: function (viewer, ctx) {
+        if (!viewer || !(WP.can && WP.can('viewSettings'))) return [];   // director/admin only
+        var waves = (ctx && ctx.execWaves) || [];
+        return waves
+          .map(function (w, i) { return { w: w, no: i + 1 }; })
+          .filter(function (x) {
+            var pct = +(x.w && x.w.progress);
+            var done = String(x.w && x.w.status || '').toLowerCase() === 'done';
+            return done || pct >= 100;
+          })
+          .map(function (x) {
+            var name = String(x.w.name || '').trim();
+            return {
+              id: 'waveDone:' + (name || x.no),          // stable per wave -> dismissible
+              type: 'waveCompleted',
+              icon: 'check',
+              text: WP.i18n.t('waveCompleteNotif').replace('{n}', x.no).replace('{name}', name),
+              area: name,
+              route: 'exec',
+              at: null,   // no reliable completion timestamp in the payload; sorts after dated
+            };
+          });
+      },
+    },
+
     // MANAGER — "a direct report needs attention". Phase-1 EXTENSION POINT:
     // the app has no per-report actionable-item model yet that isn't already
     // surveillance-adjacent, so we do NOT invent one. Returns [] until a clean
