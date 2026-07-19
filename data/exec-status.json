@@ -1,20 +1,20 @@
 {
-  "generated": "2026-07-19T17:52:00.055Z",
+  "generated": "2026-07-19T19:01:02.682Z",
   "cover": {
     "status": "In Progress",
-    "progress": 94,
+    "progress": 95,
     "health": "green",
-    "narrative": "94% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
+    "narrative": "95% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
   },
   "waves": [
     {
       "name": "Executive Status Deck",
       "label": "wave:exec-status",
       "status": "In Progress",
-      "progress": 94,
+      "progress": 95,
       "health": "green",
       "openPRs": [],
-      "notes": "18/19 PRs merged, 5k/5k lines."
+      "notes": "20/21 PRs merged, 5k/5k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,22 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-146",
+      "area": "Exec Deck",
+      "title": "docs: lesson - code merge dropped by deploy concurrency race",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T19:00:41Z"
+    },
+    {
+      "id": "pr-145",
+      "area": "Exec Deck",
+      "title": "Order the Project delivery timeline into status bands",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T18:44:13Z"
+    },
     {
       "id": "pr-144",
       "area": "Exec Deck",
@@ -295,6 +311,11 @@
     {
       "ts": "2026-07-19T17:52:00.055Z",
       "progress": 94,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T19:01:02.682Z",
+      "progress": 95,
       "health": "green"
     }
   ]
