@@ -1,20 +1,20 @@
 {
-  "generated": "2026-07-19T11:55:38.638Z",
+  "generated": "2026-07-19T13:40:08.832Z",
   "cover": {
     "status": "In Progress",
-    "progress": 92,
+    "progress": 93,
     "health": "green",
-    "narrative": "92% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
+    "narrative": "93% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
   },
   "waves": [
     {
       "name": "Executive Status Deck",
       "label": "wave:exec-status",
       "status": "In Progress",
-      "progress": 92,
+      "progress": 93,
       "health": "green",
       "openPRs": [],
-      "notes": "10/11 PRs merged, 3k/4k lines."
+      "notes": "11/12 PRs merged, 4k/4k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-137",
+      "area": "Exec Deck",
+      "title": "feat(exec): director triage controls on feedback rows (local-overlay, warehouse-ready)",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T13:39:48Z"
+    },
     {
       "id": "pr-136",
       "area": "Exec Deck",
@@ -196,6 +204,11 @@
     {
       "ts": "2026-07-19T11:55:38.638Z",
       "progress": 92,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T13:40:08.832Z",
+      "progress": 93,
       "health": "green"
     }
   ]
