@@ -1854,6 +1854,23 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-row--discarded { opacity: .55; }
 .ex-tl-row--discarded .ex-tl-title { text-decoration: line-through; }
 
+/* Per-row feedback triage (director-only). A gear button reveals inline selects.
+ * Tokens only (token-purity gate). Keyboard + touch friendly hit targets. */
+.ex-tl-triage-btn { flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-muted); cursor: pointer; }
+.ex-tl-triage-btn:hover { background: var(--surface-2); color: var(--text); }
+.ex-tl-triage-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.ex-triage { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
+  padding: 10px 12px; margin: 2px 0 8px 30px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface-2); }
+.ex-triage-f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.ex-triage-f select { min-height: 34px; padding: 4px 8px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; }
+.ex-triage-wave--need select { border-color: var(--exec-amber); box-shadow: 0 0 0 2px color-mix(in srgb, var(--exec-amber) 30%, transparent); }
+.ex-triage-save { min-height: 34px; }
+[dir="rtl"] .ex-triage { margin-left: 0; margin-right: 30px; }
+
 /* Cover rollup */
 .ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .ex-tile { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
@@ -4378,6 +4395,16 @@ const EMAIL_HASHES = {};
     execWave:       { en: 'WAVE', ar: 'موجة' },
     execOpen:       { en: 'open', ar: 'مفتوح' },
     execFbTag:      { en: 'Feedback', ar: 'ملاحظة' },
+    execTriageOpen:   { en: 'Triage this feedback', ar: 'فرز هذه الملاحظة' },
+    execTriageStatus: { en: 'Status', ar: 'الحالة' },
+    execTriageWave:   { en: 'Wave', ar: 'الموجة' },
+    execTriagePickWave: { en: 'Pick a wave…', ar: 'اختر موجة…' },
+    execTriageSave:   { en: 'Save', ar: 'حفظ' },
+    execTriage_New:      { en: 'New', ar: 'جديدة' },
+    execTriage_Testing:  { en: 'Testing', ar: 'قيد الاختبار' },
+    execTriage_Review:   { en: 'Under review', ar: 'قيد المراجعة' },
+    execTriage_Assigned: { en: 'Assigned', ar: 'مُسندة' },
+    execTriage_Discarded:{ en: 'Discarded', ar: 'مُستبعدة' },
     execBlockedOn:  { en: 'Blocked on', ar: 'بانتظار' },
     execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
     execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },
