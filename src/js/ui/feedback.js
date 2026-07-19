@@ -303,7 +303,17 @@
       // steal Escape (re-triggering the close prompt) and Tab (trapping focus out of
       // the dialog) - which left the "Keep your feedback?" dialog unclickable.
       if (dialogOpen()) return;
-      if (e.key === 'Escape') { e.preventDefault(); requestClose(); return; }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        // Stop THIS event before opening the confirm dialog: requestClose() may
+        // synchronously mount a dialog whose own capturing keydown listener would
+        // otherwise catch this same still-propagating Escape and instantly close
+        // the dialog it was just created for (a one-keypress open+close that left
+        // Escape looking dead). stopImmediatePropagation keeps the event ours.
+        e.stopImmediatePropagation();
+        requestClose();
+        return;
+      }
       if (e.key === 'Tab') trapTab(e);
     };
     document.addEventListener('keydown', panelState.keydown, true);
