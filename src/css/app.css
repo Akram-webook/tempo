@@ -2411,11 +2411,23 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .fb-select:focus-visible { outline: 2px solid var(--link); outline-offset: 0; border-color: var(--link); }
 
 /* Image add / preview. */
-.fb-img-add { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; cursor: pointer;
-  font-size: 13px; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-sm);
-  padding: 8px 12px; min-height: 40px; }
-.fb-img-add:hover { border-color: var(--brand); color: var(--brand-text); }
-.fb-img-add:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
+/* Image dropzone: a full-width drop target that ALSO works as click-to-choose and
+ * paste. Dashed border + centred prompt; highlights while a file is dragged over. */
+.fb-dropzone { display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 12px; cursor: pointer; text-align: center; width: 100%;
+  color: var(--text-muted); border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 16px 14px; min-height: 76px; transition: border-color .15s, background .15s, color .15s; }
+.fb-dropzone:hover { border-color: var(--brand); color: var(--brand-text); }
+.fb-dropzone:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
+.fb-dropzone.is-dragover { border-color: var(--brand); border-style: solid;
+  background: color-mix(in srgb, var(--brand) 8%, transparent); color: var(--brand-text); }
+.fb-dz-icon { flex: none; display: inline-flex; color: var(--text-muted); }
+.fb-dropzone:hover .fb-dz-icon, .fb-dropzone.is-dragover .fb-dz-icon { color: var(--brand); }
+.fb-dz-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.fb-dz-text strong { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.fb-dropzone.is-dragover .fb-dz-text strong { color: var(--brand-text); }
+.fb-dz-sub { font-size: 11.5px; color: var(--text-muted); }
+[dir="rtl"] .fb-dz-text { align-items: flex-end; }
 .fb-img-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .fb-img { position: relative; margin-top: 12px; display: inline-block; }
 .fb-img img { max-width: 140px; max-height: 100px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: block; }

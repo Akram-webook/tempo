@@ -2655,11 +2655,23 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .fb-select:focus-visible { outline: 2px solid var(--link); outline-offset: 0; border-color: var(--link); }
 
 /* Image add / preview. */
-.fb-img-add { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; cursor: pointer;
-  font-size: 13px; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-sm);
-  padding: 8px 12px; min-height: 40px; }
-.fb-img-add:hover { border-color: var(--brand); color: var(--brand-text); }
-.fb-img-add:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
+/* Image dropzone: a full-width drop target that ALSO works as click-to-choose and
+ * paste. Dashed border + centred prompt; highlights while a file is dragged over. */
+.fb-dropzone { display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 12px; cursor: pointer; text-align: center; width: 100%;
+  color: var(--text-muted); border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 16px 14px; min-height: 76px; transition: border-color .15s, background .15s, color .15s; }
+.fb-dropzone:hover { border-color: var(--brand); color: var(--brand-text); }
+.fb-dropzone:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
+.fb-dropzone.is-dragover { border-color: var(--brand); border-style: solid;
+  background: color-mix(in srgb, var(--brand) 8%, transparent); color: var(--brand-text); }
+.fb-dz-icon { flex: none; display: inline-flex; color: var(--text-muted); }
+.fb-dropzone:hover .fb-dz-icon, .fb-dropzone.is-dragover .fb-dz-icon { color: var(--brand); }
+.fb-dz-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.fb-dz-text strong { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.fb-dropzone.is-dragover .fb-dz-text strong { color: var(--brand-text); }
+.fb-dz-sub { font-size: 11.5px; color: var(--text-muted); }
+[dir="rtl"] .fb-dz-text { align-items: flex-end; }
 .fb-img-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .fb-img { position: relative; margin-top: 12px; display: inline-block; }
 .fb-img img { max-width: 140px; max-height: 100px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: block; }
@@ -4179,6 +4191,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     fbPrio_High:    { en: 'High',                    ar: 'عالية' },
     fbPrio_Critical:{ en: 'Critical',                ar: 'حرجة' },
     fbAddImage:     { en: 'Add image',               ar: 'إضافة صورة' },
+    fbDropHere:     { en: 'Drag an image here',      ar: 'اسحب صورة إلى هنا' },
+    fbDropOrClick:  { en: 'or click to choose · or paste', ar: 'أو انقر للاختيار · أو الصق' },
     fbRemoveImage:  { en: 'Remove image',            ar: 'إزالة الصورة' },
     fbImgAdded:     { en: 'Image added.',            ar: 'تمت إضافة الصورة.' },
     fbImgType:      { en: "That file isn't an image.", ar: 'هذا الملف ليس صورة.' },
@@ -8389,6 +8403,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     lock:     '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     wallet:   '<path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7"/><circle cx="17" cy="14" r="1.5" fill="currentColor" stroke="none"/>',
     check:    '<path d="M20 6 9 17l-5-5"/>',
+    image:    '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
     pencil:   '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
     star:     '<path d="M12 2l3 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.9 21l1.2-6.8-5-4.9 6.9-1z"/>',
     clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -14746,6 +14761,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
     // Focus trap + Esc
     panelState.keydown = function (e) {
+      // Stand down while a confirm/prompt dialog is open on top of us: its own host
+      // (#overlay-host) owns Esc + Tab then. Otherwise our capturing handler would
+      // steal Escape (re-triggering the close prompt) and Tab (trapping focus out of
+      // the dialog) - which left the "Keep your feedback?" dialog unclickable.
+      if (dialogOpen()) return;
       if (e.key === 'Escape') { e.preventDefault(); requestClose(); return; }
       if (e.key === 'Tab') trapTab(e);
     };
@@ -14756,6 +14776,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       var f = wrap.querySelector('#fb-note') || wrap.querySelector('#fb-close');
       if (f) try { f.focus(); } catch (e) {}
     }, 30);
+  }
+
+  // Is a WBK confirm/prompt dialog currently mounted (in the shared overlay host)?
+  // While one is, the feedback panel must not intercept Esc/Tab.
+  function dialogOpen() {
+    var h = document.getElementById('overlay-host');
+    return !!(h && h.querySelector('.dlg'));
   }
 
   function trapTab(e) {
@@ -14862,8 +14889,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       ? '<div class="fb-img"><img src="' + esc(m.composer.image) + '" alt="" />' +
           '<button type="button" class="fb-img-rm" id="fb-img-rm" aria-label="' + esc(t('fbRemoveImage')) + '">' +
             ui.icon('x', 14) + '</button></div>'
-      : '<label class="fb-img-add" tabindex="0" role="button" aria-label="' + esc(t('fbAddImage')) + '">' +
-          ui.icon('plus', 14) + ' <span>' + esc(t('fbAddImage')) + '</span>' +
+      : '<label class="fb-img-add fb-dropzone" id="fb-dropzone" tabindex="0" role="button" aria-label="' + esc(t('fbAddImage')) + '">' +
+          '<span class="fb-dz-icon">' + ui.icon('image', 20) + '</span>' +
+          '<span class="fb-dz-text"><strong>' + esc(t('fbDropHere')) + '</strong>' +
+            '<span class="fb-dz-sub">' + esc(t('fbDropOrClick')) + '</span></span>' +
           '<input type="file" accept="image/*" id="fb-img-input" class="fb-img-input" />' +
         '</label>';
 
@@ -14949,12 +14978,35 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     if (prio) prio.addEventListener('change', function (e) { m.composer.priority = e.target.value; saveModel(); });
 
     // Image input (add) — accept image/* only, ≤5MB, downscale, one per comment (QA C).
+    // Three ways in: click/keyboard (the <input>), drag-drop, and paste.
     var imgInput = wrap.querySelector('#fb-img-input');
     if (imgInput) imgInput.addEventListener('change', onImagePick);
-    var imgAdd = wrap.querySelector('.fb-img-add');
-    if (imgAdd) imgAdd.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); imgInput.click(); }
-    });
+    var dz = wrap.querySelector('#fb-dropzone');
+    if (dz) {
+      dz.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); imgInput.click(); }
+      });
+      // Drag-and-drop: highlight on dragover, accept the first image on drop.
+      var stop = function (e) { e.preventDefault(); e.stopPropagation(); };
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        dz.addEventListener(ev, function (e) { stop(e); dz.classList.add('is-dragover'); });
+      });
+      ['dragleave', 'dragend'].forEach(function (ev) {
+        dz.addEventListener(ev, function (e) { stop(e); dz.classList.remove('is-dragover'); });
+      });
+      dz.addEventListener('drop', function (e) {
+        stop(e); dz.classList.remove('is-dragover');
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        acceptFile(f);
+      });
+      // Paste an image straight from the clipboard while the dropzone has focus.
+      dz.addEventListener('paste', function (e) {
+        var items = (e.clipboardData && e.clipboardData.items) || [];
+        for (var i = 0; i < items.length; i++) {
+          if (/^image\//.test(items[i].type)) { e.preventDefault(); acceptFile(items[i].getAsFile()); break; }
+        }
+      });
+    }
     var imgRm = wrap.querySelector('#fb-img-rm');
     if (imgRm) imgRm.addEventListener('click', function () { m.composer.image = null; m.composer.imageName = ''; saveModel(); renderBody(); });
 
@@ -14982,10 +15034,17 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   }
 
   /* -------- image handling -------- */
+  // From the <input> change event: pull the file, reset the input so the same
+  // file can be re-picked, then hand off to the shared acceptFile path (which is
+  // also used by drag-drop and paste).
   function onImagePick(e) {
-    var t = WP.i18n.t;
     var file = e.target.files && e.target.files[0];
     e.target.value = '';   // allow re-pick of the same file
+    acceptFile(file);
+  }
+  // Shared entry point for a picked / dropped / pasted image file.
+  function acceptFile(file) {
+    var t = WP.i18n.t;
     if (!file) return;
     if (!/^image\//.test(file.type)) { toastErr(t('fbImgType')); return; }
     var reader = new FileReader();

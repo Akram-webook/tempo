@@ -24,7 +24,7 @@ const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const srcs = [...html.matchAll(/src="([^"]+\.js)"/g)].map(m => m[1]);
 
-const dom = new JSDOM('<!doctype html><html><head></head><body><div id="app"></div></body></html>', {
+const dom = new JSDOM('<!doctype html><html><head></head><body><div id="app"></div><div id="overlay-host"></div></body></html>', {
   url: 'https://example.org/tempo/', pretendToBeVisual: true, runScripts: 'outside-only',
 });
 const { window } = dom;
@@ -505,6 +505,48 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(/ملاحظات|شارك/.test($('.fb-h').textContent), 'panel title localized to Arabic');
     assert(/تعليق/.test($('.fb-composer-h').textContent), 'composer marker localized to Arabic');
     WP.state.lang = 'en';
+    fb._close();
+
+    // ========================================================================
+    // Image dropzone: drag / click / paste (replaces the bare file input)
+    // ========================================================================
+    fb._reset(); fb._close(); await tick(); fb.open(); await tick();
+    const dz = $('#fb-dropzone');
+    assert(!!dz, 'image dropzone renders (not a bare file input)');
+    assert(!!$('#fb-img-input'), 'the hidden file input is still present for click/keyboard');
+    assert(/Drag an image/i.test($('#fb-body').textContent), 'dropzone shows the drag prompt');
+    assert(/click to choose|paste/i.test($('#fb-body').textContent), 'dropzone offers click + paste too');
+    dz.dispatchEvent(new window.Event('dragover', { bubbles: true, cancelable: true }));
+    assert(dz.classList.contains('is-dragover'), 'dragover highlights the dropzone');
+    dz.dispatchEvent(new window.Event('dragleave', { bubbles: true, cancelable: true }));
+    assert(!dz.classList.contains('is-dragover'), 'dragleave clears the highlight');
+    // a dropped file must be handled without throwing
+    let dropOk = true;
+    try {
+      const drop = new window.Event('drop', { bubbles: true, cancelable: true });
+      drop.dataTransfer = { files: [new window.File([new Uint8Array([1])], 'x.png', { type: 'image/png' })] };
+      dz.dispatchEvent(drop);
+    } catch (e) { dropOk = false; }
+    assert(dropOk, 'dropping an image file is handled without error');
+    fb._close();
+
+    // ========================================================================
+    // The "Keep your feedback?" close dialog is reachable (was trapped by the
+    // panel's capturing Esc/Tab handler - regression guard).
+    // ========================================================================
+    fb._reset(); fb._close(); await tick(); fb.open(); await tick();
+    $('#fb-note').value = 'a draft that should trigger the confirm';
+    $('#fb-note').dispatchEvent(new window.Event('input', { bubbles: true }));
+    $('#fb-close').click(); await tick();
+    const oh = window.document.getElementById('overlay-host');
+    assert(oh && oh.querySelector('.dlg'), 'closing with a draft opens the confirm dialog');
+    // while the dialog is open, the panel must NOT swallow Tab (its trap stands down)
+    const tabEv = new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    window.document.dispatchEvent(tabEv);
+    assert(!tabEv.defaultPrevented, 'the feedback panel does not trap Tab while the dialog is open');
+    // clicking the dialog's cancel ("Close anyway") must resolve + tear the dialog down
+    oh.querySelector('#dlg-cancel').click(); await tick();
+    assert(!(window.document.getElementById('overlay-host').querySelector('.dlg')), 'the confirm dialog closes when its button is clicked');
     fb._close();
 
     // ========================================================================
