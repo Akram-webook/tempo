@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T10:30:00.000Z",
+  "generated": "2026-07-19T14:00:00.000Z",
   "items": [
     {
       "id": "sample-1",
@@ -13,7 +13,10 @@
       "context": "Chrome / macOS",
       "url": "",
       "status": "Assigned",
-      "wave": 3
+      "wave": 3,
+      "triagedAt": "2026-07-19T14:00:00.000Z",
+      "triagedBy": "akram@webook.com",
+      "triageNote": "Sync reliability is core to Real Data Go-live. Correctly placed."
     },
     {
       "id": "sample-2",
@@ -26,8 +29,11 @@
       "note": "[Bug] Export button does nothing on the weekly report\nContext: clicking Export gives no file and no error.\nImpact: I can't share the week with my director.\nSuggestion: it should download a PDF or show why it can't.",
       "context": "Safari / iOS",
       "url": "",
-      "status": "Testing",
-      "wave": null
+      "status": "Assigned",
+      "wave": 1,
+      "triagedAt": "2026-07-19T14:00:00.000Z",
+      "triagedBy": "akram@webook.com",
+      "triageNote": "Real defect (dead export button), not a nice-to-have. Assigned to Wave 1 (reporting) to fix now."
     },
     {
       "id": "sample-3",
@@ -40,8 +46,11 @@
       "note": "[Feature] Dark mode for the printed report\nContext: the report is bright white when printed at night.\nImpact: minor, cosmetic.\nSuggestion: a dark theme for the report page.",
       "context": "Firefox / Windows",
       "url": "",
-      "status": "New",
-      "wave": null
+      "status": "Review",
+      "wave": null,
+      "triagedAt": "2026-07-19T14:00:00.000Z",
+      "triagedBy": "akram@webook.com",
+      "triageNote": "Legitimate but low-value cosmetic idea. Acknowledged (Under review); not worth a wave yet, not discarded."
     }
   ]
 }
