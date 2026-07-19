@@ -1,20 +1,20 @@
 {
-  "generated": "2026-07-19T19:55:13.308Z",
+  "generated": "2026-07-19T20:08:08.958Z",
   "cover": {
-    "status": "In Progress",
-    "progress": 95,
+    "status": "Done",
+    "progress": 100,
     "health": "green",
-    "narrative": "95% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
+    "narrative": "100% delivered across 4 waves - 1 done, 0 in progress (weighted by change size)."
   },
   "waves": [
     {
       "name": "Executive Status Deck",
       "label": "wave:exec-status",
-      "status": "In Progress",
-      "progress": 95,
+      "status": "Done",
+      "progress": 100,
       "health": "green",
       "openPRs": [],
-      "notes": "25/26 PRs merged, 6k/6k lines."
+      "notes": "26/26 PRs merged, 6k/6k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-152",
+      "area": "Exec Deck",
+      "title": "Fix 95%-but-all-done: exclude abandoned PRs from progress",
+      "status": "Done",
+      "type": "Bug",
+      "ts": "2026-07-19T20:07:45Z"
+    },
     {
       "id": "pr-151",
       "area": "Exec Deck",
@@ -381,6 +389,11 @@
     {
       "ts": "2026-07-19T19:55:13.308Z",
       "progress": 95,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T20:08:08.958Z",
+      "progress": 100,
       "health": "green"
     }
   ]
