@@ -770,14 +770,26 @@
       return '<div class="ex-fgroup" role="radiogroup" aria-label="' + esc(label) + '">' +
         '<span class="ex-flabel">' + esc(label) + '</span>' + chips + '</div>';
     };
+    // A dropdown variant of a filter group (used for Status: the values read as the
+    // timeline BAND names - Delivered / In progress / To decide - so the filter and
+    // the sections share one vocabulary). data-filter-select ties it to the wiring.
+    const selectGroup = function (label, key, cur, opts) {
+      const options = opts.map(function (o) {
+        return '<option value="' + esc(o.v) + '"' + (cur === o.v ? ' selected' : '') + '>' + esc(o.l) + '</option>';
+      }).join('');
+      return '<div class="ex-fgroup ex-fgroup--select">' +
+        '<span class="ex-flabel">' + esc(label) + '</span>' +
+        '<select class="ex-fselect" data-filter-select="' + key + '" aria-label="' + esc(label) + '">' + options + '</select>' +
+      '</div>';
+    };
     return '<div class="section ex-filters">' +
       group(t('execFilterType'), 'type', filterType, [
         { v: 'all', l: t('execFilterAll') }, { v: 'bug', l: t('execFilterBugs') },
         { v: 'feature', l: t('execFilterFeatures') }, { v: 'improvement', l: t('execFilterImprovements') },
       ]) +
-      group(t('execFilterStatus'), 'status', filterStatus, [
-        { v: 'all', l: t('execFilterAll') }, { v: 'done', l: t('execFilterDone') },
-        { v: 'working', l: t('execFilterWorking') }, { v: 'planned', l: t('execFilterPlanned') },
+      selectGroup(t('execFilterStatus'), 'status', filterStatus, [
+        { v: 'all', l: t('execFilterAll') }, { v: 'done', l: t('execBandDone') },
+        { v: 'working', l: t('execBandWorking') }, { v: 'planned', l: t('execBandToDecide') },
       ]) +
     '</div>';
   }
@@ -847,6 +859,15 @@
         const val = b.getAttribute('data-val');
         if (key === 'type') filterType = val;
         else if (key === 'status') filterStatus = val;
+        if (lastBaseData) paintBody(host, lastBaseData);
+      };
+    });
+    // Dropdown filter groups (Status): change sets the filter + repaints the body.
+    host.querySelectorAll('[data-filter-select]').forEach(function (sel) {
+      sel.onchange = function () {
+        const key = sel.getAttribute('data-filter-select');
+        if (key === 'type') filterType = sel.value;
+        else if (key === 'status') filterStatus = sel.value;
         if (lastBaseData) paintBody(host, lastBaseData);
       };
     });

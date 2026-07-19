@@ -1787,6 +1787,9 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-fchip:hover { border-color: var(--border-strong, var(--border)); color: var(--text-primary); }
 .ex-fchip.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .ex-fchip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Status filter as a dropdown (Delivered / In progress / To decide). Inherits the
+ * branded <select> baseline; just size it to sit inline with the label + chips. */
+.ex-fselect { min-height: 32px; min-width: 130px; font-size: 12.5px; padding-block: 5px; }
 /* Waves section (GitHub-warehouse shape): per-wave progress + health + blockers. */
 .ex-waves { display: flex; flex-direction: column; gap: 14px; }
 .ex-wave { display: flex; flex-direction: column; gap: 5px; }
@@ -11818,14 +11821,26 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       return '<div class="ex-fgroup" role="radiogroup" aria-label="' + esc(label) + '">' +
         '<span class="ex-flabel">' + esc(label) + '</span>' + chips + '</div>';
     };
+    // A dropdown variant of a filter group (used for Status: the values read as the
+    // timeline BAND names - Delivered / In progress / To decide - so the filter and
+    // the sections share one vocabulary). data-filter-select ties it to the wiring.
+    const selectGroup = function (label, key, cur, opts) {
+      const options = opts.map(function (o) {
+        return '<option value="' + esc(o.v) + '"' + (cur === o.v ? ' selected' : '') + '>' + esc(o.l) + '</option>';
+      }).join('');
+      return '<div class="ex-fgroup ex-fgroup--select">' +
+        '<span class="ex-flabel">' + esc(label) + '</span>' +
+        '<select class="ex-fselect" data-filter-select="' + key + '" aria-label="' + esc(label) + '">' + options + '</select>' +
+      '</div>';
+    };
     return '<div class="section ex-filters">' +
       group(t('execFilterType'), 'type', filterType, [
         { v: 'all', l: t('execFilterAll') }, { v: 'bug', l: t('execFilterBugs') },
         { v: 'feature', l: t('execFilterFeatures') }, { v: 'improvement', l: t('execFilterImprovements') },
       ]) +
-      group(t('execFilterStatus'), 'status', filterStatus, [
-        { v: 'all', l: t('execFilterAll') }, { v: 'done', l: t('execFilterDone') },
-        { v: 'working', l: t('execFilterWorking') }, { v: 'planned', l: t('execFilterPlanned') },
+      selectGroup(t('execFilterStatus'), 'status', filterStatus, [
+        { v: 'all', l: t('execFilterAll') }, { v: 'done', l: t('execBandDone') },
+        { v: 'working', l: t('execBandWorking') }, { v: 'planned', l: t('execBandToDecide') },
       ]) +
     '</div>';
   }
@@ -11895,6 +11910,15 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         const val = b.getAttribute('data-val');
         if (key === 'type') filterType = val;
         else if (key === 'status') filterStatus = val;
+        if (lastBaseData) paintBody(host, lastBaseData);
+      };
+    });
+    // Dropdown filter groups (Status): change sets the filter + repaints the body.
+    host.querySelectorAll('[data-filter-select]').forEach(function (sel) {
+      sel.onchange = function () {
+        const key = sel.getAttribute('data-filter-select');
+        if (key === 'type') filterType = sel.value;
+        else if (key === 'status') filterStatus = sel.value;
         if (lastBaseData) paintBody(host, lastBaseData);
       };
     });

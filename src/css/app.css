@@ -1543,6 +1543,9 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-fchip:hover { border-color: var(--border-strong, var(--border)); color: var(--text-primary); }
 .ex-fchip.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .ex-fchip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* Status filter as a dropdown (Delivered / In progress / To decide). Inherits the
+ * branded <select> baseline; just size it to sit inline with the label + chips. */
+.ex-fselect { min-height: 32px; min-width: 130px; font-size: 12.5px; padding-block: 5px; }
 /* Waves section (GitHub-warehouse shape): per-wave progress + health + blockers. */
 .ex-waves { display: flex; flex-direction: column; gap: 14px; }
 .ex-wave { display: flex; flex-direction: column; gap: 5px; }
