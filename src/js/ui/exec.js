@@ -210,6 +210,14 @@
 
   function timelineHTML(data, mode, offset) {
     const t = WP.i18n.t;
+    // Stale-data guard: if the payload has NO timeline source field at all -
+    // items[] absent (not just empty) AND no requests[]/features[] - the JSON
+    // predates the items[] feature. Say "will appear after the next update"
+    // rather than "Nothing in this range", which reads as "nothing shipped" and
+    // misleads a director looking at stale data. An empty items:[] is NOT stale
+    // (the workflow ran and legitimately has nothing) - that's a normal empty.
+    const staleNoSource = !!data && data.items === undefined &&
+      !(data.requests && data.requests.length) && !(data.features && data.features.length);
     const items = timelineItems(data);
     const dated = items.map(function (it) { return { it: it, ms: it.date ? Date.parse(it.date) : NaN }; });
 
@@ -234,12 +242,13 @@
       groups = rows.length ? [{ label: null, rows: rows }] : [];
     }
 
+    const emptyMsg = staleNoSource ? t('execTlStale') : t('execTlEmpty');
     const body = groups.length
       ? groups.map(function (g) {
           return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
             g.rows.map(function (x) { return tlRow(x.it); }).join('');
         }).join('')
-      : '<div class="ex-empty">' + t('execTlEmpty') + '</div>';
+      : '<div class="ex-empty">' + emptyMsg + '</div>';
 
     return '<div class="section">' +
       '<div class="ex-tl-head"><h3 class="ex-h3">' + t('execTimeline') + '</h3>' +
