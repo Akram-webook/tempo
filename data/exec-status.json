@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T17:47:46.479Z",
+  "generated": "2026-07-19T17:52:00.055Z",
   "cover": {
     "status": "In Progress",
     "progress": 94,
@@ -14,7 +14,7 @@
       "progress": 94,
       "health": "green",
       "openPRs": [],
-      "notes": "17/18 PRs merged, 5k/5k lines."
+      "notes": "18/19 PRs merged, 5k/5k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-144",
+      "area": "Exec Deck",
+      "title": "docs: log dropzone + dialog fix",
+      "status": "Done",
+      "type": "Bug",
+      "ts": "2026-07-19T17:51:35Z"
+    },
     {
       "id": "pr-143",
       "area": "Exec Deck",
@@ -281,6 +289,11 @@
     },
     {
       "ts": "2026-07-19T17:47:46.479Z",
+      "progress": 94,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T17:52:00.055Z",
       "progress": 94,
       "health": "green"
     }
