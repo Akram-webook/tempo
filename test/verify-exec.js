@@ -150,6 +150,9 @@ const PAYLOAD = {
     const tlRows = el.querySelectorAll('.ex-tl-row');
     assert(tlRows.length === 3, 'timeline renders all 3 items[] in the current week (got ' + tlRows.length + ')');
     assert(/broken workload scroll/i.test(el.textContent), 'an item title renders');
+    // area prefix: fixture spans 2 areas (Exec Deck + Capacity) so it IS shown.
+    assert(/Exec Deck\s+—/.test(el.textContent), 'area prefix shows when timeline spans >1 area');
+
     // stats strip counts ITEMS not waves: 2 Done, 1 Working.
     const sum = el.querySelector('.ex-launch-sum');
     assert(sum && /2 shipped/.test(sum.textContent), 'stats strip counts items: 2 shipped');
@@ -216,6 +219,19 @@ const PAYLOAD = {
     WP.ui.exec.render(elAr);
     await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
     assert(/تسليم المشروع/.test(elAr.textContent), 'title localizes to AR (project delivery)');
+
+    // --- single-area timeline drops the redundant repeated prefix (run LAST so it ---
+    //     doesn't disturb lastData for the filter-chip assertions above) -------------
+    WP.state.lang = 'en';
+    nextPayload = Object.assign({}, PAYLOAD, { items: [
+      { id: 'pr-a', area: 'Exec Deck', title: 'First exec change', status: 'Done', type: 'Feature', ts: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
+      { id: 'pr-b', area: 'Exec Deck', title: 'Second exec change', status: 'Done', type: 'Feature', ts: new Date(Date.now() - 3 * 3600 * 1000).toISOString() },
+    ] });
+    const elOne = window.document.createElement('div');
+    WP.ui.exec.render(elOne);
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    assert(/First exec change/.test(elOne.textContent), 'single-area timeline still renders titles');
+    assert(!/Exec Deck\s+—/.test(elOne.textContent), 'single-area timeline drops the redundant area prefix');
 
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);

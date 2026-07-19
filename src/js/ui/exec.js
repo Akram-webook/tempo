@@ -155,9 +155,14 @@
   function timelineItems(data) {
     const out = [];
     if (data && Array.isArray(data.items) && data.items.length) {
+      // Prefix each row with its area ONLY when the timeline spans >1 area - a
+      // single repeated prefix (e.g. "Exec Deck - ") is noise, so drop it then.
+      var areas = {};
+      data.items.forEach(function (it) { if (it.area) areas[it.area] = 1; });
+      var showArea = Object.keys(areas).length > 1;
       data.items.forEach(function (it) {
         out.push({
-          title: (it.area ? it.area + ' — ' : '') + (it.title || '—'),
+          title: (showArea && it.area ? it.area + ' — ' : '') + (it.title || '—'),
           status: it.status,
           date: it.ts || it.date || null,
           type: it.type || '',

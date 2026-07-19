@@ -107,8 +107,11 @@ async function prsForLabel(label) {
         else blockedOn = '';
       }
     } catch (e) { /* detail fetch failed — fall back to count-only for this PR */ }
+    // closed-but-not-merged = abandoned/superseded PR. It represents no delivery,
+    // so mark it so the timeline can drop it (else it lingers forever as "Working").
+    const closedUnmerged = !merged && !open;
     prs.push({
-      number: it.number, title: it.title, merged, open, additions, blockedOn, stuckDays,
+      number: it.number, title: it.title, merged, open, closedUnmerged, additions, blockedOn, stuckDays,
       mergedAt: (it.pull_request && it.pull_request.merged_at) || null,
       createdAt: it.created_at || null,
     });
@@ -220,6 +223,7 @@ async function computeShip() {
   for (const { wave, prs } of wavesPrs) {
     const area = SHORT[wave.name] || wave.name;
     for (const pr of prs) {
+      if (pr.closedUnmerged) continue;   // abandoned/superseded PR is not a delivery item
       const ts = pr.mergedAt || pr.createdAt;
       if (!ts) continue;
       items.push({
