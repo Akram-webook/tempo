@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T11:16:35.526Z",
+  "generated": "2026-07-19T11:55:38.638Z",
   "cover": {
     "status": "In Progress",
     "progress": 92,
@@ -14,7 +14,7 @@
       "progress": 92,
       "health": "green",
       "openPRs": [],
-      "notes": "9/10 PRs merged, 3k/3k lines."
+      "notes": "10/11 PRs merged, 3k/4k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-136",
+      "area": "Exec Deck",
+      "title": "fix(exec/feedback): QA finish-gate fixes for PR #135 (3 bugs)",
+      "status": "Done",
+      "type": "Bug",
+      "ts": "2026-07-19T11:55:22Z"
+    },
     {
       "id": "pr-135",
       "area": "Exec Deck",
@@ -182,6 +190,11 @@
     },
     {
       "ts": "2026-07-19T11:16:35.526Z",
+      "progress": 92,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T11:55:38.638Z",
       "progress": 92,
       "health": "green"
     }
