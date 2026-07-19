@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T13:40:08.832Z",
+  "generated": "2026-07-19T16:55:46.672Z",
   "cover": {
     "status": "In Progress",
     "progress": 93,
@@ -14,7 +14,7 @@
       "progress": 93,
       "health": "green",
       "openPRs": [],
-      "notes": "11/12 PRs merged, 4k/4k lines."
+      "notes": "12/13 PRs merged, 4k/4k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-138",
+      "area": "Exec Deck",
+      "title": "chore(feedback): triage round 1 - assign waves + set lifecycle for the 3 open items",
+      "status": "Done",
+      "type": "Feature",
+      "ts": "2026-07-19T15:33:48Z"
+    },
     {
       "id": "pr-137",
       "area": "Exec Deck",
@@ -208,6 +216,11 @@
     },
     {
       "ts": "2026-07-19T13:40:08.832Z",
+      "progress": 93,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T16:55:46.672Z",
       "progress": 93,
       "health": "green"
     }
