@@ -1,20 +1,20 @@
 {
-  "generated": "2026-07-19T09:55:42.206Z",
+  "generated": "2026-07-19T11:16:35.526Z",
   "cover": {
     "status": "In Progress",
-    "progress": 89,
+    "progress": 92,
     "health": "green",
-    "narrative": "89% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
+    "narrative": "92% delivered across 4 waves - 0 done, 1 in progress (weighted by change size)."
   },
   "waves": [
     {
       "name": "Executive Status Deck",
       "label": "wave:exec-status",
       "status": "In Progress",
-      "progress": 89,
+      "progress": 92,
       "health": "green",
       "openPRs": [],
-      "notes": "8/9 PRs merged, 2k/3k lines."
+      "notes": "9/10 PRs merged, 3k/3k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-135",
+      "area": "Exec Deck",
+      "title": "feat(feedback): Polish into a triage story + surface triaged feedback in Project delivery",
+      "status": "Done",
+      "type": "Improvement",
+      "ts": "2026-07-19T11:16:17Z"
+    },
     {
       "id": "pr-134",
       "area": "Exec Deck",
@@ -170,6 +178,11 @@
     {
       "ts": "2026-07-19T09:55:42.206Z",
       "progress": 89,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T11:16:35.526Z",
+      "progress": 92,
       "health": "green"
     }
   ]
