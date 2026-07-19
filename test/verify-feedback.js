@@ -549,6 +549,17 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(!(window.document.getElementById('overlay-host').querySelector('.dlg')), 'the confirm dialog closes when its button is clicked');
     fb._close();
 
+    // Escape opens the dialog exactly ONCE (no re-entrant one-keypress open+close):
+    // a single Escape must LEAVE the dialog on screen, not open-and-close it.
+    fb._reset(); fb._close(); await tick(); fb.open(); await tick();
+    $('#fb-note').value = 'draft to guard the Escape path';
+    $('#fb-note').dispatchEvent(new window.Event('input', { bubbles: true }));
+    const escEv = new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    window.document.dispatchEvent(escEv); await tick();
+    assert(window.document.getElementById('overlay-host').querySelector('.dlg'),
+      'a single Escape leaves the confirm dialog OPEN (not re-entrantly closed)');
+    fb._close();
+
     // ========================================================================
     // Warehouse files: feedback.json schema + it is NOT exec-status.json.
     // ========================================================================

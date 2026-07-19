@@ -335,6 +335,16 @@ const PAYLOAD = {
     // The engine suggests a Status (+ wave) for an untriaged Bug: Assigned to a wave.
     const sug = WP.fbTriage.suggest({ klass: 'Bug', note: '[Bug] Export button does nothing', status: 'New' }, 4);
     assert(sug.status === 'Assigned' && sug.wave, 'suggestion: a Bug is suggested Assigned + a wave');
+    // Regression (wave over-match): a Slack feature whose note happens to mention
+    // "delivery" must still map to the Slack wave (4), NOT get hijacked by Wave 1.
+    const sugSlack = WP.fbTriage.suggest({ klass: 'Feature', area: 'Slack', note: '[Feature] post the delivery story to Slack', priority: 'Medium' }, 4);
+    assert(sugSlack.wave === 4, 'wave suggestion: area=Slack -> Wave 4 even if the note says "delivery" (no Wave-1 over-match)');
+    // The authoritative `area` outweighs a stray generic word in the note.
+    const sugArea = WP.fbTriage.suggest({ klass: 'Feature', area: 'Workload Map', note: 'improve delivery of the numbers', priority: 'Medium' }, 4);
+    assert(sugArea.wave === 2, 'wave suggestion: area=Workload Map -> Wave 2, not Wave 1 on the word "delivery"');
+    // A weak-only signal (no strong surface match) returns null - do not guess a wave.
+    const sugVague = WP.fbTriage.suggest({ klass: 'Feature', area: '', note: 'please add a nice thing', priority: 'Medium' }, 4);
+    assert(sugVague.wave === null, 'wave suggestion: no clear surface -> null (director decides), not a guessed wave');
     // open the panel
     elT.querySelector('.ex-tl-triage-btn').click();
     const panel = elT.querySelector('.ex-triage');
@@ -382,6 +392,46 @@ const PAYLOAD = {
     assert(WP.fbTriage.load()['tri-1'].wave === null, 'discarding clears the assigned wave');
     try { window.localStorage.removeItem(WP.fbTriage._key); } catch (e) {}
     nextFeedback = null;
+
+    // --- band bucketing: Testing is In-progress; Review is To-decide -------------
+    // A Testing item is actively being worked, so it belongs to the In progress
+    // band (with Assigned) - NOT the To decide band with New/Review.
+    const elB = window.document.createElement('div');
+    nextFeedback = { generated: new Date().toISOString(), items: [
+      { id: 'b-test', note: '[Bug] being tested', klass: 'Bug', status: 'Testing', wave: null, submittedAt: new Date().toISOString() },
+      { id: 'b-rev', note: '[Feature] to decide', klass: 'Feature', status: 'Review', wave: null, submittedAt: new Date(Date.now() - 60000).toISOString() },
+    ] };
+    WP.ui.exec.render(elB);
+    await settle(); goAll(elB); await Promise.resolve(); await Promise.resolve();
+    const bandOf = function (el, title) {
+      const nodes = [...el.querySelectorAll('.ex-tl-band, .ex-tl-item')];
+      let cur = '';
+      for (const n of nodes) {
+        if (n.classList.contains('ex-tl-band')) cur = n.textContent;
+        else if ((n.querySelector('.ex-tl-title') || {}).textContent && n.querySelector('.ex-tl-title').textContent.includes(title)) return cur;
+      }
+      return '';
+    };
+    assert(/In progress|قيد التنفيذ/i.test(bandOf(elB, 'being tested')), 'a Testing item sits in the In progress band (not To decide)');
+    assert(/To decide|بانتظار/i.test(bandOf(elB, 'to decide')), 'a Review item sits in the To decide band');
+    nextFeedback = null;
+
+    // --- status chips localize (EN + AR), not raw English in Arabic --------------
+    // Use a fresh payload with a Working feedback row so we KNOW a chip exists.
+    WP.state.lang = 'ar';
+    nextFeedback = { generated: new Date().toISOString(), items: [
+      { id: 'ar-chip', note: '[Feature] ar chip', klass: 'Feature', status: 'Assigned', wave: 1, submittedAt: new Date().toISOString() },
+    ] };
+    const elArChip = window.document.createElement('div');
+    WP.ui.exec.render(elArChip);
+    await settle();
+    resetFilters(elArChip); goAll(elArChip);   // clear any filter left active by earlier blocks
+    await Promise.resolve(); await Promise.resolve();
+    const arChips = [...elArChip.querySelectorAll('.ex-chip')].map(c => c.textContent);
+    assert(arChips.length > 0, 'timeline has status chips to check');
+    assert(arChips.some(c => /[؀-ۿ]/.test(c)), 'status chips render in Arabic in AR mode (not raw English)');
+    assert(!arChips.some(c => /^Working$|^Done$|^Under review$/.test(c.trim())), 'no raw-English status chip leaks in AR mode');
+    WP.state.lang = 'en'; nextFeedback = null;
 
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);

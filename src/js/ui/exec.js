@@ -73,9 +73,20 @@
   function statusIcon(key) {
     return '<span class="ex-sic ex-sic--' + key + '" aria-hidden="true">' + ui.icon(BUCKET_ICON[key] || 'minus', 13) + '</span>';
   }
+  // Known status strings localize (EN + AR); an unknown one falls back to its raw
+  // text so nothing ever renders blank. Keys live in i18n as execChip_<slug>.
+  var CHIP_I18N = {
+    'done': 'execChip_done', 'live': 'execChip_done', 'shipped': 'execChip_done',
+    'working': 'execChip_working', 'in progress': 'execChip_working',
+    'under review': 'execChip_review', 'planned': 'execChip_planned',
+    'testing': 'execChip_testing', 'discarded': 'execChip_discarded',
+    'needs you': 'execChip_needs', 'blocked': 'execChip_blocked',
+  };
   function chip(raw) {
     const key = statusColorKey(raw);
-    const label = ui.esc(String(raw || '—'));
+    const slug = String(raw || '').toLowerCase().trim();
+    const k = CHIP_I18N[slug];
+    const label = ui.esc(k ? WP.i18n.t(k) : (String(raw || '—')));
     return '<span class="ex-chip ex-chip--' + key + '">' + label + '</span>';
   }
 
@@ -201,9 +212,11 @@
   // lifecycle (New/Testing/Review/Assigned/Discarded) folds onto the exec status
   // buckets so a director can filter to "Planned" and see everything still to
   // decide, or "Working" for what's been assigned to a wave.
-  //   New | Testing | Review  -> 'Planned'   (violet/grey bucket: not yet decided)
-  //   Assigned                 -> 'Working'   (accepted, in a wave)
-  //   Discarded                -> 'Discarded' (grey bucket; shown dimmed)
+  //   New | Review           -> 'Planned' / 'Under review'  (violet: not yet decided)
+  //   Testing | Assigned      -> 'Working'   (amber: actively being worked / in a wave)
+  //   Discarded               -> 'Discarded' (grey bucket; shown dimmed)
+  // Testing is a real in-progress stage (someone is actively validating it), so it
+  // sits in the "In progress" band with Assigned - NOT with the undecided New/Review.
   var FB_STATUS_TO_EXEC = { New: 'Planned', Testing: 'Testing', Review: 'Under review',
     Assigned: 'Working', Discarded: 'Discarded' };
   // The raw triage lifecycle a director moves an item through, in order. Assigned
@@ -255,23 +268,47 @@
   // product person would triage it, so the director just confirms. Rules are
   // ordered + honest: a real bug -> fix now (Assigned); a feature that serves a
   // wave -> that wave; a valid-but-low-value idea -> Review (parked, not inflated).
-  // Which wave "owns" a surface, matched on the feedback's area/note text. The
-  // number is the 1-based wave index in exec-status.json waves[]. Extend as the
-  // roadmap grows; unknown surfaces fall through to a priority-based default.
+  // Which wave "owns" a surface. Each owner has STRONG signals (specific,
+  // multi-word surface names - these decide) and WEAK signals (generic single
+  // words that only break ties). We SCORE every owner instead of first-match, and
+  // weight the `area` field (the authoritative surface, e.g. "Slack") above the
+  // free-text note, so a stray generic word in the note (e.g. "the delivery
+  // story") can't hijack an item whose area clearly belongs elsewhere. The number
+  // is the 1-based wave index in exec-status.json waves[]. Extend as the roadmap
+  // grows; an item with no clear owner returns null (director places it).
   var WAVE_OWNERS = [
-    { re: /exec|deck|director|delivery|status/i, wave: 1 },   // Executive Status Deck
-    { re: /capacit|workload|team.?health|burnout|overload/i, wave: 2 }, // Capacity Engine
-    { re: /real.?data|go.?live|import|sync|warehouse/i, wave: 3 },      // Real Data Go-live
-    { re: /slack|notif|reminder|channel/i, wave: 4 },         // Slack Integration
+    { wave: 1,   // Executive Status Deck
+      strong: /exec(utive)?\s*(status|deck)|project\s*delivery|status\s*deck|the\s*deck|broadcast|digest/i,
+      weak: /\b(director|report|deck)\b/i },
+    { wave: 2,   // Capacity Engine
+      strong: /capacity\s*engine|workload\s*map|team.?health|burnout|overload/i,
+      weak: /\b(capacit|workload|balance)\b/i },
+    { wave: 3,   // Real Data Go-live
+      strong: /real.?data|go.?live|data\s*(import|warehouse|migration)|nightly\s*sync/i,
+      weak: /\b(import|sync|warehouse|migration)\b/i },
+    { wave: 4,   // Slack Integration
+      strong: /slack/i,
+      weak: /\b(notif|reminder|channel|post)\b/i },
   ];
   function suggestWave(raw, waveCount) {
-    var hay = String((raw.area || '') + ' ' + (raw.note || '')).toLowerCase();
-    for (var i = 0; i < WAVE_OWNERS.length; i++) {
-      if (WAVE_OWNERS[i].re.test(hay) && WAVE_OWNERS[i].wave <= (waveCount || 4)) {
-        return WAVE_OWNERS[i].wave;
-      }
-    }
-    return null;   // no clear owner -> let the director place it
+    var area = String(raw.area || '').toLowerCase();
+    var note = String(raw.note || '').toLowerCase();
+    var cap = waveCount || 4;
+    var best = null, bestScore = 0;
+    WAVE_OWNERS.forEach(function (o) {
+      if (o.wave > cap) return;
+      var score = 0;
+      // Area is authoritative: a strong area match is decisive; a strong note
+      // match is next; weak signals only nudge and never outweigh a strong hit.
+      if (o.strong.test(area)) score += 100;
+      else if (o.strong.test(note)) score += 40;
+      if (o.weak.test(area)) score += 6;
+      else if (o.weak.test(note)) score += 2;
+      if (score > bestScore) { bestScore = score; best = o.wave; }
+    });
+    // Require at least a strong signal somewhere - weak-only (score < 40) is too
+    // thin to auto-assign; let the director decide rather than guess a wave.
+    return bestScore >= 40 ? best : null;
   }
   // Returns { status, wave, reasonKey } - reasonKey is an i18n key explaining WHY.
   function triageSuggest(raw, waveCount) {
