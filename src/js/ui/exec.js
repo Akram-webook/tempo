@@ -176,6 +176,9 @@
           source: it.source || '',        // 'feedback' rows get the tag + lane treatment
           lane: it.lane || '',
           wave: it.wave || null,
+          klass: it.klass || '',          // carried through for the triage suggestion engine
+          area: it.area || '',
+          priority: it.priority || '',
         });
       });
     } else {
@@ -246,6 +249,52 @@
   }
   WP.fbTriage = { load: triageLoad, set: triageSet, apply: triageApply,
     STATUSES: TRIAGE_STATUSES, _key: TRIAGE_KEY };
+
+  // --- Triage suggestion engine -------------------------------------------
+  // Recommend a Status (+ Wave for Assigned) for a raw feedback item, the way a
+  // product person would triage it, so the director just confirms. Rules are
+  // ordered + honest: a real bug -> fix now (Assigned); a feature that serves a
+  // wave -> that wave; a valid-but-low-value idea -> Review (parked, not inflated).
+  // Which wave "owns" a surface, matched on the feedback's area/note text. The
+  // number is the 1-based wave index in exec-status.json waves[]. Extend as the
+  // roadmap grows; unknown surfaces fall through to a priority-based default.
+  var WAVE_OWNERS = [
+    { re: /exec|deck|director|delivery|status/i, wave: 1 },   // Executive Status Deck
+    { re: /capacit|workload|team.?health|burnout|overload/i, wave: 2 }, // Capacity Engine
+    { re: /real.?data|go.?live|import|sync|warehouse/i, wave: 3 },      // Real Data Go-live
+    { re: /slack|notif|reminder|channel/i, wave: 4 },         // Slack Integration
+  ];
+  function suggestWave(raw, waveCount) {
+    var hay = String((raw.area || '') + ' ' + (raw.note || '')).toLowerCase();
+    for (var i = 0; i < WAVE_OWNERS.length; i++) {
+      if (WAVE_OWNERS[i].re.test(hay) && WAVE_OWNERS[i].wave <= (waveCount || 4)) {
+        return WAVE_OWNERS[i].wave;
+      }
+    }
+    return null;   // no clear owner -> let the director place it
+  }
+  // Returns { status, wave, reasonKey } - reasonKey is an i18n key explaining WHY.
+  function triageSuggest(raw, waveCount) {
+    var k = String(raw.klass || raw.type || '').toLowerCase();
+    var pri = String(raw.priority || '').toLowerCase();
+    var wave = suggestWave(raw, waveCount);
+    // 1. A bug is a defect - fix it now, in whichever wave owns the surface.
+    if (/bug/.test(k)) {
+      return { status: 'Assigned', wave: wave || 1, reasonKey: 'execSugBug' };
+    }
+    // 2. A feature/idea that clearly serves a wave -> assign it to that wave.
+    if (wave && !/low/.test(pri)) {
+      return { status: 'Assigned', wave: wave, reasonKey: 'execSugFits' };
+    }
+    // 3. High/critical priority with no obvious wave still deserves attention now.
+    if (/high|critical/.test(pri)) {
+      return { status: 'Review', wave: null, reasonKey: 'execSugHigh' };
+    }
+    // 4. Everything else: a valid idea with no fitting wave -> park at Review,
+    //    honestly (not inflated into a wave, not dropped).
+    return { status: 'Review', wave: null, reasonKey: 'execSugPark' };
+  }
+  WP.fbTriage.suggest = triageSuggest;
   // Its classified lane -> the Type the exec filter understands (bug/feature/improvement).
   function fbTypeFor(fb) {
     var k = String(fb.klass || fb.type || '').toLowerCase();
@@ -276,36 +325,64 @@
         source: 'feedback',            // marks it as an incoming idea, not shipped work
         lane: lane,                    // Frontend | Backend | Bug | Feature | ...
         wave: it.wave || null,
+        klass: it.klass || '',         // raw classification (drives the suggestion)
+        area: it.area || '',           // the surface it's about (e.g. "Weekly Report")
+        priority: it.priority || '',   // Low | Medium | High | Critical
       };
     });
   }
 
   // Inline triage controls for ONE feedback row (director-only; the whole view is
-  // already gated to director/admin). A "Triage" toggle reveals a status <select>
-  // + a wave <select> (wave shown only when Assigned). Saving overlays the local
-  // decision and repaints. data-fb-id ties the controls back to the item.
+  // already gated to director/admin). A gear toggle reveals a compact card: a
+  // recommendation banner (pre-selected suggestion + WHY), a Status <select>, a
+  // Wave <select> (only when Assigned), and Save / Cancel. Saving overlays the
+  // local decision and repaints. data-fb-id ties the controls back to the item.
   function triageControlsHTML(it, waveCount) {
     const t = WP.i18n.t;
     if (!it.id) return '';   // can't target an item with no id
-    const cur = it.rawStatus || 'New';
+    const raw = it.rawStatus || 'New';
+    // Ask the engine what it would do. Pre-select the suggestion on an untriaged
+    // item ('New'); on an already-decided item, reflect the existing decision so
+    // the director edits from the real state, not a fresh guess.
+    const sug = triageSuggest(it, waveCount);
+    const untriaged = raw === 'New';
+    const cur = untriaged ? sug.status : raw;
+    const curWave = untriaged ? sug.wave : it.wave;
     const statusOpts = TRIAGE_STATUSES.map(function (s) {
+      var tag = (s === sug.status) ? ' ★' : '';   // star marks the recommended option
       return '<option value="' + s + '"' + (s === cur ? ' selected' : '') + '>' +
-        esc(t('execTriage_' + s)) + '</option>';
+        esc(t('execTriage_' + s) + tag) + '</option>';
     }).join('');
     // Wave options 1..waveCount (fallback to at least 4 so it's usable before waves load).
     var n = waveCount > 0 ? waveCount : 4;
     var waveOpts = '<option value="">' + esc(t('execTriagePickWave')) + '</option>';
     for (var i = 1; i <= n; i++) {
-      waveOpts += '<option value="' + i + '"' + (String(it.wave) === String(i) ? ' selected' : '') + '>' +
+      waveOpts += '<option value="' + i + '"' + (String(curWave) === String(i) ? ' selected' : '') + '>' +
         esc(t('execWave') + ' ' + i) + '</option>';
     }
     const showWave = cur === 'Assigned';
-    return '<div class="ex-triage" data-fb-id="' + esc(it.id) + '" hidden>' +
-      '<label class="ex-triage-f"><span>' + esc(t('execTriageStatus')) + '</span>' +
-        '<select class="ex-triage-status">' + statusOpts + '</select></label>' +
-      '<label class="ex-triage-f ex-triage-wave"' + (showWave ? '' : ' hidden') + '><span>' + esc(t('execTriageWave')) + '</span>' +
-        '<select class="ex-triage-wavesel">' + waveOpts + '</select></label>' +
-      '<button type="button" class="btn ex-triage-save">' + esc(t('execTriageSave')) + '</button>' +
+    // Recommendation banner: plain-words WHY + the suggested placement.
+    var sugPlace = sug.status === 'Assigned'
+      ? esc(t('execTriage_Assigned')) + ' · ' + esc(t('execWave') + ' ' + (sug.wave || 1))
+      : esc(t('execTriage_' + sug.status));
+    var rec = '<div class="ex-triage-rec"><span class="ex-triage-rec-k">' + esc(t('execSugLabel')) + '</span> ' +
+      '<strong>' + sugPlace + '</strong> — ' + esc(t(sug.reasonKey)) + '</div>';
+    return '<div class="ex-triage" data-fb-id="' + esc(it.id) + '"' +
+      ' data-sug-status="' + esc(sug.status) + '" data-sug-wave="' + esc(String(sug.wave || '')) + '" hidden>' +
+      rec +
+      '<div class="ex-triage-fields">' +
+        '<label class="ex-triage-f"><span>' + esc(t('execTriageStatus')) + '</span>' +
+          '<select class="ex-triage-status">' + statusOpts + '</select></label>' +
+        '<label class="ex-triage-f ex-triage-wave"' + (showWave ? '' : ' hidden') + '><span>' + esc(t('execTriageWave')) + '</span>' +
+          '<select class="ex-triage-wavesel">' + waveOpts + '</select></label>' +
+        '<div class="ex-triage-actions">' +
+          '<button type="button" class="btn primary ex-triage-save">' + esc(t('execTriageSave')) + '</button>' +
+          '<button type="button" class="btn ex-triage-cancel">' + esc(t('execTriageCancel')) + '</button>' +
+          '<span class="ex-triage-saved" role="status" aria-live="polite" hidden>' +
+            ui.icon('check', 14) + ' ' + esc(t('execTriageSaved')) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<p class="ex-triage-note">' + esc(t('execTriageLocalNote')) + '</p>' +
     '</div>';
   }
 
@@ -680,22 +757,62 @@
     host.querySelectorAll('.ex-triage').forEach(function (panel) {
       var statusSel = panel.querySelector('.ex-triage-status');
       var waveWrap = panel.querySelector('.ex-triage-wave');
+      var waveSel = panel.querySelector('.ex-triage-wavesel');
+      var saved = panel.querySelector('.ex-triage-saved');
+      // When the director changes status: show/hide the wave picker, and if they
+      // switch TO Assigned with no wave chosen, prefill the suggested wave.
       if (statusSel && waveWrap) {
-        statusSel.onchange = function () { waveWrap.hidden = statusSel.value !== 'Assigned'; };
+        statusSel.onchange = function () {
+          var assigned = statusSel.value === 'Assigned';
+          waveWrap.hidden = !assigned;
+          if (assigned && waveSel && !waveSel.value) {
+            var sw = panel.getAttribute('data-sug-wave');
+            if (sw) waveSel.value = sw;
+          }
+          if (saved) saved.hidden = true;   // any edit clears the "Saved" tick
+        };
       }
+      var cancel = panel.querySelector('.ex-triage-cancel');
+      if (cancel) cancel.onclick = function () {
+        var item = panel.closest('.ex-tl-item');
+        var btn = item && item.querySelector('.ex-tl-triage-btn');
+        panel.hidden = true;
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      };
       var save = panel.querySelector('.ex-triage-save');
       if (save) save.onclick = function () {
         // defence in depth: the view is director-gated, re-check before writing.
         if (WP.can && !WP.can('viewSettings')) return;
         var id = panel.getAttribute('data-fb-id');
         var status = statusSel ? statusSel.value : 'New';
-        var waveSel = panel.querySelector('.ex-triage-wavesel');
         var wave = (status === 'Assigned' && waveSel) ? (parseInt(waveSel.value, 10) || null) : null;
-        if (status === 'Assigned' && !wave) { /* need a wave */ toastNeedWave(host); return; }
+        if (status === 'Assigned' && !wave) { toastNeedWave(host); return; }
         triageSet(id, status, wave);
-        if (lastBaseData) paintBody(host, lastBaseData);   // re-fold from warehouse + overlay
+        // Confirm the save inline FIRST (so the click visibly registers), then
+        // re-fold from the warehouse + overlay so the row's chip/tags update.
+        if (saved) saved.hidden = false;
+        rememberOpenTriage(id);            // keep this panel open across the repaint
+        if (lastBaseData) paintBody(host, lastBaseData);
       };
     });
+    restoreOpenTriage(host);   // re-open + re-confirm the panel we just saved
+  }
+  // Repaint collapses every panel; remember which one was mid-save so we can
+  // re-open it and re-show its "Saved" tick, so Save never feels like a no-op.
+  var _openTriageId = null;
+  function rememberOpenTriage(id) { _openTriageId = id; }
+  function restoreOpenTriage(host) {
+    if (!_openTriageId) return;
+    var panel = host.querySelector('.ex-triage[data-fb-id="' + (window.CSS && CSS.escape ? CSS.escape(_openTriageId) : _openTriageId) + '"]');
+    if (panel) {
+      panel.hidden = false;
+      var item = panel.closest('.ex-tl-item');
+      var btn = item && item.querySelector('.ex-tl-triage-btn');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+      var saved = panel.querySelector('.ex-triage-saved');
+      if (saved) saved.hidden = false;
+    }
+    _openTriageId = null;
   }
   // Small inline nudge when Assigned is chosen without a wave (no global toast dep).
   function toastNeedWave(host) {

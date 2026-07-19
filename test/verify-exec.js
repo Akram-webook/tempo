@@ -321,15 +321,22 @@ const PAYLOAD = {
     resetFilters(elT); goAll(elT);
     await Promise.resolve(); await Promise.resolve();
     assert(elT.querySelector('.ex-tl-triage-btn'), 'a triage control renders on a feedback row');
+    // The engine suggests a Status (+ wave) for an untriaged Bug: Assigned to a wave.
+    const sug = WP.fbTriage.suggest({ klass: 'Bug', note: '[Bug] Export button does nothing', status: 'New' }, 4);
+    assert(sug.status === 'Assigned' && sug.wave, 'suggestion: a Bug is suggested Assigned + a wave');
     // open the panel
     elT.querySelector('.ex-tl-triage-btn').click();
     const panel = elT.querySelector('.ex-triage');
     assert(panel && !panel.hidden, 'triage panel opens');
-    // choose Assigned -> the wave picker reveals
+    assert(panel.querySelector('.ex-triage-rec'), 'a recommendation banner renders');
+    // untriaged item pre-selects the suggested status (not raw "New")
     const statusSel = panel.querySelector('.ex-triage-status');
+    assert(statusSel.value === sug.status, 'panel pre-selects the suggested status');
+    assert(panel.querySelector('.ex-triage-cancel'), 'a Cancel button renders');
+    // Force Assigned with an EMPTY wave -> Save refuses (no overlay written).
     statusSel.value = 'Assigned'; statusSel.dispatchEvent(new window.Event('change', { bubbles: true }));
     assert(!panel.querySelector('.ex-triage-wave').hidden, 'wave picker shows when status = Assigned');
-    // Save with NO wave -> refuses (no overlay written)
+    panel.querySelector('.ex-triage-wavesel').value = '';   // clear the auto-prefilled suggestion
     panel.querySelector('.ex-triage-save').click();
     await Promise.resolve();
     assert(!(WP.fbTriage.load()['tri-1']), 'Assigned without a wave does not save');
