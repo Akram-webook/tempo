@@ -89,3 +89,8 @@ A running log of what worked, what nearly broke, and the rule to remember. Appen
 - What worked: building the items in a Node script (not hand-JSON) guaranteed valid JSON + the exact append-only shape, and cross-checking each hand-triage against WP.fbTriage.suggest() proved my decisions were consistent, not arbitrary.
 - Gotcha: pre-triaged items must carry status+wave+triagedAt/By/Note AND match the appender enums (klass in the allowed set) or a future real submission could look inconsistent next to them.
 - Rule to remember: when seeding the warehouse, verify the fold renders (row count + wave-chip count + panel count in jsdom) before shipping - a bad field silently renders untagged.
+
+## 2026-07-19 - Feedback image dropzone + stuck close-dialog fix
+- What worked: refactoring onImagePick into a shared acceptFile(file) meant the input, drag-drop, and paste all reuse ONE validated path - no duplicated size/type/downscale logic.
+- What nearly broke / the gotcha: the "Keep your feedback?" dialog was unclickable. The cause was NOT the dialog - it was the feedback panels OWN capturing keydown handler (Esc->requestClose, Tab->focus-trap) stealing the keys from a dialog that lives in a DIFFERENT host (#overlay-host). A focus-trap must yield when a modal opens ON TOP of it.
+- Rule to remember: any component with a capturing key handler / focus-trap must detect a higher modal (query the shared overlay-host for .dlg) and STAND DOWN while it is open, or it silently traps the user. Test it by asserting the trap does NOT preventDefault(Tab) while the dialog is mounted.
