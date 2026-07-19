@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T09:28:21.632Z",
+  "generated": "2026-07-19T09:55:42.206Z",
   "cover": {
     "status": "In Progress",
     "progress": 89,
@@ -14,7 +14,7 @@
       "progress": 89,
       "health": "green",
       "openPRs": [],
-      "notes": "7/8 PRs merged, 2k/3k lines."
+      "notes": "8/9 PRs merged, 2k/3k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-134",
+      "area": "Exec Deck",
+      "title": "fix(exec): drop closed-unmerged PRs from Project delivery timeline + hide redundant single-area prefix",
+      "status": "Done",
+      "type": "Bug",
+      "ts": "2026-07-19T09:55:25Z"
+    },
     {
       "id": "pr-126",
       "area": "Exec Deck",
@@ -101,14 +109,6 @@
       "status": "Done",
       "type": "Feature",
       "ts": "2026-07-18T07:52:04Z"
-    },
-    {
-      "id": "pr-115",
-      "area": "Exec Deck",
-      "title": "feat(exec-status): derive project-delivery status from merged-PR counts",
-      "status": "Working",
-      "type": "Feature",
-      "ts": "2026-07-17T22:42:01Z"
     }
   ],
   "history": [
@@ -164,6 +164,11 @@
     },
     {
       "ts": "2026-07-19T09:28:21.632Z",
+      "progress": 89,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-19T09:55:42.206Z",
       "progress": 89,
       "health": "green"
     }
