@@ -163,22 +163,35 @@ function narrativeFor(waves, cover) {
     `${done} done, ${active} in progress (weighted by change size).${tail}`;
 }
 
+// Effort-weighted progress for ONE wave's PR list (closed-unmerged already removed
+// by the caller). PROGRESS = merged churn / total churn; falls back to merged/total
+// PR count when churn data is all zero. Pure + exported so it can be unit-tested:
+// the invariant that matters is "all-merged, no open -> 100%" (the bug was a
+// closed-unmerged PR leaking into the denominator and pinning it below 100).
+function waveProgress(prs) {
+  const merged = prs.filter((p) => p.merged);
+  const churnMerged = merged.reduce((s, p) => s + (p.additions || 0), 0);
+  const churnTotal = prs.reduce((s, p) => s + (p.additions || 0), 0);
+  const pct = churnTotal > 0
+    ? Math.round((churnMerged / churnTotal) * 100)
+    : (prs.length === 0 ? 0 : Math.round((merged.length / prs.length) * 100));
+  return { pct, churnMerged, churnTotal };
+}
+
 async function computeShip() {
   const waves = [];
   const wavesPrs = [];   // keep each wave's PRs so we can build timeline items below
   let mergedChurn = 0, totalChurn = 0;
   for (const w of WAVES) {
-    const prs = await prsForLabel(w.label);
+    const allPrs = await prsForLabel(w.label);
+    // A closed-but-unmerged PR is abandoned/superseded work - it never shipped and
+    // never will. It must NOT count anywhere (see waveProgress). Drop it up front.
+    const prs = allPrs.filter((p) => !p.closedUnmerged);
     wavesPrs.push({ wave: w, prs });
     const m = prs.filter((p) => p.merged).length;
     const t = prs.length;
-    // #1 PROGRESS = merged churn / total churn (effort-weighted), NOT PR count.
-    // Falls back to count if churn data is unavailable (all zero).
-    const wChurnMerged = prs.filter((p) => p.merged).reduce((s, p) => s + p.additions, 0);
-    const wChurnTotal = prs.reduce((s, p) => s + p.additions, 0);
+    const { pct, churnMerged: wChurnMerged, churnTotal: wChurnTotal } = waveProgress(prs);
     mergedChurn += wChurnMerged; totalChurn += wChurnTotal;
-    const pct = wChurnTotal > 0 ? Math.round((wChurnMerged / wChurnTotal) * 100)
-      : (t === 0 ? 0 : Math.round((m / t) * 100));   // fallback: count-based
     const { flag, blockers } = healthFlagFor(prs);
     const openPRs = prs.filter((p) => p.open).map((p) => ({
       number: p.number, title: p.title,
@@ -393,6 +406,22 @@ function renderStatusHtml(status) {
 function selftest() {
   const http = require('http');
   const files = {};   // in-memory "repo"
+
+  // --- pure-unit checks for waveProgress (the "95% but all done" bug) ----------
+  const assertEq = (a, b, m) => { if (a !== b) throw new Error('waveProgress: ' + m + ' (got ' + a + ', want ' + b + ')'); };
+  // all merged, no open, no closed-unmerged -> 100%
+  assertEq(waveProgress([{ merged: true, additions: 100 }, { merged: true, additions: 50 }]).pct, 100, 'all merged = 100%');
+  // one open PR with churn -> below 100
+  assertEq(waveProgress([{ merged: true, additions: 90 }, { merged: false, open: true, additions: 10 }]).pct, 90, 'open PR churn lowers progress');
+  // THE BUG: a closed-unmerged PR must NOT be in the list (caller drops it). Prove
+  // that once dropped, an all-merged wave is 100% even if that PR had lots of churn.
+  const withGhost = [{ merged: true, additions: 100 }, { merged: false, open: false, closedUnmerged: true, additions: 900 }];
+  const cleaned = withGhost.filter((p) => !p.closedUnmerged);
+  assertEq(waveProgress(cleaned).pct, 100, 'closed-unmerged excluded -> all-merged wave = 100% (not 10%)');
+  // empty wave -> 0; count fallback when churn is all zero
+  assertEq(waveProgress([]).pct, 0, 'empty wave = 0%');
+  assertEq(waveProgress([{ merged: true, additions: 0 }, { merged: false, open: true, additions: 0 }]).pct, 50, 'zero-churn falls back to PR count');
+
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       let body = ''; req.on('data', (c) => (body += c));
