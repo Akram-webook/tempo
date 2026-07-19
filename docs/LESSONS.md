@@ -117,3 +117,10 @@ A running log of what worked, what nearly broke, and the rule to remember. Appen
 - Why I missed it earlier: I dropped that same ghost PR from the TIMELINE (display) but not from the MATH. A fix to how something renders is not a fix to how it is computed - check every consumer of the excluded data.
 - Fix: filter closedUnmerged PRs up front so they count in NO metric (progress, health, counts). Extracted waveProgress() as a pure fn with unit checks in --selftest, incl. the exact regression (all-merged wave = 100% even with a heavy-churn closed-unmerged ghost).
 - Rule to remember: when you exclude data from ONE view, grep every place that reads that data - a display filter and a math filter are different fixes. And headline metrics must reconcile with their own sub-counts (100% <=> 0 remaining); if they disagree, one formula is wrong.
+
+## 2026-07-19 - Waves batch: focus, completion-notify, strategic backlog
+- What worked: breaking a big multi-part request (per-wave bars, notify Ahmed, BCG ideas) into 3 focused PRs kept each verifiable + shippable instead of one risky mega-change.
+- What nearly broke: switching notifications.js from the old JSONP endpoint to fetch() broke a jsdom test that had no fetch (ReferenceError). Two-part fix: guard the code (typeof fetch !== function -> resolve empty) AND stub fetch in the test. Lesson below.
+- Gotcha: a shared cache (notif execWaves) means a later test re-open does NOT re-fetch; the empty-state test had to seat a MEMBER (structurally empty) rather than rely on a new fetch stub taking effect.
+- Also: found the notif panel was STILL on the dead Google/JSONP path post-migration - a stale consumer of exec data. When you migrate a data source, grep every reader, not just the main view.
+- Rule to remember: any code that calls a browser global (fetch) must degrade if it is absent (older/headless envs + tests), and migrating a data source means sweeping ALL its consumers.
