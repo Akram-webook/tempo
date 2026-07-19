@@ -122,8 +122,30 @@
 
   // Build the structured story locally. Returns the SAME shape a remote model is
   // expected to return, so the two are interchangeable.
+  // Recognise a note this engine already produced, so a SECOND Polish is a no-op
+  // instead of re-wrapping (which nested "[Bug] [Bug] ... Context: ..." - a real
+  // bug: directors click Polish twice). Matches a leading "[Area] Title" line.
+  function looksPolished(raw) {
+    return /^\s*\[[^\]]+\]\s*.+/.test(raw) && /(^|\n)\s*(Context|Impact|Suggestion|السياق|الأثر|الاقتراح)\s*:/.test(raw);
+  }
+  // Parse an already-polished note back into a story object (idempotency path).
+  function parseStory(raw, page) {
+    var m = /^\s*\[([^\]]+)\]\s*(.*)$/.exec((raw.split('\n')[0] || '').trim());
+    var area = (m && m[1]) || classifyArea(raw + ' ' + (page || ''));
+    var title = (m && m[2]) || deriveTitle(raw);
+    // Pull the first Context:/Impact:/Suggestion: value if present (EN or AR label).
+    function field(re) { var x = re.exec(raw); return x ? x[1].trim() : ''; }
+    var context = field(/(?:^|\n)\s*(?:Context|السياق)\s*:\s*([^\n]*)/i);
+    var impact = field(/(?:^|\n)\s*(?:Impact|الأثر)\s*:\s*([^\n]*)/i);
+    var suggestion = field(/(?:^|\n)\s*(?:Suggestion|الاقتراح)\s*:\s*([^\n]*)/i);
+    return { v: STORY_VERSION, title: title, area: area, context: context || title,
+      impact: impact, suggestion: suggestion, type: AREA_TO_TYPE[area] || 'New idea' };
+  }
+
   function polishLocally(note, page) {
     var raw = String(note || '').trim();
+    // Idempotency: re-polishing an already-structured note must not nest/duplicate.
+    if (looksPolished(raw)) return parseStory(raw, page);
     var area = classifyArea(raw + ' ' + (page || ''));
     var ss = sentences(raw);
     var title = deriveTitle(raw);

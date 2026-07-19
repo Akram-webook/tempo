@@ -265,6 +265,13 @@ const PAYLOAD = {
     const fbRows = elFb.querySelectorAll('.ex-tl-row--fb').length;
     assert(fbRows === 3, 'all 3 feedback items surface (got ' + fbRows + ')');
 
+    // BUG-001 regression: feedback must NOT inflate the stats strip. PAYLOAD here
+    // has 1 item (pr-x, Done); the folded feedback includes an Assigned item that
+    // maps to 'Working'. The strip must still read the DELIVERY item only.
+    const fbSum = elFb.querySelector('.ex-launch-sum');
+    assert(fbSum && /1 shipped/.test(fbSum.textContent), 'stats strip counts delivery items only: 1 shipped');
+    assert(fbSum && /0 in progress/.test(fbSum.textContent), 'assigned feedback does NOT inflate in-progress (BUG-001)');
+
     // Type=Bugs filters the timeline to the bug feedback (+ any bug PRs).
     elFb.querySelector('.ex-fchip[data-filter="type"][data-val="bug"]').click();
     await Promise.resolve(); await Promise.resolve();
@@ -279,6 +286,18 @@ const PAYLOAD = {
     elFb.querySelector('.ex-fchip[data-filter="status"][data-val="planned"]').click();
     await Promise.resolve(); await Promise.resolve();
     assert(/Export button/.test(elFb.textContent), 'Status=Planned shows the not-yet-decided feedback');
+
+    // BUG-003 regression: when a filter matches nothing, the message must say so -
+    // NOT "Nothing in this range" (which implies a date/week problem, not a filter).
+    // Type=Bug + Status=Done matches nothing here: the only Done item is a Feature
+    // PR, and the bug feedback is New/Testing - so the timeline is filter-empty.
+    elFb.querySelector('.ex-fchip[data-filter="type"][data-val="bug"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    elFb.querySelector('.ex-fchip[data-filter="status"][data-val="done"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    const fbEmpty = (elFb.querySelector('.ex-tl-body') || {}).textContent || '';
+    assert(/match your filters|تطابق عوامل التصفية/i.test(fbEmpty), 'filtered-empty says "No items match your filters" (BUG-003)');
+    assert(!/Nothing in this range/i.test(fbEmpty), 'filtered-empty does NOT misleadingly blame the date range');
     nextFeedback = null;   // restore default empty feedback for any later work
 
   } catch (e) {

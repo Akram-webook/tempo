@@ -93,7 +93,11 @@
       : (c.pct != null ? Math.round(+c.pct) : 0);
     // Rollup counts: prefer the timeline items[] (per-PR, so "8 shipped" is real
     // delivered work), and fall back to the wave rollup when no items[] exist yet.
-    const items = (data && Array.isArray(data.items)) ? data.items : null;
+    // IMPORTANT: count DELIVERY items only - folded-in feedback (source:'feedback')
+    // is incoming triage, not shipped/in-flight work, so it must NOT inflate the
+    // stats strip (an Assigned feedback item maps to status 'Working').
+    const allItems = (data && Array.isArray(data.items)) ? data.items : null;
+    const items = allItems ? allItems.filter(function (x) { return x.source !== 'feedback'; }) : null;
     const done = items ? items.filter(function (x) { return x.status === 'Done'; }).length
       : waves.filter(function (x) { return x.status === 'Done'; }).length;
     const next = items ? items.filter(function (x) { return x.status === 'Working'; }).length
@@ -305,7 +309,13 @@
       groups = rows.length ? [{ label: null, rows: rows }] : [];
     }
 
-    const emptyMsg = staleNoSource ? t('execTlStale') : t('execTlEmpty');
+    // Three distinct empty reasons, so the message never misleads:
+    //  - stale JSON (no items[] field at all) -> "will appear after next update"
+    //  - a filter is active and matched nothing -> "no items match your filters"
+    //    (NOT "Nothing in this range", which wrongly implies a date/week problem)
+    //  - genuinely nothing in this week -> "Nothing in this range"
+    const emptyMsg = staleNoSource ? t('execTlStale')
+      : (anyFilterActive() ? t('execTlFiltered') : t('execTlEmpty'));
     const body = groups.length
       ? groups.map(function (g) {
           return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
