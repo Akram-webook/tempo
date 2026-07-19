@@ -1500,12 +1500,19 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-deck-btn { flex: none; }
 .ex-launch-sum { color: var(--text-muted); font-size: 13px; }
 /* Trend sparkline (last N delivered-% points). Colour by direction. */
-.ex-spark { display: flex; align-items: center; gap: 8px; margin-top: 2px; color: var(--text-muted); }
-.ex-spark svg { display: block; opacity: .85; }
-.ex-spark-l { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-.ex-spark-l--up   { color: var(--state-positive); }
-.ex-spark-l--down { color: var(--state-negative); }
-.ex-spark-l--flat { color: var(--text-muted); }
+/* Filter bar: Type + Status chip groups above the waves grid. */
+.ex-filters { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; }
+.ex-fgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ex-flabel { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-inline-end: 2px; }
+.ex-fchip {
+  font: inherit; font-size: 13px; line-height: 1; cursor: pointer;
+  padding: 7px 13px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+.ex-fchip:hover { border-color: var(--border-strong, var(--border)); color: var(--text-primary); }
+.ex-fchip.is-on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.ex-fchip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 /* Waves section (GitHub-warehouse shape): per-wave progress + health + blockers. */
 .ex-waves { display: flex; flex-direction: column; gap: 14px; }
 .ex-wave { display: flex; flex-direction: column; gap: 5px; }

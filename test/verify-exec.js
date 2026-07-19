@@ -104,19 +104,41 @@ const PAYLOAD = {
       !/Executive/i.test(el.querySelector('.ex-title').textContent), 'title reads project delivery (not Executive)');
     assert(el.querySelector('.ex-forwho') && /Not an employee view|ليست شاشة للموظفين/i.test(el.querySelector('.ex-forwho').textContent), 'a for-who line states it is not an employee view');
 
-    // --- launcher: cover.progress % + single bar + trend sparkline -----------------
+    // --- launcher: cover.progress % + single bar (NO sparkline - removed) ----------
     const pctn = el.querySelector('.ex-pct-n');
     assert(pctn && /60%/.test(pctn.textContent), 'launcher renders cover.progress (60%)');
     const bar0 = el.querySelector('.ex-launch .ex-bar span');
     assert(bar0 && /width:\s*60%/.test(bar0.getAttribute('style') || ''), 'progress bar green = 60%');
-    assert(el.querySelector('.ex-spark svg path'), 'trend sparkline renders from history[]');
-    assert(el.querySelector('.ex-spark-l--up'), 'rising history marks trend up');
+    assert(!el.querySelector('.ex-spark'), 'trend sparkline removed (reverted to the prior view)');
+
+    // --- filter bar: Type + Status chip groups ------------------------------------
+    assert(el.querySelector('.ex-filters'), 'filter bar renders');
+    const groups = el.querySelectorAll('.ex-fgroup');
+    assert(groups.length === 2, 'two filter groups (Type + Status)');
+    const chipVals = [...el.querySelectorAll('.ex-fchip')].map(c => c.getAttribute('data-val'));
+    ['all', 'bug', 'feature', 'improvement', 'done', 'working', 'planned']
+      .forEach(v => assert(chipVals.indexOf(v) >= 0, 'filter chip present: ' + v));
+    // Default: All is on in both groups.
+    assert([...el.querySelectorAll('.ex-fchip.is-on')].length === 2, 'exactly the two "All" chips are on by default');
 
     // --- waves section: progress + health + blocked-on ----------------------------
     const waves = el.querySelectorAll('.ex-wave');
     assert(waves.length === 2, 'both waves render (got ' + waves.length + ')');
     assert(/Capacity Engine/.test(el.textContent), 'wave name shows');
     assert(el.querySelector('.ex-wave-blk') && /reviewers/.test(el.querySelector('.ex-wave-blk').textContent), 'blocked-on shows whose move it is');
+
+    // --- filter interaction: Status=Done hides the two non-done waves --------------
+    // (both PAYLOAD waves are "In Progress" → Done should empty the waves grid.)
+    const doneChip = [...el.querySelectorAll('.ex-fchip[data-filter="status"]')].find(c => c.getAttribute('data-val') === 'done');
+    assert(doneChip, 'Status=Done chip exists');
+    doneChip.click();
+    await Promise.resolve(); await Promise.resolve();
+    assert(el.querySelectorAll('.ex-wave').length === 0, 'Status=Done filters out the in-progress waves');
+    assert(el.querySelector('.ex-fchip[data-filter="status"][data-val="done"]').classList.contains('is-on'), 'Done chip is now active');
+    // Reset back to All so later assertions see the full set.
+    el.querySelector('.ex-fchip[data-filter="status"][data-val="all"]').click();
+    await Promise.resolve(); await Promise.resolve();
+    assert(el.querySelectorAll('.ex-wave').length === 2, 'Status=All restores both waves');
 
     // --- needs-you from data.needsYou ---------------------------------------------
     assert(/awaiting review/i.test(el.textContent), 'needsYou item renders');
@@ -154,6 +176,6 @@ const PAYLOAD = {
     errors.push('[run] ' + e.message + '\n' + e.stack);
   }
   if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-  console.log('PASS — project-delivery (GitHub warehouse): fetch() on data/exec-status.json (no JSONP), admin gate, cover.progress launcher + single bar, waves with progress/health/blocked-on, trend sparkline, needsYou, empty-state when no run yet, error state, Open-report -> status.html, EN+AR.');
+  console.log('PASS — project-delivery (GitHub warehouse): fetch() on data/exec-status.json (no JSONP), admin gate, cover.progress launcher + single bar, sparkline REMOVED, Type+Status filter bar (chips + Status=Done filters waves), waves with progress/health/blocked-on, needsYou, empty-state when no run yet, error state, Open-report -> status.html, EN+AR.');
   process.exit(0);
 })();

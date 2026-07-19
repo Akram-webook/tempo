@@ -82,32 +82,6 @@
   // Compact LAUNCHER — a small summary + % bar + one-line rollup + a big button
   // to the full Google Slides deck (the hosted, presentable artifact). The page
   // no longer duplicates the full slide-by-slide render; the deck owns that.
-  // Trend sparkline: an inline SVG polyline of the last N delivered-% points
-  // from data.history (appended per run on the sheet side). Renders NOTHING when
-  // history is absent or has <2 points - never a broken/empty chart. Pure SVG,
-  // no library, theme-aware via currentColor.
-  function sparklineHTML(history) {
-    const pts = (history || [])
-      .map(function (h) { return (h && (h.progress != null ? +h.progress : +h.pct)); })
-      .filter(function (n) { return !isNaN(n); })
-      .slice(-10);
-    if (pts.length < 2) return '';
-    const W = 120, H = 28, max = 100, min = 0;
-    const step = W / (pts.length - 1);
-    const y = function (v) { return H - ((v - min) / (max - min)) * H; };
-    const d = pts.map(function (v, i) { return (i ? 'L' : 'M') + (i * step).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
-    const last = pts[pts.length - 1], first = pts[0];
-    const dir = last > first ? 'up' : (last < first ? 'down' : 'flat');
-    const t = WP.i18n.t;
-    return '<div class="ex-spark" title="' + t('execTrend') + ': ' + first + '% -> ' + last + '%">' +
-      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true" preserveAspectRatio="none">' +
-        '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        '<circle cx="' + ((pts.length - 1) * step).toFixed(1) + '" cy="' + y(last).toFixed(1) + '" r="2.2" fill="currentColor"/>' +
-      '</svg>' +
-      '<span class="ex-spark-l ex-spark-l--' + dir + '">' + t('execTrend') + '</span>' +
-    '</div>';
-  }
-
   function launcherHTML(data) {
     const t = WP.i18n.t;
     const c = (data && data.cover) || {};
@@ -136,7 +110,6 @@
         '<span style="width:' + Math.max(0, 100 - pct) + '%;background:' + COLORS.grey + '"></span>' +
       '</div>' +
       '<div class="ex-launch-sum">' + summary + '</div>' +
-      sparklineHTML(data && data.history) +
     '</div>';
   }
 
@@ -176,14 +149,15 @@
   function timelineItems(data) {
     const out = [];
     ((data && data.requests) || []).forEach(function (r) {
-      out.push({ title: (r.area ? r.area + ' — ' : '') + (r.note || '—'), status: r.status, date: r.date || null });
+      out.push({ title: (r.area ? r.area + ' — ' : '') + (r.note || '—'), status: r.status, date: r.date || null, type: r.type || r.Type || '' });
     });
     ((data && data.features) || []).forEach(function (f) {
       const d = f.date || f.Reviewed || f.reviewed || null;
       const title = (f.area || f.Area || '') ? ((f.area || f.Area) + ' — ' + (f.feature || f.Feature || '')) : (f.feature || f.Feature || '');
-      if (title) out.push({ title: title, status: f.status || f.Status, date: d });
+      if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
     });
-    return out;
+    // Apply the view-local Type + Status filters to the timeline items.
+    return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status); });
   }
 
   function tlRow(it) {
@@ -321,12 +295,50 @@
   let refWeekOffset = 0; // current week = 0; ‹prev = -1, next› = +1 … (time-navigator reference)
   let lastData = null;   // last payload (so a nav change repaints without refetch)
 
+  // View-local filters applied across the whole Project-delivery view (waves +
+  // timeline). Purely presentational; nothing touches WP.state. Default 'all' so
+  // the view shows everything until the user narrows it.
+  let filterType = 'all';    // all | bug | feature | improvement
+  let filterStatus = 'all';  // all | done | working | planned
+  // Map a filter bucket to the raw status words the data uses (via statusColorKey
+  // buckets, so "In Progress"/"in review" -> working, "Later"/"planned" -> planned).
+  function matchesStatus(raw) {
+    if (filterStatus === 'all') return true;
+    const b = statusColorKey(raw);   // green|amber|red|violet|grey
+    if (filterStatus === 'done') return b === 'green';
+    if (filterStatus === 'working') return b === 'amber' || b === 'red';
+    if (filterStatus === 'planned') return b === 'violet' || b === 'grey';
+    return true;
+  }
+  // Type lives on items that carry one (timeline rows); items with no type are
+  // shown under 'all' and hidden only when a specific type is selected.
+  function matchesType(rawType) {
+    if (filterType === 'all') return true;
+    const s = String(rawType || '').toLowerCase();
+    if (!s) return false;
+    if (filterType === 'bug') return /bug/.test(s);
+    if (filterType === 'feature') return /feature|new idea|idea/.test(s);
+    if (filterType === 'improvement') return /improv|design|enhanc/.test(s);
+    return true;
+  }
+  const anyFilterActive = function () { return filterType !== 'all' || filterStatus !== 'all'; };
+
   // WAVES section (GitHub-warehouse shape): one row per wave with progress bar +
   // health dot + notes + any open-PR blockers. This is the heart of the page now.
   function wavesHTML(data) {
     const t = WP.i18n.t;
-    const waves = (data && data.waves) || [];
-    if (!waves.length) return '';
+    let waves = (data && data.waves) || [];
+    // Waves are structural, not typed - Status filters them; a specific Type
+    // filter (Bugs/Features/…) hides them since a wave has no type. Under 'all'
+    // type they always show. This keeps "Status: Done" meaningful on waves while
+    // "Type: Bugs" scopes to the typed timeline items only.
+    waves = waves.filter(function (w) {
+      return matchesStatus(w.status) && (filterType === 'all');
+    });
+    if (!waves.length) {
+      // Don't leave a bare heading when a filter empties the grid.
+      return anyFilterActive() ? '' : '';
+    }
     const rows = waves.map(function (w) {
       const pct = Math.max(0, Math.min(100, +w.progress || 0));
       const h = w.health || 'green';
@@ -346,12 +358,38 @@
     return '<div class="section ex-waves"><h3 class="ex-h3">' + t('execWaves') + '</h3>' + rows + '</div>';
   }
 
+  // Filter bar: Type (All/Bugs/Features/Improvements) + Status (All/Done/Working/
+  // Planned) chip groups. View-local - a click repaints the body from lastData.
+  function filterBarHTML() {
+    const t = WP.i18n.t;
+    const group = function (label, key, cur, opts) {
+      const chips = opts.map(function (o) {
+        const on = cur === o.v ? ' is-on' : '';
+        return '<button type="button" class="ex-fchip' + on + '" role="radio" aria-checked="' +
+          (cur === o.v ? 'true' : 'false') + '" data-filter="' + key + '" data-val="' + o.v + '">' +
+          esc(o.l) + '</button>';
+      }).join('');
+      return '<div class="ex-fgroup" role="radiogroup" aria-label="' + esc(label) + '">' +
+        '<span class="ex-flabel">' + esc(label) + '</span>' + chips + '</div>';
+    };
+    return '<div class="section ex-filters">' +
+      group(t('execFilterType'), 'type', filterType, [
+        { v: 'all', l: t('execFilterAll') }, { v: 'bug', l: t('execFilterBugs') },
+        { v: 'feature', l: t('execFilterFeatures') }, { v: 'improvement', l: t('execFilterImprovements') },
+      ]) +
+      group(t('execFilterStatus'), 'status', filterStatus, [
+        { v: 'all', l: t('execFilterAll') }, { v: 'done', l: t('execFilterDone') },
+        { v: 'working', l: t('execFilterWorking') }, { v: 'planned', l: t('execFilterPlanned') },
+      ]) +
+    '</div>';
+  }
+
   function paintBody(host, data) {
     lastData = data;
     // 1) launcher (progress + trend), 2) WAVES (health/blocked-on), 3) needs-you,
     // 4) any dated timeline items (empty in the warehouse shape, renders nothing).
     const needsList = (data.needsYou || []).map(function (n) { return { note: n, status: 'Needs input' }; });
-    const body = launcherHTML(data) + wavesHTML(data) +
+    const body = launcherHTML(data) + filterBarHTML() + wavesHTML(data) +
       (needsList.length ? needsHTML(needsList) : '') +
       timelineHTML(data, tlMode, refWeekOffset);
     const bodyEl = host.querySelector('.ex-body');
@@ -394,6 +432,17 @@
     });
     const today = host.querySelector('[data-today]');
     if (today) today.onclick = function () { refWeekOffset = 0; repaintTimeline(host); };
+    // Filter chips: set the view-local filter and repaint the whole body (waves +
+    // timeline both respond). Keeps everything off WP.state.
+    host.querySelectorAll('[data-filter]').forEach(function (b) {
+      b.onclick = function () {
+        const key = b.getAttribute('data-filter');
+        const val = b.getAttribute('data-val');
+        if (key === 'type') filterType = val;
+        else if (key === 'status') filterStatus = val;
+        if (lastData) paintBody(host, lastData);
+      };
+    });
   }
 
   function paintError(host) {
