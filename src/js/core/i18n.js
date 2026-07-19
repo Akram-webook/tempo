@@ -428,6 +428,8 @@
     fbPrio_High:    { en: 'High',                    ar: 'عالية' },
     fbPrio_Critical:{ en: 'Critical',                ar: 'حرجة' },
     fbAddImage:     { en: 'Add image',               ar: 'إضافة صورة' },
+    fbDropHere:     { en: 'Drag an image here',      ar: 'اسحب صورة إلى هنا' },
+    fbDropOrClick:  { en: 'or click to choose · or paste', ar: 'أو انقر للاختيار · أو الصق' },
     fbRemoveImage:  { en: 'Remove image',            ar: 'إزالة الصورة' },
     fbImgAdded:     { en: 'Image added.',            ar: 'تمت إضافة الصورة.' },
     fbImgType:      { en: "That file isn't an image.", ar: 'هذا الملف ليس صورة.' },

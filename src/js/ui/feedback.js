@@ -298,6 +298,11 @@
 
     // Focus trap + Esc
     panelState.keydown = function (e) {
+      // Stand down while a confirm/prompt dialog is open on top of us: its own host
+      // (#overlay-host) owns Esc + Tab then. Otherwise our capturing handler would
+      // steal Escape (re-triggering the close prompt) and Tab (trapping focus out of
+      // the dialog) - which left the "Keep your feedback?" dialog unclickable.
+      if (dialogOpen()) return;
       if (e.key === 'Escape') { e.preventDefault(); requestClose(); return; }
       if (e.key === 'Tab') trapTab(e);
     };
@@ -308,6 +313,13 @@
       var f = wrap.querySelector('#fb-note') || wrap.querySelector('#fb-close');
       if (f) try { f.focus(); } catch (e) {}
     }, 30);
+  }
+
+  // Is a WBK confirm/prompt dialog currently mounted (in the shared overlay host)?
+  // While one is, the feedback panel must not intercept Esc/Tab.
+  function dialogOpen() {
+    var h = document.getElementById('overlay-host');
+    return !!(h && h.querySelector('.dlg'));
   }
 
   function trapTab(e) {
@@ -414,8 +426,10 @@
       ? '<div class="fb-img"><img src="' + esc(m.composer.image) + '" alt="" />' +
           '<button type="button" class="fb-img-rm" id="fb-img-rm" aria-label="' + esc(t('fbRemoveImage')) + '">' +
             ui.icon('x', 14) + '</button></div>'
-      : '<label class="fb-img-add" tabindex="0" role="button" aria-label="' + esc(t('fbAddImage')) + '">' +
-          ui.icon('plus', 14) + ' <span>' + esc(t('fbAddImage')) + '</span>' +
+      : '<label class="fb-img-add fb-dropzone" id="fb-dropzone" tabindex="0" role="button" aria-label="' + esc(t('fbAddImage')) + '">' +
+          '<span class="fb-dz-icon">' + ui.icon('image', 20) + '</span>' +
+          '<span class="fb-dz-text"><strong>' + esc(t('fbDropHere')) + '</strong>' +
+            '<span class="fb-dz-sub">' + esc(t('fbDropOrClick')) + '</span></span>' +
           '<input type="file" accept="image/*" id="fb-img-input" class="fb-img-input" />' +
         '</label>';
 
@@ -501,12 +515,35 @@
     if (prio) prio.addEventListener('change', function (e) { m.composer.priority = e.target.value; saveModel(); });
 
     // Image input (add) — accept image/* only, ≤5MB, downscale, one per comment (QA C).
+    // Three ways in: click/keyboard (the <input>), drag-drop, and paste.
     var imgInput = wrap.querySelector('#fb-img-input');
     if (imgInput) imgInput.addEventListener('change', onImagePick);
-    var imgAdd = wrap.querySelector('.fb-img-add');
-    if (imgAdd) imgAdd.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); imgInput.click(); }
-    });
+    var dz = wrap.querySelector('#fb-dropzone');
+    if (dz) {
+      dz.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); imgInput.click(); }
+      });
+      // Drag-and-drop: highlight on dragover, accept the first image on drop.
+      var stop = function (e) { e.preventDefault(); e.stopPropagation(); };
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        dz.addEventListener(ev, function (e) { stop(e); dz.classList.add('is-dragover'); });
+      });
+      ['dragleave', 'dragend'].forEach(function (ev) {
+        dz.addEventListener(ev, function (e) { stop(e); dz.classList.remove('is-dragover'); });
+      });
+      dz.addEventListener('drop', function (e) {
+        stop(e); dz.classList.remove('is-dragover');
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        acceptFile(f);
+      });
+      // Paste an image straight from the clipboard while the dropzone has focus.
+      dz.addEventListener('paste', function (e) {
+        var items = (e.clipboardData && e.clipboardData.items) || [];
+        for (var i = 0; i < items.length; i++) {
+          if (/^image\//.test(items[i].type)) { e.preventDefault(); acceptFile(items[i].getAsFile()); break; }
+        }
+      });
+    }
     var imgRm = wrap.querySelector('#fb-img-rm');
     if (imgRm) imgRm.addEventListener('click', function () { m.composer.image = null; m.composer.imageName = ''; saveModel(); renderBody(); });
 
@@ -534,10 +571,17 @@
   }
 
   /* -------- image handling -------- */
+  // From the <input> change event: pull the file, reset the input so the same
+  // file can be re-picked, then hand off to the shared acceptFile path (which is
+  // also used by drag-drop and paste).
   function onImagePick(e) {
-    var t = WP.i18n.t;
     var file = e.target.files && e.target.files[0];
     e.target.value = '';   // allow re-pick of the same file
+    acceptFile(file);
+  }
+  // Shared entry point for a picked / dropped / pasted image file.
+  function acceptFile(file) {
+    var t = WP.i18n.t;
     if (!file) return;
     if (!/^image\//.test(file.type)) { toastErr(t('fbImgType')); return; }
     var reader = new FileReader();
