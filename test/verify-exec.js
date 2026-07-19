@@ -300,6 +300,71 @@ const PAYLOAD = {
     assert(!/Nothing in this range/i.test(fbEmpty), 'filtered-empty does NOT misleadingly blame the date range');
     nextFeedback = null;   // restore default empty feedback for any later work
 
+    // --- triage controls: director advances lifecycle / assigns wave / discards ---
+    // Decisions save to a LOCAL overlay (localStorage) and apply on re-render.
+    try { window.localStorage.removeItem(WP.fbTriage._key); } catch (e) {}
+    WP.state.lang = 'en';
+    nextPayload = Object.assign({}, PAYLOAD, { waves: [{ name: 'W1' }, { name: 'W2' }, { name: 'W3' }, { name: 'W4' }], items: [] });
+    nextFeedback = { generated: new Date().toISOString(), items: [
+      { id: 'tri-1', note: '[Bug] Export button does nothing', klass: 'Bug', type: 'Bug', status: 'New', wave: null, submittedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
+    ] };
+    const elT = window.document.createElement('div');
+    WP.ui.exec.render(elT);
+    await settle();
+    // reset the filters left active by the BUG-003 block (view-local state persists),
+    // then move to "All" so the item is visible regardless of the week window.
+    const resetFilters = function (el) {
+      const ta = el.querySelector('.ex-fchip[data-filter="type"][data-val="all"]'); if (ta) ta.click();
+      const sa = el.querySelector('.ex-fchip[data-filter="status"][data-val="all"]'); if (sa) sa.click();
+    };
+    const goAll = function (el) { const a = [...el.querySelectorAll('.ex-seg-btn')].find(b => /all/i.test(b.textContent)); if (a) a.click(); };
+    resetFilters(elT); goAll(elT);
+    await Promise.resolve(); await Promise.resolve();
+    assert(elT.querySelector('.ex-tl-triage-btn'), 'a triage control renders on a feedback row');
+    // open the panel
+    elT.querySelector('.ex-tl-triage-btn').click();
+    const panel = elT.querySelector('.ex-triage');
+    assert(panel && !panel.hidden, 'triage panel opens');
+    // choose Assigned -> the wave picker reveals
+    const statusSel = panel.querySelector('.ex-triage-status');
+    statusSel.value = 'Assigned'; statusSel.dispatchEvent(new window.Event('change', { bubbles: true }));
+    assert(!panel.querySelector('.ex-triage-wave').hidden, 'wave picker shows when status = Assigned');
+    // Save with NO wave -> refuses (no overlay written)
+    panel.querySelector('.ex-triage-save').click();
+    await Promise.resolve();
+    assert(!(WP.fbTriage.load()['tri-1']), 'Assigned without a wave does not save');
+    // pick wave 3 + save
+    panel.querySelector('.ex-triage-wavesel').value = '3';
+    panel.querySelector('.ex-triage-save').click();
+    await settle();
+    goAll(elT);
+    await Promise.resolve(); await Promise.resolve();
+    assert(WP.fbTriage.load()['tri-1'] && WP.fbTriage.load()['tri-1'].wave === 3, 'decision persisted to the overlay (wave 3)');
+    assert(/WAVE 3/.test(elT.textContent), 'row now shows the WAVE 3 chip after assigning');
+    assert(elT.querySelector('.ex-tl-row--fb .ex-chip--amber'), 'assigned feedback now reads Working (amber)');
+
+    // Re-render fresh (simulate reload) - the decision must survive.
+    const elT2 = window.document.createElement('div');
+    WP.ui.exec.render(elT2);
+    await settle();
+    goAll(elT2);
+    await Promise.resolve(); await Promise.resolve();
+    assert(/WAVE 3/.test(elT2.textContent), 'triage decision survives a re-render (localStorage overlay)');
+    // Discard it -> dimmed/struck, wave cleared.
+    elT2.querySelector('.ex-tl-triage-btn').click();
+    const p2 = elT2.querySelector('.ex-triage');
+    p2.querySelector('.ex-triage-status').value = 'Discarded';
+    p2.querySelector('.ex-triage-status').dispatchEvent(new window.Event('change', { bubbles: true }));
+    assert(p2.querySelector('.ex-triage-wave').hidden, 'wave picker hides for Discarded');
+    p2.querySelector('.ex-triage-save').click();
+    await settle();
+    goAll(elT2);
+    await Promise.resolve(); await Promise.resolve();
+    assert(elT2.querySelector('.ex-tl-row--discarded'), 'discarded feedback renders dimmed/struck');
+    assert(WP.fbTriage.load()['tri-1'].wave === null, 'discarding clears the assigned wave');
+    try { window.localStorage.removeItem(WP.fbTriage._key); } catch (e) {}
+    nextFeedback = null;
+
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);
   }

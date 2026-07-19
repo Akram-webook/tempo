@@ -1858,6 +1858,23 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-row--discarded { opacity: .55; }
 .ex-tl-row--discarded .ex-tl-title { text-decoration: line-through; }
 
+/* Per-row feedback triage (director-only). A gear button reveals inline selects.
+ * Tokens only (token-purity gate). Keyboard + touch friendly hit targets. */
+.ex-tl-triage-btn { flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-muted); cursor: pointer; }
+.ex-tl-triage-btn:hover { background: var(--surface-2); color: var(--text); }
+.ex-tl-triage-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+.ex-triage { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
+  padding: 10px 12px; margin: 2px 0 8px 30px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface-2); }
+.ex-triage-f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.ex-triage-f select { min-height: 34px; padding: 4px 8px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; }
+.ex-triage-wave--need select { border-color: var(--exec-amber); box-shadow: 0 0 0 2px color-mix(in srgb, var(--exec-amber) 30%, transparent); }
+.ex-triage-save { min-height: 34px; }
+[dir="rtl"] .ex-triage { margin-left: 0; margin-right: 30px; }
+
 /* Cover rollup */
 .ex-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .ex-tile { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
@@ -4373,6 +4390,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execWave:       { en: 'WAVE', ar: 'موجة' },
     execOpen:       { en: 'open', ar: 'مفتوح' },
     execFbTag:      { en: 'Feedback', ar: 'ملاحظة' },
+    execTriageOpen:   { en: 'Triage this feedback', ar: 'فرز هذه الملاحظة' },
+    execTriageStatus: { en: 'Status', ar: 'الحالة' },
+    execTriageWave:   { en: 'Wave', ar: 'الموجة' },
+    execTriagePickWave: { en: 'Pick a wave…', ar: 'اختر موجة…' },
+    execTriageSave:   { en: 'Save', ar: 'حفظ' },
+    execTriage_New:      { en: 'New', ar: 'جديدة' },
+    execTriage_Testing:  { en: 'Testing', ar: 'قيد الاختبار' },
+    execTriage_Review:   { en: 'Under review', ar: 'قيد المراجعة' },
+    execTriage_Assigned: { en: 'Assigned', ar: 'مُسندة' },
+    execTriage_Discarded:{ en: 'Discarded', ar: 'مُستبعدة' },
     execBlockedOn:  { en: 'Blocked on', ar: 'بانتظار' },
     execYourRequests: { en: 'Your requests', ar: 'طلباتك' },
     execRaised:     { en: 'You raised {n} · {m} delivered · {k} in progress · {j} need your input', ar: 'طلبت {n} · {m} مُنجز · {k} قيد التنفيذ · {j} بحاجة إلى ردّك' },
@@ -11043,11 +11070,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       var showArea = Object.keys(areas).length > 1;
       data.items.forEach(function (it) {
         out.push({
+          id: it.id || null,
           title: (showArea && it.area ? it.area + ' — ' : '') + (it.title || '—'),
           status: it.status,
+          rawStatus: it.rawStatus || '',  // feedback lifecycle value (for triage controls)
           date: it.ts || it.date || null,
           type: it.type || '',
-          source: it.source || '',       // 'feedback' rows get the tag + lane treatment
+          source: it.source || '',        // 'feedback' rows get the tag + lane treatment
           lane: it.lane || '',
           wave: it.wave || null,
         });
@@ -11077,6 +11106,49 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   //   Discarded                -> 'Discarded' (grey bucket; shown dimmed)
   var FB_STATUS_TO_EXEC = { New: 'Planned', Testing: 'Testing', Review: 'Under review',
     Assigned: 'Working', Discarded: 'Discarded' };
+  // The raw triage lifecycle a director moves an item through, in order. Assigned
+  // requires a wave; the others don't. Kept here so the controls + store agree.
+  var TRIAGE_STATUSES = ['New', 'Testing', 'Review', 'Assigned', 'Discarded'];
+
+  // ---- Triage overlay store (director decisions, local-first) -----------------
+  // A director can advance an item's lifecycle / assign a wave / discard it right
+  // from the Project delivery page. Until a token-safe write proxy exists (the
+  // same blocker as the feedback Send transport), those decisions are saved to
+  // THIS browser (localStorage) and overlaid on the warehouse data at render time.
+  // Structured so flipping to a real warehouse write later is a one-function swap
+  // (replace load/save; the overlay-merge in feedbackAsItems stays the same).
+  var TRIAGE_KEY = 'tempo_fb_triage';
+  function triageLoad() {
+    try { return JSON.parse(localStorage.getItem(TRIAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function triageSave(map) {
+    // private-mode / quota: the decision just isn't persisted, never a crash.
+    try { localStorage.setItem(TRIAGE_KEY, JSON.stringify(map)); } catch (e) {}
+  }
+  // Merge a raw feedback item with any local override for it. Override wins.
+  function triageApply(rawItem) {
+    var over = triageLoad()[rawItem.id];
+    if (!over) return rawItem;
+    var merged = {};
+    for (var k in rawItem) merged[k] = rawItem[k];
+    if (over.status) merged.status = over.status;
+    if ('wave' in over) merged.wave = over.wave;
+    return merged;
+  }
+  // Record a director's decision for one item. status must be a TRIAGE_STATUS;
+  // wave is required for Assigned, cleared otherwise.
+  function triageSet(id, status, wave) {
+    if (!id || TRIAGE_STATUSES.indexOf(status) < 0) return;
+    var map = triageLoad();
+    var entry = { status: status };
+    if (status === 'Assigned') entry.wave = wave || null;
+    else entry.wave = null;               // any non-Assigned status clears the wave
+    map[id] = entry;
+    triageSave(map);
+  }
+  WP.fbTriage = { load: triageLoad, set: triageSet, apply: triageApply,
+    STATUSES: TRIAGE_STATUSES, _key: TRIAGE_KEY };
   // Its classified lane -> the Type the exec filter understands (bug/feature/improvement).
   function fbTypeFor(fb) {
     var k = String(fb.klass || fb.type || '').toLowerCase();
@@ -11087,7 +11159,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   }
   function feedbackAsItems(fb) {
     if (!fb || !Array.isArray(fb.items)) return [];
-    return fb.items.map(function (it) {
+    return fb.items.map(function (raw) {
+      // Overlay any local director decision on top of the warehouse record first.
+      var it = triageApply(raw);
       // Title: prefer the polished "[Area] Title" first line; else the raw note.
       var firstLine = String(it.note || '').split('\n')[0].trim();
       var lane = it.klass || '';
@@ -11096,7 +11170,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       var m = /^\[([^\]]+)\]\s*(.*)$/.exec(title);
       if (m) { lane = lane || m[1]; title = m[2] || m[1]; }
       return {
+        id: it.id || null,             // needed so the triage controls can target it
         title: title,
+        rawStatus: it.status || 'New', // the triage lifecycle value (for the controls)
         status: FB_STATUS_TO_EXEC[it.status] || 'Planned',
         date: it.submittedAt || null,
         type: fbTypeFor(it),
@@ -11107,7 +11183,36 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     });
   }
 
-  function tlRow(it) {
+  // Inline triage controls for ONE feedback row (director-only; the whole view is
+  // already gated to director/admin). A "Triage" toggle reveals a status <select>
+  // + a wave <select> (wave shown only when Assigned). Saving overlays the local
+  // decision and repaints. data-fb-id ties the controls back to the item.
+  function triageControlsHTML(it, waveCount) {
+    const t = WP.i18n.t;
+    if (!it.id) return '';   // can't target an item with no id
+    const cur = it.rawStatus || 'New';
+    const statusOpts = TRIAGE_STATUSES.map(function (s) {
+      return '<option value="' + s + '"' + (s === cur ? ' selected' : '') + '>' +
+        esc(t('execTriage_' + s)) + '</option>';
+    }).join('');
+    // Wave options 1..waveCount (fallback to at least 4 so it's usable before waves load).
+    var n = waveCount > 0 ? waveCount : 4;
+    var waveOpts = '<option value="">' + esc(t('execTriagePickWave')) + '</option>';
+    for (var i = 1; i <= n; i++) {
+      waveOpts += '<option value="' + i + '"' + (String(it.wave) === String(i) ? ' selected' : '') + '>' +
+        esc(t('execWave') + ' ' + i) + '</option>';
+    }
+    const showWave = cur === 'Assigned';
+    return '<div class="ex-triage" data-fb-id="' + esc(it.id) + '" hidden>' +
+      '<label class="ex-triage-f"><span>' + esc(t('execTriageStatus')) + '</span>' +
+        '<select class="ex-triage-status">' + statusOpts + '</select></label>' +
+      '<label class="ex-triage-f ex-triage-wave"' + (showWave ? '' : ' hidden') + '><span>' + esc(t('execTriageWave')) + '</span>' +
+        '<select class="ex-triage-wavesel">' + waveOpts + '</select></label>' +
+      '<button type="button" class="btn ex-triage-save">' + esc(t('execTriageSave')) + '</button>' +
+    '</div>';
+  }
+
+  function tlRow(it, waveCount) {
     const t = WP.i18n.t;
     const k = statusColorKey(it.status);
     const isFb = it.source === 'feedback';
@@ -11116,14 +11221,24 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // wave chip once it's been assigned - so the director sees, at a glance, what
     // it is and whether it's been placed in a wave. Discarded rows read dimmed.
     var tags = '';
+    var triageBtn = '';
     if (isFb) {
       tags += '<span class="ex-tl-tag ex-tl-tag--fb">' + esc(t('execFbTag')) + '</span>';
       if (it.lane) tags += '<span class="ex-tl-tag ex-tl-tag--lane">' + esc(it.lane) + '</span>';
       if (it.wave) tags += '<span class="ex-tl-tag ex-tl-tag--wave">' + esc(t('execWave') + ' ' + it.wave) + '</span>';
+      if (it.id) {
+        triageBtn = '<button type="button" class="ex-tl-triage-btn" aria-expanded="false" ' +
+          'aria-label="' + esc(t('execTriageOpen')) + '" title="' + esc(t('execTriageOpen')) + '">' +
+          ui.icon('settings', 15) + '</button>';
+      }
     }
-    return '<div class="ex-tl-row' + (isFb ? ' ex-tl-row--fb' : '') + (discarded ? ' ex-tl-row--discarded' : '') + '">' +
-      statusIcon(k) +
-      '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + tags + chip(it.status) + '</div>';
+    return '<div class="ex-tl-item">' +
+      '<div class="ex-tl-row' + (isFb ? ' ex-tl-row--fb' : '') + (discarded ? ' ex-tl-row--discarded' : '') + '">' +
+        statusIcon(k) +
+        '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + tags + chip(it.status) + triageBtn +
+      '</div>' +
+      (isFb ? triageControlsHTML(it, waveCount) : '') +
+    '</div>';
   }
 
   // Navigator control: [Week | All] granularity segment + (in Week mode) the
@@ -11162,6 +11277,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const staleNoSource = !!data && data.items === undefined &&
       !(data.requests && data.requests.length) && !(data.features && data.features.length);
     const items = timelineItems(data);
+    const waveCount = ((data && data.waves) || []).length;   // for the Assign-to-wave control
     const dated = items.map(function (it) { return { it: it, ms: it.date ? Date.parse(it.date) : NaN }; });
 
     let groups;
@@ -11195,7 +11311,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const body = groups.length
       ? groups.map(function (g) {
           return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
-            g.rows.map(function (x) { return tlRow(x.it); }).join('');
+            g.rows.map(function (x) { return tlRow(x.it, waveCount); }).join('');
         }).join('')
       : '<div class="ex-empty">' + emptyMsg + '</div>';
 
@@ -11268,7 +11384,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   let token = 0;         // guards against a stale JSONP resolving after a re-render
   let tlMode = 'week';   // 'week' (stepper) | 'all' (every week grouped) — view-local
   let refWeekOffset = 0; // current week = 0; ‹prev = -1, next› = +1 … (time-navigator reference)
-  let lastData = null;   // last payload (so a nav change repaints without refetch)
+  let lastData = null;   // last MERGED payload (base + folded feedback) for the timeline
+  let lastBaseData = null;   // base exec payload (before feedback fold)
+  let lastFeedbackRaw = null;   // raw feedback warehouse payload (re-folded each paint)
 
   // View-local filters applied across the whole Project-delivery view (waves +
   // timeline). Purely presentational; nothing touches WP.state. Default 'all' so
@@ -11377,7 +11495,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     '</div>';
   }
 
-  function paintBody(host, data) {
+  function paintBody(host, baseData) {
+    // Re-fold feedback from the RAW payload on every paint, so a just-saved triage
+    // decision (which changed the local overlay) is re-applied via feedbackAsItems.
+    lastBaseData = baseData;
+    var data = baseData;
+    var fbItems = feedbackAsItems(lastFeedbackRaw);   // [] when no feedback / failed
+    if (fbItems.length) {
+      var merged = (Array.isArray(baseData.items) ? baseData.items.slice() : []).concat(fbItems);
+      data = Object.assign({}, baseData, { items: merged });
+    }
     lastData = data;
     // 1) launcher (progress + trend), 2) WAVES (health/blocked-on), 3) needs-you,
     // 4) any dated timeline items (empty in the warehouse shape, renders nothing).
@@ -11433,9 +11560,51 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         const val = b.getAttribute('data-val');
         if (key === 'type') filterType = val;
         else if (key === 'status') filterStatus = val;
-        if (lastData) paintBody(host, lastData);
+        if (lastBaseData) paintBody(host, lastBaseData);
       };
     });
+    wireTriage(host);
+  }
+
+  // Wire the per-row feedback triage controls (director-only view). Toggle reveals
+  // the inline selects; changing status shows/hides the wave picker; Save records
+  // the decision to the local overlay + repaints so the row reflects it at once.
+  function wireTriage(host) {
+    host.querySelectorAll('.ex-tl-triage-btn').forEach(function (btn) {
+      btn.onclick = function () {
+        var item = btn.closest('.ex-tl-item');
+        var panel = item && item.querySelector('.ex-triage');
+        if (!panel) return;
+        var open = panel.hidden;
+        panel.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+    });
+    host.querySelectorAll('.ex-triage').forEach(function (panel) {
+      var statusSel = panel.querySelector('.ex-triage-status');
+      var waveWrap = panel.querySelector('.ex-triage-wave');
+      if (statusSel && waveWrap) {
+        statusSel.onchange = function () { waveWrap.hidden = statusSel.value !== 'Assigned'; };
+      }
+      var save = panel.querySelector('.ex-triage-save');
+      if (save) save.onclick = function () {
+        // defence in depth: the view is director-gated, re-check before writing.
+        if (WP.can && !WP.can('viewSettings')) return;
+        var id = panel.getAttribute('data-fb-id');
+        var status = statusSel ? statusSel.value : 'New';
+        var waveSel = panel.querySelector('.ex-triage-wavesel');
+        var wave = (status === 'Assigned' && waveSel) ? (parseInt(waveSel.value, 10) || null) : null;
+        if (status === 'Assigned' && !wave) { /* need a wave */ toastNeedWave(host); return; }
+        triageSet(id, status, wave);
+        if (lastBaseData) paintBody(host, lastBaseData);   // re-fold from warehouse + overlay
+      };
+    });
+  }
+  // Small inline nudge when Assigned is chosen without a wave (no global toast dep).
+  function toastNeedWave(host) {
+    var el = host.querySelector('.ex-triage:not([hidden]) .ex-triage-wave');
+    if (el) { el.hidden = false; el.classList.add('ex-triage-wave--need');
+      setTimeout(function () { el.classList.remove('ex-triage-wave--need'); }, 1500); }
   }
 
   function paintError(host) {
@@ -11473,13 +11642,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       // Also fold in triaged user feedback (data/feedback.json), so the SAME
       // timeline + filters show incoming ideas alongside shipped delivery. This
       // is best-effort: a missing/failed feedback file must never break the page.
-      loadFeedback().then(function (fbItems) {
+      loadFeedback().then(function (fbRaw) {
         if (my !== token) return;
-        if (fbItems && fbItems.length) {
-          var merged = (Array.isArray(data.items) ? data.items.slice() : []).concat(fbItems);
-          data = Object.assign({}, data, { items: merged });
-        }
-        paintBody(host, data);
+        lastFeedbackRaw = fbRaw;      // keep the RAW payload so paintBody can re-fold
+        paintBody(host, data);        // paintBody folds feedback (+ overlay) in itself
       });
     }).catch(function () {
       if (my !== token) return;
@@ -11487,14 +11653,14 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     });
   }
 
-  // Fetch + map the feedback warehouse. Resolves to [] on any problem (missing
-  // file, bad JSON, offline) - the Project delivery page stands on its own data.
+  // Fetch the feedback warehouse RAW (unmapped). Resolves to null on any problem
+  // (missing file, bad JSON, offline) - the Project delivery page stands on its own.
   function loadFeedback() {
     var url = (WP.config.feedbackData || 'data/feedback.json') + '?t=' + Date.now();
     return fetch(url, { cache: 'no-store' }).then(function (res) {
-      if (!res.ok) return [];
+      if (!res.ok) return null;
       return res.json();
-    }).then(function (fb) { return feedbackAsItems(fb); }).catch(function () { return []; });
+    }).catch(function () { return null; });
   }
 
   function render(root) {
