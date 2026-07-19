@@ -19,12 +19,13 @@
   // Cache of the last exec payload requests[] so opening the panel is instant
   // and a refresh re-fetches. Keyed nothing fancy — one viewer at a time.
   var execRequests = null;   // null = not loaded, [] = loaded-empty
+  var execWaves = null;      // waves[] from the warehouse (for wave-completion alerts)
   var loadState = 'idle';    // 'idle' | 'loading' | 'ok' | 'error'
 
   function enabled() { return !!(WP.config && WP.config.notificationsEnabled); }
 
   function items() {
-    return WP.notifications.buildItems(WP.viewer(), { execRequests: execRequests || [] });
+    return WP.notifications.buildItems(WP.viewer(), { execRequests: execRequests || [], execWaves: execWaves || [] });
   }
 
   // ---- badge -----------------------------------------------------------------
@@ -157,16 +158,19 @@
   // Fetch the Executive Status endpoint (same source as the exec view) to get
   // the Feedback requests[] for the "needs input" items. Reuses WP.ui.jsonp.
   function loadExec(force) {
-    var url = (WP.config.execStatusEndpoint || '').trim();
-    // No endpoint → nothing to fetch; resolve to empty immediately (checked
-    // BEFORE the in-flight guard so a stuck request can't block the empty case).
-    if (!url) { loadState = 'ok'; execRequests = []; if (isOpen()) paintPanel(); refreshBadge(); return; }
+    // GitHub-warehouse: fetch the SAME committed JSON the exec view reads
+    // (data/exec-status.json), NOT the old Google/JSONP endpoint. Gives us both
+    // requests[] (needs-input) and waves[] (wave-completion alerts).
+    var url = (WP.config.execStatusData || 'data/exec-status.json');
+    // No URL, or no fetch in this environment -> resolve to empty (never throw).
+    if (!url || typeof fetch !== 'function') { loadState = 'ok'; execRequests = execRequests || []; execWaves = execWaves || []; if (isOpen()) paintPanel(); refreshBadge(); return; }
     if (loadState === 'loading') return;
     if (execRequests !== null && !force) return;
     loadState = 'loading';
     if (isOpen()) paintPanel();
-    ui.jsonp(url).then(function (data) {
+    fetch(url + '?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (data) {
       execRequests = (data && data.requests) || [];
+      execWaves = (data && data.waves) || [];
       loadState = 'ok';
       if (isOpen()) paintPanel();
       refreshBadge();
