@@ -454,6 +454,31 @@
     const waveCount = ((data && data.waves) || []).length;   // for the Assign-to-wave control
     const dated = items.map(function (it) { return { it: it, ms: it.date ? Date.parse(it.date) : NaN }; });
 
+    // Order WITHIN a group so the list reads logically instead of by insertion.
+    // A director scans top-to-bottom, so: live/working work first, then what's
+    // still to decide, discarded last (it's dimmed anyway). Ties broken by wave
+    // (assigned items grouped, Wave 1 before Wave 2...), then newest first.
+    // rank: lower = higher up the list.
+    function statusRank(x) {
+      const k = statusColorKey(x.it.status);
+      // green (done/live) -> amber (working/next) -> violet (planned/review) ->
+      // red (needs you) sits with amber urgency -> grey (discarded) last.
+      return ({ green: 0, amber: 1, red: 1, violet: 2, grey: 4 })[k] != null
+        ? ({ green: 0, amber: 1, red: 1, violet: 2, grey: 4 })[k] : 3;
+    }
+    function sortRows(rows) {
+      return rows.slice().sort(function (a, b) {
+        const sr = statusRank(a) - statusRank(b);
+        if (sr) return sr;
+        // within the same status band, group by wave (assigned first, ascending)
+        const wa = a.it.wave || 99, wb = b.it.wave || 99;
+        if (wa !== wb) return wa - wb;
+        // then newest first (undated sinks to the bottom of its band)
+        const ma = isNaN(a.ms) ? -Infinity : a.ms, mb = isNaN(b.ms) ? -Infinity : b.ms;
+        return mb - ma;
+      });
+    }
+
     let groups;
     if (mode === 'all') {
       // group every dated item by week around the current week (±), plus undated.
@@ -467,12 +492,12 @@
       });
       const offs = Object.keys(buckets).filter(function (k) { return k !== '__undated'; })
         .map(Number).sort(function (a, b) { return b - a; });   // newest week first
-      groups = offs.map(function (o) { return { label: weekLabel(weekWindow(o)), rows: buckets[o] }; });
-      if (buckets.__undated) groups.push({ label: t('execUndated'), rows: buckets.__undated });
+      groups = offs.map(function (o) { return { label: weekLabel(weekWindow(o)), rows: sortRows(buckets[o]) }; });
+      if (buckets.__undated) groups.push({ label: t('execUndated'), rows: sortRows(buckets.__undated) });
     } else {
       const win = weekWindow(offset);
       const rows = dated.filter(function (x) { return !isNaN(x.ms) && inWindow(x.ms, win); });
-      groups = rows.length ? [{ label: null, rows: rows }] : [];
+      groups = rows.length ? [{ label: null, rows: sortRows(rows) }] : [];
     }
 
     // Three distinct empty reasons, so the message never misleads:
@@ -482,10 +507,33 @@
     //  - genuinely nothing in this week -> "Nothing in this range"
     const emptyMsg = staleNoSource ? t('execTlStale')
       : (anyFilterActive() ? t('execTlFiltered') : t('execTlEmpty'));
+    // Within a (time) group, split the already-sorted rows into status BANDS with a
+    // small header each - Delivered / In progress / To decide / Discarded - so the
+    // list reads as clear sections instead of a flat wall. A band renders only if
+    // it has rows, so a filtered view never shows an empty section.
+    function bandKey(x) {
+      const k = statusColorKey(x.it.status);
+      if (k === 'green') return 'done';
+      if (k === 'amber' || k === 'red') return 'working';
+      if (k === 'grey') return 'discarded';
+      return 'todecide';   // violet (planned / under review / new)
+    }
+    const BAND_ORDER = ['done', 'working', 'todecide', 'discarded'];
+    const BAND_LABEL = { done: 'execBandDone', working: 'execBandWorking',
+      todecide: 'execBandToDecide', discarded: 'execBandDiscarded' };
+    function bandsHTML(rows) {
+      const by = {};
+      rows.forEach(function (x) { (by[bandKey(x)] = by[bandKey(x)] || []).push(x); });
+      return BAND_ORDER.filter(function (b) { return by[b]; }).map(function (b) {
+        return '<div class="ex-tl-band">' + esc(t(BAND_LABEL[b])) +
+            ' <span class="ex-tl-band-n">' + by[b].length + '</span></div>' +
+          by[b].map(function (x) { return tlRow(x.it, waveCount); }).join('');
+      }).join('');
+    }
     const body = groups.length
       ? groups.map(function (g) {
           return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
-            g.rows.map(function (x) { return tlRow(x.it, waveCount); }).join('');
+            bandsHTML(g.rows);
         }).join('')
       : '<div class="ex-empty">' + emptyMsg + '</div>';
 

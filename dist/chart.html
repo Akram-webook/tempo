@@ -1839,6 +1839,15 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 [dir="rtl"] .ex-step-label { direction: ltr; }
 .ex-tl-group { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 14px 0 6px; }
 .ex-tl-group:first-child { margin-top: 0; }
+/* Status band header inside a time group: Delivered / In progress / To decide /
+ * Discarded. Lighter than a week header, with a count pill, so the list reads as
+ * clear sections. Tokens only (token-purity gate). */
+.ex-tl-band { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted);
+  margin: 16px 0 4px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+.ex-tl-band:first-child { margin-top: 4px; }
+.ex-tl-band-n { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-muted);
+  background: var(--surface-2); border-radius: 999px; padding: 1px 7px; }
 .ex-tl-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
 .ex-tl-row:last-child { border-bottom: 0; }
 .ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
@@ -4386,6 +4395,10 @@ const EMAIL_HASHES = {};
     execUpcoming:   { en: 'Upcoming', ar: 'القادم' },
     execAll:        { en: 'All', ar: 'الكل' },
     execUndated:    { en: 'No date yet', ar: 'بدون تاريخ' },
+    execBandDone:      { en: 'Delivered', ar: 'تم التسليم' },
+    execBandWorking:   { en: 'In progress', ar: 'قيد التنفيذ' },
+    execBandToDecide:  { en: 'To decide', ar: 'بانتظار القرار' },
+    execBandDiscarded: { en: 'Discarded', ar: 'مُستبعدة' },
     execTlEmpty:    { en: 'Nothing in this range.', ar: 'لا شيء في هذا النطاق.' },
     execTlFiltered: { en: 'No items match your filters.', ar: 'لا عناصر تطابق عوامل التصفية.' },
     execTlStale:    { en: 'Items will appear after the next status update.', ar: 'ستظهر العناصر بعد تحديث الحالة التالي.' },
