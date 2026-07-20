@@ -835,7 +835,8 @@
     var items = m.queue.slice();
     var pending = (m.composer.note || '').trim();
     if (pending) {
-      var it = { note: pending.slice(0, NOTE_MAX), type: m.composer.type };
+      var it = { note: pending.slice(0, NOTE_MAX), type: m.composer.type,
+        image: m.composer.image || null, imageName: m.composer.imageName || '' };
       if (canSetPriority()) it.priority = m.composer.priority;
       items.push(it);
     }
@@ -879,7 +880,16 @@
     var endpoint = cfg('feedbackEndpoint');
     var token = cfg('feedbackDispatchToken');
     if (!endpoint || !token) {
-      var ok = saveLocally(dispatches.map(function (d) { return d.inputs; }));
+      // Local save keeps the FULL record incl. the attached image (unlike the
+      // warehouse dispatch, whose small string inputs cannot carry a base64 image).
+      // Pair each dispatch's classified inputs with its comment's image so the
+      // just-saved item can show its screenshot on Project delivery.
+      var ok = saveLocally(dispatches.map(function (d, i) {
+        return Object.assign({}, d.inputs, {
+          image: items[i].image || null,
+          imageName: items[i].imageName || '',
+        });
+      }));
       setSubmitting(false);
       if (!ok) {
         // Write failed (e.g. localStorage quota). Do NOT clear the draft and do

@@ -300,6 +300,22 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(toastMsg && /saved|حُفظ/i.test(toastMsg), 'empty token -> "Saved on this device" confirmation');
     assert(fb._model().queue.length === 0 && !fb._model().composer.note, 'draft cleared after a local save (nothing lingers)');
 
+    // REGRESSION (image on Project delivery): an attached screenshot must be CARRIED
+    // into the local store so it can show on the delivery timeline. The warehouse
+    // dispatch drops images by design; the local save must NOT. The original gap
+    // reused the dispatch inputs (no image) for the local record, so images vanished.
+    try { window.localStorage.removeItem('tempo_feedback_saved'); } catch (e) {}
+    fb._close(); await tick(); fb.open(); await tick();
+    const shotUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    fireInput($('#fb-note'), 'a note with a screenshot');
+    fb._model().composer.image = shotUrl;
+    fb._model().composer.imageName = 'shot.png';
+    $('#fb-submit').click();
+    await tick();
+    let imgStore = [];
+    try { imgStore = JSON.parse(window.localStorage.getItem('tempo_feedback_saved') || '[]'); } catch (e) {}
+    assert(imgStore.some((r) => r.image === shotUrl), 'a saved screenshot is CARRIED into the local store (shows on Project delivery)');
+
     // REGRESSION (adversarial review): if the local write FAILS (e.g. quota), the
     // app must NOT clear the draft and must NOT claim success - never lose work.
     // Simulate a failing localStorage.setItem and assert the draft survives + an
