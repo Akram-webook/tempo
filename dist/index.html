@@ -12104,7 +12104,28 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return fetch(url, { cache: 'no-store' }).then(function (res) {
       if (!res.ok) return null;
       return res.json();
-    }).catch(function () { return null; });
+    }).catch(function () { return null; }).then(function (fbRaw) {
+      // Fold in feedback the user SAVED locally (when the send transport is not
+      // wired). Without this the saved item is written to a store the page never
+      // reads, so it appears nowhere - the bug this fixes. Local records sit at
+      // the top (most recent first) and are de-duped against the warehouse by id.
+      return mergeLocalSaved(fbRaw);
+    });
+  }
+
+  // Merge locally-saved feedback into the warehouse payload. Best-effort and
+  // fail-safe: any error just returns the warehouse data unchanged.
+  function mergeLocalSaved(fbRaw) {
+    try {
+      var local = (WP.ui.feedback && WP.ui.feedback.savedItems) ? WP.ui.feedback.savedItems() : [];
+      if (!local || !local.length) return fbRaw;
+      var base = (fbRaw && Array.isArray(fbRaw.items)) ? fbRaw.items : [];
+      var seen = {};
+      base.forEach(function (it) { if (it && it.id) seen[it.id] = true; });
+      var extra = local.filter(function (it) { return it && it.id && !seen[it.id]; });
+      // newest local first, then the warehouse items
+      return Object.assign({}, fbRaw || {}, { items: extra.reverse().concat(base) });
+    } catch (e) { return fbRaw; }
   }
 
   function render(root) {
@@ -14971,8 +14992,21 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   function loadSaved() {
     try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]') || []; } catch (e) { return []; }
   }
+  // A saved record must be a valid data/feedback.json-shaped item so the Project
+  // delivery page (feedbackAsItems) can render it: it needs a stable id and a
+  // lifecycle status. Without these the item is invisible - the exact bug this
+  // fixes (write went to a store nothing read).
+  var savedSeq = 0;
   function saveLocally(records) {
-    var all = loadSaved().concat(records);
+    var existing = loadSaved();
+    var stamped = records.map(function (r) {
+      return Object.assign({
+        id: 'local-' + (existing.length + (++savedSeq)) + '-' + String(r.submittedAt || '').replace(/[^0-9]/g, '').slice(-8),
+        status: 'New',        // enters the triage lifecycle -> shows as "To decide" on delivery
+        savedLocal: true,     // provenance: captured on this device, not the shared warehouse
+      }, r);
+    });
+    var all = existing.concat(stamped);
     try { localStorage.setItem(SAVED_KEY, JSON.stringify(all)); } catch (e) {}
     return all.length;
   }
@@ -15619,6 +15653,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
       live(WP.i18n.plural('fbSavedLocalN', items.length));
       closePanel();
+      // If the user is on Project delivery, re-render so the just-saved item
+      // appears immediately (it is folded into the feedback list at load time).
+      if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
       return;
     }
 
@@ -15697,6 +15734,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   WP.ui.feedback = {
     mount: mount,
     open: open,
+    // Public: locally-saved feedback (captured when the send transport is not
+    // wired). The Project delivery page folds these into the warehouse list so a
+    // saved item is actually VISIBLE - one source of truth for read + write.
+    savedItems: loadSaved,
     _close: closePanel,
     _reset: function () { model = null; try { sessionStorage.clear(); } catch (e) {} },
     _model: function () { return loadModel(); },

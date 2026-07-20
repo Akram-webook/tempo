@@ -217,8 +217,21 @@
   function loadSaved() {
     try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]') || []; } catch (e) { return []; }
   }
+  // A saved record must be a valid data/feedback.json-shaped item so the Project
+  // delivery page (feedbackAsItems) can render it: it needs a stable id and a
+  // lifecycle status. Without these the item is invisible - the exact bug this
+  // fixes (write went to a store nothing read).
+  var savedSeq = 0;
   function saveLocally(records) {
-    var all = loadSaved().concat(records);
+    var existing = loadSaved();
+    var stamped = records.map(function (r) {
+      return Object.assign({
+        id: 'local-' + (existing.length + (++savedSeq)) + '-' + String(r.submittedAt || '').replace(/[^0-9]/g, '').slice(-8),
+        status: 'New',        // enters the triage lifecycle -> shows as "To decide" on delivery
+        savedLocal: true,     // provenance: captured on this device, not the shared warehouse
+      }, r);
+    });
+    var all = existing.concat(stamped);
     try { localStorage.setItem(SAVED_KEY, JSON.stringify(all)); } catch (e) {}
     return all.length;
   }
@@ -865,6 +878,9 @@
       toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
       live(WP.i18n.plural('fbSavedLocalN', items.length));
       closePanel();
+      // If the user is on Project delivery, re-render so the just-saved item
+      // appears immediately (it is folded into the feedback list at load time).
+      if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
       return;
     }
 
@@ -943,6 +959,10 @@
   WP.ui.feedback = {
     mount: mount,
     open: open,
+    // Public: locally-saved feedback (captured when the send transport is not
+    // wired). The Project delivery page folds these into the warehouse list so a
+    // saved item is actually VISIBLE - one source of truth for read + write.
+    savedItems: loadSaved,
     _close: closePanel,
     _reset: function () { model = null; try { sessionStorage.clear(); } catch (e) {} },
     _model: function () { return loadModel(); },
