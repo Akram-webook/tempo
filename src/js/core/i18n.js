@@ -481,6 +481,14 @@
     fbSentNFew:     { en: 'Sent {n} comments. Thank you.', ar: 'أُرسل {n} تعليقات. شكراً لك.' },
     fbSentNMany:    { en: 'Sent {n} comments. Thank you.', ar: 'أُرسل {n} تعليقاً. شكراً لك.' },
     fbSentNOther:   { en: 'Sent {n} comments. Thank you.', ar: 'أُرسل {n} تعليق. شكراً لك.' },
+    // — Save-locally (transport not configured): capture, never dead-end —
+    fbSaveLocal:    { en: 'Save feedback',            ar: 'حفظ الملاحظة' },
+    fbSaveLocalTip: { en: 'Live sending is not wired yet, so this is saved on this device and can be sent later. Nothing is lost.', ar: 'الإرسال المباشر غير مُفعّل بعد، لذا تُحفظ هذه الملاحظة على هذا الجهاز ويمكن إرسالها لاحقاً. لا شيء يُفقد.' },
+    fbSavedLocalNOne:   { en: 'Saved 1 comment on this device.', ar: 'حُفظ تعليق واحد على هذا الجهاز.' },
+    fbSavedLocalNTwo:   { en: 'Saved {n} comments on this device.', ar: 'حُفظ تعليقان على هذا الجهاز.' },
+    fbSavedLocalNFew:   { en: 'Saved {n} comments on this device.', ar: 'حُفظت {n} تعليقات على هذا الجهاز.' },
+    fbSavedLocalNMany:  { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليقاً على هذا الجهاز.' },
+    fbSavedLocalNOther: { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليق على هذا الجهاز.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },

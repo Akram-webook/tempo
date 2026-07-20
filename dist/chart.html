@@ -1348,7 +1348,10 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 .row .pct { width: 46px; text-align: end; font-variant-numeric: tabular-nums; font-weight: 600; }
 
 /* ---- popover / drawer ---- */
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 40; display: grid; place-items: center; }
+/* z-index 1100: a confirm/prompt dialog must sit ABOVE the feedback panel
+   (.fb-overlay 1000 / .fb-panel 1001) so its buttons are clickable when the
+   "Keep your feedback?" dialog opens over the panel; stays below toasts (1200). */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1100; display: grid; place-items: center; }
 .popover { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; width: min(340px, 92vw); box-shadow: var(--shadow); position: relative; }
 .popover-close { position: absolute; top: 10px; inset-inline-end: 10px; border: 0; background: var(--surface-2); color: var(--text-muted); width: 26px; height: 26px; border-radius: 50%; font-size: 13px; }
 .popover-close:hover { color: var(--text); }
@@ -1897,6 +1900,12 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-band:first-child { margin-top: 4px; }
 .ex-tl-band-n { font-size: 10.5px; font-weight: 600; letter-spacing: 0; color: var(--text-muted);
   background: var(--surface-2); border-radius: 999px; padding: 1px 7px; }
+.ex-tl-band--toggle { width: 100%; background: none; cursor: pointer; text-align: start;
+  font-family: inherit; }
+.ex-tl-band--toggle:hover { color: var(--text); }
+.ex-tl-band--toggle:hover .ex-tl-band-n { color: var(--text); }
+.ex-tl-band--toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.ex-tl-band-caret { display: inline-flex; color: var(--text-muted); }
 .ex-tl-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
 .ex-tl-row:last-child { border-bottom: 0; }
 .ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
@@ -4309,6 +4318,14 @@ const EMAIL_HASHES = {};
     fbSentNFew:     { en: 'Sent {n} comments. Thank you.', ar: 'أُرسل {n} تعليقات. شكراً لك.' },
     fbSentNMany:    { en: 'Sent {n} comments. Thank you.', ar: 'أُرسل {n} تعليقاً. شكراً لك.' },
     fbSentNOther:   { en: 'Sent {n} comments. Thank you.', ar: 'أُرسل {n} تعليق. شكراً لك.' },
+    // — Save-locally (transport not configured): capture, never dead-end —
+    fbSaveLocal:    { en: 'Save feedback',            ar: 'حفظ الملاحظة' },
+    fbSaveLocalTip: { en: 'Live sending is not wired yet, so this is saved on this device and can be sent later. Nothing is lost.', ar: 'الإرسال المباشر غير مُفعّل بعد، لذا تُحفظ هذه الملاحظة على هذا الجهاز ويمكن إرسالها لاحقاً. لا شيء يُفقد.' },
+    fbSavedLocalNOne:   { en: 'Saved 1 comment on this device.', ar: 'حُفظ تعليق واحد على هذا الجهاز.' },
+    fbSavedLocalNTwo:   { en: 'Saved {n} comments on this device.', ar: 'حُفظ تعليقان على هذا الجهاز.' },
+    fbSavedLocalNFew:   { en: 'Saved {n} comments on this device.', ar: 'حُفظت {n} تعليقات على هذا الجهاز.' },
+    fbSavedLocalNMany:  { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليقاً على هذا الجهاز.' },
+    fbSavedLocalNOther: { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليق على هذا الجهاز.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },
