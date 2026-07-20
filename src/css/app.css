@@ -1684,6 +1684,31 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-row--discarded { opacity: .55; }
 .ex-tl-row--discarded .ex-tl-title { text-decoration: line-through; }
 
+/* Feedback screenshot thumbnail on a timeline row -> opens the lightbox.
+ * Sits under the row, indented to line up past the status icon. */
+.ex-tl-thumb { display: inline-block; margin: 2px 0 8px 34px; padding: 0; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2);
+  overflow: hidden; line-height: 0; }
+[dir="rtl"] .ex-tl-thumb { margin-inline: 34px 0; }
+.ex-tl-thumb img { display: block; max-width: 160px; max-height: 96px; width: auto; height: auto; object-fit: cover; }
+.ex-tl-thumb:hover { border-color: var(--brand); }
+.ex-tl-thumb:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+
+/* Full-size screenshot lightbox. Sits above everything (feedback panel z-1000,
+ * dialogs z-1100, toasts z-1200) at z-1150 so it covers the page while a toast
+ * could still surface over it if needed. */
+.ex-img-ov { position: fixed; inset: 0; z-index: 1150; background: rgba(0,0,0,.72);
+  display: grid; place-items: center; padding: 24px; }
+.ex-img-box { position: relative; max-width: min(92vw, 1100px); max-height: 88vh; }
+.ex-img-full { display: block; max-width: 100%; max-height: 88vh; width: auto; height: auto;
+  border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.ex-img-close { position: absolute; top: -14px; inset-inline-end: -14px; width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+.ex-img-close:hover { background: var(--surface-2); }
+.ex-img-close:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 45%, transparent); }
+
 /* Per-row feedback triage (director-only). A gear button reveals inline selects.
  * Tokens only (token-purity gate). Keyboard + touch friendly hit targets. */
 .ex-tl-triage-btn { flex: none; display: inline-flex; align-items: center; justify-content: center;

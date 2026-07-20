@@ -330,14 +330,30 @@ const PAYLOAD = {
     // nowhere. This proves the write store and the read path share one source.
     if (WP.ui.feedback && typeof WP.ui.feedback.savedItems === 'function') {
       const savedBackup = WP.ui.feedback.savedItems();
+      const proofImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
       try { window.localStorage.setItem('tempo_feedback_saved', JSON.stringify([
-        { id: 'local-proof-1', status: 'New', savedLocal: true, note: '[Dashboard] LOCAL-SAVE-PROOF item', klass: 'Bug', type: 'Bug', submittedAt: new Date().toISOString() },
+        { id: 'local-proof-1', status: 'New', savedLocal: true, note: '[Dashboard] LOCAL-SAVE-PROOF item', klass: 'Bug', type: 'Bug', submittedAt: new Date().toISOString(), image: proofImg, imageName: 'shot.png' },
       ])); } catch (e) {}
       const elLocal = window.document.createElement('div');
       WP.ui.exec.render(elLocal);
       await settle();
       assert(/LOCAL-SAVE-PROOF/.test(elLocal.textContent), 'locally-saved feedback SURFACES on the delivery timeline (not a dead write)');
       assert(elLocal.querySelector('.ex-tl-row--fb'), 'the locally-saved item renders as a feedback row');
+      // Image regression: a screenshot attached to the saved feedback must render
+      // as a clickable thumbnail on the delivery timeline (the whole point of "I
+      // need to see the images"). The thumb carries the image in data-ex-img.
+      const thumb = elLocal.querySelector('.ex-tl-thumb[data-ex-img]');
+      assert(thumb, 'attached screenshot renders as a thumbnail on the delivery timeline');
+      assert(thumb && thumb.getAttribute('data-ex-img') === proofImg, 'the thumbnail carries the full image (opens in the lightbox)');
+      assert(thumb && thumb.querySelector('img'), 'the thumbnail shows an <img> preview');
+      // Clicking the thumb opens the full-size lightbox overlay.
+      thumb.click();
+      const ov = window.document.querySelector('.ex-img-ov');
+      assert(ov, 'clicking the thumbnail opens the screenshot lightbox');
+      assert(ov && ov.querySelector('.ex-img-full') && ov.querySelector('.ex-img-full').getAttribute('src') === proofImg, 'the lightbox shows the full image');
+      // Escape closes it and cleans up.
+      window.document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' }));
+      assert(!window.document.querySelector('.ex-img-ov'), 'Escape closes the lightbox');
       // restore the store so no later test is polluted
       try { window.localStorage.setItem('tempo_feedback_saved', JSON.stringify(savedBackup || [])); } catch (e) {}
     }

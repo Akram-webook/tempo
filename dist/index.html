@@ -1928,6 +1928,31 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-row--discarded { opacity: .55; }
 .ex-tl-row--discarded .ex-tl-title { text-decoration: line-through; }
 
+/* Feedback screenshot thumbnail on a timeline row -> opens the lightbox.
+ * Sits under the row, indented to line up past the status icon. */
+.ex-tl-thumb { display: inline-block; margin: 2px 0 8px 34px; padding: 0; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2);
+  overflow: hidden; line-height: 0; }
+[dir="rtl"] .ex-tl-thumb { margin-inline: 34px 0; }
+.ex-tl-thumb img { display: block; max-width: 160px; max-height: 96px; width: auto; height: auto; object-fit: cover; }
+.ex-tl-thumb:hover { border-color: var(--brand); }
+.ex-tl-thumb:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
+
+/* Full-size screenshot lightbox. Sits above everything (feedback panel z-1000,
+ * dialogs z-1100, toasts z-1200) at z-1150 so it covers the page while a toast
+ * could still surface over it if needed. */
+.ex-img-ov { position: fixed; inset: 0; z-index: 1150; background: rgba(0,0,0,.72);
+  display: grid; place-items: center; padding: 24px; }
+.ex-img-box { position: relative; max-width: min(92vw, 1100px); max-height: 88vh; }
+.ex-img-full { display: block; max-width: 100%; max-height: 88vh; width: auto; height: auto;
+  border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.ex-img-close { position: absolute; top: -14px; inset-inline-end: -14px; width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+.ex-img-close:hover { background: var(--surface-2); }
+.ex-img-close:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 45%, transparent); }
+
 /* Per-row feedback triage (director-only). A gear button reveals inline selects.
  * Tokens only (token-purity gate). Keyboard + touch friendly hit targets. */
 .ex-tl-triage-btn { flex: none; display: inline-flex; align-items: center; justify-content: center;
@@ -4515,6 +4540,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execChip_later:   { en: 'Later', ar: 'لاحقاً' },
     execChip_next:    { en: 'Next', ar: 'التالي' },
     execFbTag:      { en: 'Feedback', ar: 'ملاحظة' },
+    execImgOpen:    { en: 'View screenshot', ar: 'عرض لقطة الشاشة' },
+    execImgAlt:     { en: 'Attached screenshot', ar: 'لقطة شاشة مرفقة' },
+    execImgTitle:   { en: 'Screenshot', ar: 'لقطة الشاشة' },
     execTriageOpen:   { en: 'Triage this feedback', ar: 'فرز هذه الملاحظة' },
     execTriageStatus: { en: 'Status', ar: 'الحالة' },
     execTriageWave:   { en: 'Wave', ar: 'الموجة' },
@@ -11266,6 +11294,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
           klass: it.klass || '',          // carried through for the triage suggestion engine
           area: it.area || '',
           priority: it.priority || '',
+          image: it.image || null,        // attached screenshot (locally-saved feedback) -> thumbnail
+          imageName: it.imageName || '',
         });
       });
     } else {
@@ -11441,6 +11471,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         klass: it.klass || '',         // raw classification (drives the suggestion)
         area: it.area || '',           // the surface it's about (e.g. "Weekly Report")
         priority: it.priority || '',   // Low | Medium | High | Critical
+        image: it.image || null,       // attached screenshot (locally-saved feedback only)
+        imageName: it.imageName || '',
       };
     });
   }
@@ -11519,11 +11551,22 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
           ui.icon('settings', 15) + '</button>';
       }
     }
+    // A screenshot attached to (locally-saved) feedback: show a small thumbnail the
+    // director can click to view full size. Only present on local feedback - the
+    // shared warehouse never carries images.
+    var thumb = '';
+    if (isFb && it.image) {
+      thumb = '<button type="button" class="ex-tl-thumb" data-ex-img="' + esc(it.image) + '"' +
+        ' aria-label="' + esc(t('execImgOpen')) + '" title="' + esc(t('execImgOpen')) + '">' +
+        '<img src="' + esc(it.image) + '" alt="' + esc(it.imageName || t('execImgAlt')) + '" loading="lazy" />' +
+      '</button>';
+    }
     return '<div class="ex-tl-item">' +
       '<div class="ex-tl-row' + (isFb ? ' ex-tl-row--fb' : '') + (discarded ? ' ex-tl-row--discarded' : '') + '">' +
         statusIcon(k) +
         '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + tags + chip(it.status) + triageBtn +
       '</div>' +
+      thumb +
       (isFb ? triageControlsHTML(it, waveCount) : '') +
     '</div>';
   }
@@ -11926,6 +11969,37 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     }
   }
 
+  // Full-size screenshot lightbox. A dark overlay with the image centred; closes
+  // on backdrop click, the X button, or Escape; restores focus to the thumbnail.
+  function openImgLightbox(src, returnTo) {
+    if (!src) return;
+    const t = WP.i18n.t;
+    var ov = document.createElement('div');
+    ov.className = 'ex-img-ov';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', t('execImgTitle'));
+    ov.innerHTML =
+      '<div class="ex-img-box">' +
+        '<button type="button" class="ex-img-close" aria-label="' + esc(t('close')) + '" title="' + esc(t('close')) + '">' +
+          ui.icon('x', 18) + '</button>' +
+        '<img class="ex-img-full" src="' + esc(src) + '" alt="' + esc(t('execImgAlt')) + '" />' +
+      '</div>';
+    function close() {
+      document.removeEventListener('keydown', onKey);
+      if (ov.parentNode) ov.parentNode.removeChild(ov);
+      if (returnTo) { try { returnTo.focus(); } catch (e) {} }
+    }
+    function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
+    ov.addEventListener('click', function (e) {
+      if (e.target === ov || (e.target.closest && e.target.closest('.ex-img-close'))) close();
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+    var btn = ov.querySelector('.ex-img-close');
+    if (btn) { try { btn.focus(); } catch (e) {} }
+  }
+
   // Repaint ONLY the timeline section in place from lastData (no refetch), then
   // re-wire. Keeps focus off WP.state — this is view-local navigation.
   function repaintTimeline(host) {
@@ -11995,6 +12069,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         var again = host.querySelector('[data-band-toggle="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
         if (again) { try { again.focus(); } catch (e) {} }
       };
+    });
+    // Screenshot thumbnails -> open the full image in a lightbox overlay.
+    host.querySelectorAll('.ex-tl-thumb[data-ex-img]').forEach(function (b) {
+      b.onclick = function () { openImgLightbox(b.getAttribute('data-ex-img'), b); };
     });
     wireTriage(host);
   }
@@ -15639,7 +15717,8 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     var items = m.queue.slice();
     var pending = (m.composer.note || '').trim();
     if (pending) {
-      var it = { note: pending.slice(0, NOTE_MAX), type: m.composer.type };
+      var it = { note: pending.slice(0, NOTE_MAX), type: m.composer.type,
+        image: m.composer.image || null, imageName: m.composer.imageName || '' };
       if (canSetPriority()) it.priority = m.composer.priority;
       items.push(it);
     }
@@ -15683,7 +15762,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     var endpoint = cfg('feedbackEndpoint');
     var token = cfg('feedbackDispatchToken');
     if (!endpoint || !token) {
-      var ok = saveLocally(dispatches.map(function (d) { return d.inputs; }));
+      // Local save keeps the FULL record incl. the attached image (unlike the
+      // warehouse dispatch, whose small string inputs cannot carry a base64 image).
+      // Pair each dispatch's classified inputs with its comment's image so the
+      // just-saved item can show its screenshot on Project delivery.
+      var ok = saveLocally(dispatches.map(function (d, i) {
+        return Object.assign({}, d.inputs, {
+          image: items[i].image || null,
+          imageName: items[i].imageName || '',
+        });
+      }));
       setSubmitting(false);
       if (!ok) {
         // Write failed (e.g. localStorage quota). Do NOT clear the draft and do

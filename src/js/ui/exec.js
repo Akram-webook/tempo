@@ -193,6 +193,8 @@
           klass: it.klass || '',          // carried through for the triage suggestion engine
           area: it.area || '',
           priority: it.priority || '',
+          image: it.image || null,        // attached screenshot (locally-saved feedback) -> thumbnail
+          imageName: it.imageName || '',
         });
       });
     } else {
@@ -368,6 +370,8 @@
         klass: it.klass || '',         // raw classification (drives the suggestion)
         area: it.area || '',           // the surface it's about (e.g. "Weekly Report")
         priority: it.priority || '',   // Low | Medium | High | Critical
+        image: it.image || null,       // attached screenshot (locally-saved feedback only)
+        imageName: it.imageName || '',
       };
     });
   }
@@ -446,11 +450,22 @@
           ui.icon('settings', 15) + '</button>';
       }
     }
+    // A screenshot attached to (locally-saved) feedback: show a small thumbnail the
+    // director can click to view full size. Only present on local feedback - the
+    // shared warehouse never carries images.
+    var thumb = '';
+    if (isFb && it.image) {
+      thumb = '<button type="button" class="ex-tl-thumb" data-ex-img="' + esc(it.image) + '"' +
+        ' aria-label="' + esc(t('execImgOpen')) + '" title="' + esc(t('execImgOpen')) + '">' +
+        '<img src="' + esc(it.image) + '" alt="' + esc(it.imageName || t('execImgAlt')) + '" loading="lazy" />' +
+      '</button>';
+    }
     return '<div class="ex-tl-item">' +
       '<div class="ex-tl-row' + (isFb ? ' ex-tl-row--fb' : '') + (discarded ? ' ex-tl-row--discarded' : '') + '">' +
         statusIcon(k) +
         '<span class="ex-tl-title">' + ui.esc(it.title) + '</span>' + tags + chip(it.status) + triageBtn +
       '</div>' +
+      thumb +
       (isFb ? triageControlsHTML(it, waveCount) : '') +
     '</div>';
   }
@@ -853,6 +868,37 @@
     }
   }
 
+  // Full-size screenshot lightbox. A dark overlay with the image centred; closes
+  // on backdrop click, the X button, or Escape; restores focus to the thumbnail.
+  function openImgLightbox(src, returnTo) {
+    if (!src) return;
+    const t = WP.i18n.t;
+    var ov = document.createElement('div');
+    ov.className = 'ex-img-ov';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', t('execImgTitle'));
+    ov.innerHTML =
+      '<div class="ex-img-box">' +
+        '<button type="button" class="ex-img-close" aria-label="' + esc(t('close')) + '" title="' + esc(t('close')) + '">' +
+          ui.icon('x', 18) + '</button>' +
+        '<img class="ex-img-full" src="' + esc(src) + '" alt="' + esc(t('execImgAlt')) + '" />' +
+      '</div>';
+    function close() {
+      document.removeEventListener('keydown', onKey);
+      if (ov.parentNode) ov.parentNode.removeChild(ov);
+      if (returnTo) { try { returnTo.focus(); } catch (e) {} }
+    }
+    function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
+    ov.addEventListener('click', function (e) {
+      if (e.target === ov || (e.target.closest && e.target.closest('.ex-img-close'))) close();
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+    var btn = ov.querySelector('.ex-img-close');
+    if (btn) { try { btn.focus(); } catch (e) {} }
+  }
+
   // Repaint ONLY the timeline section in place from lastData (no refetch), then
   // re-wire. Keeps focus off WP.state — this is view-local navigation.
   function repaintTimeline(host) {
@@ -922,6 +968,10 @@
         var again = host.querySelector('[data-band-toggle="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
         if (again) { try { again.focus(); } catch (e) {} }
       };
+    });
+    // Screenshot thumbnails -> open the full image in a lightbox overlay.
+    host.querySelectorAll('.ex-tl-thumb[data-ex-img]').forEach(function (b) {
+      b.onclick = function () { openImgLightbox(b.getAttribute('data-ex-img'), b); };
     });
     wireTriage(host);
   }
