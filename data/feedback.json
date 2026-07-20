@@ -47,10 +47,10 @@
       "context": "Firefox / Windows",
       "url": "",
       "status": "Review",
-      "wave": null,
-      "triagedAt": "2026-07-19T16:15:00.000Z",
+      "wave": 1,
+      "triagedAt": "2026-07-20T09:00:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Valid but low-value and cosmetic, with no wave it clearly serves. Parked under Review - acknowledged, not inflated into a wave and not discarded. Revisit if it recurs or a print-polish wave opens."
+      "triageNote": "Cosmetic and low-value, kept at Review (not yet started). Assigned to Wave 1 (Executive Status Deck) because the printed report is a delivery-deck surface - that is the wave that would own it when a print-polish pass opens."
     },
     {
       "id": "idea-1",
@@ -149,10 +149,10 @@
       "context": "Product suggestion",
       "url": "",
       "status": "Review",
-      "wave": null,
-      "triagedAt": "2026-07-19T18:00:00.000Z",
+      "wave": 2,
+      "triagedAt": "2026-07-20T09:00:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Valid polish but no wave clearly owns it yet and it is Low priority. Parked at Review, revisit under a perf pass."
+      "triageNote": "Valid polish, still at Review (not started). Assigned to Wave 2 (Capacity Engine) - the Workload map is the Capacity surface, so this perf work belongs to that wave."
     },
     {
       "id": "idea-7",
@@ -166,10 +166,10 @@
       "context": "Product suggestion",
       "url": "",
       "status": "Review",
-      "wave": null,
-      "triagedAt": "2026-07-19T18:00:00.000Z",
+      "wave": 1,
+      "triagedAt": "2026-07-20T09:00:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Forward-looking and depends on the still-open write-proxy blocker. Parked at Review until that lands."
+      "triageNote": "Depends on the still-open write-proxy blocker, so kept at Review. Assigned to Wave 1 (Executive Status Deck) - it closes the delivery loop (idea to shipped work) which is Wave 1's remit."
     },
     {
       "id": "idea-8",
@@ -183,10 +183,10 @@
       "context": "Product suggestion",
       "url": "",
       "status": "Review",
-      "wave": null,
-      "triagedAt": "2026-07-19T18:00:00.000Z",
+      "wave": 1,
+      "triagedAt": "2026-07-20T09:00:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Depends on idea-1 and an email transport we do not have yet. Parked at Review, revisit after idea-1 ships."
+      "triageNote": "Depends on idea-1 and an email transport we do not have yet, so kept at Review. Assigned to Wave 1 (Executive Status Deck) - same delivery-broadcast family as idea-1, which owns it."
     },
     {
       "id": "idea-9",
@@ -200,10 +200,10 @@
       "context": "Product suggestion",
       "url": "",
       "status": "Review",
-      "wave": null,
-      "triagedAt": "2026-07-19T18:00:00.000Z",
+      "wave": 3,
+      "triagedAt": "2026-07-20T09:00:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Strong trust alignment but a cross-cutting design task; no single wave owns it. Parked at Review for a design pass."
+      "triageNote": "Cross-cutting design task, kept at Review for a design pass. Assigned to Wave 3 (Real Data Go-live) - freshness/confidence on derived numbers is exactly the trust layer that go-live needs, so that wave owns it."
     },
     {
       "id": "bcg-1",
@@ -285,10 +285,10 @@
       "context": "BCG/PM strategic proposal",
       "url": "",
       "status": "Review",
-      "wave": null,
-      "triagedAt": "2026-07-19T20:30:00.000Z",
+      "wave": 4,
+      "triagedAt": "2026-07-20T09:00:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Strong Wave-4 idea but depends on the token-safe write proxy (same blocker as feedback Send). Parked at Review until that lands - honest, not inflated."
+      "triageNote": "Depends on the token-safe write proxy (same blocker as feedback Send), so kept at Review - honest, not inflated. Assigned to Wave 4 (Slack Integration), which clearly owns it once the blocker lands."
     },
     {
       "id": "bcg-6",
@@ -319,10 +319,10 @@
       "context": "BCG/PM strategic proposal",
       "url": "",
       "status": "Review",
-      "wave": null,
-      "triagedAt": "2026-07-19T20:30:00.000Z",
+      "wave": 1,
+      "triagedAt": "2026-07-20T09:00:00.000Z",
       "triagedBy": "akram@webook.com",
-      "triageNote": "Good UX leverage but not urgent and no single wave owns it. Parked at Review - a fast win to promote when a polish wave opens."
+      "triageNote": "Good UX leverage but not urgent, so kept at Review. Assigned to Wave 1 (Executive Status Deck) - role-based landing is an executive-visibility improvement, so that wave owns it."
     }
   ]
 }

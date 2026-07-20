@@ -274,23 +274,31 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     WP.ui.toast = realToast;
 
     // ========================================================================
-    // Submit: graceful when endpoint empty — button reads "Not configured yet"
-    // with an explainer tip; clicking still surfaces the message and clears nothing.
+    // Submit: transport NOT wired -> button reads "Save feedback" and clicking
+    // SAVES the submission to a durable per-browser store (never a dead-end, never
+    // a dropped submission). It must still fire NO dispatch (no token leak).
     // ========================================================================
     // Not configured = endpoint set but TOKEN empty (the token-safe transport
-    // isn't wired). Submit must not fire a dispatch and must not leak.
+    // isn't wired). Submit saves locally instead of dispatching.
     toastMsg = null; WP.ui.toast = (m, s) => { toastMsg = m; };
     WP.config.feedbackEndpoint = DISPATCH_URL;
     WP.config.feedbackDispatchToken = '';
     fb._close(); await tick(); fb.open(); await tick();   // re-render with empty token
-    assert(/not configured|configured|مُهيأ/i.test($('.fb-submit-txt').textContent), 'Submit reads "Not configured yet" when token empty');
+    fireInput($('#fb-note'), 'a note to save locally');   // ensure there is something to save
+    assert(/save feedback|حفظ/i.test($('.fb-submit-txt').textContent), 'Submit reads "Save feedback" when the transport is not wired');
     assert($('#fb-submit').getAttribute('data-tip'), 'Submit has an explainer tooltip when not configured');
+    try { window.localStorage.removeItem('tempo_feedback_saved'); } catch (e) {}
     fbFetch.calls = [];
+    const savedQueueLen = fb._model().queue.length + 1;   // queue + the pending note
     $('#fb-submit').click();
     await tick();
     assert(dispatchCalls().length === 0, 'no dispatch fired without a token (no leak)');
-    assert(toastMsg && /not configured|configured|مُهيأ/i.test(toastMsg), 'empty token → graceful "not configured" message');
-    assert(fb._model().queue.length >= 1, 'nothing cleared when not configured');
+    let savedStore = [];
+    try { savedStore = JSON.parse(window.localStorage.getItem('tempo_feedback_saved') || '[]'); } catch (e) {}
+    assert(savedStore.length === savedQueueLen, 'the submission is saved to the local store (' + savedQueueLen + ' got ' + savedStore.length + ')');
+    assert(savedStore[0] && typeof savedStore[0].note === 'string' && savedStore[0].submittedAt, 'saved record carries note + metadata');
+    assert(toastMsg && /saved|حُفظ/i.test(toastMsg), 'empty token -> "Saved on this device" confirmation');
+    assert(fb._model().queue.length === 0 && !fb._model().composer.note, 'draft cleared after a local save (nothing lingers)');
     WP.ui.toast = realToast;
 
     // ========================================================================
@@ -590,7 +598,7 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
       console.log('FAIL — verify-feedback:\n' + errors.join('\n'));
       process.exit(1);
     }
-    console.log('PASS — feedback widget (GitHub warehouse): FAB when authed; feedback-first composer, 4 types (no Question); priority director-only incl. Critical + blank for members; note required + capped + escaped; Suggest/Polish + Undo; queue add/edit/remove; submit = ONE workflow_dispatch per comment (JSON {ref,inputs}, Bearer auth, 204=success), separate dispatches, non-204 keeps queue; double-submit guarded; offline keeps queue; close/reopen restore; images rejected type/>5MB; unset token → "Not configured yet" + tip + NO dispatch (no token leak); silent metadata in dispatch inputs; data/feedback.json schema + distinct from exec-status.json; append-feedback core (coerce+cap); EN + AR/RTL; no console errors.');
+    console.log('PASS — feedback widget (GitHub warehouse): FAB when authed; feedback-first composer, 4 types (no Question); priority director-only incl. Critical + blank for members; note required + capped + escaped; Suggest/Polish + Undo; queue add/edit/remove; submit = ONE workflow_dispatch per comment (JSON {ref,inputs}, Bearer auth, 204=success), separate dispatches, non-204 keeps queue; double-submit guarded; offline keeps queue; close/reopen restore; images rejected type/>5MB; unset token → "Save feedback" saves to a durable local store + confirms + clears draft + NO dispatch (no token leak); silent metadata in dispatch inputs; data/feedback.json schema + distinct from exec-status.json; append-feedback core (coerce+cap); EN + AR/RTL; no console errors.');
   } catch (e) {
     console.log('FAIL — verify-feedback threw: ' + e.stack);
     process.exit(1);

@@ -170,6 +170,12 @@ const PAYLOAD = {
     assert(el.querySelectorAll('.ex-wave-card').length === 2, 'Status=All restores both waves');
 
     // --- timeline items[] render (the fix: was empty because items[] was missing) --
+    // Delivered (Done) rows are collapsed by default; expand so we can count them all.
+    const expandDelivered = function () {
+      const tg = el.querySelector('[data-band-toggle="done"]');
+      if (tg && tg.getAttribute('aria-expanded') === 'false') tg.click();
+    };
+    expandDelivered();
     const tlRows = el.querySelectorAll('.ex-tl-row');
     assert(tlRows.length === 3, 'timeline renders all 3 items[] in the current week (got ' + tlRows.length + ')');
     assert(/broken workload scroll/i.test(el.textContent), 'an item title renders');
@@ -186,6 +192,22 @@ const PAYLOAD = {
     const bodyHTML = el.querySelector('.ex-tl-body').innerHTML;
     assert(bodyHTML.indexOf('Delivered') < bodyHTML.indexOf('In progress'),
       'Delivered band is ordered before In progress');
+
+    // --- Delivered is COLLAPSED by default (finished wall hidden, one click away) ----
+    // (we expanded it above to count rows; re-collapse so the toggle round-trips cleanly)
+    const reToggle = el.querySelector('[data-band-toggle="done"]');
+    if (reToggle && reToggle.getAttribute('aria-expanded') === 'true') reToggle.click();
+    const doneToggle = el.querySelector('[data-band-toggle="done"]');
+    assert(doneToggle && doneToggle.tagName === 'BUTTON', 'Delivered band is a collapsible <button> by default');
+    assert(doneToggle.getAttribute('aria-expanded') === 'false', 'Delivered starts collapsed (aria-expanded=false)');
+    // Its Done rows are NOT rendered while collapsed; In progress rows ARE.
+    const doneBefore = el.querySelectorAll('.ex-tl-row').length;
+    doneToggle.click();
+    const afterToggle = el.querySelector('[data-band-toggle="done"]');
+    assert(afterToggle.getAttribute('aria-expanded') === 'true', 'clicking the Delivered header expands it');
+    assert(el.querySelectorAll('.ex-tl-row').length > doneBefore, 'expanding Delivered reveals its rows');
+    afterToggle.click();
+    assert(el.querySelector('[data-band-toggle="done"]').getAttribute('aria-expanded') === 'false', 'clicking again re-collapses Delivered');
 
     // --- wave focus: a wave card is a button that filters the timeline to its wave --
     const waveCards = el.querySelectorAll('.ex-wave-card[data-wave]');
@@ -207,6 +229,8 @@ const PAYLOAD = {
     assert(el.querySelectorAll('.ex-wave-card').length === 0, 'Type=Bugs hides the (untyped) waves');
     el.querySelector('.ex-fchip[data-filter="type"][data-val="all"]').click();
     await Promise.resolve(); await Promise.resolve();
+    // Type=All re-collapses Delivered (it's collapsible again under an unfiltered view); expand to count all.
+    expandDelivered();
     assert(el.querySelectorAll('.ex-tl-row').length === 3, 'Type=All restores all timeline items');
 
     // --- needs-you from data.needsYou ---------------------------------------------
@@ -270,6 +294,9 @@ const PAYLOAD = {
     const elOne = window.document.createElement('div');
     WP.ui.exec.render(elOne);
     await settle();
+    // all-Done fixture -> Delivered is collapsed by default; expand to see the rows.
+    const oneToggle = elOne.querySelector('[data-band-toggle="done"]');
+    if (oneToggle && oneToggle.getAttribute('aria-expanded') === 'false') oneToggle.click();
     assert(/First exec change/.test(elOne.textContent), 'single-area timeline still renders titles');
     assert(!/Exec Deck\s+—/.test(elOne.textContent), 'single-area timeline drops the redundant area prefix');
 

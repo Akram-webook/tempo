@@ -565,9 +565,21 @@
       const by = {};
       rows.forEach(function (x) { (by[bandKey(x)] = by[bandKey(x)] || []).push(x); });
       return BAND_ORDER.filter(function (b) { return by[b]; }).map(function (b) {
+        const rowsHTML = by[b].map(function (x) { return tlRow(x.it, waveCount); }).join('');
+        // The Delivered band is a large finished wall - collapse it by default so
+        // the timeline reads as "what's live / in progress / to decide", not a
+        // history dump. It stays one click away (never deleted), and stays OPEN if
+        // the user is explicitly filtering to Delivered.
+        const collapsible = b === 'done' && filterStatus !== 'done' && filterType === 'all' && filterWave === 'all';
+        const open = !collapsible || showDelivered;
+        if (collapsible) {
+          return '<button type="button" class="ex-tl-band ex-tl-band--toggle" data-band-toggle="done" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+              '<span class="ex-tl-band-caret" aria-hidden="true">' + ui.icon(open ? 'caret' : 'chevronRight', 14) + '</span>' +
+              esc(t(BAND_LABEL[b])) + ' <span class="ex-tl-band-n">' + by[b].length + '</span></button>' +
+            (open ? rowsHTML : '');
+        }
         return '<div class="ex-tl-band">' + esc(t(BAND_LABEL[b])) +
-            ' <span class="ex-tl-band-n">' + by[b].length + '</span></div>' +
-          by[b].map(function (x) { return tlRow(x.it, waveCount); }).join('');
+            ' <span class="ex-tl-band-n">' + by[b].length + '</span></div>' + rowsHTML;
       }).join('');
     }
     const body = groups.length
@@ -656,6 +668,7 @@
   let filterType = 'all';    // all | bug | feature | improvement
   let filterStatus = 'all';  // all | done | working | planned
   let filterWave = 'all';    // 'all' | a 1-based wave index (as string) - focus one wave
+  let showDelivered = false; // Delivered band collapsed by default (finished wall) - toggled open on demand
   // Map a filter bucket to the raw status words the data uses (via statusColorKey
   // buckets, so "In Progress"/"in review" -> working, "Later"/"planned" -> planned).
   function matchesStatus(raw) {
@@ -882,6 +895,10 @@
     });
     var clearBtn = host.querySelector('[data-wave-clear]');
     if (clearBtn) clearBtn.onclick = function () { filterWave = 'all'; if (lastBaseData) paintBody(host, lastBaseData); };
+    // Delivered band toggle: expand/collapse the finished wall in place.
+    host.querySelectorAll('[data-band-toggle="done"]').forEach(function (b) {
+      b.onclick = function () { showDelivered = !showDelivered; if (lastBaseData) paintBody(host, lastBaseData); };
+    });
     wireTriage(host);
   }
 

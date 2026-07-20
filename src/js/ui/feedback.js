@@ -209,6 +209,19 @@
     model = { queue: [], composer: blankComposer() };
     try { sessionStorage.removeItem(pageKey()); } catch (e) {}
   }
+  // Durable local store of submitted feedback for when the warehouse transport is
+  // NOT configured yet. This is per-browser (localStorage), NOT the shared
+  // data/feedback.json warehouse (only CI can write that). It means a user can
+  // still capture feedback and nothing is lost; it can be exported/promoted later.
+  var SAVED_KEY = 'tempo_feedback_saved';
+  function loadSaved() {
+    try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]') || []; } catch (e) { return []; }
+  }
+  function saveLocally(records) {
+    var all = loadSaved().concat(records);
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(all)); } catch (e) {}
+    return all.length;
+  }
   function hasContent() {
     var m = loadModel();
     return m.queue.length > 0 || !!(m.composer.note && m.composer.note.trim());
@@ -445,14 +458,14 @@
 
     var addLabel = t('fbAddComment').replace('{n}', String(m.queue.length + 1));
     // Configured = both the dispatch URL and a token are present (a token-safe
-    // transport is wired). Either missing ⇒ "Not configured yet".
+    // transport is wired). When NOT configured the button no longer dead-ends as
+    // "Not configured yet" - it reads "Save feedback" and stores the submission
+    // locally (per-browser) so nothing is lost and it can be promoted later.
     var configured = cfg('feedbackEndpoint') !== '' && cfg('feedbackDispatchToken') !== '';
-    // When the write endpoint is not wired yet, the button reads "Not configured
-    // yet" with an explainer tooltip - compose still works, nothing is lost.
     var submitLabel = configured
       ? WP.i18n.plural('fbSubmitN', m.queue.length + 1)
-      : t('fbNotConfigured');
-    var submitTip = configured ? '' : ' data-tip="' + esc(t('fbNotConfiguredTip')) + '" aria-describedby="fb-submit-tip"';
+      : t('fbSaveLocal');
+    var submitTip = configured ? '' : ' data-tip="' + esc(t('fbSaveLocalTip')) + '" aria-describedby="fb-submit-tip"';
 
     body.innerHTML =
       queueHTML +
@@ -808,29 +821,16 @@
     }
     if (!items.length) { toastErr(t('fbNoteRequired')); focusNote(); return; }
 
-    // Warehouse transport needs both the dispatch URL and a token. Either missing
-    // ⇒ "Not configured yet" (never a silent drop, never a leaked-token send).
-    var endpoint = cfg('feedbackEndpoint');
-    var token = cfg('feedbackDispatchToken');
-    if (!endpoint || !token) { toastErr(t('fbNotConfigured')); return; }
-
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      toastErr(t('fbOffline')); return;                          // offline (QA A)
-    }
-
-    setSubmitting(true);
-    live(t('fbSending'));
-
     var viewer = WP.viewer && WP.viewer();
     var owner = viewer ? (WP.auth && WP.auth.emailOf ? WP.auth.emailOf(viewer) : (viewer.name || viewer.id)) : '';
     var screen = (window.screen ? window.screen.width + '×' + window.screen.height : '');
     var context = browserInfo() + (screen ? ' · ' + screen : '');
     var when = new Date().toISOString();
 
-    // Build one dispatch payload per comment. priority blanked for a non-director
-    // (never trust a client priority we can't verify - QA F). NOTE: images are not
-    // carried by the dispatch transport (workflow_dispatch inputs are small string
-    // fields; a base64 image would blow the input limit and bloat git history).
+    // Build one record per comment. priority blanked for a non-director (never trust
+    // a client priority we can't verify - QA F). NOTE: images are not carried by the
+    // dispatch transport (workflow_dispatch inputs are small string fields; a base64
+    // image would blow the input limit and bloat git history).
     var dispatches = items.map(function (it) {
       // classified lane: a Polished note starts with "[Area] Title". Fall back to
       // classifying the raw note so even an un-polished submission is triage-ready.
@@ -851,6 +851,29 @@
         },
       };
     });
+
+    // Warehouse transport needs both the dispatch URL and a token. When either is
+    // missing we do NOT dead-end the user (old behaviour lost their feedback): we
+    // SAVE their submission to a durable per-browser local store and confirm it, so
+    // nothing is lost and it can be exported/promoted to the warehouse later.
+    var endpoint = cfg('feedbackEndpoint');
+    var token = cfg('feedbackDispatchToken');
+    if (!endpoint || !token) {
+      saveLocally(dispatches.map(function (d) { return d.inputs; }));
+      clearDraft();
+      setSubmitting(false);
+      toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
+      live(WP.i18n.plural('fbSavedLocalN', items.length));
+      closePanel();
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      toastErr(t('fbOffline')); return;                          // offline (QA A)
+    }
+
+    setSubmitting(true);
+    live(t('fbSending'));
 
     // All dispatches must succeed (each returns HTTP 204). If any fails, keep the
     // whole queue and let the user retry - never a partial silent success.
