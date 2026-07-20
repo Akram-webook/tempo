@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T21:03:34.548Z",
+  "generated": "2026-07-20T06:15:40.720Z",
   "cover": {
     "status": "Done",
     "progress": 100,
@@ -14,7 +14,7 @@
       "progress": 100,
       "health": "green",
       "openPRs": [],
-      "notes": "32/32 PRs merged, 6k/6k lines."
+      "notes": "33/33 PRs merged, 7k/7k lines."
     },
     {
       "name": "Capacity Engine",
@@ -46,6 +46,14 @@
   ],
   "needsYou": [],
   "items": [
+    {
+      "id": "pr-159",
+      "area": "Exec Deck",
+      "title": "Collapse Delivered by default, assign every item to a wave, fix stuck dialog + save feedback locally",
+      "status": "Done",
+      "type": "Bug",
+      "ts": "2026-07-20T06:15:14Z"
+    },
     {
       "id": "pr-158",
       "area": "Exec Deck",
@@ -305,11 +313,6 @@
   ],
   "history": [
     {
-      "ts": "2026-07-19T05:59:26.080Z",
-      "progress": 89,
-      "health": "green"
-    },
-    {
       "ts": "2026-07-19T06:01:37.631Z",
       "progress": 89,
       "health": "green"
@@ -451,6 +454,11 @@
     },
     {
       "ts": "2026-07-19T21:03:34.548Z",
+      "progress": 100,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-20T06:15:40.720Z",
       "progress": 100,
       "health": "green"
     }
