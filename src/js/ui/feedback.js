@@ -222,6 +222,9 @@
   // lifecycle status. Without these the item is invisible - the exact bug this
   // fixes (write went to a store nothing read).
   var savedSeq = 0;
+  // Returns true only if the write actually persisted. The caller MUST check this
+  // and keep the draft on false - otherwise a quota error silently loses the user's
+  // feedback while telling them it was saved (violates the never-lose-work promise).
   function saveLocally(records) {
     var existing = loadSaved();
     var stamped = records.map(function (r) {
@@ -232,8 +235,12 @@
       }, r);
     });
     var all = existing.concat(stamped);
-    try { localStorage.setItem(SAVED_KEY, JSON.stringify(all)); } catch (e) {}
-    return all.length;
+    try {
+      localStorage.setItem(SAVED_KEY, JSON.stringify(all));
+      // Confirm the write took (some browsers/quota states throw; others no-op).
+      var check = localStorage.getItem(SAVED_KEY);
+      return !!check && check.indexOf(stamped[0].id) !== -1;
+    } catch (e) { return false; }
   }
   function hasContent() {
     var m = loadModel();
@@ -872,9 +879,16 @@
     var endpoint = cfg('feedbackEndpoint');
     var token = cfg('feedbackDispatchToken');
     if (!endpoint || !token) {
-      saveLocally(dispatches.map(function (d) { return d.inputs; }));
-      clearDraft();
+      var ok = saveLocally(dispatches.map(function (d) { return d.inputs; }));
       setSubmitting(false);
+      if (!ok) {
+        // Write failed (e.g. localStorage quota). Do NOT clear the draft and do
+        // NOT claim success - keep the user's work and tell them the truth.
+        toastErr(t('fbSaveLocalFail'));
+        live(t('fbSaveLocalFail'));
+        return;
+      }
+      clearDraft();
       toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
       live(WP.i18n.plural('fbSavedLocalN', items.length));
       closePanel();

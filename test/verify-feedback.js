@@ -299,6 +299,31 @@ function tick() { return new Promise(r => setTimeout(r, 0)); }
     assert(savedStore[0] && typeof savedStore[0].note === 'string' && savedStore[0].submittedAt, 'saved record carries note + metadata');
     assert(toastMsg && /saved|حُفظ/i.test(toastMsg), 'empty token -> "Saved on this device" confirmation');
     assert(fb._model().queue.length === 0 && !fb._model().composer.note, 'draft cleared after a local save (nothing lingers)');
+
+    // REGRESSION (adversarial review): if the local write FAILS (e.g. quota), the
+    // app must NOT clear the draft and must NOT claim success - never lose work.
+    // Simulate a failing localStorage.setItem and assert the draft survives + an
+    // error (not a success) is shown.
+    toastMsg = null; let toastKind = null;
+    WP.ui.toast = (m, k) => { toastMsg = m; toastKind = k; };
+    fb._close(); await tick(); fb.open(); await tick();
+    fireInput($('#fb-note'), 'a note the storage will reject');
+    // Swap the WHOLE localStorage for a throwing stub (jsdom won't honor a method
+    // override on the native instance). setItem throws => saveLocally returns false.
+    const realLS = window.localStorage;
+    const throwingLS = {
+      getItem: function () { return null; },
+      setItem: function () { throw new Error('QuotaExceeded'); },
+      removeItem: function () {}, clear: function () {},
+    };
+    Object.defineProperty(window, 'localStorage', { configurable: true, get: function () { return throwingLS; } });
+    $('#fb-submit').click();
+    await tick();
+    Object.defineProperty(window, 'localStorage', { configurable: true, get: function () { return realLS; } });   // restore
+    assert(!!(fb._model().composer.note || fb._model().queue.length), 'a FAILED local save KEEPS the draft (never lose work)');
+    assert(toastMsg && !/saved|حُفظ/i.test(toastMsg), 'a FAILED local save does NOT falsely say "Saved"');
+    // clean the note so later tests start fresh
+    fb._reset && fb._reset();
     WP.ui.toast = realToast;
 
     // ========================================================================

@@ -561,7 +561,7 @@
     const BAND_ORDER = ['done', 'working', 'todecide', 'discarded'];
     const BAND_LABEL = { done: 'execBandDone', working: 'execBandWorking',
       todecide: 'execBandToDecide', discarded: 'execBandDiscarded' };
-    function bandsHTML(rows) {
+    function bandsHTML(rows, groupKey) {
       const by = {};
       rows.forEach(function (x) { (by[bandKey(x)] = by[bandKey(x)] || []).push(x); });
       return BAND_ORDER.filter(function (b) { return by[b]; }).map(function (b) {
@@ -569,11 +569,14 @@
         // The Delivered band is a large finished wall - collapse it by default so
         // the timeline reads as "what's live / in progress / to decide", not a
         // history dump. It stays one click away (never deleted), and stays OPEN if
-        // the user is explicitly filtering to Delivered.
+        // the user is explicitly filtering to Delivered. Each week-group's band is
+        // tracked independently (deliveredOpen[groupKey]) so expanding one week
+        // does NOT unfurl every other week's Delivered history.
         const collapsible = b === 'done' && filterStatus !== 'done' && filterType === 'all' && filterWave === 'all';
-        const open = !collapsible || showDelivered;
+        const key = 'done:' + (groupKey == null ? '_' : groupKey);
+        const open = !collapsible || !!deliveredOpen[key];
         if (collapsible) {
-          return '<button type="button" class="ex-tl-band ex-tl-band--toggle" data-band-toggle="done" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+          return '<button type="button" class="ex-tl-band ex-tl-band--toggle" data-band-toggle="' + esc(key) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
               '<span class="ex-tl-band-caret" aria-hidden="true">' + ui.icon(open ? 'caret' : 'chevronRight', 14) + '</span>' +
               esc(t(BAND_LABEL[b])) + ' <span class="ex-tl-band-n">' + by[b].length + '</span></button>' +
             (open ? rowsHTML : '');
@@ -582,12 +585,21 @@
             ' <span class="ex-tl-band-n">' + by[b].length + '</span></div>' + rowsHTML;
       }).join('');
     }
-    const body = groups.length
-      ? groups.map(function (g) {
+    let body = groups.length
+      ? groups.map(function (g, gi) {
+          // Stable per-group key so each week's Delivered toggle is independent.
+          var gkey = g.label ? g.label : (mode === 'week' ? 'w' + offset : 'g' + gi);
           return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
-            bandsHTML(g.rows);
+            bandsHTML(g.rows, gkey);
         }).join('')
       : '<div class="ex-empty">' + emptyMsg + '</div>';
+    // Guard the "lonely collapsed header" state: when every visible row is a
+    // Delivered (Done) item and all of them are collapsed, the body would be just
+    // band header(s) with no rows - which reads as broken/empty. Add a one-line
+    // hint that the delivered work is hidden and how to reveal it.
+    if (groups.length && !/ex-tl-row/.test(body)) {
+      body += '<div class="ex-tl-allhidden">' + esc(t('execTlAllDelivered')) + '</div>';
+    }
 
     return '<div class="section">' +
       '<div class="ex-tl-head"><h3 class="ex-h3">' + t('execTimeline') + '</h3>' +
@@ -668,7 +680,10 @@
   let filterType = 'all';    // all | bug | feature | improvement
   let filterStatus = 'all';  // all | done | working | planned
   let filterWave = 'all';    // 'all' | a 1-based wave index (as string) - focus one wave
-  let showDelivered = false; // Delivered band collapsed by default (finished wall) - toggled open on demand
+  // Delivered band(s) collapsed by default (finished wall). In "All" view there is
+  // one Delivered band PER week-group, so we track which are open by a per-group key
+  // (not a single flag - a single flag made one click expand every week's band).
+  const deliveredOpen = {};
   // Map a filter bucket to the raw status words the data uses (via statusColorKey
   // buckets, so "In Progress"/"in review" -> working, "Later"/"planned" -> planned).
   function matchesStatus(raw) {
@@ -895,9 +910,18 @@
     });
     var clearBtn = host.querySelector('[data-wave-clear]');
     if (clearBtn) clearBtn.onclick = function () { filterWave = 'all'; if (lastBaseData) paintBody(host, lastBaseData); };
-    // Delivered band toggle: expand/collapse the finished wall in place.
-    host.querySelectorAll('[data-band-toggle="done"]').forEach(function (b) {
-      b.onclick = function () { showDelivered = !showDelivered; if (lastBaseData) paintBody(host, lastBaseData); };
+    // Delivered band toggle: expand/collapse THIS group's finished wall in place.
+    // Each toggle carries its own group key (data-band-toggle="done:<group>") so a
+    // click flips only that band. Repaint the timeline only (not the whole body)
+    // and restore focus to the same toggle so keyboard/SR users keep their place.
+    host.querySelectorAll('[data-band-toggle^="done"]').forEach(function (b) {
+      b.onclick = function () {
+        var key = b.getAttribute('data-band-toggle');
+        deliveredOpen[key] = !deliveredOpen[key];
+        repaintTimeline(host);
+        var again = host.querySelector('[data-band-toggle="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
+        if (again) { try { again.focus(); } catch (e) {} }
+      };
     });
     wireTriage(host);
   }
