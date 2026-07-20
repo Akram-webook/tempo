@@ -1036,7 +1036,28 @@
     return fetch(url, { cache: 'no-store' }).then(function (res) {
       if (!res.ok) return null;
       return res.json();
-    }).catch(function () { return null; });
+    }).catch(function () { return null; }).then(function (fbRaw) {
+      // Fold in feedback the user SAVED locally (when the send transport is not
+      // wired). Without this the saved item is written to a store the page never
+      // reads, so it appears nowhere - the bug this fixes. Local records sit at
+      // the top (most recent first) and are de-duped against the warehouse by id.
+      return mergeLocalSaved(fbRaw);
+    });
+  }
+
+  // Merge locally-saved feedback into the warehouse payload. Best-effort and
+  // fail-safe: any error just returns the warehouse data unchanged.
+  function mergeLocalSaved(fbRaw) {
+    try {
+      var local = (WP.ui.feedback && WP.ui.feedback.savedItems) ? WP.ui.feedback.savedItems() : [];
+      if (!local || !local.length) return fbRaw;
+      var base = (fbRaw && Array.isArray(fbRaw.items)) ? fbRaw.items : [];
+      var seen = {};
+      base.forEach(function (it) { if (it && it.id) seen[it.id] = true; });
+      var extra = local.filter(function (it) { return it && it.id && !seen[it.id]; });
+      // newest local first, then the warehouse items
+      return Object.assign({}, fbRaw || {}, { items: extra.reverse().concat(base) });
+    } catch (e) { return fbRaw; }
   }
 
   function render(root) {

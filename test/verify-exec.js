@@ -323,6 +323,25 @@ const PAYLOAD = {
     const fbRows = elFb.querySelectorAll('.ex-tl-row--fb').length;
     assert(fbRows === 3, 'all 3 feedback items surface (got ' + fbRows + ')');
 
+    // REGRESSION (class: write-and-read-to-different-stores): feedback SAVED locally
+    // via WP.ui.feedback.savedItems() must be folded into the delivery timeline even
+    // when the warehouse file does NOT contain it. The original bug wrote saved
+    // feedback to a localStorage key nothing on the page read, so it appeared
+    // nowhere. This proves the write store and the read path share one source.
+    if (WP.ui.feedback && typeof WP.ui.feedback.savedItems === 'function') {
+      const savedBackup = WP.ui.feedback.savedItems();
+      try { window.localStorage.setItem('tempo_feedback_saved', JSON.stringify([
+        { id: 'local-proof-1', status: 'New', savedLocal: true, note: '[Dashboard] LOCAL-SAVE-PROOF item', klass: 'Bug', type: 'Bug', submittedAt: new Date().toISOString() },
+      ])); } catch (e) {}
+      const elLocal = window.document.createElement('div');
+      WP.ui.exec.render(elLocal);
+      await settle();
+      assert(/LOCAL-SAVE-PROOF/.test(elLocal.textContent), 'locally-saved feedback SURFACES on the delivery timeline (not a dead write)');
+      assert(elLocal.querySelector('.ex-tl-row--fb'), 'the locally-saved item renders as a feedback row');
+      // restore the store so no later test is polluted
+      try { window.localStorage.setItem('tempo_feedback_saved', JSON.stringify(savedBackup || [])); } catch (e) {}
+    }
+
     // BUG-001 regression: feedback must NOT inflate the stats strip. PAYLOAD here
     // has 1 item (pr-x, Done); the folded feedback includes an Assigned item that
     // maps to 'Working'. The strip must still read the DELIVERY item only.
