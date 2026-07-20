@@ -172,7 +172,7 @@ const PAYLOAD = {
     // --- timeline items[] render (the fix: was empty because items[] was missing) --
     // Delivered (Done) rows are collapsed by default; expand so we can count them all.
     const expandDelivered = function () {
-      const tg = el.querySelector('[data-band-toggle="done"]');
+      const tg = el.querySelector('[data-band-toggle^="done"]');
       if (tg && tg.getAttribute('aria-expanded') === 'false') tg.click();
     };
     expandDelivered();
@@ -195,19 +195,19 @@ const PAYLOAD = {
 
     // --- Delivered is COLLAPSED by default (finished wall hidden, one click away) ----
     // (we expanded it above to count rows; re-collapse so the toggle round-trips cleanly)
-    const reToggle = el.querySelector('[data-band-toggle="done"]');
+    const reToggle = el.querySelector('[data-band-toggle^="done"]');
     if (reToggle && reToggle.getAttribute('aria-expanded') === 'true') reToggle.click();
-    const doneToggle = el.querySelector('[data-band-toggle="done"]');
+    const doneToggle = el.querySelector('[data-band-toggle^="done"]');
     assert(doneToggle && doneToggle.tagName === 'BUTTON', 'Delivered band is a collapsible <button> by default');
     assert(doneToggle.getAttribute('aria-expanded') === 'false', 'Delivered starts collapsed (aria-expanded=false)');
     // Its Done rows are NOT rendered while collapsed; In progress rows ARE.
     const doneBefore = el.querySelectorAll('.ex-tl-row').length;
     doneToggle.click();
-    const afterToggle = el.querySelector('[data-band-toggle="done"]');
+    const afterToggle = el.querySelector('[data-band-toggle^="done"]');
     assert(afterToggle.getAttribute('aria-expanded') === 'true', 'clicking the Delivered header expands it');
     assert(el.querySelectorAll('.ex-tl-row').length > doneBefore, 'expanding Delivered reveals its rows');
     afterToggle.click();
-    assert(el.querySelector('[data-band-toggle="done"]').getAttribute('aria-expanded') === 'false', 'clicking again re-collapses Delivered');
+    assert(el.querySelector('[data-band-toggle^="done"]').getAttribute('aria-expanded') === 'false', 'clicking again re-collapses Delivered');
 
     // --- wave focus: a wave card is a button that filters the timeline to its wave --
     const waveCards = el.querySelectorAll('.ex-wave-card[data-wave]');
@@ -295,7 +295,7 @@ const PAYLOAD = {
     WP.ui.exec.render(elOne);
     await settle();
     // all-Done fixture -> Delivered is collapsed by default; expand to see the rows.
-    const oneToggle = elOne.querySelector('[data-band-toggle="done"]');
+    const oneToggle = elOne.querySelector('[data-band-toggle^="done"]');
     if (oneToggle && oneToggle.getAttribute('aria-expanded') === 'false') oneToggle.click();
     assert(/First exec change/.test(elOne.textContent), 'single-area timeline still renders titles');
     assert(!/Exec Deck\s+—/.test(elOne.textContent), 'single-area timeline drops the redundant area prefix');
@@ -520,6 +520,28 @@ const PAYLOAD = {
     assert(arChips.some(c => /[؀-ۿ]/.test(c)), 'status chips render in Arabic in AR mode (not raw English)');
     assert(!arChips.some(c => /^Working$|^Done$|^Under review$/.test(c.trim())), 'no raw-English status chip leaks in AR mode');
     WP.state.lang = 'en'; nextFeedback = null;
+
+    // REGRESSION (adversarial review) — run LAST so it can't pollute shared view
+    // state. In "All" view there is one Delivered band per week-group; a single
+    // shared flag made ONE click expand EVERY week's band. Assert independence.
+    nextPayload = Object.assign({}, PAYLOAD, { items: [
+      { id: 'wk0a', area: 'Deck', title: 'This week delivered A', status: 'Done', type: 'Feature', ts: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString() },
+      { id: 'wk0b', area: 'Deck', title: 'This week delivered B', status: 'Done', type: 'Bug', ts: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString() },
+      { id: 'wk1a', area: 'Deck', title: 'Last week delivered A', status: 'Done', type: 'Feature', ts: new Date(Date.now() - 9 * 24 * 3600 * 1000).toISOString() },
+      { id: 'wk1b', area: 'Deck', title: 'Last week delivered B', status: 'Done', type: 'Feature', ts: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString() },
+    ] });
+    const elMulti = window.document.createElement('div');
+    WP.ui.exec.render(elMulti);
+    await settle();
+    const allBtn = [...elMulti.querySelectorAll('[data-mode]')].find(b => /all/i.test(b.getAttribute('data-mode')));
+    if (allBtn) allBtn.click();
+    const mToggles = elMulti.querySelectorAll('[data-band-toggle^="done"]');
+    assert(mToggles.length >= 2, 'All view renders one Delivered band per week-group (got ' + mToggles.length + ')');
+    assert([...mToggles].every(t => t.getAttribute('aria-expanded') === 'false'), 'all Delivered bands start collapsed');
+    mToggles[0].click();
+    const mAfter = elMulti.querySelectorAll('[data-band-toggle^="done"]');
+    assert(mAfter[0].getAttribute('aria-expanded') === 'true', 'clicking one Delivered band expands THAT band');
+    assert(mAfter[1].getAttribute('aria-expanded') === 'false', 'other week Delivered bands stay collapsed (independent toggles)');
 
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);

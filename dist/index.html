@@ -1910,6 +1910,9 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-tl-band--toggle:hover .ex-tl-band-n { color: var(--text); }
 .ex-tl-band--toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .ex-tl-band-caret { display: inline-flex; color: var(--text-muted); }
+.ex-tl-band--toggle[aria-expanded="false"] .ex-tl-band-caret { transform: none; }
+[dir="rtl"] .ex-tl-band--toggle[aria-expanded="false"] .ex-tl-band-caret { transform: scaleX(-1); }
+.ex-tl-allhidden { color: var(--text-muted); font-size: 12.5px; padding: 10px 4px 2px; }
 .ex-tl-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
 .ex-tl-row:last-child { border-bottom: 0; }
 .ex-tl-title { flex: 1; min-width: 0; font-size: 13.5px; }
@@ -4316,6 +4319,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // — Save-locally (transport not configured): capture, never dead-end —
     fbSaveLocal:    { en: 'Save feedback',            ar: 'حفظ الملاحظة' },
     fbSaveLocalTip: { en: 'Live sending is not wired yet, so this is saved on this device and can be sent later. Nothing is lost.', ar: 'الإرسال المباشر غير مُفعّل بعد، لذا تُحفظ هذه الملاحظة على هذا الجهاز ويمكن إرسالها لاحقاً. لا شيء يُفقد.' },
+    fbSaveLocalFail: { en: "Couldn't save on this device (storage may be full). Your feedback is still here - try again.", ar: 'تعذّر الحفظ على هذا الجهاز (قد تكون المساحة ممتلئة). ملاحظتك ما زالت هنا - حاول مرة أخرى.' },
     fbSavedLocalNOne:   { en: 'Saved 1 comment on this device.', ar: 'حُفظ تعليق واحد على هذا الجهاز.' },
     fbSavedLocalNTwo:   { en: 'Saved {n} comments on this device.', ar: 'حُفظ تعليقان على هذا الجهاز.' },
     fbSavedLocalNFew:   { en: 'Saved {n} comments on this device.', ar: 'حُفظت {n} تعليقات على هذا الجهاز.' },
@@ -4473,6 +4477,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     execTlEmpty:    { en: 'Nothing in this range.', ar: 'لا شيء في هذا النطاق.' },
     execTlFiltered: { en: 'No items match your filters.', ar: 'لا عناصر تطابق عوامل التصفية.' },
     execTlStale:    { en: 'Items will appear after the next status update.', ar: 'ستظهر العناصر بعد تحديث الحالة التالي.' },
+    execTlAllDelivered: { en: 'All items here are delivered - open the Delivered section above to see them.', ar: 'كل العناصر هنا تم تسليمها - افتح قسم "تم التسليم" أعلاه لعرضها.' },
     execToday:      { en: 'Today', ar: 'اليوم' },
     execPrevWeek:   { en: 'Previous week', ar: 'الأسبوع السابق' },
     execNextWeek:   { en: 'Next week', ar: 'الأسبوع التالي' },
@@ -11629,7 +11634,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const BAND_ORDER = ['done', 'working', 'todecide', 'discarded'];
     const BAND_LABEL = { done: 'execBandDone', working: 'execBandWorking',
       todecide: 'execBandToDecide', discarded: 'execBandDiscarded' };
-    function bandsHTML(rows) {
+    function bandsHTML(rows, groupKey) {
       const by = {};
       rows.forEach(function (x) { (by[bandKey(x)] = by[bandKey(x)] || []).push(x); });
       return BAND_ORDER.filter(function (b) { return by[b]; }).map(function (b) {
@@ -11637,11 +11642,14 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         // The Delivered band is a large finished wall - collapse it by default so
         // the timeline reads as "what's live / in progress / to decide", not a
         // history dump. It stays one click away (never deleted), and stays OPEN if
-        // the user is explicitly filtering to Delivered.
+        // the user is explicitly filtering to Delivered. Each week-group's band is
+        // tracked independently (deliveredOpen[groupKey]) so expanding one week
+        // does NOT unfurl every other week's Delivered history.
         const collapsible = b === 'done' && filterStatus !== 'done' && filterType === 'all' && filterWave === 'all';
-        const open = !collapsible || showDelivered;
+        const key = 'done:' + (groupKey == null ? '_' : groupKey);
+        const open = !collapsible || !!deliveredOpen[key];
         if (collapsible) {
-          return '<button type="button" class="ex-tl-band ex-tl-band--toggle" data-band-toggle="done" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+          return '<button type="button" class="ex-tl-band ex-tl-band--toggle" data-band-toggle="' + esc(key) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
               '<span class="ex-tl-band-caret" aria-hidden="true">' + ui.icon(open ? 'caret' : 'chevronRight', 14) + '</span>' +
               esc(t(BAND_LABEL[b])) + ' <span class="ex-tl-band-n">' + by[b].length + '</span></button>' +
             (open ? rowsHTML : '');
@@ -11650,12 +11658,21 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
             ' <span class="ex-tl-band-n">' + by[b].length + '</span></div>' + rowsHTML;
       }).join('');
     }
-    const body = groups.length
-      ? groups.map(function (g) {
+    let body = groups.length
+      ? groups.map(function (g, gi) {
+          // Stable per-group key so each week's Delivered toggle is independent.
+          var gkey = g.label ? g.label : (mode === 'week' ? 'w' + offset : 'g' + gi);
           return (g.label ? '<div class="ex-tl-group">' + ui.esc(g.label) + '</div>' : '') +
-            bandsHTML(g.rows);
+            bandsHTML(g.rows, gkey);
         }).join('')
       : '<div class="ex-empty">' + emptyMsg + '</div>';
+    // Guard the "lonely collapsed header" state: when every visible row is a
+    // Delivered (Done) item and all of them are collapsed, the body would be just
+    // band header(s) with no rows - which reads as broken/empty. Add a one-line
+    // hint that the delivered work is hidden and how to reveal it.
+    if (groups.length && !/ex-tl-row/.test(body)) {
+      body += '<div class="ex-tl-allhidden">' + esc(t('execTlAllDelivered')) + '</div>';
+    }
 
     return '<div class="section">' +
       '<div class="ex-tl-head"><h3 class="ex-h3">' + t('execTimeline') + '</h3>' +
@@ -11736,7 +11753,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   let filterType = 'all';    // all | bug | feature | improvement
   let filterStatus = 'all';  // all | done | working | planned
   let filterWave = 'all';    // 'all' | a 1-based wave index (as string) - focus one wave
-  let showDelivered = false; // Delivered band collapsed by default (finished wall) - toggled open on demand
+  // Delivered band(s) collapsed by default (finished wall). In "All" view there is
+  // one Delivered band PER week-group, so we track which are open by a per-group key
+  // (not a single flag - a single flag made one click expand every week's band).
+  const deliveredOpen = {};
   // Map a filter bucket to the raw status words the data uses (via statusColorKey
   // buckets, so "In Progress"/"in review" -> working, "Later"/"planned" -> planned).
   function matchesStatus(raw) {
@@ -11963,9 +11983,18 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     });
     var clearBtn = host.querySelector('[data-wave-clear]');
     if (clearBtn) clearBtn.onclick = function () { filterWave = 'all'; if (lastBaseData) paintBody(host, lastBaseData); };
-    // Delivered band toggle: expand/collapse the finished wall in place.
-    host.querySelectorAll('[data-band-toggle="done"]').forEach(function (b) {
-      b.onclick = function () { showDelivered = !showDelivered; if (lastBaseData) paintBody(host, lastBaseData); };
+    // Delivered band toggle: expand/collapse THIS group's finished wall in place.
+    // Each toggle carries its own group key (data-band-toggle="done:<group>") so a
+    // click flips only that band. Repaint the timeline only (not the whole body)
+    // and restore focus to the same toggle so keyboard/SR users keep their place.
+    host.querySelectorAll('[data-band-toggle^="done"]').forEach(function (b) {
+      b.onclick = function () {
+        var key = b.getAttribute('data-band-toggle');
+        deliveredOpen[key] = !deliveredOpen[key];
+        repaintTimeline(host);
+        var again = host.querySelector('[data-band-toggle="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
+        if (again) { try { again.focus(); } catch (e) {} }
+      };
     });
     wireTriage(host);
   }
@@ -14997,6 +15026,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   // lifecycle status. Without these the item is invisible - the exact bug this
   // fixes (write went to a store nothing read).
   var savedSeq = 0;
+  // Returns true only if the write actually persisted. The caller MUST check this
+  // and keep the draft on false - otherwise a quota error silently loses the user's
+  // feedback while telling them it was saved (violates the never-lose-work promise).
   function saveLocally(records) {
     var existing = loadSaved();
     var stamped = records.map(function (r) {
@@ -15007,8 +15039,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       }, r);
     });
     var all = existing.concat(stamped);
-    try { localStorage.setItem(SAVED_KEY, JSON.stringify(all)); } catch (e) {}
-    return all.length;
+    try {
+      localStorage.setItem(SAVED_KEY, JSON.stringify(all));
+      // Confirm the write took (some browsers/quota states throw; others no-op).
+      var check = localStorage.getItem(SAVED_KEY);
+      return !!check && check.indexOf(stamped[0].id) !== -1;
+    } catch (e) { return false; }
   }
   function hasContent() {
     var m = loadModel();
@@ -15647,9 +15683,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     var endpoint = cfg('feedbackEndpoint');
     var token = cfg('feedbackDispatchToken');
     if (!endpoint || !token) {
-      saveLocally(dispatches.map(function (d) { return d.inputs; }));
-      clearDraft();
+      var ok = saveLocally(dispatches.map(function (d) { return d.inputs; }));
       setSubmitting(false);
+      if (!ok) {
+        // Write failed (e.g. localStorage quota). Do NOT clear the draft and do
+        // NOT claim success - keep the user's work and tell them the truth.
+        toastErr(t('fbSaveLocalFail'));
+        live(t('fbSaveLocalFail'));
+        return;
+      }
+      clearDraft();
       toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
       live(WP.i18n.plural('fbSavedLocalN', items.length));
       closePanel();

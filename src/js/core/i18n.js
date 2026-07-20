@@ -484,6 +484,7 @@
     // — Save-locally (transport not configured): capture, never dead-end —
     fbSaveLocal:    { en: 'Save feedback',            ar: 'حفظ الملاحظة' },
     fbSaveLocalTip: { en: 'Live sending is not wired yet, so this is saved on this device and can be sent later. Nothing is lost.', ar: 'الإرسال المباشر غير مُفعّل بعد، لذا تُحفظ هذه الملاحظة على هذا الجهاز ويمكن إرسالها لاحقاً. لا شيء يُفقد.' },
+    fbSaveLocalFail: { en: "Couldn't save on this device (storage may be full). Your feedback is still here - try again.", ar: 'تعذّر الحفظ على هذا الجهاز (قد تكون المساحة ممتلئة). ملاحظتك ما زالت هنا - حاول مرة أخرى.' },
     fbSavedLocalNOne:   { en: 'Saved 1 comment on this device.', ar: 'حُفظ تعليق واحد على هذا الجهاز.' },
     fbSavedLocalNTwo:   { en: 'Saved {n} comments on this device.', ar: 'حُفظ تعليقان على هذا الجهاز.' },
     fbSavedLocalNFew:   { en: 'Saved {n} comments on this device.', ar: 'حُفظت {n} تعليقات على هذا الجهاز.' },
@@ -641,6 +642,7 @@
     execTlEmpty:    { en: 'Nothing in this range.', ar: 'لا شيء في هذا النطاق.' },
     execTlFiltered: { en: 'No items match your filters.', ar: 'لا عناصر تطابق عوامل التصفية.' },
     execTlStale:    { en: 'Items will appear after the next status update.', ar: 'ستظهر العناصر بعد تحديث الحالة التالي.' },
+    execTlAllDelivered: { en: 'All items here are delivered - open the Delivered section above to see them.', ar: 'كل العناصر هنا تم تسليمها - افتح قسم "تم التسليم" أعلاه لعرضها.' },
     execToday:      { en: 'Today', ar: 'اليوم' },
     execPrevWeek:   { en: 'Previous week', ar: 'الأسبوع السابق' },
     execNextWeek:   { en: 'Next week', ar: 'الأسبوع التالي' },
