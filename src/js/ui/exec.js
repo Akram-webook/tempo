@@ -859,7 +859,10 @@
     });
     var totalDone = 0, totalPlanned = 0, hasAnyPlan = false;
     var waves = data.waves.map(function (w, idx) {
-      var no = idx + 1;
+      // Prefer an explicit wave number if the payload carries one; only fall back
+      // to array position for the current dense/ordered shape. This keeps
+      // item->wave attribution correct even if waves is ever sparse or reordered.
+      var no = (+w.no || +w.wave || idx + 1);
       var done = doneBy[no] || 0;
       var seen = seenBy[no] || 0;
       // planned = declared plan, but at least what we can see, at least done, at least 1 if it has work.
@@ -875,10 +878,12 @@
         out.status = out.progress >= 100 ? 'Done'
           : out.progress > 0 ? 'In Progress'
           : (w.status === 'Next' ? 'Next' : 'Later');
-        // keep the "N/M PRs merged" note truthful as an item count if none present
-        if (!/\d+\/\d+ PRs merged/.test(w.notes || '')) {
-          out.notes = done + '/' + planned + ' items shipped';
-        }
+        // Only set the item-count note when there is NO informative note to keep -
+        // preserve human/blocked-on notes ("#118 awaiting review (7d)"), and refresh
+        // an existing auto note (PR-merged rollup or our own "N/M items shipped").
+        var note = w.notes || '';
+        var isAutoNote = !note || /\d+\/\d+ PRs merged/.test(note) || /\d+\/\d+ items shipped/.test(note);
+        if (isAutoNote) out.notes = done + '/' + planned + ' items shipped';
         totalDone += done;
         totalPlanned += planned;
       }
