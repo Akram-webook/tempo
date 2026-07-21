@@ -1741,24 +1741,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .acct-section { padding: 4px 8px 8px; }
 .acct-mini { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
 
-/* Executive-status card — director dashboard entry point to the live deck.
-   Brand-accent leading edge, whole card is the click target, routes in-app to
-   the embedded Executive Status view. It is a <button>, so reset button chrome. */
-.exec-card {
-  display: flex; align-items: center; gap: 14px; width: 100%; text-align: start;
-  margin: 0 0 18px; padding: 16px 18px;
-  border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
-  border-radius: var(--radius); background: var(--surface);
-  color: var(--text); cursor: pointer; font: inherit;
-  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
-}
-.exec-card:hover { border-color: var(--border-secondary); background: var(--surface-1); }
-.exec-card:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
-.exec-card-body { flex: 1; min-width: 0; }
-.exec-card-title { font-weight: 600; font-size: 15px; }
-.exec-card-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
-.exec-card-go { flex: none; color: var(--brand); display: inline-flex; align-items: center; }
-[dir="rtl"] .exec-card-go svg { transform: scaleX(-1); }
+/* (Removed) The Executive-status / Project delivery dashboard entry card.
+   Project delivery is reached from the left nav + its own route now. */
 
 /* Executive Status view — NATIVE render of the live Feedback sheet (JSONP).
    On-brand, four sections; mirrors the Google Slides deck. */
@@ -9184,24 +9168,6 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return '<span class="dash-pct" style="color:' + c + '">' + snap.load + '%</span>';
   }
 
-  /* Executive-status card — a full-width entry point at the TOP of the
-   * director dashboard. Renders ONLY when WP.execDeckVisible() (deck URL set
-   * AND viewer is admin/director). The whole card is the click target; it
-   * opens the in-app Executive Status view (which embeds the live deck +
-   * offers "open / present in Google Slides"). Empty/off → renders nothing. */
-  function execCard() {
-    if (!WP.execDeckVisible || !WP.execDeckVisible()) return '';
-    const t = WP.i18n.t;
-    return '<button type="button" class="exec-card" data-go="exec" ' +
-      'aria-label="' + t('execStatus') + ' — ' + t('execStatusSub') + '">' +
-      '<div class="exec-card-body">' +
-        '<div class="exec-card-title">' + t('execStatus') + '</div>' +
-        '<div class="exec-card-sub">' + t('execStatusSub') + '</div>' +
-      '</div>' +
-      '<span class="exec-card-go" aria-hidden="true">' + WP.ui.icon('arrowRight', 18) + '</span>' +
-      '</button>';
-  }
-
   function director(root, viewer) {
     const t = WP.i18n.t, win = WP.state.window, ref = WP.state.refDate;
     const people = WP.access.visiblePeople(viewer);
@@ -9352,11 +9318,9 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     root.insertAdjacentHTML('afterbegin', WP.ui.provenanceNote());
 
     // Executive-status card — director/admin entry point to the live deck.
-    // Prepended LAST so it sits at the very top. Renders nothing when the deck
-    // URL is unset or the viewer isn't admin/director. Its data-go="exec" is
-    // wired by the shared [data-go] handler below (routes in-app to the view).
-    const exec = execCard();
-    if (exec) root.insertAdjacentHTML('afterbegin', exec);
+    // (Removed) The full-width "Project delivery" entry card at the top of the
+    // director dashboard. Project delivery is still reachable from the left nav
+    // and its own route; only this dashboard card was removed per request.
 
     root.querySelectorAll('[data-open]').forEach(function (el) {
       const open = function () { WP.setState({ route: 'profile', selectedId: el.dataset.open }); };

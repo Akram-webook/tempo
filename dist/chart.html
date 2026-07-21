@@ -1737,24 +1737,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .acct-section { padding: 4px 8px 8px; }
 .acct-mini { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
 
-/* Executive-status card — director dashboard entry point to the live deck.
-   Brand-accent leading edge, whole card is the click target, routes in-app to
-   the embedded Executive Status view. It is a <button>, so reset button chrome. */
-.exec-card {
-  display: flex; align-items: center; gap: 14px; width: 100%; text-align: start;
-  margin: 0 0 18px; padding: 16px 18px;
-  border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
-  border-radius: var(--radius); background: var(--surface);
-  color: var(--text); cursor: pointer; font: inherit;
-  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
-}
-.exec-card:hover { border-color: var(--border-secondary); background: var(--surface-1); }
-.exec-card:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
-.exec-card-body { flex: 1; min-width: 0; }
-.exec-card-title { font-weight: 600; font-size: 15px; }
-.exec-card-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
-.exec-card-go { flex: none; color: var(--brand); display: inline-flex; align-items: center; }
-[dir="rtl"] .exec-card-go svg { transform: scaleX(-1); }
+/* (Removed) The Executive-status / Project delivery dashboard entry card.
+   Project delivery is reached from the left nav + its own route now. */
 
 /* Executive Status view — NATIVE render of the live Feedback sheet (JSONP).
    On-brand, four sections; mirrors the Google Slides deck. */
