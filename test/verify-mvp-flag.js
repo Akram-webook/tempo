@@ -27,19 +27,24 @@ const DEFERRED_ROUTES=['library','weekly','wellbeing','fairness','upward','org']
 const DEFERRED_NAV=['library','weekly','wellbeing','fairness','org'];
 const CORE_NAV=['dashboard','map','daily','evaluations','me','permissions','settings'];
 function finish(){if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}
-  console.log('PASS — mvp flag: ONE reversible flag (WP.config.mvp, default true, inlined into dist). mvp=true hides the deferred layer (nav entries removed, routes redirect home, in-screen panels — P6 dev panel, P1 timeline, P3 band/consistency/prep — absent) while the core renders fully; mvp=false restores every surface (nav + routes + panels). Nothing deleted; one line reverses it. EN + AR, both themes.');
+  console.log('PASS — mvp flag: ONE reversible flag (WP.config.mvp, default false = advanced layer visible, inlined into dist). mvp=true hides the deferred layer (nav entries removed, routes redirect home, in-screen panels — P6 dev panel, P1 timeline, P3 band/consistency/prep — absent) while the core renders fully; mvp=false restores every surface (nav + routes + panels). Nothing deleted; one line reverses it. EN + AR, both themes.');
   process.exit(0);}
 
 (async()=>{
 try{
   // ── THE FLAG itself ──
-  assert(WP.config.mvp===true,'WP.config.mvp defaults to true (lean v1)');
+  assert(WP.config.mvp===false,'WP.config.mvp defaults to false (advanced layer un-deferred so we can work on it)');
   assert(typeof WP.deferred==='function','WP.deferred() guard helper exists');
-  assert(/WP\.config\.mvp\s*=\s*true/.test(configJs),'flag is declared in config.js (default true)');
-  assert(/flip to false to un-defer/i.test(configJs),'config.js documents the one-line reversal (like DEFAULT_THEME)');
+  assert(/WP\.config\.mvp\s*=\s*false/.test(configJs),'flag is declared in config.js (default false)');
+  assert(/re-hide them for a lean go-live cut/i.test(configJs),'config.js documents the one-line reversal (set true to re-hide)');
   assert(/WP\.config\.mvp/.test(distHtml),'the flag is inlined into the built dist (ships in the bundle)');
+  // WP.deferred() is state-driven by the flag; prove both truth tables explicitly.
+  WP.config.mvp=true;
   DEFERRED_ROUTES.forEach(id=>assert(WP.deferred(id)===true,'mvp=true defers "'+id+'"'));
   CORE_NAV.forEach(id=>assert(WP.deferred(id)===false,'core surface "'+id+'" is never deferred'));
+  WP.config.mvp=false;
+  DEFERRED_ROUTES.forEach(id=>assert(WP.deferred(id)===false,'mvp=false (default) un-defers "'+id+'"'));
+  WP.config.mvp=false;   // restore the shipped default before the render checks below
 
   const PEOPLE=WP.data.PEOPLE||[];
   const dir=PEOPLE.find(p=>WP.access.canManage(p));assert(dir,'a director/admin exists');

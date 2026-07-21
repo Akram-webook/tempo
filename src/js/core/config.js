@@ -77,7 +77,12 @@
    * VIEWS are hidden (compute-on-view ⇒ no cost), but the data keeps
    * building for when you un-defer.
    * -------------------------------------------------------------- */
-  if (WP.config.mvp === undefined) WP.config.mvp = true;
+  // Un-deferred: the advanced surfaces (Library, Weekly report, Wellbeing,
+  // Fairness, Upward, Org, Eval prep/band/consistency, Timeline) are BACK so we
+  // can work on them. They were only hidden, never removed - flipping this to
+  // false returns nav entries, routes, and in-screen panels alike. Set to true
+  // again to re-hide them for a lean go-live cut.
+  if (WP.config.mvp === undefined) WP.config.mvp = false;
 
   /* ----------------------------------------------------------------
    * Executive Status — live data endpoint + deck link (both reversible).

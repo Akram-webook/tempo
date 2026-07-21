@@ -837,6 +837,64 @@
     '</div>';
   }
 
+  // Derive each wave's % from REAL work: done / planned. `done` = delivery items
+  // (source !== 'feedback') assigned to that wave with status 'Done'. `planned` =
+  // the wave's declared plan size (wave.planned), never less than the items we can
+  // actually see assigned to it, and never less than done. The overall cover % is
+  // the same ratio rolled up across all waves (total done / total planned), so the
+  // headline number and the wave cards always agree and move together as we ship.
+  // Reversible + fail-safe: if a wave has no plan and no assigned items, it keeps
+  // whatever progress the payload declared (so the current Wave 1 = 100% stands).
+  function deriveWaveProgress(data) {
+    if (!data || !Array.isArray(data.waves) || !data.waves.length) return data;
+    var items = Array.isArray(data.items)
+      ? data.items.filter(function (x) { return x && x.source !== 'feedback'; }) : [];
+    // count done + total assigned, per 1-based wave index
+    var doneBy = {}, seenBy = {};
+    items.forEach(function (it) {
+      var wv = +it.wave;
+      if (!wv) return;                 // unassigned items don't belong to a wave's ratio
+      seenBy[wv] = (seenBy[wv] || 0) + 1;
+      if (it.status === 'Done') doneBy[wv] = (doneBy[wv] || 0) + 1;
+    });
+    var totalDone = 0, totalPlanned = 0, hasAnyPlan = false;
+    var waves = data.waves.map(function (w, idx) {
+      var no = idx + 1;
+      var done = doneBy[no] || 0;
+      var seen = seenBy[no] || 0;
+      // planned = declared plan, but at least what we can see, at least done, at least 1 if it has work.
+      var declared = (w.planned != null && !isNaN(+w.planned)) ? Math.max(0, Math.round(+w.planned)) : 0;
+      var planned = Math.max(declared, seen, done);
+      var out = Object.assign({}, w);
+      if (planned > 0) {
+        hasAnyPlan = true;
+        out.planned = planned;
+        out.done = done;
+        out.progress = Math.round((done / planned) * 100);
+        // status derives from the ratio unless the payload pinned a non-default one.
+        out.status = out.progress >= 100 ? 'Done'
+          : out.progress > 0 ? 'In Progress'
+          : (w.status === 'Next' ? 'Next' : 'Later');
+        // keep the "N/M PRs merged" note truthful as an item count if none present
+        if (!/\d+\/\d+ PRs merged/.test(w.notes || '')) {
+          out.notes = done + '/' + planned + ' items shipped';
+        }
+        totalDone += done;
+        totalPlanned += planned;
+      }
+      return out;
+    });
+    var out = Object.assign({}, data, { waves: waves });
+    if (hasAnyPlan && totalPlanned > 0) {
+      var pct = Math.round((totalDone / totalPlanned) * 100);
+      out.cover = Object.assign({}, data.cover || {}, {
+        progress: pct,
+        status: pct >= 100 ? 'Done' : pct > 0 ? 'In Progress' : 'Later',
+      });
+    }
+    return out;
+  }
+
   function paintBody(host, baseData) {
     // Re-fold feedback from the RAW payload on every paint, so a just-saved triage
     // decision (which changed the local overlay) is re-applied via feedbackAsItems.
@@ -847,6 +905,9 @@
       var merged = (Array.isArray(baseData.items) ? baseData.items.slice() : []).concat(fbItems);
       data = Object.assign({}, baseData, { items: merged });
     }
+    // Recompute every wave % (and the headline %) from real done/planned before
+    // rendering, so the numbers reflect what's actually shipped vs planned.
+    data = deriveWaveProgress(data);
     lastData = data;
     // 1) launcher (progress + trend), 2) WAVES (health/blocked-on), 3) needs-you,
     // 4) any dated timeline items (empty in the warehouse shape, renders nothing).
