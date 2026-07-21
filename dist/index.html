@@ -3842,6 +3842,25 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   if (WP.config.feedbackKey === undefined)      WP.config.feedbackKey = '';
   if (WP.config.aiPolishEndpoint === undefined) WP.config.aiPolishEndpoint = '';
 
+  /* ----------------------------------------------------------------
+   * LOCAL SYSTEM transport (tools/local-server.js).
+   * ----------------------------------------------------------------
+   * When Tempo runs on the local Node server (npm run local), feedback -
+   * INCLUDING attached images - is POSTed here and written to real files on
+   * disk (data/feedback.json + data/feedback-images/), then shown on Project
+   * delivery exactly like the live path. This is the seam we later repoint at
+   * a real server (Supabase) with no UI change.
+   *
+   * Auto-on when the page is served from localhost/127.0.0.1 (i.e. via the
+   * local server); OFF for the static GitHub Pages build, which falls back to
+   * the existing per-browser local save. Empty string ⇒ disabled.
+   * -------------------------------------------------------------- */
+  if (WP.config.feedbackLocalEndpoint === undefined) {
+    var host = (typeof location !== 'undefined' && location.hostname) || '';
+    var isLocal = host === 'localhost' || host === '127.0.0.1';
+    WP.config.feedbackLocalEndpoint = isLocal ? '/api/feedback' : '';
+  }
+
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
   // (WP.deferred) gates nav, routes, and panels alike.
@@ -4350,6 +4369,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     fbSavedLocalNFew:   { en: 'Saved {n} comments on this device.', ar: 'حُفظت {n} تعليقات على هذا الجهاز.' },
     fbSavedLocalNMany:  { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليقاً على هذا الجهاز.' },
     fbSavedLocalNOther: { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليق على هذا الجهاز.' },
+    // — Local system (server on your machine) saved-to-disk confirmations —
+    fbSavedDiskNOne:   { en: 'Saved 1 comment (with any image) to your local system.', ar: 'حُفظ تعليق واحد (مع أي صورة) في نظامك المحلي.' },
+    fbSavedDiskNTwo:   { en: 'Saved {n} comments to your local system.', ar: 'حُفظ تعليقان في نظامك المحلي.' },
+    fbSavedDiskNFew:   { en: 'Saved {n} comments to your local system.', ar: 'حُفظت {n} تعليقات في نظامك المحلي.' },
+    fbSavedDiskNMany:  { en: 'Saved {n} comments to your local system.', ar: 'حُفظ {n} تعليقاً في نظامك المحلي.' },
+    fbSavedDiskNOther: { en: 'Saved {n} comments to your local system.', ar: 'حُفظ {n} تعليق في نظامك المحلي.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },
@@ -15759,6 +15784,51 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // missing we do NOT dead-end the user (old behaviour lost their feedback): we
     // SAVE their submission to a durable per-browser local store and confirm it, so
     // nothing is lost and it can be exported/promoted to the warehouse later.
+    // LOCAL SYSTEM: when running on the local Node server, POST the FULL records
+    // (images included) so they are written to real files on disk and show on
+    // Project delivery. Falls back to browser-save if the local server is down,
+    // so nothing is ever lost.
+    var localEp = cfg('feedbackLocalEndpoint');
+    if (localEp) {
+      var localRecords = dispatches.map(function (d, i) {
+        return Object.assign({}, d.inputs, {
+          image: items[i].image || null,
+          imageName: items[i].imageName || '',
+        });
+      });
+      setSubmitting(true);
+      live(t('fbSending'));
+      fetch(localEp, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: localRecords }),
+      }).then(function (r) {
+        if (!r.ok) throw new Error('local http ' + r.status);
+        return r.json();
+      }).then(function () {
+        setSubmitting(false);
+        clearDraft();
+        toastOk(WP.i18n.plural('fbSavedDiskN', items.length));
+        live(WP.i18n.plural('fbSavedDiskN', items.length));
+        closePanel();
+        // Refresh Project delivery so the just-saved item (with its image) shows.
+        if (WP.ui && WP.ui.exec && WP.ui.exec.refresh) { try { WP.ui.exec.refresh(); } catch (e) {} }
+        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+      }).catch(function () {
+        // Local server unreachable: fall back to per-browser save so nothing is
+        // lost, then tell the truth via the same local-saved toast.
+        var ok2 = saveLocally(localRecords);
+        setSubmitting(false);
+        if (!ok2) { toastErr(t('fbSaveLocalFail')); live(t('fbSaveLocalFail')); return; }
+        clearDraft();
+        toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
+        live(WP.i18n.plural('fbSavedLocalN', items.length));
+        closePanel();
+        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+      });
+      return;
+    }
+
     var endpoint = cfg('feedbackEndpoint');
     var token = cfg('feedbackDispatchToken');
     if (!endpoint || !token) {

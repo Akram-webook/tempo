@@ -171,6 +171,25 @@
   if (WP.config.feedbackKey === undefined)      WP.config.feedbackKey = '';
   if (WP.config.aiPolishEndpoint === undefined) WP.config.aiPolishEndpoint = '';
 
+  /* ----------------------------------------------------------------
+   * LOCAL SYSTEM transport (tools/local-server.js).
+   * ----------------------------------------------------------------
+   * When Tempo runs on the local Node server (npm run local), feedback -
+   * INCLUDING attached images - is POSTed here and written to real files on
+   * disk (data/feedback.json + data/feedback-images/), then shown on Project
+   * delivery exactly like the live path. This is the seam we later repoint at
+   * a real server (Supabase) with no UI change.
+   *
+   * Auto-on when the page is served from localhost/127.0.0.1 (i.e. via the
+   * local server); OFF for the static GitHub Pages build, which falls back to
+   * the existing per-browser local save. Empty string ⇒ disabled.
+   * -------------------------------------------------------------- */
+  if (WP.config.feedbackLocalEndpoint === undefined) {
+    var host = (typeof location !== 'undefined' && location.hostname) || '';
+    var isLocal = host === 'localhost' || host === '127.0.0.1';
+    WP.config.feedbackLocalEndpoint = isLocal ? '/api/feedback' : '';
+  }
+
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
   // (WP.deferred) gates nav, routes, and panels alike.

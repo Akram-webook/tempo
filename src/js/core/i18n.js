@@ -490,6 +490,12 @@
     fbSavedLocalNFew:   { en: 'Saved {n} comments on this device.', ar: 'حُفظت {n} تعليقات على هذا الجهاز.' },
     fbSavedLocalNMany:  { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليقاً على هذا الجهاز.' },
     fbSavedLocalNOther: { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليق على هذا الجهاز.' },
+    // — Local system (server on your machine) saved-to-disk confirmations —
+    fbSavedDiskNOne:   { en: 'Saved 1 comment (with any image) to your local system.', ar: 'حُفظ تعليق واحد (مع أي صورة) في نظامك المحلي.' },
+    fbSavedDiskNTwo:   { en: 'Saved {n} comments to your local system.', ar: 'حُفظ تعليقان في نظامك المحلي.' },
+    fbSavedDiskNFew:   { en: 'Saved {n} comments to your local system.', ar: 'حُفظت {n} تعليقات في نظامك المحلي.' },
+    fbSavedDiskNMany:  { en: 'Saved {n} comments to your local system.', ar: 'حُفظ {n} تعليقاً في نظامك المحلي.' },
+    fbSavedDiskNOther: { en: 'Saved {n} comments to your local system.', ar: 'حُفظ {n} تعليق في نظامك المحلي.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },
