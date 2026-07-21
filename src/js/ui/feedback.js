@@ -877,6 +877,51 @@
     // missing we do NOT dead-end the user (old behaviour lost their feedback): we
     // SAVE their submission to a durable per-browser local store and confirm it, so
     // nothing is lost and it can be exported/promoted to the warehouse later.
+    // LOCAL SYSTEM: when running on the local Node server, POST the FULL records
+    // (images included) so they are written to real files on disk and show on
+    // Project delivery. Falls back to browser-save if the local server is down,
+    // so nothing is ever lost.
+    var localEp = cfg('feedbackLocalEndpoint');
+    if (localEp) {
+      var localRecords = dispatches.map(function (d, i) {
+        return Object.assign({}, d.inputs, {
+          image: items[i].image || null,
+          imageName: items[i].imageName || '',
+        });
+      });
+      setSubmitting(true);
+      live(t('fbSending'));
+      fetch(localEp, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: localRecords }),
+      }).then(function (r) {
+        if (!r.ok) throw new Error('local http ' + r.status);
+        return r.json();
+      }).then(function () {
+        setSubmitting(false);
+        clearDraft();
+        toastOk(WP.i18n.plural('fbSavedDiskN', items.length));
+        live(WP.i18n.plural('fbSavedDiskN', items.length));
+        closePanel();
+        // Refresh Project delivery so the just-saved item (with its image) shows.
+        if (WP.ui && WP.ui.exec && WP.ui.exec.refresh) { try { WP.ui.exec.refresh(); } catch (e) {} }
+        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+      }).catch(function () {
+        // Local server unreachable: fall back to per-browser save so nothing is
+        // lost, then tell the truth via the same local-saved toast.
+        var ok2 = saveLocally(localRecords);
+        setSubmitting(false);
+        if (!ok2) { toastErr(t('fbSaveLocalFail')); live(t('fbSaveLocalFail')); return; }
+        clearDraft();
+        toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
+        live(WP.i18n.plural('fbSavedLocalN', items.length));
+        closePanel();
+        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+      });
+      return;
+    }
+
     var endpoint = cfg('feedbackEndpoint');
     var token = cfg('feedbackDispatchToken');
     if (!endpoint || !token) {

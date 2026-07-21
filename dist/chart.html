@@ -3847,6 +3847,25 @@ const EMAIL_HASHES = {};
   if (WP.config.feedbackKey === undefined)      WP.config.feedbackKey = '';
   if (WP.config.aiPolishEndpoint === undefined) WP.config.aiPolishEndpoint = '';
 
+  /* ----------------------------------------------------------------
+   * LOCAL SYSTEM transport (tools/local-server.js).
+   * ----------------------------------------------------------------
+   * When Tempo runs on the local Node server (npm run local), feedback -
+   * INCLUDING attached images - is POSTed here and written to real files on
+   * disk (data/feedback.json + data/feedback-images/), then shown on Project
+   * delivery exactly like the live path. This is the seam we later repoint at
+   * a real server (Supabase) with no UI change.
+   *
+   * Auto-on when the page is served from localhost/127.0.0.1 (i.e. via the
+   * local server); OFF for the static GitHub Pages build, which falls back to
+   * the existing per-browser local save. Empty string ⇒ disabled.
+   * -------------------------------------------------------------- */
+  if (WP.config.feedbackLocalEndpoint === undefined) {
+    var host = (typeof location !== 'undefined' && location.hostname) || '';
+    var isLocal = host === 'localhost' || host === '127.0.0.1';
+    WP.config.feedbackLocalEndpoint = isLocal ? '/api/feedback' : '';
+  }
+
   // The advanced surfaces deferred when mvp === true. These ids match
   // nav ids / route names AND in-screen panel keys, so a single helper
   // (WP.deferred) gates nav, routes, and panels alike.
@@ -4355,6 +4374,12 @@ const EMAIL_HASHES = {};
     fbSavedLocalNFew:   { en: 'Saved {n} comments on this device.', ar: 'حُفظت {n} تعليقات على هذا الجهاز.' },
     fbSavedLocalNMany:  { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليقاً على هذا الجهاز.' },
     fbSavedLocalNOther: { en: 'Saved {n} comments on this device.', ar: 'حُفظ {n} تعليق على هذا الجهاز.' },
+    // — Local system (server on your machine) saved-to-disk confirmations —
+    fbSavedDiskNOne:   { en: 'Saved 1 comment (with any image) to your local system.', ar: 'حُفظ تعليق واحد (مع أي صورة) في نظامك المحلي.' },
+    fbSavedDiskNTwo:   { en: 'Saved {n} comments to your local system.', ar: 'حُفظ تعليقان في نظامك المحلي.' },
+    fbSavedDiskNFew:   { en: 'Saved {n} comments to your local system.', ar: 'حُفظت {n} تعليقات في نظامك المحلي.' },
+    fbSavedDiskNMany:  { en: 'Saved {n} comments to your local system.', ar: 'حُفظ {n} تعليقاً في نظامك المحلي.' },
+    fbSavedDiskNOther: { en: 'Saved {n} comments to your local system.', ar: 'حُفظ {n} تعليق في نظامك المحلي.' },
     // — Tier weights (routine tier + live counts) —
     tierRoutine:    { en: 'Routine baseline', ar: 'الأساس الروتيني' },
     tierEventsNow:  { en: 'events on this tier now', ar: 'فعالية على هذه الفئة حالياً' },

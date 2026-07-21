@@ -6,3 +6,7 @@ _site/
 .vscode/
 .slack-ingest-state.json
 .slack-ingest-health.json
+
+# Local system feedback images (saved on your machine, never committed)
+data/feedback-images/
+data/feedback.json.tmp
