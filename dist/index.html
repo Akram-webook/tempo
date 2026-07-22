@@ -11989,9 +11989,14 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       var no = (+w.no || +w.wave || idx + 1);
       var done = doneBy[no] || 0;
       var seen = seenBy[no] || 0;
-      // planned = declared plan, but at least what we can see, at least done, at least 1 if it has work.
+      // planned denominator:
+      //  - when a plan is DECLARED (wavePlans / payload), trust it: max(declared, done)
+      //    so extra items shipping under new ids never inflate the denominator (a
+      //    planned feature that ships under a fresh PR id can't push 1/3 -> 1/4), and
+      //    a wave that over-delivers just caps at 100%.
+      //  - with NO declared plan, fall back to what we can see: max(seen, done).
       var declared = (w.planned != null && !isNaN(+w.planned)) ? Math.max(0, Math.round(+w.planned)) : 0;
-      var planned = Math.max(declared, seen, done);
+      var planned = declared > 0 ? Math.max(declared, done) : Math.max(seen, done);
       var out = Object.assign({}, w);
       if (planned > 0) {
         hasAnyPlan = true;
@@ -15909,6 +15914,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       });
       setSubmitting(true);
       live(t('fbSending'));
+      // `saved` gates the catch: once the server confirms the write, a later throw
+      // in the UI work (toast/render) must NOT trigger the local-save fallback, or
+      // we would double-save (disk + localStorage) and mislead the user.
+      var savedOnServer = false;
       fetch(localEp, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -15917,15 +15926,20 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         if (!r.ok) throw new Error('local http ' + r.status);
         return r.json();
       }).then(function () {
+        savedOnServer = true;                 // server has the data; never re-save now
         setSubmitting(false);
         clearDraft();
         toastOk(WP.i18n.plural('fbSavedDiskN', items.length));
         live(WP.i18n.plural('fbSavedDiskN', items.length));
         closePanel();
         // Refresh Project delivery so the just-saved item (with its image) shows.
-        if (WP.ui && WP.ui.exec && WP.ui.exec.refresh) { try { WP.ui.exec.refresh(); } catch (e) {} }
-        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+        // Guarded so a render error can't bubble into the .catch (double-save guard).
+        try {
+          if (WP.ui && WP.ui.exec && WP.ui.exec.refresh) WP.ui.exec.refresh();
+          if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+        } catch (e) {}
       }).catch(function () {
+        if (savedOnServer) return;            // post-success UI threw; data is safe on disk
         // Local server unreachable: fall back to per-browser save so nothing is
         // lost, then tell the truth via the same local-saved toast.
         var ok2 = saveLocally(localRecords);
@@ -15935,7 +15949,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
         live(WP.i18n.plural('fbSavedLocalN', items.length));
         closePanel();
-        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+        if (WP.state && WP.state.route === 'exec' && WP.render) { try { WP.render(); } catch (e) {} }
       });
       return;
     }

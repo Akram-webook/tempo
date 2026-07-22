@@ -629,6 +629,35 @@ const PAYLOAD = {
     const bHead = elBk.querySelector('.ex-pct-n');
     assert(bHead && bHead.textContent.trim() === '50%', 'backlog fold: headline = 2/4 = 50%, NOT the stale cover=100 (got ' + (bHead && bHead.textContent) + ')');
     assert(/planned thing/.test(elBk.textContent), 'backlog fold: the planned item appears in the view');
+
+    // --- REGRESSION: a planned item that SHIPS under a new PR id must not inflate
+    // the wave denominator. Wave 2 plan = 3; one feature ships as a new Done PR
+    // (CI gives it no wave -> defaults to wave 2 via a labelled PR here) while the
+    // planned item is still Later in the backlog. Denominator must stay 3 (declared),
+    // NOT climb to 4 (declared + the extra shipped item). Was 1/4=25%, want 1/3=33%.
+    // Two waves so wave 2 is really at index 1 (its 1-based number = 2, matching item.wave=2).
+    const SHIP = {
+      generated: new Date().toISOString(),
+      cover: { status: 'In Progress', progress: 0, health: 'green' },
+      waves: [
+        { name: 'W1', label: 'wave:1', status: 'Done', progress: 100, health: 'green', openPRs: [] },
+        { name: 'W2', label: 'wave:2', status: 'Later', progress: 0, health: 'green', openPRs: [] },
+      ],
+      needsYou: [],
+      items: [ { id: 'pr-shipped', area: 'W2', title: 'a planned thing shipped', status: 'Done', type: 'Feature', wave: 2, ts: new Date().toISOString() } ],
+    };
+    const SHIP_BACKLOG = { defaultDeliveryWave: 1, wavePlans: { 1: 1, 2: 3 },
+      items: [
+        { id: 'plan-a', title: 'plan a', status: 'Later', type: 'Feature', wave: 2, ts: new Date().toISOString() },
+        { id: 'plan-b', title: 'plan b', status: 'Later', type: 'Feature', wave: 2, ts: new Date().toISOString() },
+        { id: 'plan-c', title: 'plan c', status: 'Later', type: 'Feature', wave: 2, ts: new Date().toISOString() },
+      ] };
+    const elS = window.document.createElement('div');
+    nextPayload = SHIP; nextOk = true; nextBacklog = SHIP_BACKLOG;
+    WP.ui.exec.render(elS);
+    await settle();
+    const sPct2 = [...elS.querySelectorAll('.ex-wc-pct')].map(s => s.textContent.trim())[1];
+    assert(sPct2 === '33%', 'shipped-under-new-id: W2 stays 1/3 = 33% (declared plan trusted, not inflated to 1/4) (got ' + sPct2 + ')');
     nextBacklog = null;   // restore default for any later assertions
 
   } catch (e) {

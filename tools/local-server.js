@@ -49,7 +49,9 @@ function argVal(flag, def) {
 const PORT = parseInt(argVal('--port', process.env.PORT || '4000'), 10);
 const HOST = argVal('--host', '127.0.0.1');
 const NO_BUILD = argv.includes('--no-build');
-const MAX_BODY = 12 * 1024 * 1024; // 12MB - one downscaled screenshot is well under this
+// One downscaled screenshot is ~6.7MB as a base64 dataURL; a queue can carry
+// several, so allow headroom for a batched multi-image POST (was 12MB = ~1 image).
+const MAX_BODY = 48 * 1024 * 1024; // 48MB
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -98,7 +100,19 @@ function makeId(seq) {
   return 'local-' + seq + '-' + Math.floor(Math.random() * 1e6).toString(36);
 }
 
-/* data:image/png;base64,AAAA...  ->  { ext, buffer }  (null if not a data URL) */
+/* Sniff the first bytes so we never write a "valid base64 but not an image" blob
+ * (Buffer.from is lenient and returns garbage for e.g. misplaced '='). Returns
+ * true only when the buffer's magic bytes match a real image of `ext`. */
+function looksLikeImage(buf, ext) {
+  if (!buf || buf.length < 4) return false;
+  if (ext === 'png')  return buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47; // \x89PNG
+  if (ext === 'jpg')  return buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;                    // JPEG SOI
+  if (ext === 'gif')  return buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46;                    // GIF
+  if (ext === 'webp') return buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP';
+  return false;
+}
+
+/* data:image/png;base64,AAAA...  ->  { ext, buffer }  (null if not a real image) */
 function decodeDataUrl(dataUrl) {
   if (typeof dataUrl !== 'string') return null;
   const m = /^data:(image\/(png|jpeg|jpg|gif|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl.trim());
@@ -107,6 +121,7 @@ function decodeDataUrl(dataUrl) {
   let buf;
   try { buf = Buffer.from(m[3], 'base64'); } catch (e) { return null; }
   if (!buf.length) return null;
+  if (!looksLikeImage(buf, ext)) return null;   // reject garbage that passed the regex
   return { ext: ext, buffer: buf };
 }
 
@@ -133,7 +148,13 @@ function persistRecord(rec, seq, stamp) {
 
 /* ---- static file serving (path-traversal safe) ---- */
 function safeJoin(base, urlPath) {
-  const clean = decodeURIComponent(urlPath.split('?')[0].split('#')[0]);
+  let clean;
+  try {
+    clean = decodeURIComponent(urlPath.split('?')[0].split('#')[0]);
+  } catch (e) {
+    return null;   // malformed percent-escape (e.g. "/%") - reject instead of throwing
+  }
+  if (clean.indexOf('\0') !== -1) return null;   // null byte - reject explicitly
   const target = path.normalize(path.join(base, clean));
   if (target !== base && !target.startsWith(base + path.sep)) return null; // escape guard
   return target;
@@ -165,6 +186,7 @@ function handleFeedback(req, res) {
   const chunks = [];
   let aborted = false;
   req.on('data', (c) => {
+    if (aborted) return;   // a queued chunk after we already 413'd would double-writeHead
     size += c.length;
     if (size > MAX_BODY) {
       aborted = true;

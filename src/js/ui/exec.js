@@ -866,9 +866,14 @@
       var no = (+w.no || +w.wave || idx + 1);
       var done = doneBy[no] || 0;
       var seen = seenBy[no] || 0;
-      // planned = declared plan, but at least what we can see, at least done, at least 1 if it has work.
+      // planned denominator:
+      //  - when a plan is DECLARED (wavePlans / payload), trust it: max(declared, done)
+      //    so extra items shipping under new ids never inflate the denominator (a
+      //    planned feature that ships under a fresh PR id can't push 1/3 -> 1/4), and
+      //    a wave that over-delivers just caps at 100%.
+      //  - with NO declared plan, fall back to what we can see: max(seen, done).
       var declared = (w.planned != null && !isNaN(+w.planned)) ? Math.max(0, Math.round(+w.planned)) : 0;
-      var planned = Math.max(declared, seen, done);
+      var planned = declared > 0 ? Math.max(declared, done) : Math.max(seen, done);
       var out = Object.assign({}, w);
       if (planned > 0) {
         hasAnyPlan = true;
