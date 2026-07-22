@@ -38,6 +38,10 @@ jobs:
           # the leadership report (both committed by the exec-status workflow).
           cp data/exec-status.json _site/data/exec-status.json
           cp data/feedback.json _site/data/feedback.json
+          # Durable planned-work backlog: SEPARATE from the CI-regenerated
+          # exec-status.json so the auto-refresh can't wipe planned items. The
+          # Project-delivery page folds it in for the honest done/planned %.
+          cp data/delivery-backlog.json _site/data/delivery-backlog.json
           cp src/status.html _site/status.html
       - uses: actions/upload-pages-artifact@v3
         with:
