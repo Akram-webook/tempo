@@ -28,9 +28,11 @@ try{
   assert(/only|lock|denied/i.test(view.textContent.toLowerCase()) || /wrDenied/.test(reportJs),'non-manager is denied the weekly report');
   assert(!WP.access.canManage(WP.viewer()) ? !/Decisions by type/.test(view.textContent) : true,'non-manager never sees the report body');
 
-  // nav entry + route are canManage-gated in app.js
+  // route stays registered + reachable; nav entry retired (2026-07 review) so the
+  // page is hidden but one-line restorable. The access + de-identification guarantees
+  // below still hold on the live route.
   assert(/route === 'weekly'/.test(appJs),'weekly route registered in app.js');
-  assert(/canManage[\s\S]{0,300}id: 'weekly'/.test(appJs),'weekly nav entry is inside the canManage block');
+  assert(!/^\s*nav\.push\(\{ id: 'weekly'/m.test(appJs),'weekly nav entry retired (commented out, not active)');
   // the view itself re-checks the gate (defence in depth)
   assert(/canManage\(viewer\)/.test(reportJs) && /wrDenied/.test(reportJs),'view re-checks canManage (defence in depth)');
 

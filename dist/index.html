@@ -16139,9 +16139,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       nav.splice(5, 0, { id: 'fairness', routes: ['fairness'], icon: 'tree', label: t('navFairness') });
     }
     if (canManage) {
-      // Weekly Intelligence Report — director/admin only (decision patterns, never
-      // people). Hidden for everyone else (guardrail, Constitution II / Ethics #6).
-      nav.push({ id: 'weekly', routes: ['weekly'], icon: 'chart', label: t('navWeekly') });
+      // Weekly Intelligence Report — retired from the nav (2026-07 review): it is
+      // reporting-for-its-own-sake, which the app deliberately avoids (Constitution I:
+      // improve decisions, not reporting). The route + view + weeklyReport.js are kept
+      // intact and reachable, so restoring it is a one-line nav.push here.
+      // nav.push({ id: 'weekly', routes: ['weekly'], icon: 'chart', label: t('navWeekly') });
       // Org capability (P6) — director/admin only, aggregated + k-anonymized. The
       // view re-checks the gate (defence in depth). Never people, never a ranking.
       nav.push({ id: 'org', routes: ['org'], icon: 'tree', label: t('navOrg') });
