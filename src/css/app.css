@@ -1748,6 +1748,9 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-pct-wrap { margin-top: 16px; }
 .ex-pct-n { font-size: 34px; font-weight: 800; color: var(--brand); }
 .ex-pct-l { color: var(--text-muted); font-size: 13px; }
+/* Scope line under the headline % - clarifies it counts the whole plan (all waves),
+   not the current wave, so a 100% wave next to an 80% headline reads as sensible. */
+.ex-pct-scope { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; }
 .ex-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin-top: 8px; background: var(--surface-1); }
 .ex-bar span { display: block; height: 100%; }
 
