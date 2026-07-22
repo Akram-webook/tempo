@@ -2304,9 +2304,10 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
    light theme to keep the small role labels readable (WCAG AA). RTL reverses the row. */
 #sig-bar { position: relative; z-index: 0; }
 .sig-bar { display: flex; align-items: center; gap: var(--sp-5); padding: var(--sp-3) var(--sp-7); margin-top: var(--sp-5);
-  /* reserve trailing room so the floating Feedback button (bottom-end, ~48px +
-     margins) never sits on top of the last credit name - keeps it readable */
-  padding-inline-end: 92px;
+  /* reserve trailing room so the floating Feedback button (bottom-end: 48px wide
+     + 28px inset + shadow) never crowds or clips the last credit name. Generous
+     gap so the name reads comfortably, not right up against the button. */
+  padding-inline-end: 120px;
   border-top: 1px solid var(--border, rgba(255,255,255,.12));
   background: var(--bg);
   font-family: var(--font-sans, system-ui, sans-serif); }
