@@ -26,7 +26,9 @@ const navIds=()=>[].slice.call(topbar().querySelectorAll('[data-go]')).map(b=>b.
 const DEFERRED_ROUTES=['library','weekly','wellbeing','fairness','upward','org'];
 // 'library' (Components) is intentionally NOT a sidebar entry any more - it is a
 // dev/design showcase reachable only by route - so it is excluded from the NAV list.
-const DEFERRED_NAV=['weekly','wellbeing','fairness','org'];
+// 'weekly' (Weekly Report) is likewise route-only now: its nav entry was retired in
+// the 2026-07 review (reporting-for-its-own-sake) but the route stays reachable.
+const DEFERRED_NAV=['wellbeing','fairness','org'];
 const CORE_NAV=['dashboard','map','daily','evaluations','me','permissions','settings'];
 function finish(){if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}
   console.log('PASS — mvp flag: ONE reversible flag (WP.config.mvp, default false = advanced layer visible, inlined into dist). mvp=true hides the deferred layer (nav entries removed, routes redirect home, in-screen panels — P6 dev panel, P1 timeline, P3 band/consistency/prep — absent) while the core renders fully; mvp=false restores every surface (nav + routes + panels). Nothing deleted; one line reverses it. EN + AR, both themes.');
@@ -126,11 +128,13 @@ try{
   // ── EN + AR, both themes — render cleanly in each state ──
   WP.config.mvp=true;
   WP.state.lang='ar';WP.state.theme='light';WP.setState({route:'dashboard'});
-  assert(navIds().indexOf('weekly')<0,'mvp=true under AR/light: deferred nav still hidden');
+  assert(navIds().indexOf('wellbeing')<0,'mvp=true under AR/light: deferred nav still hidden');
   assert(view().innerHTML.length>0,'mvp=true renders under AR + light theme');
   WP.state.theme='dark';WP.setState({route:'dashboard'});assert(view().innerHTML.length>0,'mvp=true renders under AR + dark theme');
   WP.config.mvp=false;WP.setState({route:'dashboard'});
-  assert(navIds().indexOf('weekly')>=0,'mvp=false under AR: deferred nav returns');
+  assert(navIds().indexOf('wellbeing')>=0,'mvp=false under AR: deferred nav returns');
+  // 'weekly' route stays reachable but is never a nav entry now (retired 2026-07)
+  assert(navIds().indexOf('weekly')<0,'weekly nav retired: absent even when mvp=false');
   WP.state.lang='en';
 }catch(e){errors.push('[run] '+e.message+'\n'+e.stack);}
 finish();

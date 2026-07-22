@@ -189,3 +189,33 @@ A running log of what worked, what nearly broke, and the rule to remember. Appen
 - What I nearly got wrong: I flagged "FAB unclickable while the daily-checkin modal is open" as a bug - but the .overlay is z-index 1100 vs FAB 900, which is CORRECT modal behavior (a modal SHOULD block the FAB). Checked the z-index before "fixing" it. Don't fix correct behavior.
 - Also caught a self-inflicted test bug: my new regression fixture put "W2" at array index 0, so its 1-based number was 1, not 2 - items with wave:2 didn't match. Wave NUMBER = array position, not the label string. Fixed the fixture to have 2 waves.
 - Rule to remember: a green suite proves the happy path, not correctness. After any non-trivial logic, run adversarial reviewers that hunt failure inputs, and add a regression test for each confirmed bug BEFORE fixing it.
+
+## 2026-07-22 — Nav audit: retire the "Weekly report" page
+- What worked: read every route's actual render function before judging, not just the nav labels. Wellbeing/Fairness looked thin by line-count (85/112) but are substantive gated pages with real states; the genuinely useless one (Weekly report) was longer but served reporting-for-its-own-sake, which the Constitution explicitly avoids ("improve decisions, not reporting").
+- What nearly broke / the gotcha: THREE separate tests asserted the weekly nav entry (verify-intel-ui, verify-weekly-report, verify-mvp-flag). Hiding the entry without updating them = red suite. The suite is the safety net working as designed. Also: kept the route + view + file reachable (commented the one nav.push) so the change is one-line reversible - the tests now assert the ROUTE stays registered while the NAV entry is retired. Precedent already existed: 'library' is a route-only page excluded from DEFERRED_NAV with the same rationale - I matched that exact pattern.
+- What I'd do differently next time: grep tests for the nav id BEFORE editing, so I know upfront how many assertions move.
+- Rule to remember: "useless" is about whether a page answers a decision, not its size. And hide-don't-delete keeps it reversible; when you retire a nav entry, update every test that asserted its presence to assert its ABSENCE + the route's continued reachability.
+
+## 2026-07-22 - Local server kept dying (ERR_CONNECTION_REFUSED)
+- What worked: macOS-native LaunchAgent (~/Library/LaunchAgents/com.tempo.local.plist) with KeepAlive=true + RunAtLoad=true. Starts at login, auto-restarts on crash/kill. Verified by kill -9 -> came back with a new PID.
+- What nearly broke / the gotcha: The server was NEVER broken. It was just a foreground process tied to a terminal/session, so it died on terminal close, sleep, restart, or session end. "It keeps dying" was a supervision gap, not a code bug. Diagnose HOW a process is run before touching its code.
+- What I'd do differently next time: For any "local system" the user relies on, set up supervision (launchd) from day one, not a raw node process.
+- Rule to remember: A local system only lives while its process lives. If the user needs it "always there", it needs a supervisor. Use --no-build in the plist for fast restarts; `npm run local` by hand for a fresh rebuild.
+
+## 2026-07-22 — "80% vs 100%" on Project delivery
+- What worked: reproduced the exact number offline (35/44 = 80%) BEFORE touching code, so I knew it was correct math, not a bug — then fixed the real defect (an ambiguous label), not the arithmetic.
+- What nearly broke / the gotcha: two progress systems coexist — a per-wave ratio (done/planned) AND a roadmap-wide rollup (total done / total planned across ALL waves). A finished wave (100%) sitting next to an all-waves headline (80%) reads as a contradiction even though both are right. The headline denominator is `wavePlans` in data/delivery-backlog.json (1:35, 2:3, 3:5, 4:1 = 44), not the live PR count.
+- What I'd do differently next time: when a number "looks wrong," first prove what it's actually counting against the real data; a mismatch is often a labelling gap, not a calc error.
+- Rule to remember: any headline % that rolls up a hidden denominator must state the denominator on-screen ("35 of 44 across 4 waves"), or it will read as broken next to a component that shows 100%.
+
+## 2026-07-22 — Rename "Tembo" -> "Workload" (product name)
+- What worked: grepping ALL user-facing "Tempo/تيمبو/تِمبو" (not just the wordmark) caught ~15 body-copy mentions I had wrongly waved off as "would read badly"; renaming them made the product name consistent.
+- What nearly broke / the gotcha: my first-pass claim "renaming mid-sentence reads badly" was only true for ARABIC. Arabic has no capitalization to signal a proper noun, so "حجم العمل" mid-sentence collides with the on-screen domain word "workload/الحِمل". English "Workload" as a proper noun reads fine. Fix: EN -> "Workload", AR -> "التطبيق" (the app) mid-sentence, "حجم العمل" only for the standalone name label.
+- What I'd do differently next time: don't blanket-skip a rename with a vibe reason; check each string in context and per language before deciding.
+- Rule to remember: a product-name rename is app-wide, not just the logo. Sweep EVERY user-facing string in BOTH languages; judge proper-noun readability per language (Arabic often needs "التطبيق" not the literal name). Leave code comments + dead strings (execEyebrowOld) alone.
+
+## 2026-07-22 — Bug hunt: missing i18n key + generator-vs-source drift
+- What worked: (a) scripting a "referenced t('key') but not defined" audit across all src/js caught `t('or')` rendering the raw key on the login screen (AR showed "or" not "أو"); (b) an adversarial code-review agent caught that src/status.html is REGENERATED by scripts/compute-exec-status.js on CI, so my manual rename there would have been reverted on the next run.
+- What nearly broke / the gotcha: editing a GENERATED file (src/status.html) without updating its generator = a silent revert on the next CI run. The file looked hand-editable but wasn't.
+- What I'd do differently next time: before editing any file, check if a script/CI generates it (grep the filename in scripts/ + .github/workflows). Run the missing-key audit as a standing check after any i18n change.
+- Rule to remember: (1) after any i18n change, audit that every t('literal') key exists (dynamic t('prefix_'+x) keys excepted). (2) Never edit a generated artifact without updating its generator too - grep scripts/ and workflows for the filename first.

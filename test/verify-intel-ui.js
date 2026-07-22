@@ -105,9 +105,10 @@ try{
     // de-identified: the report engine strips people; the VIEW must not re-introduce
     // names. It must not call the people directory to label rows.
     assert(!/WP\.i18n\.name\(|WP\.access\.byId\(|\.name\b.*person/.test(reportJs),'report view introduces NO per-person names/rows (de-identified)');
-    // nav entry gated to canManage; route registered
+    // route + view kept intact and reachable; nav entry retired (2026-07 review:
+    // reporting-for-its-own-sake), so restoring it is a one-line nav.push.
     assert(/route === 'weekly'|route==='weekly'/.test(appJs),'weekly route registered in app.js');
-    assert(/canManage[\s\S]{0,400}id: 'weekly'/.test(appJs) || /id: 'weekly'[\s\S]{0,120}/.test(appJs),'weekly nav entry present (canManage-gated)');
+    assert(!/^\s*nav\.push\(\{ id: 'weekly'/m.test(appJs),'weekly nav entry retired (commented out, not active)');
   }
 
   // engine de-identification holds (report carries no per-person key)

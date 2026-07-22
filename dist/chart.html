@@ -1988,6 +1988,9 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ex-pct-wrap { margin-top: 16px; }
 .ex-pct-n { font-size: 34px; font-weight: 800; color: var(--brand); }
 .ex-pct-l { color: var(--text-muted); font-size: 13px; }
+/* Scope line under the headline % - clarifies it counts the whole plan (all waves),
+   not the current wave, so a 100% wave next to an 80% headline reads as sensible. */
+.ex-pct-scope { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; }
 .ex-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin-top: 8px; background: var(--surface-1); }
 .ex-bar span { display: block; height: 100%; }
 
@@ -3909,7 +3912,7 @@ const EMAIL_HASHES = {};
 
   const STRINGS = {
     appName:        { en: 'Webook',                 ar: 'ويبوك' },
-    subtitle:       { en: 'Tembo',                  ar: 'Tembo' },
+    subtitle:       { en: 'Workload',               ar: 'Workload' },
     workloadMap:    { en: 'Workload Map',           ar: 'خريطة الأحمال' },
     teamHealth:     { en: 'Team Health',            ar: 'صحة الفريق' },
     available:      { en: 'Available',              ar: 'متاح' },
@@ -4205,7 +4208,7 @@ const EMAIL_HASHES = {};
     wbFlagged:      { en: 'People who may need relief', ar: 'أشخاص قد يحتاجون دعماً' },
     wbSuggested:    { en: 'Suggested', ar: 'المقترح' },
     wbEmptyTitle:   { en: 'No one is showing wellbeing risk right now', ar: 'لا أحد يُظهر مؤشّر خطر على الرفاهية حالياً' },
-    wbEmptyNote:    { en: 'That’s a good outcome — your team’s workload looks sustainable. Tempo will flag rising strain here early.', ar: 'هذه نتيجة جيدة — يبدو حِمل فريقك مستداماً. سيُنبّهك Tempo هنا مبكراً عند تزايد الضغط.' },
+    wbEmptyNote:    { en: 'That’s a good outcome — your team’s workload looks sustainable. Workload will flag rising strain here early.', ar: 'هذه نتيجة جيدة — يبدو حِمل فريقك مستداماً. سيُنبّهك التطبيق هنا مبكراً عند تزايد الضغط.' },
     wbDenied:       { en: 'Wellbeing signals are visible only to a person’s manager, their director, and super-admin.', ar: 'مؤشّرات الرفاهية تظهر فقط لمدير الشخص ومديره الأعلى ومشرف النظام.' },
     wbError:        { en: 'Couldn’t compute wellbeing signals right now.', ar: 'تعذّر حساب مؤشّرات الرفاهية حالياً.' },
     /* ===== Fairness / Overload Radar (Builder B) — keep grouped; may rebase ===== */
@@ -4220,7 +4223,7 @@ const EMAIL_HASHES = {};
     frSuggested:    { en: 'Suggested', ar: 'المقترح' },
     frNoData:       { en: 'Not enough assignment data yet for this team.', ar: 'لا توجد بيانات إسناد كافية لهذا الفريق بعد.' },
     frEmptyTitle:   { en: 'Not enough data to assess balance yet', ar: 'لا توجد بيانات كافية لتقييم التوازن بعد' },
-    frEmptyNote:    { en: 'No team has assignments to compare yet. Tempo will surface concentration or imbalance here as work is assigned.', ar: 'لا يوجد فريق لديه مهام للمقارنة بعد. سيُظهر Tempo هنا التركّز أو الاختلال عند إسناد العمل.' },
+    frEmptyNote:    { en: 'No team has assignments to compare yet. Workload will surface concentration or imbalance here as work is assigned.', ar: 'لا يوجد فريق لديه مهام للمقارنة بعد. سيُظهر التطبيق هنا التركّز أو الاختلال عند إسناد العمل.' },
     frDenied:       { en: 'Team-balance signals are visible only to a director / super-admin (across teams) and a manager (their own team).', ar: 'إشارات توازن الفريق تظهر فقط للمدير الأعلى / مشرف النظام (عبر الفرق) وللمدير (فريقه فقط).' },
     frError:        { en: 'Couldn’t compute team-balance signals right now.', ar: 'تعذّر حساب إشارات توازن الفريق حالياً.' },
     /* ===== end Fairness group ===== */
@@ -4473,12 +4476,13 @@ const EMAIL_HASHES = {};
     emailLabel:     { en: 'Work email', ar: 'إيميل العمل' },
     emailPh:        { en: 'name@webook.com', ar: 'name@webook.com' },
     continueBtn:    { en: 'Continue', ar: 'متابعة' },
+    or:             { en: 'or', ar: 'أو' },
     signOut:        { en: 'Sign out', ar: 'تسجيل الخروج' },
     pickAccount:    { en: 'Or pick your account', ar: 'أو اختر حسابك' },
     errBadDomain:   { en: 'Only @webook.com emails can sign in.', ar: 'فقط إيميلات @webook.com يمكنها الدخول.' },
     errNoAccount:   { en: 'No account found for that email. Try “pick your account”.', ar: 'لا حساب لهذا الإيميل. جرّب «اختر حسابك».' },
     demoAuthNote:   { en: 'Prototype sign-in — no password. Your email is matched to your team profile and role.', ar: 'دخول تجريبي — بدون كلمة مرور. يُربط إيميلك بملفك ودورك في الفريق.' },
-    verifyNote:     { en: 'Demo gate — your email must match a registered Tempo account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في تيمبو. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
+    verifyNote:     { en: 'Demo gate — your email must match a registered Workload account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في التطبيق. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
     errVerify:      { en: 'Could not verify that Google account. Use your @webook.com account.', ar: 'تعذّر التحقق من حساب Google. استخدم حساب @webook.com.' },
     // — email verification code (OTP) —
     sendCode:       { en: 'Email me a code', ar: 'أرسل لي رمزاً' },
@@ -4523,7 +4527,7 @@ const EMAIL_HASHES = {};
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     execStatus:     { en: 'Project delivery', ar: 'تسليم المشروع' },
     execStatusSub:  { en: 'Build status — what shipped, what\'s next', ar: 'حالة البناء — ما تم تسليمه وما هو التالي' },
-    execEyebrow:    { en: 'WEBOOK · TEMBO — PROJECT DELIVERY', ar: 'ويبوك · تيمبو — تسليم المشروع' },
+    execEyebrow:    { en: 'WEBOOK · WORKLOAD — PROJECT DELIVERY', ar: 'ويبوك · حجم العمل — تسليم المشروع' },
     execForWho:     { en: 'Build & delivery status for the project team — what shipped, what\'s in progress, and what needs a decision. Not an employee view.', ar: 'حالة بناء وتسليم المشروع لفريق العمل — ما تم تسليمه وما هو قيد التنفيذ وما يحتاج قراراً. ليست شاشة للموظفين.' },
     execOpenDeck:   { en: 'Open full status deck', ar: 'فتح عرض الحالة الكامل' },
     execSummary:    { en: '{done} shipped · {next} in progress · {need} need you', ar: '{done} مُنجز · {next} قيد التنفيذ · {need} بحاجة إليك' },
@@ -4566,7 +4570,12 @@ const EMAIL_HASHES = {};
     execInProgress: { en: 'In progress', ar: 'قيد التنفيذ' },
     execPlanned:    { en: 'Planned', ar: 'مخطّط' },
     execTotalWaves: { en: 'Total waves', ar: 'إجمالي الموجات' },
-    execDelivered:  { en: 'delivered', ar: 'مُنجز' },
+    execDelivered:  { en: 'workload', ar: 'حجم العمل' },
+    // Explains what the headline % counts, so a 100% wave next to an 80% overall
+    // never reads as a contradiction: it's all-waves scope, not the current wave.
+    execDeliveredScope:    { en: '{done} of {total} planned items across {waves} waves', ar: '{done} من {total} عنصراً مخططاً عبر {waves} موجات' },
+    // Singular variant so a one-wave plan reads "across 1 wave", not "1 waves".
+    execDeliveredScope1:   { en: '{done} of {total} planned items across 1 wave', ar: '{done} من {total} عنصراً مخططاً عبر موجة واحدة' },
     execFilterType:         { en: 'Type', ar: 'النوع' },
     execFilterStatus:       { en: 'Status', ar: 'الحالة' },
     execFilterAll:          { en: 'All', ar: 'الكل' },
@@ -4654,15 +4663,15 @@ const EMAIL_HASHES = {};
     prefComfortable:{ en: 'Comfortable', ar: 'مريحة' },
     prefCompact:    { en: 'Compact', ar: 'مدمجة' },
     prefDateFmt:    { en: 'Date format', ar: 'صيغة التاريخ' },
-    prefDateFmtNote:{ en: 'How dates appear across Tempo.', ar: 'كيف تظهر التواريخ في تيمبو.' },
-    prefDateFmtInfo:{ en: 'How dates appear across Tempo (follows your language). Example: {sample}', ar: 'كيف تظهر التواريخ في تيمبو (تتبع لغتك). مثال: {sample}' },
+    prefDateFmtNote:{ en: 'How dates appear across Workload.', ar: 'كيف تظهر التواريخ في التطبيق.' },
+    prefDateFmtInfo:{ en: 'How dates appear across Workload (follows your language). Example: {sample}', ar: 'كيف تظهر التواريخ في التطبيق (تتبع لغتك). مثال: {sample}' },
     prefDateAuto:   { en: 'Automatic (by language)', ar: 'تلقائي (حسب اللغة)' },
     prefSaved:      { en: 'Preference saved', ar: 'تم حفظ التفضيل' },
     // Notifications
     notifTitle:     { en: 'Notifications', ar: 'الإشعارات' },
-    notifSub:       { en: 'Choose how and what Tempo tells you. Off by default means never bothered.', ar: 'اختر كيف وماذا يخبرك تيمبو. الإيقاف يعني عدم الإزعاج.' },
+    notifSub:       { en: 'Choose how and what Workload tells you. Off by default means never bothered.', ar: 'اختر كيف وماذا يخبرك التطبيق. الإيقاف يعني عدم الإزعاج.' },
     notifChannels:  { en: 'How you’re notified', ar: 'طريقة الإشعار' },
-    notifChannelsNote:{ en: 'Turn a channel off to stop all Tempo messages there.', ar: 'أوقف قناة لإيقاف كل رسائل تيمبو فيها.' },
+    notifChannelsNote:{ en: 'Turn a channel off to stop all Workload messages there.', ar: 'أوقف قناة لإيقاف كل رسائل التطبيق فيها.' },
     notifEmail:     { en: 'Email', ar: 'البريد' },
     notifSlack:     { en: 'Slack', ar: 'سلاك' },
     notifInapp:     { en: 'In-app', ar: 'داخل التطبيق' },
@@ -4718,8 +4727,8 @@ const EMAIL_HASHES = {};
     comingSoon:     { en: 'Coming soon', ar: 'قريباً' },
     // ── Privacy (My settings) ──
     pvTitle:        { en: 'Privacy', ar: 'الخصوصية' },
-    pvSub:          { en: 'Exactly what Tempo holds about you, and how to get a copy.', ar: 'ما الذي يحتفظ به تِمبو عنك بالضبط، وكيف تحصل على نسخة منه.' },
-    pvHoldsTitle:   { en: 'What Tempo keeps about you', ar: 'ما الذي يحتفظ به تِمبو عنك' },
+    pvSub:          { en: 'Exactly what Workload holds about you, and how to get a copy.', ar: 'ما الذي يحتفظ به التطبيق عنك بالضبط، وكيف تحصل على نسخة منه.' },
+    pvHoldsTitle:   { en: 'What Workload keeps about you', ar: 'ما الذي يحتفظ به التطبيق عنك' },
     pvSource:       { en: 'From', ar: 'المصدر' },
     // category labels
     pvCat_identity:    { en: 'Your details', ar: 'بياناتك' },
@@ -4730,25 +4739,25 @@ const EMAIL_HASHES = {};
     pvWhy_identity:    { en: 'Name, title, work email, role and who you report to — so the app knows who you are and what you can see.', ar: 'الاسم والمسمى والبريد الوظيفي والدور ومن تتبعه — ليعرف التطبيق من أنت وما يمكنك رؤيته.' },
     pvWhy_preferences: { en: 'Theme, language, layout density, date format and notification choices — saved on your device so the app fits you.', ar: 'السمة واللغة وكثافة العرض وصيغة التاريخ وخيارات الإشعارات — محفوظة على جهازك ليناسبك التطبيق.' },
     pvWhy_evidence:    { en: 'Work-based signals (workload, check-ins, recognition, completed evaluations) — each one carries its source, so nothing is unexplained.', ar: 'إشارات مبنية على العمل (الحِمل، تسجيلات الحضور، التقدير، التقييمات المكتملة) — لكل إشارة مصدرها، فلا شيء بلا تفسير.' },
-    pvWhy_decisions:   { en: 'Decisions made in Tempo (assignments, evaluations, access changes) — kept so every decision is traceable.', ar: 'القرارات المتخذة في تِمبو (الإسنادات، التقييمات، تغييرات الوصول) — محفوظة ليكون كل قرار قابلاً للتتبّع.' },
+    pvWhy_decisions:   { en: 'Decisions made in Workload (assignments, evaluations, access changes) — kept so every decision is traceable.', ar: 'القرارات المتخذة في التطبيق (الإسنادات، التقييمات، تغييرات الوصول) — محفوظة ليكون كل قرار قابلاً للتتبّع.' },
     // source labels
     pvSrc_directory:    { en: 'the directory', ar: 'الدليل' },
     pvSrc_this_device:  { en: 'this device', ar: 'هذا الجهاز' },
     pvSrc_work_signals: { en: 'work signals', ar: 'إشارات العمل' },
     pvSrc_activity_log: { en: 'the activity log', ar: 'سجل النشاط' },
     // what Tempo never does
-    pvNeverTitle:   { en: 'What Tempo never does', ar: 'ما لا يفعله تِمبو أبداً' },
-    pvNeverBody:    { en: 'Tempo measures work and decisions — never people. No keystroke, mouse, presence or location tracking. No screen recording. No reading your private messages.', ar: 'يقيس تِمبو العمل والقرارات — لا الأشخاص أبداً. لا تتبّع لضغطات المفاتيح أو الفأرة أو الحضور أو الموقع. لا تسجيل للشاشة. لا قراءة لرسائلك الخاصة.' },
+    pvNeverTitle:   { en: 'What Workload never does', ar: 'ما لا يفعله التطبيق أبداً' },
+    pvNeverBody:    { en: 'Workload measures work and decisions — never people. No keystroke, mouse, presence or location tracking. No screen recording. No reading your private messages.', ar: 'يقيس التطبيق العمل والقرارات — لا الأشخاص أبداً. لا تتبّع لضغطات المفاتيح أو الفأرة أو الحضور أو الموقع. لا تسجيل للشاشة. لا قراءة لرسائلك الخاصة.' },
     // export
     pvExport:       { en: 'Export my data', ar: 'تصدير بياناتي' },
-    pvExportNote:   { en: 'Download everything Tempo holds about you as a file. Only your own data.', ar: 'نزّل كل ما يحتفظ به تِمبو عنك كملف. بياناتك أنت فقط.' },
+    pvExportNote:   { en: 'Download everything Workload holds about you as a file. Only your own data.', ar: 'نزّل كل ما يحتفظ به التطبيق عنك كملف. بياناتك أنت فقط.' },
     pvExportBtn:    { en: 'Download (JSON)', ar: 'تنزيل (JSON)' },
     pvExporting:    { en: 'Preparing…', ar: 'جارٍ التحضير…' },
     pvExportDone:   { en: 'Your data was downloaded.', ar: 'تم تنزيل بياناتك.' },
     pvExportError:  { en: 'Could not prepare the export. Please try again.', ar: 'تعذّر تحضير التصدير. حاول مرة أخرى.' },
     // ── Members & Access (Workspace) ──
     membersTitle:   { en: 'Members & Access', ar: 'الأعضاء والوصول' },
-    membersNote:    { en: 'Who can enter Tempo and what role they hold. Grant is the app-level gate — off means they cannot sign in at all.', ar: 'من يدخل تيمبو وأي دور يحمل. المنح هو بوابة الدخول للتطبيق — الإيقاف يعني عدم القدرة على تسجيل الدخول إطلاقاً.' },
+    membersNote:    { en: 'Who can enter Workload and what role they hold. Grant is the app-level gate — off means they cannot sign in at all.', ar: 'من يدخل التطبيق وأي دور يحمل. المنح هو بوابة الدخول للتطبيق — الإيقاف يعني عدم القدرة على تسجيل الدخول إطلاقاً.' },
     membersSearch:  { en: 'Search members', ar: 'ابحث عن عضو' },
     membersInvite:  { en: 'Invite admin', ar: 'دعوة مشرف' },
     membersCount:   { en: '{n} with access', ar: '{n} لديهم وصول' },
@@ -4758,7 +4767,7 @@ const EMAIL_HASHES = {};
     accessOn:       { en: 'Has access', ar: 'لديه وصول' },
     accessOff:      { en: 'No access', ar: 'بدون وصول' },
     grantConfirmTitle:{ en: 'Grant app access', ar: 'منح وصول التطبيق' },
-    grantConfirmBody:{ en: 'Let {n} sign in to Tempo?', ar: 'السماح لـ {n} بتسجيل الدخول إلى تيمبو؟' },
+    grantConfirmBody:{ en: 'Let {n} sign in to Workload?', ar: 'السماح لـ {n} بتسجيل الدخول إلى التطبيق؟' },
     revokeConfirmTitle:{ en: 'Revoke app access', ar: 'سحب وصول التطبيق' },
     revokeConfirmBody:{ en: 'Remove {n}’s access? They will be signed out and cannot sign in again until re-granted.', ar: 'إزالة وصول {n}؟ سيُخرَج ولن يستطيع الدخول حتى يُمنح مجدداً.' },
     cantRevokeSelf: { en: 'You can’t revoke your own access.', ar: 'لا يمكنك سحب وصولك أنت.' },
@@ -4776,7 +4785,7 @@ const EMAIL_HASHES = {};
     toggleNav:      { en: 'Show / hide menu', ar: 'إظهار / إخفاء القائمة' },
     collapseNav:    { en: 'Collapse menu', ar: 'طيّ القائمة' },
     expandNav:      { en: 'Expand menu', ar: 'فتح القائمة' },
-    goHome:         { en: 'Tempo — home', ar: 'تيمبو — الرئيسية' },
+    goHome:         { en: 'Workload — home', ar: 'حجم العمل — الرئيسية' },
     needsAttention: { en: 'Needs your attention', ar: 'يحتاج انتباهك' },
     teamLoad:       { en: 'Team load', ar: 'حمل الفرق' },
     talent:         { en: 'Growth & talent', ar: 'النمو والمواهب' },
@@ -4914,7 +4923,7 @@ const EMAIL_HASHES = {};
 
     /* ── WBK PRO design-parity: breadcrumb / header / table / sub-tabs / KPI delta ── */
     breadcrumb:     { en: 'Breadcrumb', ar: 'مسار التنقل' },
-    bcTempo:        { en: 'Tembo', ar: 'تيمبو' },
+    bcTempo:        { en: 'Workload', ar: 'حجم العمل' },
     // page-header subtitles
     dashSubDirector:{ en: 'Org-wide capacity & team health · {n} people in scope', ar: 'السعة وصحة الفرق على مستوى المنظمة · {n} شخصاً ضمن النطاق' },
     dashSubManager: { en: 'Your team’s capacity & growth · {n} reports', ar: 'سعة فريقك ونموّه · {n} من المرؤوسين' },

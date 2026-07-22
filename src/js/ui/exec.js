@@ -119,13 +119,27 @@
     const need = ((data && data.needsYou) || []).length;
     const w = function (v) { return v; };   // bar segments are already percentages
     const summary = t('execSummary').replace('{done}', done).replace('{next}', next).replace('{need}', need);
+    // Scope line: the headline % is roadmap-wide (total done / total planned across
+    // ALL waves), so a 100% wave card sitting beside an 80% headline is NOT a
+    // contradiction - it just measures the whole plan, not the current wave. Spell
+    // that out from the same numbers the % is derived from (waves carry done/planned
+    // after deriveWaveProgress). Only shown when we actually have a plan to count.
+    const planWaves = waves.filter(function (x) { return (+x.planned || 0) > 0; });
+    const scopeDone = planWaves.reduce(function (a, x) { return a + (+x.done || 0); }, 0);
+    const scopeTotal = planWaves.reduce(function (a, x) { return a + (+x.planned || 0); }, 0);
+    const scope = scopeTotal > 0
+      ? (planWaves.length === 1 ? t('execDeliveredScope1') : t('execDeliveredScope'))
+          .replace('{done}', scopeDone).replace('{total}', scopeTotal).replace('{waves}', planWaves.length)
+      : '';
     const openUrl = ui.esc((WP.config.execDeckUrl || '').trim());
     const openBtn = openUrl
       ? '<a class="btn primary ex-deck-btn" id="exec-open" href="' + openUrl + '" target="_blank" rel="noopener noreferrer">' +
           ui.icon('external', 16) + ' <span>' + t('execOpenDeck') + '</span></a>' : '';
     return '<div class="section ex-launch">' +
       '<div class="ex-launch-top">' +
-        '<div class="ex-pct"><span class="ex-pct-n">' + pct + '%</span> <span class="ex-pct-l">' + t('execDelivered') + '</span></div>' +
+        '<div class="ex-pct"><span class="ex-pct-n">' + pct + '%</span> <span class="ex-pct-l">' + t('execDelivered') + '</span>' +
+          (scope ? '<span class="ex-pct-scope">' + ui.esc(scope) + '</span>' : '') +
+        '</div>' +
         openBtn +
       '</div>' +
       '<div class="ex-bar" role="img" aria-label="' + pct + '% ' + t('execDelivered') + '">' +

@@ -358,7 +358,7 @@ function renderStatusHtml(status) {
     : `<p class="clear">Nothing needs you right now.</p>`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tembo - Project Delivery</title>
+<title>Workload - Project Delivery</title>
 <style>
   :root{--pink:#ff2c79;--bg:#09090b;--l2:#27272a;--fg:#e4e4e7;--fg2:#a1a1aa;--bd:rgba(255,255,255,.10);--g:#22c55e;--a:#f59e0b;--r:#ef4444}
   *{box-sizing:border-box}
@@ -385,7 +385,7 @@ function renderStatusHtml(status) {
   button{background:var(--pink);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
   @media print{body{background:#fff;color:#111}.actions{display:none}.cover{background:#f6f6f7}.cover .big,.eyebrow{color:#c81e63}}
 </style></head><body><div class="wrap">
-  <div class="eyebrow">WEBOOK · TEMBO - PROJECT DELIVERY</div>
+  <div class="eyebrow">WEBOOK · WORKLOAD - PROJECT DELIVERY</div>
   <h1>Project delivery</h1>
   <div class="gen">Generated ${esc(genStr)} · computed from merged PRs</div>
   <div class="actions"><button onclick="window.print()">Print / Export PDF</button></div>
