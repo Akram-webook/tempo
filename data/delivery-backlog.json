@@ -1,7 +1,14 @@
 {
-  "_comment": "DURABLE planned-work backlog for Project delivery. The CI 'exec-status update' job regenerates data/exec-status.json from merged PRs and would wipe any hand-added planned items; this file is SEPARATE and never touched by CI. The exec page folds these items + wave plan counts into the timeline + wave % at render time (like it folds feedback). Edit here to add/close planned work. status 'Later' = planned; set to 'Done' with a real PR once shipped (or just move it to exec-status via a labelled PR).",
+  "_comment": "DURABLE planned-work backlog for Project delivery. The CI 'exec-status update' job regenerates data/exec-status.json from merged PRs and would wipe any hand-added planned items; this file is SEPARATE and never touched by CI. The exec page folds these items + wave plan counts + wave NAMES into the timeline + wave % at render time. Edit here to add/close planned work. status 'Later' = planned; 'In Progress' = building now; set to 'Done' with a real PR once shipped. Waves 1-4 = shipped feature history. Waves 5-9 (G1-G5) = the Go-Live Foundation roadmap (see docs/ROADMAP-golive.md).",
   "defaultDeliveryWave": 1,
-  "wavePlans": { "1": 35, "2": 3, "3": 5, "4": 1 },
+  "wavePlans": { "1": 35, "2": 3, "3": 5, "4": 1, "5": 4, "6": 4, "7": 4, "8": 4, "9": 4 },
+  "waveNames": {
+    "5": "G1 - Real Data Foundation",
+    "6": "G2 - Real Sign-in (Auth)",
+    "7": "G3 - Real Persistence (Backend)",
+    "8": "G4 - Deploy & Access Control",
+    "9": "G5 - Go-Live Hardening"
+  },
   "items": [
     { "id": "plan-wellbeing", "area": "Wellbeing", "title": "Team wellbeing view (capacity & burnout signals)", "status": "Later", "type": "Feature", "wave": 2, "ts": "2026-07-21T09:00:00Z" },
     { "id": "plan-fairness", "area": "Fairness", "title": "Fairness view (balanced workload distribution)", "status": "Later", "type": "Feature", "wave": 2, "ts": "2026-07-21T09:00:00Z" },
@@ -11,6 +18,31 @@
     { "id": "plan-upward", "area": "Evaluations", "title": "Upward review (evaluate my manager)", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
     { "id": "plan-org", "area": "Org", "title": "Org readiness map", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
     { "id": "plan-timeline", "area": "Profile", "title": "Person growth timeline", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
-    { "id": "plan-weekly", "area": "Weekly report", "title": "Weekly report (auto digest)", "status": "Later", "type": "Feature", "wave": 4, "ts": "2026-07-21T09:00:00Z" }
+    { "id": "plan-weekly", "area": "Weekly report", "title": "Weekly report (auto digest)", "status": "Later", "type": "Feature", "wave": 4, "ts": "2026-07-21T09:00:00Z" },
+
+    { "id": "gl-g1-source", "area": "Data", "title": "G1: Connect the real Webook Event-Ops directory (private source, not in repo)", "status": "Later", "type": "Feature", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g1-import", "area": "Data", "title": "G1: Real-data import path (people + org tree) via scripts/data-load", "status": "Later", "type": "Feature", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g1-flag", "area": "Data", "title": "G1: Sample-data flag flips off cleanly; badge only shows when data is sample", "status": "Later", "type": "Improvement", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g1-pii", "area": "Data", "title": "G1: Keep PII out of the public bundle (hash emails, no raw names/phones in dist)", "status": "Later", "type": "Improvement", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
+
+    { "id": "gl-g2-invite", "area": "Auth", "title": "G2: Turn on Supabase email+password and invite real staff", "status": "Later", "type": "Feature", "wave": 6, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g2-map", "area": "Auth", "title": "G2: Sign-in maps verified email to the real person + correct role", "status": "Later", "type": "Feature", "wave": 6, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g2-failclosed", "area": "Auth", "title": "G2: Fail-closed in production (no directory-gate fallback, unknown email denied)", "status": "Later", "type": "Improvement", "wave": 6, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g2-reset", "area": "Auth", "title": "G2: Password reset + change flow verified end to end", "status": "Later", "type": "Bug fix", "wave": 6, "ts": "2026-07-22T20:00:00Z" },
+
+    { "id": "gl-g3-db", "area": "Backend", "title": "G3: Real work (assignments/check-ins/evaluations) persists to live Supabase", "status": "Later", "type": "Feature", "wave": 7, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g3-scope", "area": "Backend", "title": "G3: Role-scoped reads hold on real data (peer/manager/director)", "status": "Later", "type": "Improvement", "wave": 7, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g3-offline", "area": "Backend", "title": "G3: Graceful offline + conflict handling proven with real accounts", "status": "Later", "type": "Improvement", "wave": 7, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g3-hole", "area": "Backend", "title": "G3: Close the manual-upload dev hole on production", "status": "Later", "type": "Bug fix", "wave": 7, "ts": "2026-07-22T20:00:00Z" },
+
+    { "id": "gl-g4-target", "area": "Deploy", "title": "G4: Choose + wire the production deploy target (gated to real staff)", "status": "Later", "type": "Feature", "wave": 8, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g4-envs", "area": "Deploy", "title": "G4: Environment split - sample/demo build vs real build (reversible flag)", "status": "Later", "type": "Improvement", "wave": 8, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g4-secrets", "area": "Deploy", "title": "G4: Secrets only in backend; nothing sensitive in repo or bundle", "status": "Later", "type": "Improvement", "wave": 8, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g4-admin", "area": "Deploy", "title": "G4: Access management + admin-invite flow verified on the live target", "status": "Later", "type": "Feature", "wave": 8, "ts": "2026-07-22T20:00:00Z" },
+
+    { "id": "gl-g5-states", "area": "Hardening", "title": "G5: Every page's empty/error/loading/RTL/mobile state verified on real data", "status": "Later", "type": "Improvement", "wave": 9, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g5-monitor", "area": "Hardening", "title": "G5: Health/monitoring signal so we know if it breaks", "status": "Later", "type": "Feature", "wave": 9, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g5-onboard", "area": "Hardening", "title": "G5: Onboarding - how staff get access, how an admin adds someone", "status": "Later", "type": "Feature", "wave": 9, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g5-runbook", "area": "Hardening", "title": "G5: Known-limits doc + one-step rollback runbook", "status": "Later", "type": "Improvement", "wave": 9, "ts": "2026-07-22T20:00:00Z" }
   ]
 }
