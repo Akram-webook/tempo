@@ -3790,6 +3790,14 @@ const EMAIL_HASHES = {};
   if (WP.config.execStatusData === undefined)
     WP.config.execStatusData = 'data/exec-status.json';
 
+  // Durable planned-work backlog (data/delivery-backlog.json). SEPARATE from
+  // exec-status.json because the CI 'exec-status update' job regenerates that
+  // file from merged PRs and would wipe any hand-added planned items. The exec
+  // page folds this file's planned items + wave plan counts into the timeline
+  // and the honest wave % at render time. Missing/failed load = page still works.
+  if (WP.config.deliveryBacklogData === undefined)
+    WP.config.deliveryBacklogData = 'data/delivery-backlog.json';
+
   // Raw user feedback warehouse (data/feedback.json), committed by the Receive
   // Feedback Action. The Project delivery view folds its triaged items into the
   // same timeline + filters. Same relative-path rules as execStatusData.

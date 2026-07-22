@@ -30,14 +30,19 @@ window.HTMLElement.prototype.scrollIntoView = function () {};
 window.matchMedia = window.matchMedia || function () { return { matches: false, addEventListener() {}, removeEventListener() {} }; };
 
 // --- fetch mock: capture the URL, return whatever the current test wants. ------
-let fetchedUrl = null, nextPayload = null, nextOk = true, nextFeedback = null;
+let fetchedUrl = null, nextPayload = null, nextOk = true, nextFeedback = null, nextBacklog = null;
 window.fetch = function (url) {
-  // The view fetches exec-status.json (primary) AND feedback.json (best-effort).
-  // Route the feedback URL to its own payload so exec assertions aren't polluted;
-  // default = empty feedback so existing tests are unaffected.
+  // The view fetches exec-status.json (primary) AND feedback.json + the durable
+  // delivery-backlog.json (both best-effort). Route each side file to its own
+  // payload so exec assertions aren't polluted; defaults = empty so existing
+  // tests are unaffected (a null backlog leaves the payload's numbers as-is).
   if (/feedback\.json/.test(String(url))) {
     return Promise.resolve({ ok: true, status: 200,
       json: function () { return Promise.resolve(nextFeedback || { generated: null, items: [] }); } });
+  }
+  if (/delivery-backlog\.json/.test(String(url))) {
+    return Promise.resolve({ ok: nextBacklog !== null, status: nextBacklog !== null ? 200 : 404,
+      json: function () { return Promise.resolve(nextBacklog); } });
   }
   fetchedUrl = url;
   return Promise.resolve({
@@ -587,6 +592,44 @@ const PAYLOAD = {
     assert(dPcts[1] === '25%', 'Wave B derives 1/4 = 25% (got ' + dPcts[1] + ')');
     const dHead = elD.querySelector('.ex-pct-n');
     assert(dHead && dHead.textContent.trim() === '50%', 'headline derives total 3/6 = 50%, ignoring cover.progress (got ' + (dHead && dHead.textContent) + ')');
+
+    // --- DURABLE BACKLOG fold: CI wipes planned items from exec-status.json, so
+    // they live in data/delivery-backlog.json and are folded at render time. Prove
+    // that a CI-shaped payload (wave-less Done items, stale cover=100, no planned)
+    // + a backlog (default wave + plans + planned items) yields the HONEST % and
+    // shows the planned item in the timeline. This is the regression for the bug
+    // where the live headline read 100% after CI regenerated the file.
+    const CI_PAYLOAD = {
+      generated: new Date().toISOString(),
+      cover: { status: 'Done', progress: 100, health: 'green' },   // stale CI number
+      waves: [
+        { name: 'W1', label: 'wave:1', status: 'Done', progress: 100, health: 'green', openPRs: [] },
+        { name: 'W2', label: 'wave:2', status: 'Later', progress: 0, health: 'green', openPRs: [] },
+      ],
+      needsYou: [],
+      items: [
+        { id: 'pr-a', area: 'X', title: 'shipped a', status: 'Done', type: 'Feature', ts: new Date().toISOString() },
+        { id: 'pr-b', area: 'X', title: 'shipped b', status: 'Done', type: 'Feature', ts: new Date().toISOString() },
+      ], // NOTE: no `wave`, no `planned` - exactly what CI writes
+    };
+    const BACKLOG = {
+      defaultDeliveryWave: 1,
+      wavePlans: { 1: 2, 2: 2 },   // W1 planned 2 (both done), W2 planned 2 (none done)
+      items: [
+        { id: 'plan-x', area: 'W2 area', title: 'planned thing', status: 'Later', type: 'Feature', wave: 2, ts: new Date().toISOString() },
+      ],
+    };
+    const elBk = window.document.createElement('div');
+    nextPayload = CI_PAYLOAD; nextOk = true; nextBacklog = BACKLOG;
+    WP.ui.exec.render(elBk);
+    await settle();
+    const bPcts = [...elBk.querySelectorAll('.ex-wc-pct')].map(s => s.textContent.trim());
+    assert(bPcts[0] === '100%', 'backlog fold: W1 = 2/2 = 100% (wave-less Done items defaulted to wave 1) (got ' + bPcts[0] + ')');
+    assert(bPcts[1] === '0%', 'backlog fold: W2 = 0/2 = 0% from wavePlans (got ' + bPcts[1] + ')');
+    const bHead = elBk.querySelector('.ex-pct-n');
+    assert(bHead && bHead.textContent.trim() === '50%', 'backlog fold: headline = 2/4 = 50%, NOT the stale cover=100 (got ' + (bHead && bHead.textContent) + ')');
+    assert(/planned thing/.test(elBk.textContent), 'backlog fold: the planned item appears in the view');
+    nextBacklog = null;   // restore default for any later assertions
 
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);
