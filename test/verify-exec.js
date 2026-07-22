@@ -559,6 +559,35 @@ const PAYLOAD = {
     assert(mAfter[0].getAttribute('aria-expanded') === 'true', 'clicking one Delivered band expands THAT band');
     assert(mAfter[1].getAttribute('aria-expanded') === 'false', 'other week Delivered bands stay collapsed (independent toggles)');
 
+    // --- wave % DERIVES from real done/planned (not asserted numbers) --------------
+    // A payload where items carry a `wave` and waves carry `planned`: the card %
+    // and the headline % must be computed as done/planned, and move as items ship.
+    const DERIVE = {
+      generated: new Date().toISOString(),
+      cover: { status: 'In Progress', progress: 999, health: 'green' }, // 999 proves it is IGNORED (derived)
+      waves: [
+        { name: 'Wave A', label: 'wave:a', status: 'Later', progress: 0, health: 'green', openPRs: [], planned: 2 },
+        { name: 'Wave B', label: 'wave:b', status: 'Later', progress: 0, health: 'green', openPRs: [], planned: 4 },
+      ],
+      needsYou: [],
+      items: [
+        { id: 'd1', area: 'A', title: 'a1', status: 'Done', type: 'Feature', wave: 1, ts: new Date().toISOString() },
+        { id: 'd2', area: 'A', title: 'a2', status: 'Done', type: 'Feature', wave: 1, ts: new Date().toISOString() },
+        { id: 'd3', area: 'B', title: 'b1', status: 'Done', type: 'Feature', wave: 2, ts: new Date().toISOString() },
+        { id: 'd4', area: 'B', title: 'b2', status: 'Later', type: 'Feature', wave: 2, ts: new Date().toISOString() },
+      ],
+    };
+    const elD = window.document.createElement('div');
+    nextPayload = DERIVE; nextOk = true;
+    WP.ui.exec.render(elD);
+    await settle();
+    // Wave A = 2/2 = 100%, Wave B = 1/4 = 25%, overall = 3/6 = 50% (NOT 999)
+    const dPcts = [...elD.querySelectorAll('.ex-wc-pct')].map(s => s.textContent.trim());
+    assert(dPcts[0] === '100%', 'Wave A derives 2/2 = 100% (got ' + dPcts[0] + ')');
+    assert(dPcts[1] === '25%', 'Wave B derives 1/4 = 25% (got ' + dPcts[1] + ')');
+    const dHead = elD.querySelector('.ex-pct-n');
+    assert(dHead && dHead.textContent.trim() === '50%', 'headline derives total 3/6 = 50%, ignoring cover.progress (got ' + (dHead && dHead.textContent) + ')');
+
   } catch (e) {
     errors.push('[run] ' + e.message + '\n' + e.stack);
   }
