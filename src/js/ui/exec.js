@@ -688,6 +688,7 @@
   let lastData = null;   // last MERGED payload (base + folded feedback) for the timeline
   let lastBaseData = null;   // base exec payload (before feedback fold)
   let lastFeedbackRaw = null;   // raw feedback warehouse payload (re-folded each paint)
+  let lastBacklog = null;   // durable planned-work backlog (data/delivery-backlog.json)
 
   // View-local filters applied across the whole Project-delivery view (waves +
   // timeline). Purely presentational; nothing touches WP.state. Default 'all' so
@@ -904,11 +905,14 @@
     // Re-fold feedback from the RAW payload on every paint, so a just-saved triage
     // decision (which changed the local overlay) is re-applied via feedbackAsItems.
     lastBaseData = baseData;
-    var data = baseData;
+    // Fold the durable planned-work backlog FIRST (planned items + wave plan
+    // sizes + default-wave for wave-less delivery items). CI regenerates
+    // exec-status.json from PRs and wipes any planned items, so they live here.
+    var data = foldBacklog(baseData, lastBacklog);
     var fbItems = feedbackAsItems(lastFeedbackRaw);   // [] when no feedback / failed
     if (fbItems.length) {
-      var merged = (Array.isArray(baseData.items) ? baseData.items.slice() : []).concat(fbItems);
-      data = Object.assign({}, baseData, { items: merged });
+      var merged = (Array.isArray(data.items) ? data.items.slice() : []).concat(fbItems);
+      data = Object.assign({}, data, { items: merged });
     }
     // Recompute every wave % (and the headline %) from real done/planned before
     // rendering, so the numbers reflect what's actually shipped vs planned.
@@ -1158,10 +1162,11 @@
       // Also fold in triaged user feedback (data/feedback.json), so the SAME
       // timeline + filters show incoming ideas alongside shipped delivery. This
       // is best-effort: a missing/failed feedback file must never break the page.
-      loadFeedback().then(function (fbRaw) {
+      Promise.all([loadFeedback(), loadBacklog()]).then(function (arr) {
         if (my !== token) return;
-        lastFeedbackRaw = fbRaw;      // keep the RAW payload so paintBody can re-fold
-        paintBody(host, data);        // paintBody folds feedback (+ overlay) in itself
+        lastFeedbackRaw = arr[0];     // keep the RAW payload so paintBody can re-fold
+        lastBacklog = arr[1];         // durable planned-work backlog (may be null)
+        paintBody(host, data);        // paintBody folds feedback + backlog itself
       });
     }).catch(function () {
       if (my !== token) return;
@@ -1183,6 +1188,49 @@
       // the top (most recent first) and are de-duped against the warehouse by id.
       return mergeLocalSaved(fbRaw);
     });
+  }
+
+  // Fetch the durable planned-work backlog. Resolves to null on any problem so
+  // the page always stands on its own (the CI-regenerated exec-status.json is
+  // enough by itself; the backlog only ADDS planned items + wave plan sizes).
+  function loadBacklog() {
+    var url = (WP.config.deliveryBacklogData || 'data/delivery-backlog.json') + '?t=' + Date.now();
+    return fetch(url, { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) return null;
+      return res.json();
+    }).catch(function () { return null; });
+  }
+
+  // Fold the durable backlog into a base exec payload: append its planned items
+  // (deduped by id), apply wave plan sizes to waves[].planned, and default any
+  // wave-less DELIVERY item to the declared default wave so it counts toward that
+  // wave's ratio. Pure + fail-safe: bad/empty backlog returns data unchanged.
+  function foldBacklog(data, backlog) {
+    try {
+      if (!backlog || typeof backlog !== 'object') return data;
+      var items = Array.isArray(data.items) ? data.items.slice() : [];
+      var defWave = +backlog.defaultDeliveryWave || 1;
+      // default wave for existing wave-less delivery items (not feedback)
+      items = items.map(function (it) {
+        if (it && it.source !== 'feedback' && !it.wave) {
+          return Object.assign({}, it, { wave: defWave });
+        }
+        return it;
+      });
+      // append planned items, deduped by id
+      var seen = {};
+      items.forEach(function (it) { if (it && it.id) seen[it.id] = true; });
+      (Array.isArray(backlog.items) ? backlog.items : []).forEach(function (b) {
+        if (b && b.id && !seen[b.id]) { items.push(b); seen[b.id] = true; }
+      });
+      // apply wave plan sizes
+      var plans = backlog.wavePlans || {};
+      var waves = Array.isArray(data.waves) ? data.waves.map(function (w, idx) {
+        var no = (+w.no || +w.wave || idx + 1);
+        return (plans[no] != null) ? Object.assign({}, w, { planned: +plans[no] }) : w;
+      }) : data.waves;
+      return Object.assign({}, data, { items: items, waves: waves });
+    } catch (e) { return data; }
   }
 
   // Merge locally-saved feedback into the warehouse payload. Best-effort and

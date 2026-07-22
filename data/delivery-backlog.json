@@ -1,0 +1,16 @@
+{
+  "_comment": "DURABLE planned-work backlog for Project delivery. The CI 'exec-status update' job regenerates data/exec-status.json from merged PRs and would wipe any hand-added planned items; this file is SEPARATE and never touched by CI. The exec page folds these items + wave plan counts into the timeline + wave % at render time (like it folds feedback). Edit here to add/close planned work. status 'Later' = planned; set to 'Done' with a real PR once shipped (or just move it to exec-status via a labelled PR).",
+  "defaultDeliveryWave": 1,
+  "wavePlans": { "1": 35, "2": 3, "3": 5, "4": 1 },
+  "items": [
+    { "id": "plan-wellbeing", "area": "Wellbeing", "title": "Team wellbeing view (capacity & burnout signals)", "status": "Later", "type": "Feature", "wave": 2, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-fairness", "area": "Fairness", "title": "Fairness view (balanced workload distribution)", "status": "Later", "type": "Feature", "wave": 2, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-library", "area": "Library", "title": "WBK component library / templates", "status": "Later", "type": "Feature", "wave": 2, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-evalprep", "area": "Evaluations", "title": "Evaluation prep + band calibration", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-evalconsist", "area": "Evaluations", "title": "Evaluation consistency (cross-manager band check)", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-upward", "area": "Evaluations", "title": "Upward review (evaluate my manager)", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-org", "area": "Org", "title": "Org readiness map", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-timeline", "area": "Profile", "title": "Person growth timeline", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
+    { "id": "plan-weekly", "area": "Weekly report", "title": "Weekly report (auto digest)", "status": "Later", "type": "Feature", "wave": 4, "ts": "2026-07-21T09:00:00Z" }
+  ]
+}
