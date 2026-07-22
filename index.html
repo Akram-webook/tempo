@@ -33,6 +33,10 @@
        scripts (no build step) so index.html opens directly. -->
   <script src="src/js/core/log.js"></script>
   <script src="src/js/core/sha256.js"></script>
+  <!-- G1 go-live: build.js injects the generated, gitignored real-data.js here
+       (before mock-data.js) ONLY when it exists, so WP.data.REAL is preferred over
+       the sample directory. Kept out of the static list so tests + fresh checkouts
+       (no real data) load cleanly. @REAL-DATA-SLOT@ -->
   <script src="src/js/data/mock-data.js"></script>
   <script src="src/js/data/growth-data.js"></script>
   <script src="src/js/data/evaluation.js"></script>

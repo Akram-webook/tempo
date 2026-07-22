@@ -84,6 +84,11 @@
   // again to re-hide them for a lean go-live cut.
   if (WP.config.mvp === undefined) WP.config.mvp = false;
 
+  // G1 go-live escape hatch: force the sample directory even when a generated
+  // real-data.js is present (for demos / screenshots). Reversible; default off so
+  // real data wins automatically once imported. See docs/ROADMAP-golive.md.
+  if (WP.config.forceSampleData === undefined) WP.config.forceSampleData = false;
+
   /* ----------------------------------------------------------------
    * Executive Status — live data endpoint + deck link (both reversible).
    * ----------------------------------------------------------------

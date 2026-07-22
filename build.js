@@ -40,6 +40,14 @@ function inlineShell(srcFile) {
   // 1) Inline stylesheets
   html = html.replace(/<link\s+rel="stylesheet"\s+href="(src\/css\/[^"]+)"\s*\/?>/g,
     (_, href) => '<style>\n' + read(href) + '\n</style>');
+  // 2a) G1 go-live: inject the generated, gitignored real-data.js at its marker,
+  //     BEFORE mock-data.js, but ONLY when it exists. Absent (fresh checkout / no
+  //     real data) -> marker vanishes and the app uses the sample directory.
+  const realDataPath = 'src/js/data/real-data.js';
+  html = html.replace('@REAL-DATA-SLOT@',
+    fs.existsSync(path.join(root, realDataPath))
+      ? '-->\n  <script src="' + realDataPath + '"></script>\n  <!--'
+      : '');
   // 2) Inline scripts (preserve order)
   html = html.replace(/<script\s+src="(src\/js\/[^"]+)"><\/script>/g,
     (_, src) => '<script>\n' + read(src) + '\n</script>');

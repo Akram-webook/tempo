@@ -10,3 +10,11 @@ _site/
 # Local system feedback images (saved on your machine, never committed)
 data/feedback-images/
 data/feedback.json.tmp
+
+# G1 Real data (go-live) — the REAL Webook directory + generated real-data module.
+# These carry real staff PII and must NEVER be committed. The import pipeline
+# (scripts/data-load.js) reads real-directory.* and emits real-data.js locally only.
+data/real-directory.json
+data/real-directory.csv
+data/real-directory.xlsx
+src/js/data/real-data.js

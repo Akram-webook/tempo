@@ -20,9 +20,9 @@
     { "id": "plan-timeline", "area": "Profile", "title": "Person growth timeline", "status": "Later", "type": "Feature", "wave": 3, "ts": "2026-07-21T09:00:00Z" },
     { "id": "plan-weekly", "area": "Weekly report", "title": "Weekly report (auto digest)", "status": "Later", "type": "Feature", "wave": 4, "ts": "2026-07-21T09:00:00Z" },
 
-    { "id": "gl-g1-source", "area": "Data", "title": "G1: Connect the real Webook Event-Ops directory (private source, not in repo)", "status": "Later", "type": "Feature", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
-    { "id": "gl-g1-import", "area": "Data", "title": "G1: Real-data import path (people + org tree) via scripts/data-load", "status": "Later", "type": "Feature", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
-    { "id": "gl-g1-flag", "area": "Data", "title": "G1: Sample-data flag flips off cleanly; badge only shows when data is sample", "status": "Later", "type": "Improvement", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g1-source", "area": "Data", "title": "G1: Connect the real Webook Event-Ops directory (private source, not in repo)", "status": "In Progress", "type": "Feature", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g1-import", "area": "Data", "title": "G1: Real-data import path (people + org tree) via scripts/data-load", "status": "Done", "type": "Feature", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
+    { "id": "gl-g1-flag", "area": "Data", "title": "G1: Sample-data flag flips off cleanly; badge only shows when data is sample", "status": "Done", "type": "Improvement", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
     { "id": "gl-g1-pii", "area": "Data", "title": "G1: Keep PII out of the public bundle (hash emails, no raw names/phones in dist)", "status": "Later", "type": "Improvement", "wave": 5, "ts": "2026-07-22T20:00:00Z" },
 
     { "id": "gl-g2-invite", "area": "Auth", "title": "G2: Turn on Supabase email+password and invite real staff", "status": "Later", "type": "Feature", "wave": 6, "ts": "2026-07-22T20:00:00Z" },
