@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-21T16:15:05.233Z",
+  "generated": "2026-07-22T06:39:28.780Z",
   "cover": {
     "status": "Done",
     "progress": 100,
@@ -14,8 +14,7 @@
       "progress": 100,
       "health": "green",
       "openPRs": [],
-      "notes": "35/35 PRs merged, 7k/7k lines.",
-      "planned": 35
+      "notes": "35/35 PRs merged, 7k/7k lines."
     },
     {
       "name": "Capacity Engine",
@@ -24,7 +23,7 @@
       "progress": 0,
       "health": "green",
       "openPRs": [],
-      "planned": 3
+      "notes": "0/0 PRs merged, 0k/0k lines."
     },
     {
       "name": "Real Data Go-live",
@@ -33,7 +32,7 @@
       "progress": 0,
       "health": "green",
       "openPRs": [],
-      "planned": 5
+      "notes": "0/0 PRs merged, 0k/0k lines."
     },
     {
       "name": "Slack Integration",
@@ -42,7 +41,7 @@
       "progress": 0,
       "health": "green",
       "openPRs": [],
-      "planned": 1
+      "notes": "0/0 PRs merged, 0k/0k lines."
     }
   ],
   "needsYou": [],
@@ -53,8 +52,7 @@
       "title": "Adversarial review: fix 4 real bugs in the timeline + feedback save",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-20T07:10:10Z",
-      "wave": 1
+      "ts": "2026-07-20T07:10:10Z"
     },
     {
       "id": "pr-160",
@@ -62,8 +60,7 @@
       "title": "Fix: saved feedback now shows on Project delivery (was a dead write)",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-20T06:41:42Z",
-      "wave": 1
+      "ts": "2026-07-20T06:41:42Z"
     },
     {
       "id": "pr-159",
@@ -71,8 +68,7 @@
       "title": "Collapse Delivered by default, assign every item to a wave, fix stuck dialog + save feedback locally",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-20T06:15:14Z",
-      "wave": 1
+      "ts": "2026-07-20T06:15:14Z"
     },
     {
       "id": "pr-158",
@@ -80,8 +76,7 @@
       "title": "Status filter as a dropdown (Delivered / In progress / To decide)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T21:03:10Z",
-      "wave": 1
+      "ts": "2026-07-19T21:03:10Z"
     },
     {
       "id": "pr-157",
@@ -89,8 +84,7 @@
       "title": "docs: log waves batch",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T20:51:02Z",
-      "wave": 1
+      "ts": "2026-07-19T20:51:02Z"
     },
     {
       "id": "pr-156",
@@ -98,8 +92,7 @@
       "title": "Strategic (BCG/PM) ideas mapped to waves",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T20:48:15Z",
-      "wave": 1
+      "ts": "2026-07-19T20:48:15Z"
     },
     {
       "id": "pr-155",
@@ -107,8 +100,7 @@
       "title": "Notify the director when a wave hits 100%",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T20:44:28Z",
-      "wave": 1
+      "ts": "2026-07-19T20:44:28Z"
     },
     {
       "id": "pr-154",
@@ -116,8 +108,7 @@
       "title": "Click a wave to focus it (per-wave bars + jump)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T20:30:43Z",
-      "wave": 1
+      "ts": "2026-07-19T20:30:43Z"
     },
     {
       "id": "pr-153",
@@ -125,8 +116,7 @@
       "title": "docs: log progress-100 fix",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T20:12:38Z",
-      "wave": 1
+      "ts": "2026-07-19T20:12:38Z"
     },
     {
       "id": "pr-152",
@@ -134,8 +124,7 @@
       "title": "Fix 95%-but-all-done: exclude abandoned PRs from progress",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T20:07:45Z",
-      "wave": 1
+      "ts": "2026-07-19T20:07:45Z"
     },
     {
       "id": "pr-151",
@@ -143,8 +132,7 @@
       "title": "docs: log branded-select fix",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T19:54:53Z",
-      "wave": 1
+      "ts": "2026-07-19T19:54:53Z"
     },
     {
       "id": "pr-150",
@@ -152,8 +140,7 @@
       "title": "Brand every native select (Show-N pager + all)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T19:49:04Z",
-      "wave": 1
+      "ts": "2026-07-19T19:49:04Z"
     },
     {
       "id": "pr-149",
@@ -161,8 +148,7 @@
       "title": "docs: log review-pass fixes",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T19:28:04Z",
-      "wave": 1
+      "ts": "2026-07-19T19:28:04Z"
     },
     {
       "id": "pr-148",
@@ -170,8 +156,7 @@
       "title": "Review fixes: wave over-match, Testing band, localized chips, Esc re-entry",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T19:25:32Z",
-      "wave": 1
+      "ts": "2026-07-19T19:25:32Z"
     },
     {
       "id": "pr-147",
@@ -179,8 +164,7 @@
       "title": "docs: log timeline status-bands",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T19:02:06Z",
-      "wave": 1
+      "ts": "2026-07-19T19:02:06Z"
     },
     {
       "id": "pr-146",
@@ -188,8 +172,7 @@
       "title": "docs: lesson - code merge dropped by deploy concurrency race",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T19:00:41Z",
-      "wave": 1
+      "ts": "2026-07-19T19:00:41Z"
     },
     {
       "id": "pr-145",
@@ -197,8 +180,7 @@
       "title": "Order the Project delivery timeline into status bands",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T18:44:13Z",
-      "wave": 1
+      "ts": "2026-07-19T18:44:13Z"
     },
     {
       "id": "pr-144",
@@ -206,8 +188,7 @@
       "title": "docs: log dropzone + dialog fix",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T17:51:35Z",
-      "wave": 1
+      "ts": "2026-07-19T17:51:35Z"
     },
     {
       "id": "pr-143",
@@ -215,8 +196,7 @@
       "title": "Feedback: image dropzone (drag/click/paste) + fix stuck close dialog",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T17:47:25Z",
-      "wave": 1
+      "ts": "2026-07-19T17:47:25Z"
     },
     {
       "id": "pr-142",
@@ -224,8 +204,7 @@
       "title": "docs: log seeded ideas + lesson",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T17:31:34Z",
-      "wave": 1
+      "ts": "2026-07-19T17:31:34Z"
     },
     {
       "id": "pr-141",
@@ -233,8 +212,7 @@
       "title": "Seed 9 pre-triaged product ideas into Project delivery",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T17:29:15Z",
-      "wave": 1
+      "ts": "2026-07-19T17:29:15Z"
     },
     {
       "id": "pr-140",
@@ -242,8 +220,7 @@
       "title": "docs: full Project delivery build prompt (for other agents)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T17:13:07Z",
-      "wave": 1
+      "ts": "2026-07-19T17:13:07Z"
     },
     {
       "id": "pr-139",
@@ -251,8 +228,7 @@
       "title": "Smart feedback triage: suggest status+wave, fix Save, polish panel",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T16:55:29Z",
-      "wave": 1
+      "ts": "2026-07-19T16:55:29Z"
     },
     {
       "id": "pr-138",
@@ -260,8 +236,7 @@
       "title": "chore(feedback): triage round 1 - assign waves + set lifecycle for the 3 open items",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T15:33:48Z",
-      "wave": 1
+      "ts": "2026-07-19T15:33:48Z"
     },
     {
       "id": "pr-137",
@@ -269,8 +244,7 @@
       "title": "feat(exec): director triage controls on feedback rows (local-overlay, warehouse-ready)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-19T13:39:48Z",
-      "wave": 1
+      "ts": "2026-07-19T13:39:48Z"
     },
     {
       "id": "pr-136",
@@ -278,8 +252,7 @@
       "title": "fix(exec/feedback): QA finish-gate fixes for PR #135 (3 bugs)",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T11:55:22Z",
-      "wave": 1
+      "ts": "2026-07-19T11:55:22Z"
     },
     {
       "id": "pr-135",
@@ -287,8 +260,7 @@
       "title": "feat(feedback): Polish into a triage story + surface triaged feedback in Project delivery",
       "status": "Done",
       "type": "Improvement",
-      "ts": "2026-07-19T11:16:17Z",
-      "wave": 1
+      "ts": "2026-07-19T11:16:17Z"
     },
     {
       "id": "pr-134",
@@ -296,8 +268,7 @@
       "title": "fix(exec): drop closed-unmerged PRs from Project delivery timeline + hide redundant single-area prefix",
       "status": "Done",
       "type": "Bug",
-      "ts": "2026-07-19T09:55:25Z",
-      "wave": 1
+      "ts": "2026-07-19T09:55:25Z"
     },
     {
       "id": "pr-126",
@@ -305,8 +276,7 @@
       "title": "ci(deploy): publish Pages after Executive Status commits new data",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-18T18:52:57Z",
-      "wave": 1
+      "ts": "2026-07-18T18:52:57Z"
     },
     {
       "id": "pr-125",
@@ -314,8 +284,7 @@
       "title": "feat(exec): GitHub-as-warehouse - cut Google entirely",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-18T18:40:42Z",
-      "wave": 1
+      "ts": "2026-07-18T18:40:42Z"
     },
     {
       "id": "pr-124",
@@ -323,8 +292,7 @@
       "title": "feat(exec-status): effort-weighted progress + blocked-on health + trend sparkline",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-18T14:59:15Z",
-      "wave": 1
+      "ts": "2026-07-18T14:59:15Z"
     },
     {
       "id": "pr-123",
@@ -332,8 +300,7 @@
       "title": "feat(exec-deck): rebuild Slides on structural Sheet changes (onSheetChange)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-18T14:28:58Z",
-      "wave": 1
+      "ts": "2026-07-18T14:28:58Z"
     },
     {
       "id": "pr-122",
@@ -341,8 +308,7 @@
       "title": "chore(exec-status): log endpoint tail to expose a stale GAS_ENDPOINT",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-18T14:04:42Z",
-      "wave": 1
+      "ts": "2026-07-18T14:04:42Z"
     },
     {
       "id": "pr-121",
@@ -350,8 +316,7 @@
       "title": "chore(exec-status): require a successful live POST (strict)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-18T08:03:24Z",
-      "wave": 1
+      "ts": "2026-07-18T08:03:24Z"
     },
     {
       "id": "pr-120",
@@ -359,97 +324,10 @@
       "title": "feat(exec-status): derive project-delivery status from merged PRs (live)",
       "status": "Done",
       "type": "Feature",
-      "ts": "2026-07-18T07:52:04Z",
-      "wave": 1
-    },
-    {
-      "id": "plan-wellbeing",
-      "area": "Wellbeing",
-      "title": "Team wellbeing view (capacity & burnout signals)",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 2,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-fairness",
-      "area": "Fairness",
-      "title": "Fairness view (balanced workload distribution)",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 2,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-library",
-      "area": "Library",
-      "title": "WBK component library / templates",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 2,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-evalprep",
-      "area": "Evaluations",
-      "title": "Evaluation prep + band calibration",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 3,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-evalconsist",
-      "area": "Evaluations",
-      "title": "Evaluation consistency (cross-manager band check)",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 3,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-upward",
-      "area": "Evaluations",
-      "title": "Upward review (evaluate my manager)",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 3,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-org",
-      "area": "Org",
-      "title": "Org readiness map",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 3,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-timeline",
-      "area": "Profile",
-      "title": "Person growth timeline",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 3,
-      "ts": "2026-07-21T09:00:00Z"
-    },
-    {
-      "id": "plan-weekly",
-      "area": "Weekly report",
-      "title": "Weekly report (auto digest)",
-      "status": "Later",
-      "type": "Feature",
-      "wave": 4,
-      "ts": "2026-07-21T09:00:00Z"
+      "ts": "2026-07-18T07:52:04Z"
     }
   ],
   "history": [
-    {
-      "ts": "2026-07-19T09:55:42.206Z",
-      "progress": 89,
-      "health": "green"
-    },
     {
       "ts": "2026-07-19T11:16:35.526Z",
       "progress": 92,
@@ -592,6 +470,11 @@
     },
     {
       "ts": "2026-07-21T16:15:05.233Z",
+      "progress": 100,
+      "health": "green"
+    },
+    {
+      "ts": "2026-07-22T06:39:28.780Z",
       "progress": 100,
       "health": "green"
     }
