@@ -37,7 +37,10 @@
     const t = WP.i18n.t;
     const db = WP.db;
     const live = db && db.usingBackend && db.usingBackend() && db.status && db.status.synced;
-    if (live) return '';
+    // G1: running on the REAL directory (not sample) also hides the badge - the
+    // people/org numbers are real even before the write-backend (G3) is synced.
+    const realDir = WP.data && WP.data.demoData === false;
+    if (live || realDir) return '';
     return '<div class="provenance-note" title="' + t('sampleDataHint') + '">' +
       WP.ui.icon('alert', 13) + ' ' + t('sampleData') + '</div>';
   }

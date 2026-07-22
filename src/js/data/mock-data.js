@@ -198,5 +198,31 @@
   PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
 
   const CEILING = 100;
+  // Preserve anything a pre-loaded module set on WP.data (e.g. G1 real-data.js's
+  // WP.data.REAL) - we build a fresh object below, so carry REAL across.
+  const PRELOADED_REAL = WP.data && WP.data.REAL;
+  const PRELOADED_REAL_FLAG = WP.data && WP.data.realDataLoaded;
   WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING, emailToId: emailToId };
+  if (PRELOADED_REAL) { WP.data.REAL = PRELOADED_REAL; WP.data.realDataLoaded = PRELOADED_REAL_FLAG; }
+
+  // G1 real-data hook (Go-Live Foundation, wave 5). If the generated, gitignored
+  // real-data.js loaded before us it set WP.data.REAL; prefer that directory and
+  // mark the app as NON-sample so the "Sample data" badge switches off. Reversible:
+  // remove/rename real-data.js (or set WP.config.forceSampleData) to fall straight
+  // back to the sample directory. Enrichment (tenure/growth) still applies to real
+  // people by id, and any real person missing from those maps just gets no extra.
+  (function preferRealDirectory() {
+    // config.js loads AFTER this file, so read the escape hatch from a pre-set
+    // global (window.FORCE_SAMPLE_DATA) or WP.config if it somehow exists already.
+    var forceSample = (typeof window !== 'undefined' && window.FORCE_SAMPLE_DATA) ||
+      (WP.config && WP.config.forceSampleData);
+    var real = WP.data.REAL;
+    if (forceSample || !real || !Array.isArray(real.PEOPLE) || !real.PEOPLE.length) {
+      WP.data.demoData = true;                 // running on sample data
+      return;
+    }
+    real.PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
+    WP.data.PEOPLE = real.PEOPLE;
+    WP.data.demoData = false;                  // running on the real directory
+  })();
 })(window.WP = window.WP || {});
