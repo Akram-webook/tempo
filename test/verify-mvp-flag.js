@@ -24,7 +24,9 @@ const topbar=()=>window.document.getElementById('topbar');
 const view=()=>window.document.getElementById('view');
 const navIds=()=>[].slice.call(topbar().querySelectorAll('[data-go]')).map(b=>b.dataset.go);
 const DEFERRED_ROUTES=['library','weekly','wellbeing','fairness','upward','org'];
-const DEFERRED_NAV=['library','weekly','wellbeing','fairness','org'];
+// 'library' (Components) is intentionally NOT a sidebar entry any more - it is a
+// dev/design showcase reachable only by route - so it is excluded from the NAV list.
+const DEFERRED_NAV=['weekly','wellbeing','fairness','org'];
 const CORE_NAV=['dashboard','map','daily','evaluations','me','permissions','settings'];
 function finish(){if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}
   console.log('PASS — mvp flag: ONE reversible flag (WP.config.mvp, default false = advanced layer visible, inlined into dist). mvp=true hides the deferred layer (nav entries removed, routes redirect home, in-screen panels — P6 dev panel, P1 timeline, P3 band/consistency/prep — absent) while the core renders fully; mvp=false restores every surface (nav + routes + panels). Nothing deleted; one line reverses it. EN + AR, both themes.');

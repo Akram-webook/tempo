@@ -778,21 +778,35 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
 /* ---- mandatory evaluation banner (persists across pages until reviews are done) ---- */
 #eval-banner:empty { display: none; }
 .eval-banner[hidden] { display: none; }
-/* static (not sticky) + OPAQUE background so scrolling content never bleeds through it */
-.eval-banner { margin: 0 0 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,44,121,.35);
-  background: rgb(252,231,239);
-  background: color-mix(in srgb, var(--brand) 12%, var(--surface)); }
-.eval-banner.is-overdue { border-color: var(--state-overloaded);
-  background: rgb(253,232,236);
-  background: color-mix(in srgb, var(--state-overloaded) 14%, var(--surface)); }
-.eval-banner .eb-in { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
-.eval-banner .icn { flex: none; color: var(--brand); }
-.eval-banner.is-overdue .icn { color: var(--state-overloaded); }
-.eval-banner .eb-msg { flex: 1; min-width: 0; font-size: 13.5px; color: var(--text); }
-.eval-banner .eb-msg b { font-weight: 600; }
-.eval-banner .eb-cta { flex: none; height: 32px; padding: 0 14px; }
+/* Reminder card - a calm, rounded call-to-action strip (not a loud banner).
+   Leading icon chip + two-line message (title over a quiet sub-line) + trailing
+   CTA. Static (not sticky) + OPAQUE background so scrolling content never bleeds
+   through. A thin brand/overdue leading edge signals urgency without shouting. */
+.eval-banner { margin: 0 0 16px; border-radius: var(--radius); overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--border));
+  border-inline-start: 3px solid var(--brand);
+  background: color-mix(in srgb, var(--brand) 7%, var(--surface)); }
+.eval-banner.is-overdue { border-color: color-mix(in srgb, var(--state-overloaded) 30%, var(--border));
+  border-inline-start-color: var(--state-overloaded);
+  background: color-mix(in srgb, var(--state-overloaded) 8%, var(--surface)); }
+.eval-banner .eb-in { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.eval-banner .eb-chip { flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%; color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 16%, transparent); }
+.eval-banner.is-overdue .eb-chip { color: var(--state-overloaded);
+  background: color-mix(in srgb, var(--state-overloaded) 16%, transparent); }
+.eval-banner .eb-chip .icn { flex: none; }
+.eval-banner .eb-msg { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.eval-banner .eb-title { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.eval-banner .eb-sub { font-size: 12.5px; color: var(--text-muted); line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eval-banner .eb-cta { flex: none; height: 34px; padding: 0 16px; }
 .eval-banner.is-overdue .eb-cta { background: var(--state-overloaded); border-color: transparent; }
-@media (max-width: 600px) { .eval-banner .eb-msg { font-size: 12.5px; } .eval-banner .eb-cta { padding: 0 10px; } }
+@media (max-width: 600px) {
+  .eval-banner .eb-in { gap: 10px; padding: 10px 12px; }
+  .eval-banner .eb-title { font-size: 13px; }
+  .eval-banner .eb-cta { padding: 0 12px; }
+}
 
 /* predictive search (typeahead) — functional, accessible, animated */
 .search input:placeholder-shown ~ .search-clear { display: none; }
@@ -1497,24 +1511,7 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .acct-section { padding: 4px 8px 8px; }
 .acct-mini { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
 
-/* Executive-status card — director dashboard entry point to the live deck.
-   Brand-accent leading edge, whole card is the click target, routes in-app to
-   the embedded Executive Status view. It is a <button>, so reset button chrome. */
-.exec-card {
-  display: flex; align-items: center; gap: 14px; width: 100%; text-align: start;
-  margin: 0 0 18px; padding: 16px 18px;
-  border: 1px solid var(--border); border-inline-start: 3px solid var(--brand);
-  border-radius: var(--radius); background: var(--surface);
-  color: var(--text); cursor: pointer; font: inherit;
-  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
-}
-.exec-card:hover { border-color: var(--border-secondary); background: var(--surface-1); }
-.exec-card:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); }
-.exec-card-body { flex: 1; min-width: 0; }
-.exec-card-title { font-weight: 600; font-size: 15px; }
-.exec-card-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
-.exec-card-go { flex: none; color: var(--brand); display: inline-flex; align-items: center; }
-[dir="rtl"] .exec-card-go svg { transform: scaleX(-1); }
+/* (Removed) Project-delivery dashboard entry card - reachable from the left nav. */
 
 /* Executive Status view — NATIVE render of the live Feedback sheet (JSONP).
    On-brand, four sections; mirrors the Google Slides deck. */
@@ -2063,6 +2060,10 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
    light theme to keep the small role labels readable (WCAG AA). RTL reverses the row. */
 #sig-bar { position: relative; z-index: 0; }
 .sig-bar { display: flex; align-items: center; gap: var(--sp-5); padding: var(--sp-3) var(--sp-7); margin-top: var(--sp-5);
+  /* reserve trailing room so the floating Feedback button (bottom-end: 48px wide
+     + 28px inset + shadow) never crowds or clips the last credit name. Generous
+     gap so the name reads comfortably, not right up against the button. */
+  padding-inline-end: 120px;
   border-top: 1px solid var(--border, rgba(255,255,255,.12));
   background: var(--bg);
   font-family: var(--font-sans, system-ui, sans-serif); }
@@ -2079,7 +2080,9 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   bottom: -4px; width: 20px; height: 2px; border-radius: 2px; background: var(--brand); }
 [dir="rtl"] .sig-bar { flex-direction: row-reverse; }
 @media (max-width: 640px) {
-  .sig-bar { flex-direction: column; gap: var(--sp-3); align-items: center; text-align: center; margin-top: var(--sp-5); }
+  .sig-bar { flex-direction: column; gap: var(--sp-3); align-items: center; text-align: center; margin-top: var(--sp-5);
+    /* stacked: reset the trailing reserve, add bottom room so the FAB clears it */
+    padding-inline-end: var(--sp-7); padding-bottom: 84px; }
   .sig-dept { flex: none; justify-content: center; }
   .sig-sep { display: none; }
 }
@@ -2412,7 +2415,7 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 /* FAB — small round icon-only button, bottom-end. No text label (aria-label +
    title keep it accessible), so it stays a 48px circle and never covers content. */
 .fb-fab {
-  position: fixed; inset-block-end: 24px; inset-inline-end: 24px; z-index: 900;
+  position: fixed; inset-block-end: 28px; inset-inline-end: 28px; z-index: 900;
   display: inline-flex; align-items: center; justify-content: center;
   width: 48px; height: 48px; padding: 0;
   background: var(--brand); color: var(--brand-contrast);

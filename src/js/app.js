@@ -40,7 +40,9 @@
       { id: 'me',          routes: ['me'],             icon: 'target',    label: t('myProgress') },
       { id: 'evaluations', routes: ['evaluations', 'evaluation', 'upward'], icon: 'chart', label: t('evaluationsHub') },
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
-      { id: 'library',     routes: ['library'],        icon: 'grid',      label: t('navLibrary') },
+      // "Components" (WBK design-system showcase) is a dev/design reference, not an
+      // operational surface - kept reachable at route 'library' but OFF the sidebar
+      // to reduce nav noise. Re-add the { id:'library', ... } entry here to restore.
     ];
     // Executive status — an in-app window onto the live Executive Status Deck
     // (Google Slides). Director/admin only AND only when a deck link is set
@@ -337,10 +339,17 @@
       : di.daysLeft === 0 ? t('dueToday') : t('dueInDays').replace('{d}', di.daysLeft);
     host.hidden = false;
     host.className = 'eval-banner' + (overdue ? ' is-overdue' : '');
+    // Two-line message with a leading icon chip: title (what) on top, the
+    // progress + due timing as a quieter sub-line beneath - clearer hierarchy
+    // than one dense run-on line, and the CTA sits apart on the trailing edge.
+    var sub = req.done + '/' + req.total + ' ' + t('done') + (when ? ' · ' + when : '');
     host.innerHTML =
-      '<div class="eb-in">' + WP.ui.icon(overdue ? 'flame' : 'chart', 16) +
-        '<span class="eb-msg"><b>' + WP.ui.esc(cyc.name) + ' ' + t('reviewsDue') + '</b> · ' +
-          req.done + '/' + req.total + ' ' + t('done') + (when ? ' · ' + when : '') + '</span>' +
+      '<div class="eb-in">' +
+        '<span class="eb-chip">' + WP.ui.icon(overdue ? 'flame' : 'chart', 16) + '</span>' +
+        '<span class="eb-msg">' +
+          '<span class="eb-title">' + WP.ui.esc(cyc.name) + ' ' + t('reviewsDue') + '</span>' +
+          '<span class="eb-sub">' + WP.ui.esc(sub) + '</span>' +
+        '</span>' +
         '<button class="btn primary eb-cta" id="eb-go">' + t('reviewNow') + '</button>' +
       '</div>';
     const go = document.getElementById('eb-go');
