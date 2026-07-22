@@ -219,3 +219,9 @@ A running log of what worked, what nearly broke, and the rule to remember. Appen
 - What nearly broke / the gotcha: editing a GENERATED file (src/status.html) without updating its generator = a silent revert on the next CI run. The file looked hand-editable but wasn't.
 - What I'd do differently next time: before editing any file, check if a script/CI generates it (grep the filename in scripts/ + .github/workflows). Run the missing-key audit as a standing check after any i18n change.
 - Rule to remember: (1) after any i18n change, audit that every t('literal') key exists (dynamic t('prefix_'+x) keys excepted). (2) Never edit a generated artifact without updating its generator too - grep scripts/ and workflows for the filename first.
+
+## 2026-07-22 — Put the go-live roadmap INTO Project delivery as the tracker
+- What worked: the durable backlog (data/delivery-backlog.json) already feeds Project delivery, so the roadmap lives THERE, not in a doc nobody opens. Added waveNames + let foldBacklog DECLARE plan-only waves so G1-G5 show as named cards before anything ships. Verified live on localhost:4000 (server serves data/, file:// can't) - all 5 cards + 55% rollup.
+- What nearly broke / the gotcha: wave NAMES come from exec-status.json which CI regenerates and wipes; adding named waves there = silent revert. Fix: names live in the CI-untouched backlog file, and foldBacklog synthesises the wave card. Also: file:// has no server so the exec fetch 404s and the page shows empty - MUST verify against the local server, not the file bundle.
+- What I'd do differently next time: reach for the local server for any data/-dependent view verification from the start.
+- Rule to remember: to make roadmap/plan visible on Project delivery, edit data/delivery-backlog.json (wavePlans + waveNames + items), never exec-status.json (CI-owned). Verify on http://localhost:4000, not file://.

@@ -12376,10 +12376,27 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
       });
       // apply wave plan sizes
       var plans = backlog.wavePlans || {};
+      var names = backlog.waveNames || {};   // CI-safe wave name map (survives exec-status regen)
       var waves = Array.isArray(data.waves) ? data.waves.map(function (w, idx) {
         var no = (+w.no || +w.wave || idx + 1);
-        return (plans[no] != null) ? Object.assign({}, w, { planned: +plans[no] }) : w;
-      }) : data.waves;
+        var patch = {};
+        if (plans[no] != null) patch.planned = +plans[no];
+        if (names[no] && !w.name) patch.name = names[no];
+        return Object.keys(patch).length ? Object.assign({}, w, patch) : w;
+      }) : (data.waves ? data.waves.slice() : []);
+      // Declare waves that exist ONLY in the durable backlog (e.g. the go-live
+      // roadmap waves 5+): CI's exec-status.json won't know them until a PR ships
+      // under that wave, so create a card here from wavePlans + waveNames. Keeps the
+      // whole roadmap visible on Project delivery before any of it has shipped.
+      var known = {};
+      waves.forEach(function (w, idx) { known[(+w.no || +w.wave || idx + 1)] = true; });
+      Object.keys(plans).forEach(function (k) {
+        var no = +k;
+        if (!no || known[no]) return;
+        waves.push({ no: no, name: names[no] || ('Wave ' + no), planned: +plans[no], done: 0, status: 'Later', notes: '' });
+        known[no] = true;
+      });
+      waves.sort(function (a, b) { return (+a.no || +a.wave || 0) - (+b.no || +b.wave || 0); });
       return Object.assign({}, data, { items: items, waves: waves });
     } catch (e) { return data; }
   }
