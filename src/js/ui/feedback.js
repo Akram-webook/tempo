@@ -891,6 +891,10 @@
       });
       setSubmitting(true);
       live(t('fbSending'));
+      // `saved` gates the catch: once the server confirms the write, a later throw
+      // in the UI work (toast/render) must NOT trigger the local-save fallback, or
+      // we would double-save (disk + localStorage) and mislead the user.
+      var savedOnServer = false;
       fetch(localEp, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -899,15 +903,20 @@
         if (!r.ok) throw new Error('local http ' + r.status);
         return r.json();
       }).then(function () {
+        savedOnServer = true;                 // server has the data; never re-save now
         setSubmitting(false);
         clearDraft();
         toastOk(WP.i18n.plural('fbSavedDiskN', items.length));
         live(WP.i18n.plural('fbSavedDiskN', items.length));
         closePanel();
         // Refresh Project delivery so the just-saved item (with its image) shows.
-        if (WP.ui && WP.ui.exec && WP.ui.exec.refresh) { try { WP.ui.exec.refresh(); } catch (e) {} }
-        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+        // Guarded so a render error can't bubble into the .catch (double-save guard).
+        try {
+          if (WP.ui && WP.ui.exec && WP.ui.exec.refresh) WP.ui.exec.refresh();
+          if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+        } catch (e) {}
       }).catch(function () {
+        if (savedOnServer) return;            // post-success UI threw; data is safe on disk
         // Local server unreachable: fall back to per-browser save so nothing is
         // lost, then tell the truth via the same local-saved toast.
         var ok2 = saveLocally(localRecords);
@@ -917,7 +926,7 @@
         toastOk(WP.i18n.plural('fbSavedLocalN', items.length));
         live(WP.i18n.plural('fbSavedLocalN', items.length));
         closePanel();
-        if (WP.state && WP.state.route === 'exec' && WP.render) WP.render();
+        if (WP.state && WP.state.route === 'exec' && WP.render) { try { WP.render(); } catch (e) {} }
       });
       return;
     }

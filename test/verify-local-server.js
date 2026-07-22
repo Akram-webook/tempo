@@ -30,9 +30,11 @@ ok(dec && Buffer.isBuffer(dec.buffer) && dec.buffer.length > 0, 'decodeDataUrl r
 ok(dec.ext === 'png', 'decodeDataUrl reports png ext');
 ok(srv.decodeDataUrl('not a data url') === null, 'decodeDataUrl rejects non-data-url');
 ok(srv.decodeDataUrl(null) === null, 'decodeDataUrl rejects null');
-// jpeg maps to jpg extension
-const jpg = srv.decodeDataUrl('data:image/jpeg;base64,' + Buffer.from('x').toString('base64'));
-ok(jpg && jpg.ext === 'jpg', 'jpeg data-url maps to .jpg extension');
+// jpeg maps to jpg extension - use REAL JPEG magic bytes (FF D8 FF ...) so it
+// passes the magic-byte sniff, then assert the extension mapping.
+const jpgBytes = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46]);
+const jpg = srv.decodeDataUrl('data:image/jpeg;base64,' + jpgBytes.toString('base64'));
+ok(jpg && jpg.ext === 'jpg', 'jpeg data-url (real magic bytes) maps to .jpg extension');
 
 /* --- persistRecord writes a real file + rewrites image path --- */
 // Redirect the image dir to a temp dir by working relative to the module's data dir.
@@ -56,9 +58,19 @@ try { fs.unlinkSync(onDisk); } catch (e) {}
 const textOnly = srv.persistRecord({ note: 'no image', type: 'Feature' }, 1000, '2026-07-21T00:00:00.000Z');
 ok(textOnly.image === null, 'text-only record has image=null (no dead file)');
 
-/* --- safeJoin blocks traversal --- */
+/* --- garbage base64 that passes the regex must be REJECTED (magic-byte sniff) --- */
+// valid base64 chars, but not a real PNG -> must not be written as a broken image
+const fakePng = 'data:image/png;base64,' + Buffer.from('not a real image at all').toString('base64');
+ok(srv.decodeDataUrl(fakePng) === null, 'decodeDataUrl rejects valid-base64-but-not-an-image (magic bytes)');
+// the real 1x1 PNG still passes
+ok(srv.decodeDataUrl(PNG_1x1) !== null, 'decodeDataUrl still accepts a real PNG');
+
+/* --- safeJoin blocks traversal + malformed escapes + null bytes --- */
 const base = path.join(__dirname, '..');
 ok(srv.safeJoin(base, '/dist/index.html') !== null, 'safeJoin allows in-tree path');
 ok(srv.safeJoin(base, '/../../etc/passwd') === null, 'safeJoin blocks ../ traversal');
+ok(srv.safeJoin(base, '/%2e%2e%2fsecret') === null, 'safeJoin blocks encoded ../ traversal');
+ok(srv.safeJoin(base, '/%') === null, 'safeJoin rejects a malformed percent-escape instead of throwing');
+ok(srv.safeJoin(base, '/dist/index.html%00.txt') === null, 'safeJoin rejects a null byte');
 
 console.log('verify-local-server: ' + pass + ' assertions passed');
