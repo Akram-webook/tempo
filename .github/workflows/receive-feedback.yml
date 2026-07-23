@@ -11,9 +11,33 @@ name: Receive Feedback
 on:
   workflow_dispatch:
     inputs:
+      op:
+        description: 'create | update | discard (default create)'
+        required: false
+        default: 'create'
+      id:
+        description: 'Item id (required for update/discard)'
+        required: false
+        default: ''
+      status:
+        description: 'New | Testing | Review | Assigned | Discarded (update op)'
+        required: false
+        default: ''
+      wave:
+        description: 'Delivery wave number when Assigned (update op)'
+        required: false
+        default: ''
+      triageNote:
+        description: 'Director triage note (update op)'
+        required: false
+        default: ''
+      triagedBy:
+        description: 'Who triaged (update op)'
+        required: false
+        default: ''
       note:
-        description: 'Feedback text (required)'
-        required: true
+        description: 'Feedback text (required for create)'
+        required: false
       type:
         description: 'Improvement | Bug | New idea | Design'
         required: false
@@ -78,6 +102,12 @@ jobs:
       - name: Append submission to data/feedback.json
         env:
           FB_RUN_ID: ${{ github.run_number }}
+          FB_OP: ${{ github.event.inputs.op }}
+          FB_ID: ${{ github.event.inputs.id }}
+          FB_STATUS: ${{ github.event.inputs.status }}
+          FB_WAVE: ${{ github.event.inputs.wave }}
+          FB_TRIAGE_NOTE: ${{ github.event.inputs.triageNote }}
+          FB_TRIAGED_BY: ${{ github.event.inputs.triagedBy }}
           FB_NOTE: ${{ github.event.inputs.note }}
           FB_TYPE: ${{ github.event.inputs.type }}
           FB_KLASS: ${{ github.event.inputs.klass }}
