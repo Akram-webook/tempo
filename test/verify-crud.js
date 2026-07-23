@@ -75,7 +75,7 @@ const fb = require(path.join(root, 'scripts', 'append-feedback.js'));
   if (!WP || !WP.ui || !WP.ui.feedback) { errors.push('[client] WP.ui.feedback missing'); return; }
 
   // Configure the PROXY (no token). configured() must be true via proxy alone.
-  WP.config.feedbackProxyEndpoint = 'https://proxy.example.workers.dev/feedback';
+  WP.config.feedbackProxyEndpoint = 'https://proj.supabase.co/functions/v1/feedback-proxy';
   WP.config.feedbackEndpoint = '';
   WP.config.feedbackDispatchToken = '';
 
@@ -135,19 +135,27 @@ const fb = require(path.join(root, 'scripts', 'append-feedback.js'));
   assert(!/github_pat_[A-Za-z0-9]/.test(html), 'no fine-grained PAT in dist');
   assert(!/GITHUB_PAT/.test(html), 'no GITHUB_PAT reference in dist');
   // The Worker source must never be inlined into the app bundle.
-  assert(!/tempo-crud-worker/.test(html), 'worker code not in app bundle');
+  assert(!/tempo-feedback-proxy|GITHUB_PAT|Deno\.env/.test(html), 'proxy/function code not in app bundle');
 })();
 
-/* ---------- 4) worker scoping: touches feedback only, one origin ---------- */
-(function workerScope() {
-  const w = path.join(root, 'workers', 'tempo-crud', 'index.js');
-  if (!fs.existsSync(w)) { errors.push('[worker] index.js missing'); return; }
+/* ---------- 4) proxy scoping: Supabase Edge Function, feedback only, one origin ---------- */
+(function proxyScope() {
+  const w = path.join(root, 'supabase', 'functions', 'feedback-proxy', 'index.ts');
+  if (!fs.existsSync(w)) { errors.push('[proxy] feedback-proxy/index.ts missing'); return; }
   const src = fs.readFileSync(w, 'utf8');
-  assert(!/exec-status/.test(src), 'worker never touches exec-status.json');
-  assert(/akram-webook\.github\.io/.test(src) && /Forbidden/.test(src), 'worker enforces one allowed origin');
-  assert(/receive-feedback\.yml/.test(src), 'worker forwards to the receive-feedback Action (one write path)');
-  assert(!/ghp_|github_pat_/.test(src), 'worker source carries no hardcoded token');
+  assert(!/exec-status/.test(src), 'proxy never touches exec-status.json');
+  assert(/akram-webook\.github\.io/.test(src) && /Forbidden/.test(src), 'proxy enforces one allowed origin');
+  assert(/receive-feedback\.yml/.test(src), 'proxy forwards to the receive-feedback Action (one write path)');
+  // A real token literal (ghp_/github_pat_ followed by many token chars), not the
+  // "github_pat_xxx" placeholder in the deploy-instructions comment.
+  assert(!/ghp_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9]{20}/.test(src), 'proxy source carries no hardcoded token');
+  assert(/Deno\.env\.get\("GITHUB_PAT"\)/.test(src), 'proxy reads the token from a Supabase secret (Deno.env)');
+  // origin gate runs before the OPTIONS branch (bad-origin preflight -> 403).
+  // Match the actual code (the `req.method === "OPTIONS"` branch), not the comment.
+  const gateIdx = src.indexOf('if (origin !== ALLOWED_ORIGIN)');
+  const optIdx = src.indexOf('req.method === "OPTIONS"');
+  assert(gateIdx > 0 && optIdx > 0 && gateIdx < optIdx, 'origin gate precedes the OPTIONS/preflight branch');
 })();
 
 if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }
-console.log('PASS - crud: server guards (invalid status / unknown id / immutable fields / no proto-pollution / idempotent discard / oversize cap) + client proxy transport (no Authorization header, non-ok = failure, proxy-configured) + no secret in bundle + worker scoped to feedback/one-origin.');
+console.log('PASS - crud: server guards (invalid status / unknown id / immutable fields / no proto-pollution / idempotent discard / oversize cap) + client proxy transport (no Authorization header, non-ok = failure, proxy-configured) + triage-persist (update/discard, no auth, no-op, honest note) + no secret in bundle + Supabase proxy scoped to feedback/one-origin.');
