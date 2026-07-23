@@ -40,7 +40,7 @@ const PAGE2 = [
   { type: 'message', ts: '1782900003.0001', user: 'U_GHOST',
     text: ['Daily Check-in — Ghost — 2026-06-27', 'Done today:', '- did stuff'].join('\n') } // unmapped author
 ];
-const USERS = { U_OSAMA: { email: 'o.taher.c@webook.com' }, U_GHOST: { email: 'ghost@nowhere.com' } };
+const USERS = { U_OSAMA: { email: 'owen.blake@example.com' }, U_GHOST: { email: 'ghost@nowhere.com' } };
 
 function jsonRes(obj, status) { return { ok: (status || 200) < 400, status: status || 200, headers: { get: () => null }, json: async () => obj, text: async () => JSON.stringify(obj) }; }
 function res429(retryAfterSec) {
@@ -69,7 +69,7 @@ function makeFetch(db, opts) {
     if (url.indexOf('/api/chat.getPermalink') !== -1) return jsonRes({ ok: true, permalink: 'https://slack.com/archives/C_TEST/p1' });
     if (url.indexOf('/rest/v1/directory') !== -1) {
       const dec = decodeURIComponent(url);
-      if (dec.indexOf('o.taher.c@webook.com') !== -1) return jsonRes([{ person_id: 'p_osama' }]);
+      if (dec.indexOf('owen.blake@example.com') !== -1) return jsonRes([{ person_id: 'p_osama' }]);
       return jsonRes([]); // unmapped → fail closed
     }
     if (url.indexOf('/rest/v1/events') !== -1 && init && init.method === 'POST') {
@@ -217,7 +217,7 @@ job.HOOKS.sleep = function (ms) { sleeps.push(ms); return Promise.resolve(); };
   // NO PII in the health file — operational counts only
   const healthRaw = fs.readFileSync(HEALTH, 'utf8');
   const pii = ['issued 40 tickets', 'review my PR', 'did stuff', 'cross-sell', 'power supply',
-    'U_OSAMA', 'U_GHOST', 'p_osama', 'o.taher.c@webook.com', 'slack.com/archives', 'Daily Check-in'];
+    'U_OSAMA', 'U_GHOST', 'p_osama', 'owen.blake@example.com', 'slack.com/archives', 'Daily Check-in'];
   ok('9h: health file contains NO message text / author / PII', pii.every(s => healthRaw.indexOf(s) === -1));
   ok('9i: health file keys are operational-only', Object.keys(JSON.parse(healthRaw)).sort().join(',') ===
     'consecutiveErrorRuns,cursorStuckSince,lastRunAt,lastSuccessAt,lastSummary');

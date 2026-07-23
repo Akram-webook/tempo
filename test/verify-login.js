@@ -20,21 +20,21 @@ try{
   // mode() reads WP.config.authMode live, so this takes effect immediately.
   WP.config.authMode='verified-link';
   const f=WP.auth.findByEmail;
-  assert(f('akram@webook.com').person.id==='p_akram','akram → p_akram');
-  assert(f('o.taher.c@webook.com').person.id==='p_osama','o.taher.c → Osama');
-  assert(f('fouda@webook.com').person.id==='p_fouda','Fouda account exists');
-  assert(f('abdelaal@webook.com').person.id==='p_abdelaal','Abdelaal account exists');
-  // Phase A — Motaa Aldarra now has a verified login (was getting errNoAccount).
-  assert(f('motaa@webook.com').person.id==='p_motaa','motaa → p_motaa (Phase A login)');
+  assert(f('adam.foster@example.com').person.id==='p_akram','akram → p_akram');
+  assert(f('owen.blake@example.com').person.id==='p_osama','owen.blake → Owen');
+  assert(f('frank.doyle@example.com').person.id==='p_fouda','Fouda account exists');
+  assert(f('isaac.abbott@example.com').person.id==='p_abdelaal','Abdelaal account exists');
+  // Phase A — Marco Delgado now has a verified login (was getting errNoAccount).
+  assert(f('marco.delgado@example.com').person.id==='p_motaa','motaa → p_motaa (Phase A login)');
   assert(WP.access.hasAccess('p_motaa')===true,'p_motaa passes the access gate (non-tbc)');
   // Phase B — the remaining 20 real people now resolve (verified Slack-directory emails).
-  const PHASE_B={p_hamdi:'hamdi@webook.com',p_ayman:'ayman@webook.com',p_ayah:'ayah@webook.com',
-    p_hani:'hani@webook.com',p_batool:'batool@webook.com',p_farah:'alsmay@webook.com',
-    p_zarea:'zarea@webook.com',p_khaled:'khaled@webook.com',p_amen:'amen@webook.com',
-    p_batarfi:'batarfi@webook.com',p_rafah:'rafah.alansari@webook.com',p_aljazi:'alshubaike@webook.com',
-    p_shahad:'shahad@webook.com',p_duha:'duha.alzahrani.c@webook.com',p_ibrahim:'ibrahim.albard.c@webook.com',
-    p_rana:'alsalem@webook.com',p_rosa:'rosa@webook.com',p_altahini:'altahini@webook.com',
-    p_meshalA:'alsmari@webook.com',p_raghdaa:'raghdaa@webook.com'};
+  const PHASE_B={p_hamdi:'nathan.brooks@example.com',p_ayman:'adrian.bell@example.com',p_ayah:'ava.nichols@example.com',
+    p_hani:'henry.adams@example.com',p_batool:'bianca.espinoza@example.com',p_farah:'fiona.sommers@example.com',
+    p_zarea:'oscar.reyes@example.com',p_khaled:'kevin.jennings@example.com',p_amen:'aiden.sherwood@example.com',
+    p_batarfi:'blake.turner@example.com',p_rafah:'rebecca.anderson@example.com',p_aljazi:'alicia.sherwin@example.com',
+    p_shahad:'sophie.jensen@example.com',p_duha:'daniela.zamora@example.com',p_ibrahim:'ian.barlow@example.com',
+    p_rana:'rachel.salomon@example.com',p_rosa:'rosa.anders@example.com',p_altahini:'martin.thatcher@example.com',
+    p_meshalA:'miles.sanders@example.com',p_raghdaa:'regina@example.com'};
   Object.keys(PHASE_B).forEach(function(id){
     assert(f(PHASE_B[id]).person && f(PHASE_B[id]).person.id===id, PHASE_B[id]+' → '+id);
     assert(WP.access.hasAccess(id)===(id==='p_farah'), id+' access matches the 2026-07 allowlist (only Farah allowed among phase B)');
@@ -47,7 +47,7 @@ try{
     assert(!WP.access.byId(id) || !WP.access.byId(id).email, id+' (TBC vacancy) has no login');
   });
   assert(f('akram@gmail.com').error==='errBadDomain','wrong domain rejected');
-  assert(f('nobody@webook.com').error==='errNoAccount','unknown rejected');
+  assert(f('nobody@example.com').error==='errNoAccount','unknown rejected');
   assert(WP.access.isSuperAdmin(WP.access.byId('p_akram'))===true,'akram super admin');
   assert(WP.access.isSuperAdmin(WP.access.byId('p_talal'))===false,'specialist not super admin');
 
@@ -70,17 +70,17 @@ try{
   assert(!view.querySelector('.g-accts'),'no pick-anyone list');
 
   // submit a valid account → emails a link to the REAL mailbox, does NOT sign in yet
-  submitEmail(view,'ahmed.othman@webook.com');
-  assert(sentTo==='ahmed.othman@webook.com','sign-in link requested for the real mailbox');
+  submitEmail(view,'oliver.grant@example.com');
+  assert(sentTo==='oliver.grant@example.com','sign-in link requested for the real mailbox');
   assert(WP.state.authed===false,'not signed in just by submitting an email');
 
   // simulate the user opening the link → Supabase returns a verified session
-  WP.auth.handleSession({user:{email:'ahmed.othman@webook.com'}});
+  WP.auth.handleSession({user:{email:'oliver.grant@example.com'}});
   assert(WP.state.authed===true && WP.state.viewerId==='p_ahmed','opening the verified link signs the right user in');
 
   // a session for a NON-account email must NOT sign in
   WP.state.authed=false; WP.state.viewerId=null;
-  WP.auth.handleSession({user:{email:'stranger@webook.com'}});
+  WP.auth.handleSession({user:{email:'stranger@example.com'}});
   assert(WP.state.authed===false,'verified session for a non-account email is rejected');
 }catch(e){errors.push('[run] '+e.message+'\n'+e.stack);}
 if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}

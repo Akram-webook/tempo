@@ -44,13 +44,13 @@ function resetDb() { WP.db._resetImport(); WP.db.status.offline = false; WP.db.s
 // given viewer may read. SQL note: the live policy is
 // `using (public.can_read_person(subject_id))` — see supabase/0003_directory_and_rls.sql.
 const DIR = {
-  'akram@webook.com':         { person_id: 'p_akram',       role: 'admin',    manager_email: null },
-  'ahmed.othman@webook.com':  { person_id: 'p_ahmed',       role: 'director', manager_email: null },
-  'maksousa@webook.com':      { person_id: 'p_abdulrahman', role: 'employee', manager_email: null },
-  'shamma@webook.com':        { person_id: 'p_shamma',      role: 'employee', manager_email: null },
-  'meshal@webook.com':        { person_id: 'p_meshalB',     role: 'employee', manager_email: null },
-  'o.taher.c@webook.com':     { person_id: 'p_osama',       role: 'employee', manager_email: 'akram@webook.com' },
-  'talal.samir.c@webook.com': { person_id: 'p_talal',       role: 'employee', manager_email: 'maksousa@webook.com' }
+  'adam.foster@example.com':         { person_id: 'p_akram',       role: 'admin',    manager_email: null },
+  'oliver.grant@example.com':  { person_id: 'p_ahmed',       role: 'director', manager_email: null },
+  'aaron.maxwell@example.com':      { person_id: 'p_abdulrahman', role: 'employee', manager_email: null },
+  'sara.falcone@example.com':        { person_id: 'p_shamma',      role: 'employee', manager_email: null },
+  'mason.hughes@example.com':        { person_id: 'p_meshalB',     role: 'employee', manager_email: null },
+  'owen.blake@example.com':     { person_id: 'p_osama',       role: 'employee', manager_email: 'adam.foster@example.com' },
+  'tyler@example.com': { person_id: 'p_talal',       role: 'employee', manager_email: 'aaron.maxwell@example.com' }
 };
 function canReadPerson(viewerEmail, subjectId) {
   const me = DIR[viewerEmail];
@@ -151,14 +151,14 @@ function makeScopedSb(server, viewerEmail) {
 
     // --- G) PEER → no rows. meshal is an employee with no reports and no own
     //         eval row in the set: a peer can read nothing.
-    WP._sb = makeScopedSb(scopedServer(), 'meshal@webook.com'); resetDb();
+    WP._sb = makeScopedSb(scopedServer(), 'mason.hughes@example.com'); resetDb();
     WP.data.EVALUATIONS = {};
     let scoped = await WP.db.evaluations.list();
     assert(Object.keys(scoped).length === 0, 'G: peer (meshal) sees NO rows — own row absent, no reports');
 
     // --- H) MANAGER → own + direct reports only. maksousa (p_abdulrahman)
     //         manages p_talal; must NOT see p_osama (akram's report).
-    WP._sb = makeScopedSb(scopedServer(), 'maksousa@webook.com'); resetDb();
+    WP._sb = makeScopedSb(scopedServer(), 'aaron.maxwell@example.com'); resetDb();
     WP.data.EVALUATIONS = {};
     scoped = await WP.db.evaluations.list();
     assert(scoped.p_abdulrahman, 'H: manager sees own row');
@@ -167,7 +167,7 @@ function makeScopedSb(server, viewerEmail) {
     assert(Object.keys(scoped).length === 2, 'H: manager sees exactly own + reports (2 rows)');
 
     // --- I) DIRECTOR → all rows. ahmed (director) sees everyone.
-    WP._sb = makeScopedSb(scopedServer(), 'ahmed.othman@webook.com'); resetDb();
+    WP._sb = makeScopedSb(scopedServer(), 'oliver.grant@example.com'); resetDb();
     WP.data.EVALUATIONS = {};
     scoped = await WP.db.evaluations.list();
     assert(Object.keys(scoped).length === 4, 'I: director sees ALL rows (4)');
@@ -186,15 +186,15 @@ function makeScopedSb(server, viewerEmail) {
       };
     }
     // peer (meshal): no relationship to p_osama → zero check-in events
-    WP._sb = makeScopedSb(checkinEventServer(), 'meshal@webook.com'); resetDb();
+    WP._sb = makeScopedSb(checkinEventServer(), 'mason.hughes@example.com'); resetDb();
     let evList = await WP.db.events.list('p_osama');
     assert(evList.length === 0, 'J: peer (meshal) sees NO Slack check-in events for p_osama');
     // subject (osama): sees own check-ins
-    WP._sb = makeScopedSb(checkinEventServer(), 'o.taher.c@webook.com'); resetDb();
+    WP._sb = makeScopedSb(checkinEventServer(), 'owen.blake@example.com'); resetDb();
     evList = await WP.db.events.list('p_osama');
     assert(evList.length === 2 && evList.every(function (e) { return e.source === 'slack:#daily-checkin'; }), 'J: subject (osama) sees own check-in events');
     // direct manager (akram): sees the report's check-ins
-    WP._sb = makeScopedSb(checkinEventServer(), 'akram@webook.com'); resetDb();
+    WP._sb = makeScopedSb(checkinEventServer(), 'adam.foster@example.com'); resetDb();
     evList = await WP.db.events.list('p_osama');
     assert(evList.length === 2, 'J: direct manager (akram) sees the report\'s check-in events');
   } catch (e) { errors.push('[run] ' + e.message + '\n' + e.stack); }

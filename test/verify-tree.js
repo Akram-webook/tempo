@@ -46,9 +46,9 @@ function expandAll(el) {
 
 try {
   // Force a viewer with full visibility (director) so the whole tree renders.
-  if (WP.access && WP.access.grantAccess) { try { WP.access.grantAccess('akram@webook.com'); } catch (e) {} }
+  if (WP.access && WP.access.grantAccess) { try { WP.access.grantAccess('adam.foster@example.com'); } catch (e) {} }
   // A signed-in identity so the per-user density key is namespaced (not a global key).
-  if (WP.identity && WP.identity.adopt) { try { WP.identity.adopt('akram@webook.com'); } catch (e) {} }
+  if (WP.identity && WP.identity.adopt) { try { WP.identity.adopt('adam.foster@example.com'); } catch (e) {} }
   // Start from a known density (clear any persisted value).
   try { window.localStorage.removeItem(WP.identity.nsKey('tempo_map_density')); } catch (e) {}
   WP.state.lang = 'en';

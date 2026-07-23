@@ -23,21 +23,21 @@ for (const s of srcs) { try { new window.Function(fs.readFileSync(path.join(root
 const WP = window.WP;
 
 // 1) SHA-256 correctness vs Node.
-['', 'abc', 'akram@webook.com', 'ünïcödé@x'].forEach(function (s) {
+['', 'abc', 'adam.foster@example.com', 'ünïcödé@x'].forEach(function (s) {
   const node = crypto.createHash('sha256').update(s, 'utf8').digest('hex');
   assert(WP.sha256(s) === node, 'WP.sha256("' + s + '") matches Node crypto');
 });
 
 // 2) Dev module resolves plaintext emails (source of truth still works unbuilt).
 assert(typeof WP.data.emailToId === 'function', 'WP.data.emailToId resolver exists');
-assert(WP.data.emailToId('akram@webook.com') === 'p_akram', 'dev: akram@webook.com → p_akram');
-assert(WP.data.emailToId('AKRAM@WEBOOK.COM') === 'p_akram', 'dev: resolver is case-insensitive');
-assert(WP.data.emailToId('nobody@webook.com') === null, 'dev: unknown email → null');
+assert(WP.data.emailToId('adam.foster@example.com') === 'p_akram', 'dev: adam.foster@example.com → p_akram');
+assert(WP.data.emailToId('ADAM.FOSTER@EXAMPLE.COM') === 'p_akram', 'dev: resolver is case-insensitive');
+assert(WP.data.emailToId('nobody@example.com') === null, 'dev: unknown email → null');
 // findByEmail (login) rides on the resolver.
 if (WP.ui && WP.ui.login && WP.ui.login.findByEmail) {
-  const r = WP.ui.login.findByEmail('ahmed.othman@webook.com');
+  const r = WP.ui.login.findByEmail('oliver.grant@example.com');
   assert(r.person && r.person.id === 'p_ahmed', 'login.findByEmail resolves a real account');
-  assert(WP.ui.login.findByEmail('ghost@webook.com').error === 'errNoAccount', 'login.findByEmail rejects unknown');
+  assert(WP.ui.login.findByEmail('ghost@example.com').error === 'errNoAccount', 'login.findByEmail rejects unknown');
   assert(WP.ui.login.findByEmail('x@gmail.com').error === 'errBadDomain', 'login.findByEmail rejects wrong domain');
 }
 
@@ -51,7 +51,7 @@ if (fs.existsSync(distPath)) {
   // and code comments naming akram@ / figma_dev@ — those are not a harvestable list.
   const emails = (dist.match(/[a-z0-9._-]+@webook\.com/gi) || []).map(function (e) { return e.toLowerCase(); });
   const leaked = emails.filter(function (e) {
-    return e !== 'name@webook.com' && e !== 'akram@webook.com' && e !== 'figma_dev@webook.com';
+    return e !== 'name@webook.com' && e !== 'adam.foster@example.com' && e !== 'figma_dev@example.com';
   });
   assert(leaked.length === 0, 'built dist ships NO real directory emails (leaked: ' + [...new Set(leaked)].join(', ') + ')');
   assert(/const EMAIL_HASHES = \{/.test(dist), 'built dist defines EMAIL_HASHES (hashed directory)');
@@ -73,7 +73,7 @@ if (fs.existsSync(distPath)) {
   let allOk = pairs.length > 0;
   pairs.forEach(function (x) { if (resolveByHash(x[2]) !== x[1]) allOk = false; });
   assert(allOk, 'every real email resolves to the right id via the shipped hashes (' + pairs.length + ' accounts)');
-  assert(resolveByHash('nobody@webook.com') === null, 'hash resolver rejects an unknown email');
+  assert(resolveByHash('nobody@example.com') === null, 'hash resolver rejects an unknown email');
   assert(Object.keys(hashes).length === pairs.length, 'hash count matches the source directory size');
 } else {
   console.log('note: dist/index.html absent — built-bundle checks skipped (run `node build.js` first).');

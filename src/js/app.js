@@ -304,12 +304,12 @@
         '<div class="sig-sep"></div>' +
         '<div class="sig-credit">' +
           '<div class="sig-role">' + t('sigManaged') + '</div>' +
-          '<div class="sig-name sig-name--accent">M. Akram</div>' +
+          '<div class="sig-name sig-name--accent">A. Foster</div>' +
         '</div>' +
         '<div class="sig-sep"></div>' +
         '<div class="sig-credit">' +
           '<div class="sig-role">' + t('sigDirected') + '</div>' +
-          '<div class="sig-name">Ahmed Othman</div>' +
+          '<div class="sig-name">Oliver Grant</div>' +
         '</div>' +
       '</div>';
   }
@@ -367,6 +367,10 @@
   });
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Re-select real vs sample directory now that config.js has loaded, so the
+    // forceSampleData escape hatch is finally honoured (mock-data's first pass ran
+    // before config existed). No-op when there's no real-data.js. See mock-data.js.
+    if (WP.data && WP.data.applyDirectory) WP.data.applyDirectory();
     if (WP.persist) WP.persist.hydrate();   // restore the user's saved work before first paint
     // Verified sign-in: consume a magic-link token from the URL and restore any
     // persisted Supabase session, so returning from the email link signs the user in.

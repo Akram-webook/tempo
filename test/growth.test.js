@@ -13,11 +13,11 @@ WP.state = { refDate: '2026-06-17', window: 'month' };
 const P = id => WP.data.PEOPLE.find(p => p.id === id);
 
 const checks = [
-  ['Osama flagged as retention risk', WP.growth.flightRisk(P('p_osama')).risk, true],
-  ['Osama strong promotion readiness (>=80%)', WP.growth.promotionReadiness(P('p_osama')).pct >= 80, true],
+  ['Owen flagged as retention risk', WP.growth.flightRisk(P('p_osama')).risk, true],
+  ['Owen strong promotion readiness (>=80%)', WP.growth.promotionReadiness(P('p_osama')).pct >= 80, true],
   ['Talal fairness gap (never given Tier-1)', WP.growth.promotionReadiness(P('p_talal')).fairnessGap, true],
   ['Idris is a ramping new hire', WP.growth.isRamping(P('p_idris')), true],
-  ['Motaa not a retention risk', WP.growth.flightRisk(P('p_motaa')).risk, false],
+  ['Marco not a retention risk', WP.growth.flightRisk(P('p_motaa')).risk, false],
 ];
 
 let failed = 0;
