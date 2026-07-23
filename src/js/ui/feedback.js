@@ -481,7 +481,10 @@
     // transport is wired). When NOT configured the button no longer dead-ends as
     // "Not configured yet" - it reads "Save feedback" and stores the submission
     // locally (per-browser) so nothing is lost and it can be promoted later.
-    var configured = cfg('feedbackEndpoint') !== '' && cfg('feedbackDispatchToken') !== '';
+    // Configured when EITHER the token-safe proxy is set (preferred, G3), OR the
+    // legacy direct-dispatch URL+token are both present.
+    var configured = cfg('feedbackProxyEndpoint') !== '' ||
+      (cfg('feedbackEndpoint') !== '' && cfg('feedbackDispatchToken') !== '');
     var submitLabel = configured
       ? WP.i18n.plural('fbSubmitN', m.queue.length + 1)
       : t('fbSaveLocal');
@@ -931,6 +934,32 @@
       return;
     }
 
+    // Preferred transport: the token-safe PROXY (G3). POST each item as
+    // { op:'create', item } with NO token in the browser; the Worker attaches it.
+    var proxy = cfg('feedbackProxyEndpoint');
+    if (proxy) {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        toastErr(t('fbOffline')); return;
+      }
+      setSubmitting(true);
+      live(t('fbSending'));
+      Promise.all(dispatches.map(function (d) { return proxyOne(proxy, d.inputs); }))
+        .then(function () {
+          clearDraft();
+          setSubmitting(false);
+          toastOk(WP.i18n.plural('fbSentN', items.length));
+          live(WP.i18n.plural('fbSentN', items.length));
+          closePanel();
+        }).catch(function () {
+          setSubmitting(false);
+          var msg = (typeof navigator !== 'undefined' && navigator.onLine === false) ? t('fbOffline') : t('fbSendFail');
+          toastErr(msg); live(msg);
+          var b = panelState && panelState.host.querySelector('.fb-submit-txt');
+          if (b) b.textContent = t('fbRetry');
+        });
+      return;
+    }
+
     var endpoint = cfg('feedbackEndpoint');
     var token = cfg('feedbackDispatchToken');
     if (!endpoint || !token) {
@@ -1008,6 +1037,25 @@
   // fetch DOES carry an Authorization header, so a CORS preflight fires; GitHub's
   // API supports browser CORS, so that is fine. A hard timeout keeps a hung
   // request from pinning the panel; the queue is preserved on any failure.
+  // One POST to the token-safe proxy (workers/tempo-crud). No Authorization
+  // header - the proxy holds the token. Expects { ok:true } with HTTP 200; a
+  // non-ok body or non-200 is a failure (queue preserved, user can retry).
+  function proxyOne(url, inputs) {
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+    var opts = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ op: 'create', item: inputs }),
+    };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(url, opts).then(function (res) {
+      clearTimeout(timer);
+      if (!res || res.status !== 200) throw new Error('proxy http ' + (res && res.status));
+      return res.json().then(function (j) { if (!j || j.ok !== true) throw new Error('proxy not ok'); return true; });
+    }, function (err) { clearTimeout(timer); throw err; });
+  }
+
   function dispatchOne(url, token, payload) {
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);

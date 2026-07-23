@@ -1,0 +1,9 @@
+name = "tempo-crud"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# GITHUB_PAT is NOT set here - it is a secret:
+#   cd workers/tempo-crud && npx wrangler secret put GITHUB_PAT
+# Use a FINE-GRAINED PAT scoped to the tempo repo only, with:
+#   Actions: Read and write   (to trigger workflow_dispatch)
+# Nothing else. Never commit the token.
