@@ -194,13 +194,14 @@
   if (WP.config.feedbackKey === undefined)      WP.config.feedbackKey = '';
   if (WP.config.aiPolishEndpoint === undefined) WP.config.aiPolishEndpoint = '';
 
-  /* Feedback PROXY (G3 go-live, token-safe transport). When set, Submit POSTs
-   * { op:'create', item } here WITHOUT any token - the Cloudflare Worker
-   * (workers/tempo-crud) holds the token and forwards to the Receive Feedback
-   * Action. This is the SAFE way to enable live submit: no token in the public
-   * bundle. Empty by default -> falls back to the (gated) direct-dispatch path,
-   * which stays "Not configured" without a token. Set this to the deployed
-   * worker URL to go live. See workers/tempo-crud/README.md. */
+  /* Feedback PROXY (G3 go-live, token-safe transport). When set, Submit + triage
+   * POST { op, item } here WITHOUT any token - the Supabase Edge Function
+   * (supabase/functions/feedback-proxy) holds the token and forwards to the
+   * Receive Feedback Action. This is the SAFE way to enable live submit: no token
+   * in the public bundle. Empty by default -> falls back to the (gated) direct-
+   * dispatch path, which stays "Not configured" without a token. Set this to the
+   * deployed function URL (https://<ref>.supabase.co/functions/v1/feedback-proxy)
+   * to go live. See supabase/functions/feedback-proxy/README.md. */
   if (WP.config.feedbackProxyEndpoint === undefined) WP.config.feedbackProxyEndpoint = '';
 
   /* ----------------------------------------------------------------

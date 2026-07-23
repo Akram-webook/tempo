@@ -1037,9 +1037,9 @@
   // fetch DOES carry an Authorization header, so a CORS preflight fires; GitHub's
   // API supports browser CORS, so that is fine. A hard timeout keeps a hung
   // request from pinning the panel; the queue is preserved on any failure.
-  // One POST to the token-safe proxy (workers/tempo-crud). No Authorization
-  // header - the proxy holds the token. Expects { ok:true } with HTTP 200; a
-  // non-ok body or non-200 is a failure (queue preserved, user can retry).
+  // One POST to the token-safe proxy (supabase/functions/feedback-proxy). No
+  // Authorization header - the proxy holds the token. Expects { ok:true } with
+  // HTTP 200; a non-ok body or non-200 is a failure (queue preserved, user can retry).
   function proxyOne(url, inputs) {
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
