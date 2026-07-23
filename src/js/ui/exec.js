@@ -279,7 +279,32 @@
     map[id] = entry;
     triageSave(map);
   }
-  WP.fbTriage = { load: triageLoad, set: triageSet, apply: triageApply,
+  // Persist a triage decision to the SHARED warehouse via the token-safe proxy
+  // (G3). The local overlay above stays as the instant/optimistic layer + offline
+  // fallback; this makes the decision durable + visible to every director. When no
+  // proxy is configured it resolves false (local-only, exactly as before) - never
+  // throws, never blocks the UI. A 'Discarded' status maps to the discard op.
+  function triagePersist(id, status, wave, by) {
+    var proxy = (WP.config && WP.config.feedbackProxyEndpoint) || '';
+    if (!proxy || !id) return Promise.resolve(false);
+    var op = status === 'Discarded' ? 'discard' : 'update';
+    var item = { id: id, triagedBy: by || '' };
+    if (op === 'update') {
+      item.status = status;
+      if (status === 'Assigned') item.wave = (wave == null ? '' : String(wave));
+    }
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+    var opts = { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ op: op, item: item }) };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(proxy, opts).then(function (res) {
+      clearTimeout(timer);
+      if (!res || res.status !== 200) throw new Error('triage proxy http ' + (res && res.status));
+      return res.json().then(function (j) { if (!j || j.ok !== true) throw new Error('triage not ok'); return true; });
+    }, function (err) { clearTimeout(timer); throw err; });
+  }
+  WP.fbTriage = { load: triageLoad, set: triageSet, apply: triageApply, persist: triagePersist,
     STATUSES: TRIAGE_STATUSES, _key: TRIAGE_KEY };
 
   // --- Triage suggestion engine -------------------------------------------
@@ -440,7 +465,9 @@
             ui.icon('check', 14) + ' ' + esc(t('execTriageSaved')) + '</span>' +
         '</div>' +
       '</div>' +
-      '<p class="ex-triage-note">' + esc(t('execTriageLocalNote')) + '</p>' +
+      '<p class="ex-triage-note">' +
+        esc(t((WP.config && WP.config.feedbackProxyEndpoint) ? 'execTriageSharedNote' : 'execTriageLocalNote')) +
+      '</p>' +
     '</div>';
   }
 
@@ -1112,12 +1139,20 @@
         var status = statusSel ? statusSel.value : 'New';
         var wave = (status === 'Assigned' && waveSel) ? (parseInt(waveSel.value, 10) || null) : null;
         if (status === 'Assigned' && !wave) { toastNeedWave(host); return; }
-        triageSet(id, status, wave);
+        triageSet(id, status, wave);       // optimistic local overlay (instant + offline)
         // Confirm the save inline FIRST (so the click visibly registers), then
         // re-fold from the warehouse + overlay so the row's chip/tags update.
         if (saved) saved.hidden = false;
         rememberOpenTriage(id);            // keep this panel open across the repaint
         if (lastBaseData) paintBody(host, lastBaseData);
+        // Persist to the SHARED warehouse via the proxy (G3). Best-effort: when no
+        // proxy is configured it's a no-op (local-only, as before). On failure the
+        // local overlay still stands - the director's decision is never lost - but
+        // we tell them it didn't sync so they know it's not shared yet.
+        var by = (WP.viewer && WP.viewer() && WP.viewer().id) || '';
+        triagePersist(id, status, wave, by).catch(function () {
+          if (WP.ui && WP.ui.toast) WP.ui.toast(WP.i18n.t('execTriageSyncFail'), 'warn');
+        });
       };
     });
     restoreOpenTriage(host);   // re-open + re-confirm the panel we just saved

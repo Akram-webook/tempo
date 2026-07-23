@@ -108,6 +108,24 @@ const fb = require(path.join(root, 'scripts', 'append-feedback.js'));
   assert(/feedbackProxyEndpoint'\) !== ''/.test(srcTxt), 'configured() honours the proxy endpoint');
 })();
 
+/* ---------- 2b) CLIENT triage persistence (exec.js -> proxy) ---------- */
+(function triagePersist() {
+  const src = fs.readFileSync(path.join(root, 'src/js/ui/exec.js'), 'utf8');
+  assert(/function triagePersist/.test(src), 'exec has triagePersist()');
+  // Discarded status maps to the discard op; everything else is update.
+  assert(/status === 'Discarded' \? 'discard' : 'update'/.test(src), 'triagePersist maps Discarded -> discard op');
+  // No Authorization header (token stays server-side).
+  const fn = src.slice(src.indexOf('function triagePersist'), src.indexOf('WP.fbTriage = {'));
+  assert(!/Authorization/.test(fn), 'triagePersist sends no Authorization header');
+  // No proxy configured -> resolves false (local-only, no throw).
+  assert(/if \(!proxy \|\| !id\) return Promise.resolve\(false\)/.test(fn), 'triagePersist is a no-op without a proxy');
+  // Save handler calls it optimistically AFTER the local overlay set, and toasts on failure.
+  assert(/triageSet\(id, status, wave\)/.test(src) && /triagePersist\(id, status, wave, by\)\.catch/.test(src),
+    'save handler: optimistic local set THEN best-effort warehouse persist with failure toast');
+  // The panel note is proxy-aware (shared vs this-device).
+  assert(/feedbackProxyEndpoint\) \? 'execTriageSharedNote' : 'execTriageLocalNote'/.test(src), 'triage note reflects whether it syncs');
+})();
+
 /* ---------- 3) ship-blocker: no secret in the built bundle ---------- */
 (function noSecret() {
   const dist = path.join(root, 'dist', 'index.html');

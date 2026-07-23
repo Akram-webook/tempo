@@ -34,7 +34,7 @@
     { "id": "gl-g3-scope", "area": "Backend", "title": "G3: Role-scoped reads hold on real data (peer/manager/director)", "status": "Later", "type": "Improvement", "wave": 7, "ts": "2026-07-22T20:00:00Z" },
     { "id": "gl-g3-offline", "area": "Backend", "title": "G3: Graceful offline + conflict handling proven with real accounts", "status": "Later", "type": "Improvement", "wave": 7, "ts": "2026-07-22T20:00:00Z" },
     { "id": "gl-g3-hole", "area": "Backend", "title": "G3: Close the manual-upload dev hole on production", "status": "Later", "type": "Bug fix", "wave": 7, "ts": "2026-07-22T20:00:00Z" },
-    { "id": "gl-g3-fbproxy", "area": "Backend", "title": "G3: Token-safe feedback write proxy (create/update/discard to the warehouse)", "status": "In Progress", "type": "Feature", "wave": 7, "ts": "2026-07-23T20:00:00Z" },
+    { "id": "gl-g3-fbproxy", "area": "Backend", "title": "G3: Token-safe feedback write proxy (create/update/discard to the warehouse)", "status": "Done", "type": "Feature", "wave": 7, "ts": "2026-07-23T20:00:00Z" },
 
     { "id": "gl-g4-target", "area": "Deploy", "title": "G4: Choose + wire the production deploy target (gated to real staff)", "status": "Later", "type": "Feature", "wave": 8, "ts": "2026-07-22T20:00:00Z" },
     { "id": "gl-g4-envs", "area": "Deploy", "title": "G4: Environment split - sample/demo build vs real build (reversible flag)", "status": "Later", "type": "Improvement", "wave": 8, "ts": "2026-07-22T20:00:00Z" },
