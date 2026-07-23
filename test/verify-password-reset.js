@@ -45,8 +45,8 @@ function recoveryStub(store){
   assert(view,'#view exists for rerender');
   assert(typeof WP.auth.updateNewPassword==='function','updateNewPassword is exported');
 
-  const EMAIL='motaa@webook.com';
-  const X=WP.auth.findByEmail(EMAIL), Y=WP.auth.findByEmail('ayman@webook.com');
+  const EMAIL='marco.delgado@example.com';
+  const X=WP.auth.findByEmail(EMAIL), Y=WP.auth.findByEmail('adrian.bell@example.com');
   assert(X.person && Y.person && X.person.id!==Y.person.id,'motaa and ayman are distinct accounts');
 
   // ── PASSWORD_RECOVERY routes to the set-password screen, NOT an auto sign-in ──

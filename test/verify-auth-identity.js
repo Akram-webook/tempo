@@ -77,7 +77,7 @@ try {
 
   // ---- 4. A session for an unknown / wrong-domain email signs in as NOBODY (no first-person fallback). ----
   const before = WP.state.viewerId;
-  sessionFor('nobody-here@webook.com');
+  sessionFor('nobody-here@example.com');
   assert(WP.state.authed === false && WP.state.viewerId == null, 'unknown-account session signs in as nobody (no fallback to a real person)');
   sessionFor('someone@evil.com');
   assert(WP.state.authed === false && WP.state.viewerId == null, 'wrong-domain session signs in as nobody');
@@ -92,8 +92,8 @@ try {
   assert(WP.state.authed === false && WP.state.viewerId == null, 'null session signs in as nobody');
 
   // ---- 6. Super-admin is identity-bound, not a role anyone can claim by email shape. ----
-  sessionFor('akram@webook.com');
-  assert(WP.state.viewerId === 'p_akram' && WP.access.isSuperAdmin(WP.access.byId('p_akram')) === true, 'akram@webook.com → p_akram AND is the super admin');
+  sessionFor('adam.foster@example.com');
+  assert(WP.state.viewerId === 'p_akram' && WP.access.isSuperAdmin(WP.access.byId('p_akram')) === true, 'adam.foster@example.com → p_akram AND is the super admin');
   const nonAdmin = withEmail.find(p => p.id !== 'p_akram' && WP.access.hasAccess(p.id));
   if (nonAdmin) { assert(WP.access.isSuperAdmin(WP.access.byId(nonAdmin.id)) === false, nonAdmin.id + ' (a normal account) is NOT super admin — role is bound to identity, not to signing in'); }
 } catch (e) { errors.push('[run] ' + e.message + '\n' + e.stack); }

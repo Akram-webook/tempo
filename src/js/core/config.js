@@ -5,13 +5,13 @@
  * configured wins:
  *
  *  1. EMAIL CODE (recommended) — set supabaseUrl + supabaseAnonKey below.
- *     The user enters their @webook.com email, gets a 6-digit code in their
+ *     The user enters their @example.com email, gets a 6-digit code in their
  *     inbox, and types it back. The code goes to the REAL mailbox, so typing
  *     someone else's email gets you nowhere. These two values are PUBLIC by
  *     design (safe to ship in the page). See ACCESS-SETUP.md → "Email code".
  *
  *  2. GOOGLE — set googleClientId to a Google OAuth Web Client ID. Google
- *     proves the @webook.com identity. See ACCESS-SETUP.md → "Google".
+ *     proves the @example.com identity. See ACCESS-SETUP.md → "Google".
  *
  *  3. DIRECTORY GATE (demo, default when nothing is set) — exact-email match
  *     only. Convenient for a trusted internal pilot, but NOT a real lock:
@@ -39,17 +39,17 @@
   // built-in email sender is rate-limited ("Could not send the code"), so the
   // verified-LINK path locks people out. Google (PR #51) is the intended provider
   // but is blocked on the real OAuth Client ID. The directory gate is instant
-  // (registered @webook.com email → straight in) but is NOT identity-proof:
-  // anyone who types a known @webook.com email gets in. Acceptable short-term for
+  // (registered @example.com email → straight in) but is NOT identity-proof:
+  // anyone who types a known @example.com email gets in. Acceptable short-term for
   // an internal pilot on an obscure URL; flip back to 'google' the moment the
   // Client ID is wired.
   // PASSWORD-ONLY (Akram, Jul 2026): the ONLY way in is a Supabase email+password.
   // A leftover Google/OAuth session is rejected at the session level (handleSession
   // → providerAllowedForMode). Nobody signs in without a password set via the
   // invite/reset link. Reversible: change this one word back to 'google'/'directory'.
-  // DIRECTORY (Akram, Jul 2026): unblock sign-in NOW — a registered @webook.com
+  // DIRECTORY (Akram, Jul 2026): unblock sign-in NOW — a registered @example.com
   // email goes straight in, no password, no external account needed. Not
-  // identity-proof (anyone who types a known @webook.com email gets in), fine as
+  // identity-proof (anyone who types a known @example.com email gets in), fine as
   // a short-term stopgap on an obscure URL. Flip back to 'password' once real
   // accounts exist.
   if (WP.config.authMode === undefined)        WP.config.authMode = 'directory';
@@ -88,6 +88,11 @@
   // real-data.js is present (for demos / screenshots). Reversible; default off so
   // real data wins automatically once imported. See docs/ROADMAP-golive.md.
   if (WP.config.forceSampleData === undefined) WP.config.forceSampleData = false;
+
+  // Sign-in email domain (login.js reads this). Demo default matches the fake
+  // demo directory (@example.com). Go-live (G2) sets this to the real company
+  // domain here - one line, no code change, reversible.
+  if (WP.config.authDomain === undefined) WP.config.authDomain = 'example.com';
 
   /* ----------------------------------------------------------------
    * Executive Status — live data endpoint + deck link (both reversible).

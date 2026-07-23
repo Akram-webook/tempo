@@ -19,7 +19,7 @@ setTimeout(()=>{
       if(!view.querySelector('#login-email')) errors.push('login email gate not rendered in bundle');
       const logo=view.querySelector('.login-logo');
       if(!logo||logo.getAttribute('src').indexOf('data:image/svg+xml')!==0) errors.push('logo not inlined as data URI in bundle');
-      if(WP.auth.findByEmail('akram@webook.com').person.id!=='p_akram') errors.push('directory gate broken in bundle');
+      if(WP.auth.findByEmail('adam.foster@example.com').person.id!=='p_akram') errors.push('directory gate broken in bundle');
     }
   }catch(e){errors.push('[run] '+e.message);}
   if(errors.length){console.log('FAIL\n'+errors.join('\n'));process.exit(1);}

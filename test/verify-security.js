@@ -39,7 +39,7 @@ function mockSb() {
 (async function () {
   WP.state.viewerId = 'p_akram'; WP.state.authed = true; WP._settingsTab = 'mine';
   WP._sb = mockSb();
-  WP._session = { user: { email: 'akram@webook.com' } };
+  WP._session = { user: { email: 'adam.foster@example.com' } };
   WP.ui.settings.render(el);
   let h = el.innerHTML;
 
@@ -53,7 +53,7 @@ function mockSb() {
 
   // ---- 2) change password emails the reset link to the user's OWN email -----
   el.querySelector('#sec-changepw').click(); await tick(); await tick();
-  assert(resetEmail === 'akram@webook.com', 'change password emails the reset link to the signed-in user’s own email');
+  assert(resetEmail === 'adam.foster@example.com', 'change password emails the reset link to the signed-in user’s own email');
   assert(!/signInWithPassword|updateUser/.test(WP.auth.requestPasswordChange.toString()), 'never handles the old password / updateUser client-side');
 
   // ---- 3) offline client → graceful failure ---------------------------------

@@ -130,6 +130,10 @@ function validate(list) {
   });
   const roots = people.filter(function (p) { return !p.managerId; });
   if (!roots.length) fail('no top-of-house person (every managerId is set - a cycle or missing root)');
+  // An all-placeholder (all-TBC) export would flip the "Sample data" badge OFF while
+  // showing only placeholders - almost certainly a mistake, so warn loudly.
+  var realPeople = people.filter(function (p) { return !p.tbc && !/^TBC$/i.test(p.name); });
+  if (!realPeople.length) warnings.push('every person is TBC/placeholder - the app will hide the "Sample data" badge but show no real people. Is this the right export?');
   return { people: people, warnings: warnings, roots: roots.length };
 }
 
@@ -139,18 +143,24 @@ function emitModule(people) {
     ' * Real Webook directory (PII). Gitignored. Regenerate with `node scripts/data-load.js`.\n' +
     ' * When present, mock-data.js prefers WP.data.REAL over the sample PEOPLE and\n' +
     ' * flips the "Sample data" badge off (real-data go-live, wave G1). */\n';
+  // Escape < as < so a real name containing "</script>" can't break out of
+  // the <script> tag when build.js inlines this module into dist.
+  const json = JSON.stringify(people, null, 2).replace(/</g, '\\u003c');
   const body =
     '(function (WP) {\n' +
     '  "use strict";\n' +
     '  WP.data = WP.data || {};\n' +
-    '  WP.data.REAL = { PEOPLE: ' + JSON.stringify(people, null, 2) + ' };\n' +
+    '  WP.data.REAL = { PEOPLE: ' + json + ' };\n' +
     '  WP.data.realDataLoaded = true;\n' +
     '})(window.WP = window.WP || {});\n';
   return header + body;
 }
 
 function readInput(inPath) {
-  const raw = fs.readFileSync(inPath, 'utf8');
+  // Strip a UTF-8 BOM - Excel/Sheets "Save as CSV UTF-8" prepends one, and
+  // String.trim() does NOT remove it, so it would poison the first header key
+  // ("﻿id" != "id") and reject a perfectly valid export.
+  const raw = fs.readFileSync(inPath, 'utf8').replace(/^﻿/, '');
   if (/\.csv$/i.test(inPath)) return parseCSV(raw);
   const j = JSON.parse(raw);
   return Array.isArray(j) ? j : (Array.isArray(j.people) ? j.people : fail('JSON must be an array or {people:[...]}'));
@@ -190,6 +200,10 @@ function selftest() {
 
   const parsed = parseCSV('id,name,level,managerId\na,"Root, Sr.",director,\nb,Mid,manager,a\n');
   ok(parsed.length === 2 && parsed[0].name === 'Root, Sr.', 'CSV quoted comma parsed');
+
+  // emitModule escapes </script> so an inlined name can't break out of the tag
+  const evil = emitModule([{ id: 'a', name: 'Bad</script><script>x', level: 'spec', managerId: null, initials: 'B', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }]);
+  ok(evil.indexOf('</script>') === -1, 'emitModule escapes </script> in a name');
 
   log('SELFTEST ' + (failn ? 'FAIL' : 'PASS') + ' - data-load: ' + pass + ' checks passed, ' + failn + ' failed.');
   process.exit(failn ? 1 : 0);

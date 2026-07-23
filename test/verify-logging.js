@@ -48,12 +48,12 @@ assert(sink.length === 1, 'error still emits at level = error');
 WP.log.setLevel('debug');
 
 // ---- no-PII scrub (object args) ---------------------------------------------
-const scrubbed = WP.log._scrub({ name: 'Mohammed Akram', email: 'akram@webook.com', title: 'Director', count: 5, id: 'p_akram', nested: { feedback: 'secret note', ok: true } }, 0);
+const scrubbed = WP.log._scrub({ name: 'Adam Foster', email: 'adam.foster@example.com', title: 'Director', count: 5, id: 'p_akram', nested: { feedback: 'secret note', ok: true } }, 0);
 assert(scrubbed.name === '[redacted]' && scrubbed.email === '[redacted]' && scrubbed.title === '[redacted]', 'identity fields scrubbed');
 assert(scrubbed.count === 5 && scrubbed.id === 'p_akram', 'counts + IDs preserved (allowed)');
 assert(scrubbed.nested.feedback === '[redacted]' && scrubbed.nested.ok === true, 'nested bodies scrubbed, nested flags kept');
-sink.length = 0; WP.log.info('[t.js]', { name: 'Mohammed Akram', email: 'akram@webook.com' });
-assert(!/Mohammed Akram|akram@webook\.com/.test(sink[0]) && /\[redacted\]/.test(sink[0]), 'emitted object never contains raw PII');
+sink.length = 0; WP.log.info('[t.js]', { name: 'Adam Foster', email: 'adam.foster@example.com' });
+assert(!/Adam Foster|akram@webook\.com/.test(sink[0]) && /\[redacted\]/.test(sink[0]), 'emitted object never contains raw PII');
 
 // ---- static: no raw console.* left in src/ (all routed) ----------------------
 // Allowlist: events.js keeps ONE dev-only, isDevMode()-guarded console.warn (the derive

@@ -2,21 +2,24 @@
  * Tempo — Sign in
  * ------------------------------------------------------------
  * Strongest configured method wins (see src/js/core/config.js):
- *   1. VERIFIED LINK (Supabase): enter @webook.com email → a one-time
+ *   1. VERIFIED LINK (Supabase): enter @example.com email → a one-time
  *      sign-in LINK is emailed to the REAL mailbox → open it → signed in.
  *      Typing someone else's email gets you nowhere: the link lands in
  *      THEIR inbox. (Supabase's default email sends a link; a literal typed
  *      6-digit code needs custom SMTP — see ACCESS-SETUP.md.)
- *   2. GOOGLE (GIS): Google proves the @webook.com identity.
+ *   2. GOOGLE (GIS): Google proves the @example.com identity.
  *   3. DIRECTORY GATE (demo default): exact-email match only — convenient,
  *      but NOT a real lock (anyone who types a known email gets in).
  * In every mode the email must match a registered Tempo account, and
- * akram@webook.com is the Super Admin (View-as any account + access mgmt).
+ * adam.foster@example.com is the Super Admin (View-as any account + access mgmt).
  * ========================================================== */
 (function (WP) {
   'use strict';
   const ui = WP.ui;
-  const DOMAIN = 'webook.com';
+  // Sign-in email domain. Demo default is example.com (matches the fake demo
+  // directory). Go-live (G2) sets WP.config.authDomain to the real company domain
+  // - one config line, no code change. Reversible.
+  const DOMAIN = (WP.config && WP.config.authDomain) || 'example.com';
 
   function emailOf(p) {
     if (p && p.email) return p.email;

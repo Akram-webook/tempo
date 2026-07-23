@@ -78,7 +78,7 @@
     const inputs = sec('Input',
       '<div style="display:flex;flex-direction:column;gap:14px;max-width:360px">' +
         '<label class="wbk-field"><span class="wbk-field-label">' + t('inEmail') + '</span>' +
-          '<input class="wbk-input" type="email" placeholder="name@webook.com" />' +
+          '<input class="wbk-input" type="email" placeholder="name@example.com" />' +
           '<span class="wbk-field-hint">' + t('inEmailHint') + '</span></label>' +
         '<label class="wbk-field is-error"><span class="wbk-field-label">' + t('inName') + '<span class="wbk-req">*</span></span>' +
           '<input class="wbk-input" value="" placeholder="' + t('inNamePh') + '" />' +

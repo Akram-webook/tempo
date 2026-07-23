@@ -54,10 +54,10 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 
   // ── ANTI-IMPERSONATION: type person Y, but the verified session is person X ──
   // Confirm the two are DIFFERENT registered people first.
-  const X=WP.auth.findByEmail('motaa@webook.com'), Y=WP.auth.findByEmail('ayman@webook.com');
+  const X=WP.auth.findByEmail('marco.delgado@example.com'), Y=WP.auth.findByEmail('adrian.bell@example.com');
   assert(X.person && Y.person && X.person.id!==Y.person.id,'motaa and ayman are two distinct registered accounts');
-  WP.state.authed=false;WP._sb=stubSb('motaa@webook.com');
-  view.querySelector('#login-email').value='ayman@webook.com';   // attacker types someone ELSE's email
+  WP.state.authed=false;WP._sb=stubSb('marco.delgado@example.com');
+  view.querySelector('#login-email').value='adrian.bell@example.com';   // attacker types someone ELSE's email
   view.querySelector('#login-password').value='whatever';
   view.querySelector('#login-form').dispatchEvent(new window.Event('submit'));
   await tick();
@@ -66,9 +66,9 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
   assert(WP.state.viewerId!==Y.person.id,'ANTI-IMPERSONATION: a session for X can NEVER resolve to person Y');
 
   // ── wrong credentials → one generic message, not authed, never reveals which ──
-  WP.state.authed=false;WP._login=null;WP._sb=stubSb('motaa@webook.com',{fail:true});
+  WP.state.authed=false;WP._login=null;WP._sb=stubSb('marco.delgado@example.com',{fail:true});
   WP.ui.login.render(view);
-  view.querySelector('#login-email').value='motaa@webook.com';
+  view.querySelector('#login-email').value='marco.delgado@example.com';
   view.querySelector('#login-password').value='wrong';
   view.querySelector('#login-form').dispatchEvent(new window.Event('submit'));
   await tick();
@@ -94,9 +94,9 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 
   // ── forgot/set password → resetPasswordForEmail invoked (anti-enumeration copy) ──
   let resetHit=false;WP.state.authed=false;WP._login=null;WP._denied=null;
-  WP._sb=stubSb('motaa@webook.com',{resetCalled:()=>{resetHit=true;}});
+  WP._sb=stubSb('marco.delgado@example.com',{resetCalled:()=>{resetHit=true;}});
   WP.ui.login.render(view);
-  view.querySelector('#login-email').value='motaa@webook.com';
+  view.querySelector('#login-email').value='marco.delgado@example.com';
   view.querySelector('#forgot-pw').click();
   await tick();
   assert(resetHit===true,'forgot/set password calls resetPasswordForEmail');
@@ -123,14 +123,14 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 
   // Google session for a fully-valid, access-having person → still rejected in password mode.
   let googOut=false; WP.state.authed=false; WP._login=null; WP._denied=null;
-  WP._sb=stubSbWithSession('motaa@webook.com','google',{signOutCalled:()=>{googOut=true;}});
-  WP.auth.handleSession(mkSession('motaa@webook.com','google'));
+  WP._sb=stubSbWithSession('marco.delgado@example.com','google',{signOutCalled:()=>{googOut=true;}});
+  WP.auth.handleSession(mkSession('marco.delgado@example.com','google'));
   assert(WP.state.authed===false,'password mode: a Google/OAuth session does NOT sign in (re-entry-with-Google fixed)');
   assert(googOut===true,'password mode: the rejected Google session is signed out of Supabase');
 
   // Control: an EMAIL/password-provider session for the same person IS accepted.
-  WP.state.authed=false; WP._login=null; WP._denied=null; WP._sb=stubSbWithSession('motaa@webook.com','email');
-  WP.auth.handleSession(mkSession('motaa@webook.com','email'));
+  WP.state.authed=false; WP._login=null; WP._denied=null; WP._sb=stubSbWithSession('marco.delgado@example.com','email');
+  WP.auth.handleSession(mkSession('marco.delgado@example.com','email'));
   assert(WP.state.authed===true && WP.state.viewerId===X.person.id,'password mode: an email/password-provider session IS accepted');
 
   // ── reversible: flips cleanly back to the other providers ──

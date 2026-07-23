@@ -36,15 +36,15 @@ if (WP) WP.render = function () {};
 function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 
 // Two real accounts from the seeded directory.
-const A = 'p_akram';   // akram@webook.com
-const B = 'p_osama';   // o.taher.c@webook.com
+const A = 'p_akram';   // adam.foster@example.com
+const B = 'p_osama';   // owen.blake@example.com
 const emailA = WP.identity._resolveEmail(A);
 const emailB = WP.identity._resolveEmail(B);
 
 (async () => {
   try {
     assert(WP.identity && WP.identity.nsKey && WP.identity.adopt && WP.identity.clear, 'WP.identity API present');
-    assert(emailA === 'akram@webook.com' && emailB === 'o.taher.c@webook.com', 'identity resolves the signed-in account email (not viewerId)');
+    assert(emailA === 'adam.foster@example.com' && emailB === 'owen.blake@example.com', 'identity resolves the signed-in account email (not viewerId)');
 
     // --- 1) A's saved data is NOT visible to B. -------------------------------
     // Sign in as A, save some work, then hand the device over to B.
@@ -55,7 +55,7 @@ const emailB = WP.identity._resolveEmail(B);
     WP.data.EVALUATIONS = { p_target: { period: 'Q2', status: 'Completed', scores: {}, feedback: { secret: 'A-ONLY note' }, updated_at: '2026-06-01T00:00:00Z' } };
     WP.persist.saveData();
     const keyA = WP.identity.nsKey('tempo_data');
-    assert(keyA === 'tempo_data::akram@webook.com', '1: tempo_data is namespaced by A email');
+    assert(keyA === 'tempo_data::adam.foster@example.com', '1: tempo_data is namespaced by A email');
     assert(STORE._m[keyA] && STORE._m[keyA].indexOf('A-ONLY note') !== -1, "1: A's work persisted under A's namespace");
 
     // "View as" must NOT re-key (still A's account, just viewing B).
@@ -71,7 +71,7 @@ const emailB = WP.identity._resolveEmail(B);
     assert(WP.identity.current() === emailB, '1: identity re-keys to B on the next sign-in');
     WP.persist.hydrate();                           // B loads ONLY B's namespace
     assert(!WP.data.EVALUATIONS.p_target, "1: B does NOT see A's saved evaluation (namespaces isolated)");
-    assert(STORE._m['tempo_data::o.taher.c@webook.com'] !== undefined || !WP.data.EVALUATIONS.p_target, "1: B's reads are confined to B's namespace");
+    assert(STORE._m['tempo_data::owen.blake@example.com'] !== undefined || !WP.data.EVALUATIONS.p_target, "1: B's reads are confined to B's namespace");
     // A's data is still safely on disk under A's key (not lost, just not B's).
     assert(STORE._m[keyA] && STORE._m[keyA].indexOf('A-ONLY note') !== -1, "1: A's work remains intact under A's own namespace");
 
@@ -96,7 +96,7 @@ const emailB = WP.identity._resolveEmail(B);
     WP.state.authed = false; WP.identity.clear();
     WP.setState({ authed: true, viewerId: A });     // adopt A -> migrates legacy into A's namespace
     assert(STORE._m['tempo_data'] === undefined, '2: legacy global tempo_data is REMOVED after migration (no re-adoption by another identity)');
-    assert(STORE._m['tempo_data::akram@webook.com'] && STORE._m['tempo_data::akram@webook.com'].indexOf('p_legacy') !== -1, "2: legacy work migrated into the current user's namespace");
+    assert(STORE._m['tempo_data::adam.foster@example.com'] && STORE._m['tempo_data::adam.foster@example.com'].indexOf('p_legacy') !== -1, "2: legacy work migrated into the current user's namespace");
     // Migrating again must not clobber / duplicate: a second user does NOT inherit it.
     WP.setState({ authed: false }); WP.data.EVALUATIONS = {};
     WP.setState({ authed: true, viewerId: B });

@@ -43,7 +43,7 @@ function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 
 (async () => {
   try {
-    if (WP.access && WP.access.grantAccess) { try { WP.access.grantAccess('akram@webook.com'); } catch (e) {} }
+    if (WP.access && WP.access.grantAccess) { try { WP.access.grantAccess('adam.foster@example.com'); } catch (e) {} }
     WP.state.lang = 'en';
     const el = window.document.getElementById('app');
     WP.ui.workloadMap.render(el);

@@ -2,7 +2,7 @@
  * Tempo — synchronous SHA-256  (WP.sha256)
  * ------------------------------------------------------------
  * Why this exists: directory sign-in must match a typed email WITHOUT shipping a
- * harvestable plaintext list of real @webook.com addresses in the public bundle.
+ * harvestable plaintext list of real @example.com addresses in the public bundle.
  * build.js replaces the plaintext EMAILS map with SALTED SHA-256 hashes; the client
  * hashes the typed input the same way and compares. Web Crypto's subtle.digest is
  * async, which would force the whole sign-in path async — this small, dependency-free,

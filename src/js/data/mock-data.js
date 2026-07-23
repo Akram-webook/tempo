@@ -1,22 +1,18 @@
 /* ============================================================
- * Webook Workload — Mock Data  (REAL Saudi Event-Operations team)
+ * Webook Workload — Mock Data  (DEMO Event-Operations team)
  * ------------------------------------------------------------
- * Names, titles, hierarchy and PHOTOS are the real team from Slack,
- * structured per the manager's org chart. Workload numbers, events,
- * skills and reviews are STILL mocked for the demo.
+ * Names, titles and hierarchy are FAKE demo people (no real staff PII).
+ * Workload numbers, events, skills and reviews are all mocked for the demo.
  *
- * Structure (Saudi team):
- *   Ahmed Othman (Director)
- *   ├─ Ayman Albasha (Sr Mgr) → Batool, Shahad
- *   ├─ Motaa (Sr Mgr · Ticketing) → Akram → {Idris,Gamal,Osama};
- *   │                               Khaled → {Ibrahim, Saleh};
- *   │                               Abdulrahman Maksousa → {Talal, Shamma}
- *   ├─ Ayah Nasif (Sr Mgr) → Farah, Meshal Bin Howshan, Meshal Alsmari, Rana
- *   └─ Hani Ahmed (Sr Mgr) → Mohamed Zaidan, Ahmed Faraj, Batarfi,
- *                            Omar Zarea (Cashless) → {Aljazi, Rosa, Altahini}
- * NOTE: "Farah" was listed under both Ayah and Omar Zarea — placed under
- * Ayah here; move her in Settings if she belongs to Cashless. "أمين" under
- * Ayah was unclear and left out.
+ * Structure (demo team):
+ *   Oliver Grant (Director)
+ *   ├─ Adrian Bell (Sr Mgr) → Bianca, Sophie
+ *   ├─ Marco Delgado (Sr Mgr · Ticketing) → Adam → {Marcus,Julian,Owen};
+ *   │                               Kevin → {Ian, Simon};
+ *   │                               Aaron Maxwell → {Tyler, Sara}
+ *   ├─ Ava Nichols (Sr Mgr) → Fiona, Mason Hughes, Miles Sanders, Rachel
+ *   └─ Henry Adams (Sr Mgr) → Zachary Dean, Felix Ford, Blake Turner,
+ *                            Oscar Reyes (Cashless) → {Alicia, Rosa, Martin}
  * ========================================================== */
 (function (WP) {
   'use strict';
@@ -48,70 +44,69 @@
     e_pop_concert:   { id: 'e_pop_concert',   tier: 3, nameEn: 'Pop-up Concert',         nameAr: 'حفل مفاجئ',         start: '2026-06-27', end: '2026-06-29', city: 'Dammam', intl: false },
   };
 
-  const S = 'https://avatars.slack-edge.com/';
   function P(o) { return o; }
 
   const PEOPLE = [
     // — Top of house —
-    P({ id: 'p_hamdi', slackId: '', name: 'Hamdi Missaoui', nameAr: 'حمدي المسعودي', initials: 'HM', level: 'director', managerId: null, title: 'Chief Commercial Officer', titleAr: 'الرئيس التجاري', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_ahmed', slackId: 'U099EREBS23', name: 'Ahmed Othman', nameAr: 'أحمد عثمان', initials: 'AO', level: 'director', managerId: 'p_hamdi', title: 'Event Operations Director', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-04-24/10987489079253_5eaec9a8cc3cc0048310_original.png', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_hamdi', slackId: '', name: 'Nathan Brooks', nameAr: 'ناثان بروكس', initials: 'NB', level: 'director', managerId: null, title: 'Chief Commercial Officer', titleAr: 'الرئيس التجاري', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_ahmed', slackId: 'U000000001', name: 'Oliver Grant', nameAr: 'أوليفر جرانت', initials: 'OG', level: 'director', managerId: 'p_hamdi', title: 'Event Operations Director', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Automation & Execution — Ayman =====
-    P({ id: 'p_ayman', slackId: 'U06D1GQ7XL2', name: 'Ayman Albasha', nameAr: 'أيمن الباشا', initials: 'AB', level: 'sr_manager', managerId: 'p_ahmed', team: 'Automation & Execution', teamAr: 'الأتمتة والتنفيذ', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2024-11-11/8024758637153_3f81f365db0728908404_original.jpg', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_shahad', slackId: 'U06EA95C70W', name: 'Shahad Joudah', nameAr: 'شهد جوده', initials: 'SJ', level: 'spec', managerId: 'p_ayman', title: 'Event Operations Specialist - Trainer', titleAr: 'أخصائية عمليات الفعاليات - مدرّبة', employment: 'fulltime', photo: S + '2025-12-28/10192223299267_959ffd1ed9f113297f14_original.jpg', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
-    // Anti-Fraud sub-group under Ayman
-    P({ id: 'p_batool', slackId: 'U06CM0JKYGP', name: 'Batool Emad', nameAr: 'بتول عماد', initials: 'BE', level: 'manager', managerId: 'p_ayman', subteam: 'Anti-Fraud', subteamAr: 'مكافحة الاحتيال', title: 'Event Operations Manager Anti-Fraud', titleAr: 'مدير عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', photo: S + '2025-10-02/9609866850679_74e279d52d0acdb61e3e_original.jpg', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
+    // ===== Automation & Execution — Adrian =====
+    P({ id: 'p_ayman', slackId: 'U000000002', name: 'Adrian Bell', nameAr: 'أدريان بيل', initials: 'AB', level: 'sr_manager', managerId: 'p_ahmed', team: 'Automation & Execution', teamAr: 'الأتمتة والتنفيذ', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_shahad', slackId: 'U000000003', name: 'Sophie Jensen', nameAr: 'صوفي جينسن', initials: 'SJ', level: 'spec', managerId: 'p_ayman', title: 'Event Operations Specialist - Trainer', titleAr: 'أخصائية عمليات الفعاليات - مدرّبة', employment: 'fulltime', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
+    // Anti-Fraud sub-group under Adrian
+    P({ id: 'p_batool', slackId: 'U000000004', name: 'Bianca Espinoza', nameAr: 'بيانكا إسبينوزا', initials: 'BE', level: 'manager', managerId: 'p_ayman', subteam: 'Anti-Fraud', subteamAr: 'مكافحة الاحتيال', title: 'Event Operations Manager Anti-Fraud', titleAr: 'مدير عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
     P({ id: 'p_tbc_af_spec', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_batool', tbc: true, title: 'Event Operations Specialist Anti-Fraud', titleAr: 'أخصائي عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
     P({ id: 'p_tbc_af_coord', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_batool', tbc: true, title: 'Event Operations Coordinator Anti-Fraud', titleAr: 'منسّق عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Sports — Motaa =====
-    P({ id: 'p_motaa', slackId: 'U06CYJMJPJR', name: 'Motaa Aldarra', nameAr: 'مطاع الدرة', initials: 'MA', level: 'sr_manager', managerId: 'p_ahmed', team: 'Sports', teamAr: 'الرياضة', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2024-02-21/6673336286451_cd85e03b0c0bbb79cdd7_original.png', assignedEvents: ['e_riyadh_season'], dailyCheckin: { plan: 'Lock Riyadh Season ticketing', done: 'Gate plan signed', remaining: 'Stage sign-off', learned: 'New load-in route', at: '2026-06-17T08:40:00' } }),
-    P({ id: 'p_akram', slackId: 'U06H0ASQ761', name: 'Mohammed Akram', nameAr: 'محمد أكرم', initials: 'MA', level: 'manager', managerId: 'p_motaa', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2024-02-04/6593946722801_53f137cdf64568fb3570_original.png', assignedEvents: ['e_mdl_beast', 'e_expo_booth'], dailyCheckin: { plan: 'MDLBEAST staffing grid', done: 'Crew booked', remaining: 'Power supply', learned: 'Faster generator vendor', at: '2026-06-17T08:10:00' } }),
-    P({ id: 'p_abdulrahman', slackId: 'U07LF0D3KSN', name: 'A. Maksosah', nameAr: 'عبدالرحمن مقصوصة', initials: 'AM', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-12/10274801113666_1fbe4f7bcf66ca4624f3_original.png', assignedEvents: ['e_intl_summit', 'e_school_fair'], dailyCheckin: { plan: 'Summit run sheet', done: 'Floor plan v1', remaining: 'Vendor quotes', learned: '—', at: '2026-06-17T08:20:00' } }),
-    P({ id: 'p_khaled', slackId: 'U06D1GM1RRQ', name: 'Khaled Jeneina', nameAr: 'خالد جنينة', initials: 'KJ', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-14/10293227094166_e7874eb989412974c67e_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala AV', done: 'AV finalized', remaining: 'Guest list', learned: '—', at: '2026-06-17T07:55:00' } }),
-    P({ id: 'p_shamma', slackId: 'U09AH1Z1X6C', name: 'Shamma Alsagr', nameAr: 'شما الصقر', initials: 'SA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-05/9668189448720_833ee0a7c097344689a9_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
-    P({ id: 'p_idris', slackId: 'U09E1NA1B0W', name: 'Mohammed Adris', nameAr: 'محمد إدريس', initials: 'MA', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-06-15/11365789882978_4bafd0e08a38c77a3670_original.png', assignedEvents: ['e_pop_concert'], dailyCheckin: { plan: 'Shadow festival team', done: 'Signage checklist', remaining: 'Learning the tools', learned: 'Lots — first weeks', at: '2026-06-17T08:00:00' } }),
+    // ===== Sports — Marco =====
+    P({ id: 'p_motaa', slackId: 'U000000005', name: 'Marco Delgado', nameAr: 'ماركو ديلجادو', initials: 'MD', level: 'sr_manager', managerId: 'p_ahmed', team: 'Sports', teamAr: 'الرياضة', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_riyadh_season'], dailyCheckin: { plan: 'Lock Riyadh Season ticketing', done: 'Gate plan signed', remaining: 'Stage sign-off', learned: 'New load-in route', at: '2026-06-17T08:40:00' } }),
+    P({ id: 'p_akram', slackId: 'U000000006', name: 'Adam Foster', nameAr: 'آدم فوستر', initials: 'AF', level: 'manager', managerId: 'p_motaa', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_mdl_beast', 'e_expo_booth'], dailyCheckin: { plan: 'MDLBEAST staffing grid', done: 'Crew booked', remaining: 'Power supply', learned: 'Faster generator vendor', at: '2026-06-17T08:10:00' } }),
+    P({ id: 'p_abdulrahman', slackId: 'U000000007', name: 'Aaron Maxwell', nameAr: 'آرون ماكسويل', initials: 'AM', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_intl_summit', 'e_school_fair'], dailyCheckin: { plan: 'Summit run sheet', done: 'Floor plan v1', remaining: 'Vendor quotes', learned: '—', at: '2026-06-17T08:20:00' } }),
+    P({ id: 'p_khaled', slackId: 'U000000008', name: 'Kevin Jennings', nameAr: 'كيفن جينينجز', initials: 'KJ', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala AV', done: 'AV finalized', remaining: 'Guest list', learned: '—', at: '2026-06-17T07:55:00' } }),
+    P({ id: 'p_shamma', slackId: 'U000000009', name: 'Sara Falcone', nameAr: 'سارة فالكوني', initials: 'SF', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
+    P({ id: 'p_idris', slackId: 'U000000010', name: 'Marcus Ellis', nameAr: 'ماركوس إليس', initials: 'ME', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_pop_concert'], dailyCheckin: { plan: 'Shadow festival team', done: 'Signage checklist', remaining: 'Learning the tools', learned: 'Lots — first weeks', at: '2026-06-17T08:00:00' } }),
     P({ id: 'p_tbc_sports', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_motaa', tbc: true, title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
     // Freelancers — kept under their existing line managers, tagged freelance
-    P({ id: 'p_osama', slackId: 'U08RN9WDKL6', name: 'Osama AlBasha', nameAr: 'أسامة الباشا', initials: 'OA', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2026-05-23/11194956748178_adb8e58f17daeb908d03_original.png', assignedEvents: ['e_mdl_beast', 'e_intl_summit', 'e_marathon'], dailyCheckin: { plan: 'Festival + summit prep', done: 'Two site visits', remaining: 'Both run sheets', learned: 'Stretched thin', at: '2026-06-17T09:05:00' } }),
-    P({ id: 'p_gamal', slackId: 'U08RRNYNE6A', name: 'Mohammed Jamal', nameAr: 'محمد جمال', initials: 'MJ', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-05-13/8871091980695_f4dc89fce41e5750938c_original.png', assignedEvents: ['e_mdl_beast', 'e_marathon'], dailyCheckin: { plan: 'Festival ground ops', done: 'Vendor walkthrough', remaining: 'Marathon route', learned: 'Strong new crew lead', at: '2026-06-17T08:30:00' } }),
-    P({ id: 'p_duha', slackId: '', name: 'Duha Alzahrani', nameAr: 'ضحى الزهراني', initials: 'DA', level: 'spec', managerId: 'p_farah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_talal', slackId: 'U08SB865W0Z', name: 'Talal', nameAr: 'طلال', initials: 'TA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-10-02/9621523706694_7e351c3e3a34a08ddd83_original.png', assignedEvents: [], dailyCheckin: { plan: 'Available for assignment', done: 'Helped with gala', remaining: 'Nothing assigned', learned: 'Wants more ownership', at: '2026-06-17T08:00:00' } }),
-    P({ id: 'p_ibrahim', slackId: 'U09EF3NPRUZ', name: 'Ibrahim Al-bard', nameAr: 'إبراهيم البارد', initials: 'IA', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-09-08/9473444242659_54d3513cef976a556e43_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala setup support', done: 'Seating map', remaining: 'AV cabling', learned: '—', at: '2026-06-17T08:15:00' } }),
-    P({ id: 'p_saleh', name: 'Saleh', nameAr: 'صالح', initials: 'S', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_osama', slackId: 'U000000011', name: 'Owen Blake', nameAr: 'أوين بليك', initials: 'OB', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: ['e_mdl_beast', 'e_intl_summit', 'e_marathon'], dailyCheckin: { plan: 'Festival + summit prep', done: 'Two site visits', remaining: 'Both run sheets', learned: 'Stretched thin', at: '2026-06-17T09:05:00' } }),
+    P({ id: 'p_gamal', slackId: 'U000000012', name: 'Julian Marsh', nameAr: 'جوليان مارش', initials: 'JM', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: ['e_mdl_beast', 'e_marathon'], dailyCheckin: { plan: 'Festival ground ops', done: 'Vendor walkthrough', remaining: 'Marathon route', learned: 'Strong new crew lead', at: '2026-06-17T08:30:00' } }),
+    P({ id: 'p_duha', slackId: '', name: 'Daniela Zamora', nameAr: 'دانييلا زامورا', initials: 'DZ', level: 'spec', managerId: 'p_farah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_talal', slackId: 'U000000013', name: 'Tyler', nameAr: 'تايلر', initials: 'TA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: { plan: 'Available for assignment', done: 'Helped with gala', remaining: 'Nothing assigned', learned: 'Wants more ownership', at: '2026-06-17T08:00:00' } }),
+    P({ id: 'p_ibrahim', slackId: 'U000000014', name: 'Ian Barlow', nameAr: 'إيان بارلو', initials: 'IB', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala setup support', done: 'Seating map', remaining: 'AV cabling', learned: '—', at: '2026-06-17T08:15:00' } }),
+    P({ id: 'p_saleh', name: 'Simon', nameAr: 'سايمون', initials: 'S', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Entertainment — Aya =====
-    P({ id: 'p_ayah', slackId: 'U06DE5USEEM', name: 'Aya Nasif', nameAr: 'آية ناصف', initials: 'AN', level: 'sr_manager', managerId: 'p_ahmed', team: 'Entertainment', teamAr: 'الترفيه', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-03/9633258360626_e5386ad93e75920ed6db_original.png', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_farah', slackId: 'U0A2W19C2C8', name: 'Farah Alsmay', nameAr: 'فرح السامي', initials: 'FA', level: 'manager', managerId: 'p_ayah', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-22/10353853234628_553222f85c03df752008_original.png', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
-    P({ id: 'p_amen', slackId: '', name: 'Amen Shannah', nameAr: 'أمين شنّاح', initials: 'AS', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_meshalB', slackId: 'U09PSSEP0HM', name: 'Meshaal Houshan', nameAr: 'مشعل حوشان', initials: 'MH', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-11-12/9883235121751_0604eee177420dca6959_original.png', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
-    P({ id: 'p_meshalA', slackId: 'U0A2W14TK5W', name: 'Meshaal Alsmari', nameAr: 'مشعل السمري', initials: 'MS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_raghdaa', slackId: '', name: 'Raghdaa', nameAr: 'رغداء', initials: 'RG', level: 'spec', managerId: 'p_ayah', joining: '2026-06-21', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_rana', slackId: 'U0ABANQ0WAG', name: 'Rana Alsalem', nameAr: 'رنا السالم', initials: 'RS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-27/10374791457907_964aa24ade0d5b613e14_original.png', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
+    // ===== Entertainment — Ava =====
+    P({ id: 'p_ayah', slackId: 'U000000015', name: 'Ava Nichols', nameAr: 'آفا نيكولز', initials: 'AN', level: 'sr_manager', managerId: 'p_ahmed', team: 'Entertainment', teamAr: 'الترفيه', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_farah', slackId: 'U000000016', name: 'Fiona Sommers', nameAr: 'فيونا سومرز', initials: 'FS', level: 'manager', managerId: 'p_ayah', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
+    P({ id: 'p_amen', slackId: '', name: 'Aiden Sherwood', nameAr: 'أيدن شيروود', initials: 'AS', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_meshalB', slackId: 'U000000017', name: 'Mason Hughes', nameAr: 'ماسون هيوز', initials: 'MH', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
+    P({ id: 'p_meshalA', slackId: 'U000000018', name: 'Miles Sanders', nameAr: 'مايلز ساندرز', initials: 'MS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_raghdaa', slackId: '', name: 'Regina', nameAr: 'ريجينا', initials: 'RG', level: 'spec', managerId: 'p_ayah', joining: '2026-06-21', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_rana', slackId: 'U000000019', name: 'Rachel Salomon', nameAr: 'راشيل سالومون', initials: 'RS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
 
-    // ===== On Ground — Hani =====
-    P({ id: 'p_hani', slackId: 'U06D1GQ58HG', name: 'Hani Ahmed', nameAr: 'هاني أحمد', initials: 'HA', level: 'sr_manager', managerId: 'p_ahmed', team: 'On Ground', teamAr: 'الميدان', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-29/10398251000210_8c6bc0f588ab1081bca7_original.png', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_zaidan', slackId: 'U06G2SHJB9R', name: 'Mohammed Zaidan', nameAr: 'محمد زيدان', initials: 'MZ', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', photo: S + '2025-08-08/9320247984950_c75c35bb7476935e3342_original.jpg', assignedEvents: ['e_marathon'], dailyCheckin: null }),
-    P({ id: 'p_faraj', slackId: 'U06G5DNPZA8', name: 'Ahmed Faraj', nameAr: 'أحمد فرج', initials: 'AF', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', photo: S + '2025-09-28/9593935231221_f8c3f8eaa8c189de7fd5_original.jpg', assignedEvents: ['e_riyadh_season'], dailyCheckin: null }),
-    P({ id: 'p_batarfi', slackId: 'U06CUT8FT4N', name: 'Mohammed Batarfi', nameAr: 'محمد باطرفي', initials: 'MB', level: 'sr_spec', managerId: 'p_hani', title: 'Event Operations Sr. Specialist (Logistics)', titleAr: 'أخصائي أول لعمليات الفعاليات (اللوجستيات)', employment: 'fulltime', photo: S + '2026-01-07/10275968135104_8c6bc6f01576ef2943ff_original.png', assignedEvents: [], dailyCheckin: null }),
+    // ===== On Ground — Henry =====
+    P({ id: 'p_hani', slackId: 'U000000020', name: 'Henry Adams', nameAr: 'هنري آدمز', initials: 'HA', level: 'sr_manager', managerId: 'p_ahmed', team: 'On Ground', teamAr: 'الميدان', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_zaidan', slackId: 'U000000021', name: 'Zachary Dean', nameAr: 'زاكاري دين', initials: 'ZD', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: ['e_marathon'], dailyCheckin: null }),
+    P({ id: 'p_faraj', slackId: 'U000000022', name: 'Felix Ford', nameAr: 'فيليكس فورد', initials: 'FF', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: ['e_riyadh_season'], dailyCheckin: null }),
+    P({ id: 'p_batarfi', slackId: 'U000000023', name: 'Blake Turner', nameAr: 'بليك تيرنر', initials: 'BT', level: 'sr_spec', managerId: 'p_hani', title: 'Event Operations Sr. Specialist (Logistics)', titleAr: 'أخصائي أول لعمليات الفعاليات (اللوجستيات)', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    P({ id: 'p_fouda', slackId: '', name: 'Ahmed Fouda', nameAr: 'أحمد فودة', initials: 'AF', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_abdelaal', slackId: '', name: 'Ismail Abdelaal', nameAr: 'إسماعيل عبدالعال', initials: 'IA', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_fouda', slackId: '', name: 'Frank Doyle', nameAr: 'فرانك دويل', initials: 'FD', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_abdelaal', slackId: '', name: 'Isaac Abbott', nameAr: 'إسحاق أبوت', initials: 'IA', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Cashless — Omar =====
-    P({ id: 'p_zarea', slackId: 'U09CC2V09NZ', name: 'Omar Zarei', nameAr: 'عمر زارع', initials: 'OZ', level: 'manager', managerId: 'p_ahmed', team: 'Cashless', teamAr: 'الدفع الإلكتروني', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-09-28/9610706501713_e9746e70723f0eda464c_original.jpg', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
-    P({ id: 'p_rafah', slackId: 'U099C2KP1NU', name: 'Rafah Alansari', nameAr: 'رفاه الأنصاري', initials: 'RF', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائية أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-27/9783415011188_e21952c27f823d0d8c36_original.png', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
-    P({ id: 'p_aljazi', slackId: 'U097HCNCAG3', name: 'Aljazi Alshubaike', nameAr: 'الجازي الشبيكي', initials: 'AA', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-06-17/11377561146789_e77f77e8c5519d602401_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
-    P({ id: 'p_rosa', slackId: 'U09CC2R0H29', name: 'Rosa Alansari', nameAr: 'روزا الأنصاري', initials: 'RA', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-09-02/9446013743222_95f79433181c565ba618_original.jpg', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
-    P({ id: 'p_altahini', slackId: 'U097HCRUYCB', name: 'Mohammed Altahini', nameAr: 'محمد الطحيني', initials: 'MT', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-07-28/9248551467783_16b4f569fed9b2f5e808_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
+    // ===== Cashless — Oscar =====
+    P({ id: 'p_zarea', slackId: 'U000000024', name: 'Oscar Reyes', nameAr: 'أوسكار رييس', initials: 'OR', level: 'manager', managerId: 'p_ahmed', team: 'Cashless', teamAr: 'الدفع الإلكتروني', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
+    P({ id: 'p_rafah', slackId: 'U000000025', name: 'Rebecca Anderson', nameAr: 'ريبيكا أندرسون', initials: 'RA', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائية أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
+    P({ id: 'p_aljazi', slackId: 'U000000026', name: 'Alicia Sherwin', nameAr: 'أليشيا شيروين', initials: 'AS', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
+    P({ id: 'p_rosa', slackId: 'U000000027', name: 'Rosa Anders', nameAr: 'روزا أندرز', initials: 'RA', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
+    P({ id: 'p_altahini', slackId: 'U000000028', name: 'Martin Thatcher', nameAr: 'مارتن ثاتشر', initials: 'MT', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
   ];
 
   // Default any record without an explicit employment to full-time.
   PEOPLE.forEach(function (p) { if (!p.employment) p.employment = 'fulltime'; });
 
-  // ---- Real account directory (verified @webook.com emails) ----
+  // ---- Demo account directory (fake @example.com emails) ----
   // Sign-in is keyed on these EXACT emails: one email → one account, no cross-login.
-  // akram is the Super Admin (can View-as / open any account + manage access).
+  // adam.foster is the Super Admin (can View-as / open any account + manage access).
   //
   // PRIVACY: this plaintext map is the DEV source of truth only. build.js does NOT ship it
   // to the public bundle — it strips this literal and injects a SALTED-SHA256 hash map named
@@ -121,19 +116,19 @@
   // (not a secret — it only defeats generic rainbow tables). Keep it in sync with build.js.
   const EMAIL_SALT = 'tempo:webook:v1';
   const EMAILS = {
-    p_akram: 'akram@webook.com', p_abdulrahman: 'maksousa@webook.com', p_osama: 'o.taher.c@webook.com',
-    p_gamal: 'm.ali.c@webook.com', p_talal: 'talal.samir.c@webook.com', p_ahmed: 'ahmed.othman@webook.com',
-    p_shamma: 'shamma@webook.com', p_idris: 'mohammed.adris.c@webook.com', p_zaidan: 'zaidan@webook.com',
-    p_faraj: 'faraj@webook.com', p_meshalB: 'meshal@webook.com', p_fouda: 'fouda@webook.com',
-    p_abdelaal: 'abdelaal@webook.com',
-    p_motaa: 'motaa@webook.com',
-    p_hamdi: 'hamdi@webook.com', p_ayman: 'ayman@webook.com', p_ayah: 'ayah@webook.com',
-    p_hani: 'hani@webook.com', p_batool: 'batool@webook.com', p_farah: 'alsmay@webook.com',
-    p_zarea: 'zarea@webook.com', p_khaled: 'khaled@webook.com', p_amen: 'amen@webook.com',
-    p_batarfi: 'batarfi@webook.com', p_rafah: 'rafah.alansari@webook.com', p_aljazi: 'alshubaike@webook.com',
-    p_shahad: 'shahad@webook.com', p_duha: 'duha.alzahrani.c@webook.com', p_ibrahim: 'ibrahim.albard.c@webook.com', p_saleh: 'saleh.c@webook.com',
-    p_rana: 'alsalem@webook.com', p_rosa: 'rosa@webook.com', p_altahini: 'altahini@webook.com',
-    p_meshalA: 'alsmari@webook.com', p_raghdaa: 'raghdaa@webook.com',
+    p_akram: 'adam.foster@example.com', p_abdulrahman: 'aaron.maxwell@example.com', p_osama: 'owen.blake@example.com',
+    p_gamal: 'julian.marsh@example.com', p_talal: 'tyler@example.com', p_ahmed: 'oliver.grant@example.com',
+    p_shamma: 'sara.falcone@example.com', p_idris: 'marcus.ellis@example.com', p_zaidan: 'zachary.dean@example.com',
+    p_faraj: 'felix.ford@example.com', p_meshalB: 'mason.hughes@example.com', p_fouda: 'frank.doyle@example.com',
+    p_abdelaal: 'isaac.abbott@example.com',
+    p_motaa: 'marco.delgado@example.com',
+    p_hamdi: 'nathan.brooks@example.com', p_ayman: 'adrian.bell@example.com', p_ayah: 'ava.nichols@example.com',
+    p_hani: 'henry.adams@example.com', p_batool: 'bianca.espinoza@example.com', p_farah: 'fiona.sommers@example.com',
+    p_zarea: 'oscar.reyes@example.com', p_khaled: 'kevin.jennings@example.com', p_amen: 'aiden.sherwood@example.com',
+    p_batarfi: 'blake.turner@example.com', p_rafah: 'rebecca.anderson@example.com', p_aljazi: 'alicia.sherwin@example.com',
+    p_shahad: 'sophie.jensen@example.com', p_duha: 'daniela.zamora@example.com', p_ibrahim: 'ian.barlow@example.com', p_saleh: 'simon@example.com',
+    p_rana: 'rachel.salomon@example.com', p_rosa: 'rosa.anders@example.com', p_altahini: 'martin.thatcher@example.com',
+    p_meshalA: 'miles.sanders@example.com', p_raghdaa: 'regina@example.com',
   };
   // build.js injects `const EMAIL_HASHES = {...}` and removes the EMAILS literal for the
   // public bundle. In dev/tests EMAILS is present and EMAIL_HASHES is absent; guard both.
@@ -143,7 +138,7 @@
     // Only attach the plaintext address in dev/unbuilt runs. The public bundle ships hashes
     // only, so p.email stays undefined there — sign-in resolves via emailToId() (hash match).
     if (HAS_PLAINTEXT && EMAILS[p.id]) p.email = EMAILS[p.id];
-    if (p.id === 'p_akram') p.superAdmin = true;   // Mohammed Akram — Super Admin
+    if (p.id === 'p_akram') p.superAdmin = true;   // Adam Foster — Super Admin
   });
 
   // Resolve a normalized (lowercased, trimmed) email to a person id, WITHOUT exposing the
@@ -163,7 +158,7 @@
     return null;
   }
 
-  /* Tenure & role history (mocked). Osama = flight-risk story; Idris = new hire. */
+  /* Tenure & role history (mocked). Owen = flight-risk story; Marcus = new hire. */
   const TENURE = {
     p_ahmed:       { joined: '2018-09-01', roleStart: '2020-01-01', lastProgression: '2024-01-01', tier1Delivered: 16, monthsSinceTier1: 0 },
     p_ayman:       { joined: '2019-05-01', roleStart: '2022-01-01', lastProgression: '2024-06-01', tier1Delivered: 11, monthsSinceTier1: 0 },
@@ -211,18 +206,30 @@
   // remove/rename real-data.js (or set WP.config.forceSampleData) to fall straight
   // back to the sample directory. Enrichment (tenure/growth) still applies to real
   // people by id, and any real person missing from those maps just gets no extra.
-  (function preferRealDirectory() {
-    // config.js loads AFTER this file, so read the escape hatch from a pre-set
-    // global (window.FORCE_SAMPLE_DATA) or WP.config if it somehow exists already.
+  // Keep a stable reference to the sample directory so applyDirectory() can switch
+  // BACK to it when forceSampleData is toggled (it overwrites WP.data.PEOPLE otherwise).
+  var SAMPLE_PEOPLE = PEOPLE;
+  WP.data.applyDirectory = function applyDirectory() {
+    // Escape hatch: forceSampleData keeps the sample directory even when real-data.js
+    // is present (demos/screenshots). config.js loads AFTER this file, so on the FIRST
+    // call (from here) WP.config isn't set yet and this is false - real data wins by
+    // default, which is correct. app.js re-calls this at boot AFTER config loads, so
+    // the flag is finally honoured. window.FORCE_SAMPLE_DATA works pre-config too.
     var forceSample = (typeof window !== 'undefined' && window.FORCE_SAMPLE_DATA) ||
       (WP.config && WP.config.forceSampleData);
     var real = WP.data.REAL;
     if (forceSample || !real || !Array.isArray(real.PEOPLE) || !real.PEOPLE.length) {
-      WP.data.demoData = true;                 // running on sample data
-      return;
+      // Only switch the reference back if we're currently pointed at the REAL
+      // directory - otherwise leave WP.data.PEOPLE as-is (don't clobber a test's
+      // restored array or the untouched sample default).
+      if (WP.data.PEOPLE === (real && real.PEOPLE)) WP.data.PEOPLE = SAMPLE_PEOPLE;
+      WP.data.demoData = true;
+      return false;
     }
     real.PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
     WP.data.PEOPLE = real.PEOPLE;
     WP.data.demoData = false;                  // running on the real directory
-  })();
+    return true;
+  };
+  WP.data.applyDirectory();                    // first pass (pre-config: real wins if present)
 })(window.WP = window.WP || {});

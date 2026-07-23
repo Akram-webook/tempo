@@ -20,7 +20,7 @@
  * Tempo — DESIGN TOKENS  ·  WBK PRO library V3  (single source of truth)
  * ------------------------------------------------------------
  * Re-baselined from Figma "🧱 WBK PRO library V3" (file pzAVvF8ygDHNwdNUsdwik2)
- * via get_variable_defs on the figma_dev@webook.com seat. V3's canonical
+ * via get_variable_defs on the design Figma seat. V3's canonical
  * base is LIGHT: navy Content-Primary #071437 on pure white #FFFFFF.
  * Every value carries its V3 variable name in a comment. To re-sync later,
  * keep the variable NAMES, swap the values.
@@ -2894,7 +2894,7 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
  * Tempo — synchronous SHA-256  (WP.sha256)
  * ------------------------------------------------------------
  * Why this exists: directory sign-in must match a typed email WITHOUT shipping a
- * harvestable plaintext list of real @webook.com addresses in the public bundle.
+ * harvestable plaintext list of real @example.com addresses in the public bundle.
  * build.js replaces the plaintext EMAILS map with SALTED SHA-256 hashes; the client
  * hashes the typed input the same way and compares. Web Crypto's subtle.digest is
  * async, which would force the whole sign-in path async — this small, dependency-free,
@@ -2973,24 +2973,20 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
        (no real data) load cleanly.  -->
   <script>
 /* ============================================================
- * Webook Workload — Mock Data  (REAL Saudi Event-Operations team)
+ * Webook Workload — Mock Data  (DEMO Event-Operations team)
  * ------------------------------------------------------------
- * Names, titles, hierarchy and PHOTOS are the real team from Slack,
- * structured per the manager's org chart. Workload numbers, events,
- * skills and reviews are STILL mocked for the demo.
+ * Names, titles and hierarchy are FAKE demo people (no real staff PII).
+ * Workload numbers, events, skills and reviews are all mocked for the demo.
  *
- * Structure (Saudi team):
- *   Ahmed Othman (Director)
- *   ├─ Ayman Albasha (Sr Mgr) → Batool, Shahad
- *   ├─ Motaa (Sr Mgr · Ticketing) → Akram → {Idris,Gamal,Osama};
- *   │                               Khaled → {Ibrahim, Saleh};
- *   │                               Abdulrahman Maksousa → {Talal, Shamma}
- *   ├─ Ayah Nasif (Sr Mgr) → Farah, Meshal Bin Howshan, Meshal Alsmari, Rana
- *   └─ Hani Ahmed (Sr Mgr) → Mohamed Zaidan, Ahmed Faraj, Batarfi,
- *                            Omar Zarea (Cashless) → {Aljazi, Rosa, Altahini}
- * NOTE: "Farah" was listed under both Ayah and Omar Zarea — placed under
- * Ayah here; move her in Settings if she belongs to Cashless. "أمين" under
- * Ayah was unclear and left out.
+ * Structure (demo team):
+ *   Oliver Grant (Director)
+ *   ├─ Adrian Bell (Sr Mgr) → Bianca, Sophie
+ *   ├─ Marco Delgado (Sr Mgr · Ticketing) → Adam → {Marcus,Julian,Owen};
+ *   │                               Kevin → {Ian, Simon};
+ *   │                               Aaron Maxwell → {Tyler, Sara}
+ *   ├─ Ava Nichols (Sr Mgr) → Fiona, Mason Hughes, Miles Sanders, Rachel
+ *   └─ Henry Adams (Sr Mgr) → Zachary Dean, Felix Ford, Blake Turner,
+ *                            Oscar Reyes (Cashless) → {Alicia, Rosa, Martin}
  * ========================================================== */
 (function (WP) {
   'use strict';
@@ -3022,70 +3018,69 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
     e_pop_concert:   { id: 'e_pop_concert',   tier: 3, nameEn: 'Pop-up Concert',         nameAr: 'حفل مفاجئ',         start: '2026-06-27', end: '2026-06-29', city: 'Dammam', intl: false },
   };
 
-  const S = 'https://avatars.slack-edge.com/';
   function P(o) { return o; }
 
   const PEOPLE = [
     // — Top of house —
-    P({ id: 'p_hamdi', slackId: '', name: 'Hamdi Missaoui', nameAr: 'حمدي المسعودي', initials: 'HM', level: 'director', managerId: null, title: 'Chief Commercial Officer', titleAr: 'الرئيس التجاري', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_ahmed', slackId: 'U099EREBS23', name: 'Ahmed Othman', nameAr: 'أحمد عثمان', initials: 'AO', level: 'director', managerId: 'p_hamdi', title: 'Event Operations Director', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-04-24/10987489079253_5eaec9a8cc3cc0048310_original.png', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_hamdi', slackId: '', name: 'Nathan Brooks', nameAr: 'ناثان بروكس', initials: 'NB', level: 'director', managerId: null, title: 'Chief Commercial Officer', titleAr: 'الرئيس التجاري', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_ahmed', slackId: 'U000000001', name: 'Oliver Grant', nameAr: 'أوليفر جرانت', initials: 'OG', level: 'director', managerId: 'p_hamdi', title: 'Event Operations Director', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Automation & Execution — Ayman =====
-    P({ id: 'p_ayman', slackId: 'U06D1GQ7XL2', name: 'Ayman Albasha', nameAr: 'أيمن الباشا', initials: 'AB', level: 'sr_manager', managerId: 'p_ahmed', team: 'Automation & Execution', teamAr: 'الأتمتة والتنفيذ', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2024-11-11/8024758637153_3f81f365db0728908404_original.jpg', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_shahad', slackId: 'U06EA95C70W', name: 'Shahad Joudah', nameAr: 'شهد جوده', initials: 'SJ', level: 'spec', managerId: 'p_ayman', title: 'Event Operations Specialist - Trainer', titleAr: 'أخصائية عمليات الفعاليات - مدرّبة', employment: 'fulltime', photo: S + '2025-12-28/10192223299267_959ffd1ed9f113297f14_original.jpg', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
-    // Anti-Fraud sub-group under Ayman
-    P({ id: 'p_batool', slackId: 'U06CM0JKYGP', name: 'Batool Emad', nameAr: 'بتول عماد', initials: 'BE', level: 'manager', managerId: 'p_ayman', subteam: 'Anti-Fraud', subteamAr: 'مكافحة الاحتيال', title: 'Event Operations Manager Anti-Fraud', titleAr: 'مدير عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', photo: S + '2025-10-02/9609866850679_74e279d52d0acdb61e3e_original.jpg', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
+    // ===== Automation & Execution — Adrian =====
+    P({ id: 'p_ayman', slackId: 'U000000002', name: 'Adrian Bell', nameAr: 'أدريان بيل', initials: 'AB', level: 'sr_manager', managerId: 'p_ahmed', team: 'Automation & Execution', teamAr: 'الأتمتة والتنفيذ', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_shahad', slackId: 'U000000003', name: 'Sophie Jensen', nameAr: 'صوفي جينسن', initials: 'SJ', level: 'spec', managerId: 'p_ayman', title: 'Event Operations Specialist - Trainer', titleAr: 'أخصائية عمليات الفعاليات - مدرّبة', employment: 'fulltime', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
+    // Anti-Fraud sub-group under Adrian
+    P({ id: 'p_batool', slackId: 'U000000004', name: 'Bianca Espinoza', nameAr: 'بيانكا إسبينوزا', initials: 'BE', level: 'manager', managerId: 'p_ayman', subteam: 'Anti-Fraud', subteamAr: 'مكافحة الاحتيال', title: 'Event Operations Manager Anti-Fraud', titleAr: 'مدير عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
     P({ id: 'p_tbc_af_spec', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_batool', tbc: true, title: 'Event Operations Specialist Anti-Fraud', titleAr: 'أخصائي عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
     P({ id: 'p_tbc_af_coord', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_batool', tbc: true, title: 'Event Operations Coordinator Anti-Fraud', titleAr: 'منسّق عمليات الفعاليات - مكافحة الاحتيال', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Sports — Motaa =====
-    P({ id: 'p_motaa', slackId: 'U06CYJMJPJR', name: 'Motaa Aldarra', nameAr: 'مطاع الدرة', initials: 'MA', level: 'sr_manager', managerId: 'p_ahmed', team: 'Sports', teamAr: 'الرياضة', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2024-02-21/6673336286451_cd85e03b0c0bbb79cdd7_original.png', assignedEvents: ['e_riyadh_season'], dailyCheckin: { plan: 'Lock Riyadh Season ticketing', done: 'Gate plan signed', remaining: 'Stage sign-off', learned: 'New load-in route', at: '2026-06-17T08:40:00' } }),
-    P({ id: 'p_akram', slackId: 'U06H0ASQ761', name: 'Mohammed Akram', nameAr: 'محمد أكرم', initials: 'MA', level: 'manager', managerId: 'p_motaa', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2024-02-04/6593946722801_53f137cdf64568fb3570_original.png', assignedEvents: ['e_mdl_beast', 'e_expo_booth'], dailyCheckin: { plan: 'MDLBEAST staffing grid', done: 'Crew booked', remaining: 'Power supply', learned: 'Faster generator vendor', at: '2026-06-17T08:10:00' } }),
-    P({ id: 'p_abdulrahman', slackId: 'U07LF0D3KSN', name: 'A. Maksosah', nameAr: 'عبدالرحمن مقصوصة', initials: 'AM', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-12/10274801113666_1fbe4f7bcf66ca4624f3_original.png', assignedEvents: ['e_intl_summit', 'e_school_fair'], dailyCheckin: { plan: 'Summit run sheet', done: 'Floor plan v1', remaining: 'Vendor quotes', learned: '—', at: '2026-06-17T08:20:00' } }),
-    P({ id: 'p_khaled', slackId: 'U06D1GM1RRQ', name: 'Khaled Jeneina', nameAr: 'خالد جنينة', initials: 'KJ', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-14/10293227094166_e7874eb989412974c67e_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala AV', done: 'AV finalized', remaining: 'Guest list', learned: '—', at: '2026-06-17T07:55:00' } }),
-    P({ id: 'p_shamma', slackId: 'U09AH1Z1X6C', name: 'Shamma Alsagr', nameAr: 'شما الصقر', initials: 'SA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-05/9668189448720_833ee0a7c097344689a9_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
-    P({ id: 'p_idris', slackId: 'U09E1NA1B0W', name: 'Mohammed Adris', nameAr: 'محمد إدريس', initials: 'MA', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-06-15/11365789882978_4bafd0e08a38c77a3670_original.png', assignedEvents: ['e_pop_concert'], dailyCheckin: { plan: 'Shadow festival team', done: 'Signage checklist', remaining: 'Learning the tools', learned: 'Lots — first weeks', at: '2026-06-17T08:00:00' } }),
+    // ===== Sports — Marco =====
+    P({ id: 'p_motaa', slackId: 'U000000005', name: 'Marco Delgado', nameAr: 'ماركو ديلجادو', initials: 'MD', level: 'sr_manager', managerId: 'p_ahmed', team: 'Sports', teamAr: 'الرياضة', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_riyadh_season'], dailyCheckin: { plan: 'Lock Riyadh Season ticketing', done: 'Gate plan signed', remaining: 'Stage sign-off', learned: 'New load-in route', at: '2026-06-17T08:40:00' } }),
+    P({ id: 'p_akram', slackId: 'U000000006', name: 'Adam Foster', nameAr: 'آدم فوستر', initials: 'AF', level: 'manager', managerId: 'p_motaa', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_mdl_beast', 'e_expo_booth'], dailyCheckin: { plan: 'MDLBEAST staffing grid', done: 'Crew booked', remaining: 'Power supply', learned: 'Faster generator vendor', at: '2026-06-17T08:10:00' } }),
+    P({ id: 'p_abdulrahman', slackId: 'U000000007', name: 'Aaron Maxwell', nameAr: 'آرون ماكسويل', initials: 'AM', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_intl_summit', 'e_school_fair'], dailyCheckin: { plan: 'Summit run sheet', done: 'Floor plan v1', remaining: 'Vendor quotes', learned: '—', at: '2026-06-17T08:20:00' } }),
+    P({ id: 'p_khaled', slackId: 'U000000008', name: 'Kevin Jennings', nameAr: 'كيفن جينينجز', initials: 'KJ', level: 'sr_spec', managerId: 'p_motaa', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala AV', done: 'AV finalized', remaining: 'Guest list', learned: '—', at: '2026-06-17T07:55:00' } }),
+    P({ id: 'p_shamma', slackId: 'U000000009', name: 'Sara Falcone', nameAr: 'سارة فالكوني', initials: 'SF', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_school_fair'], dailyCheckin: { plan: 'School fair layout', done: 'Vendor list', remaining: 'Signage', learned: '—', at: '2026-06-17T08:05:00' } }),
+    P({ id: 'p_idris', slackId: 'U000000010', name: 'Marcus Ellis', nameAr: 'ماركوس إليس', initials: 'ME', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_pop_concert'], dailyCheckin: { plan: 'Shadow festival team', done: 'Signage checklist', remaining: 'Learning the tools', learned: 'Lots — first weeks', at: '2026-06-17T08:00:00' } }),
     P({ id: 'p_tbc_sports', name: 'TBC', nameAr: 'يُحدّد لاحقاً', initials: 'TBC', level: 'spec', managerId: 'p_motaa', tbc: true, title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
     // Freelancers — kept under their existing line managers, tagged freelance
-    P({ id: 'p_osama', slackId: 'U08RN9WDKL6', name: 'Osama AlBasha', nameAr: 'أسامة الباشا', initials: 'OA', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2026-05-23/11194956748178_adb8e58f17daeb908d03_original.png', assignedEvents: ['e_mdl_beast', 'e_intl_summit', 'e_marathon'], dailyCheckin: { plan: 'Festival + summit prep', done: 'Two site visits', remaining: 'Both run sheets', learned: 'Stretched thin', at: '2026-06-17T09:05:00' } }),
-    P({ id: 'p_gamal', slackId: 'U08RRNYNE6A', name: 'Mohammed Jamal', nameAr: 'محمد جمال', initials: 'MJ', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-05-13/8871091980695_f4dc89fce41e5750938c_original.png', assignedEvents: ['e_mdl_beast', 'e_marathon'], dailyCheckin: { plan: 'Festival ground ops', done: 'Vendor walkthrough', remaining: 'Marathon route', learned: 'Strong new crew lead', at: '2026-06-17T08:30:00' } }),
-    P({ id: 'p_duha', slackId: '', name: 'Duha Alzahrani', nameAr: 'ضحى الزهراني', initials: 'DA', level: 'spec', managerId: 'p_farah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_talal', slackId: 'U08SB865W0Z', name: 'Talal', nameAr: 'طلال', initials: 'TA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-10-02/9621523706694_7e351c3e3a34a08ddd83_original.png', assignedEvents: [], dailyCheckin: { plan: 'Available for assignment', done: 'Helped with gala', remaining: 'Nothing assigned', learned: 'Wants more ownership', at: '2026-06-17T08:00:00' } }),
-    P({ id: 'p_ibrahim', slackId: 'U09EF3NPRUZ', name: 'Ibrahim Al-bard', nameAr: 'إبراهيم البارد', initials: 'IA', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', photo: S + '2025-09-08/9473444242659_54d3513cef976a556e43_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala setup support', done: 'Seating map', remaining: 'AV cabling', learned: '—', at: '2026-06-17T08:15:00' } }),
-    P({ id: 'p_saleh', name: 'Saleh', nameAr: 'صالح', initials: 'S', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_osama', slackId: 'U000000011', name: 'Owen Blake', nameAr: 'أوين بليك', initials: 'OB', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: ['e_mdl_beast', 'e_intl_summit', 'e_marathon'], dailyCheckin: { plan: 'Festival + summit prep', done: 'Two site visits', remaining: 'Both run sheets', learned: 'Stretched thin', at: '2026-06-17T09:05:00' } }),
+    P({ id: 'p_gamal', slackId: 'U000000012', name: 'Julian Marsh', nameAr: 'جوليان مارش', initials: 'JM', level: 'spec', managerId: 'p_akram', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: ['e_mdl_beast', 'e_marathon'], dailyCheckin: { plan: 'Festival ground ops', done: 'Vendor walkthrough', remaining: 'Marathon route', learned: 'Strong new crew lead', at: '2026-06-17T08:30:00' } }),
+    P({ id: 'p_duha', slackId: '', name: 'Daniela Zamora', nameAr: 'دانييلا زامورا', initials: 'DZ', level: 'spec', managerId: 'p_farah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_talal', slackId: 'U000000013', name: 'Tyler', nameAr: 'تايلر', initials: 'TA', level: 'spec', managerId: 'p_abdulrahman', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: [], dailyCheckin: { plan: 'Available for assignment', done: 'Helped with gala', remaining: 'Nothing assigned', learned: 'Wants more ownership', at: '2026-06-17T08:00:00' } }),
+    P({ id: 'p_ibrahim', slackId: 'U000000014', name: 'Ian Barlow', nameAr: 'إيان بارلو', initials: 'IB', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'freelance', assignedEvents: ['e_corp_gala'], dailyCheckin: { plan: 'Gala setup support', done: 'Seating map', remaining: 'AV cabling', learned: '—', at: '2026-06-17T08:15:00' } }),
+    P({ id: 'p_saleh', name: 'Simon', nameAr: 'سايمون', initials: 'S', level: 'spec', managerId: 'p_khaled', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Entertainment — Aya =====
-    P({ id: 'p_ayah', slackId: 'U06DE5USEEM', name: 'Aya Nasif', nameAr: 'آية ناصف', initials: 'AN', level: 'sr_manager', managerId: 'p_ahmed', team: 'Entertainment', teamAr: 'الترفيه', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-03/9633258360626_e5386ad93e75920ed6db_original.png', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_farah', slackId: 'U0A2W19C2C8', name: 'Farah Alsmay', nameAr: 'فرح السامي', initials: 'FA', level: 'manager', managerId: 'p_ayah', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-22/10353853234628_553222f85c03df752008_original.png', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
-    P({ id: 'p_amen', slackId: '', name: 'Amen Shannah', nameAr: 'أمين شنّاح', initials: 'AS', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_meshalB', slackId: 'U09PSSEP0HM', name: 'Meshaal Houshan', nameAr: 'مشعل حوشان', initials: 'MH', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-11-12/9883235121751_0604eee177420dca6959_original.png', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
-    P({ id: 'p_meshalA', slackId: 'U0A2W14TK5W', name: 'Meshaal Alsmari', nameAr: 'مشعل السمري', initials: 'MS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_raghdaa', slackId: '', name: 'Raghdaa', nameAr: 'رغداء', initials: 'RG', level: 'spec', managerId: 'p_ayah', joining: '2026-06-21', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_rana', slackId: 'U0ABANQ0WAG', name: 'Rana Alsalem', nameAr: 'رنا السالم', initials: 'RS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-27/10374791457907_964aa24ade0d5b613e14_original.png', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
+    // ===== Entertainment — Ava =====
+    P({ id: 'p_ayah', slackId: 'U000000015', name: 'Ava Nichols', nameAr: 'آفا نيكولز', initials: 'AN', level: 'sr_manager', managerId: 'p_ahmed', team: 'Entertainment', teamAr: 'الترفيه', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_farah', slackId: 'U000000016', name: 'Fiona Sommers', nameAr: 'فيونا سومرز', initials: 'FS', level: 'manager', managerId: 'p_ayah', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
+    P({ id: 'p_amen', slackId: '', name: 'Aiden Sherwood', nameAr: 'أيدن شيروود', initials: 'AS', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_meshalB', slackId: 'U000000017', name: 'Mason Hughes', nameAr: 'ماسون هيوز', initials: 'MH', level: 'sr_spec', managerId: 'p_ayah', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
+    P({ id: 'p_meshalA', slackId: 'U000000018', name: 'Miles Sanders', nameAr: 'مايلز ساندرز', initials: 'MS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_raghdaa', slackId: '', name: 'Regina', nameAr: 'ريجينا', initials: 'RG', level: 'spec', managerId: 'p_ayah', joining: '2026-06-21', title: 'Event Operations Coordinator', titleAr: 'منسّق عمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_rana', slackId: 'U000000019', name: 'Rachel Salomon', nameAr: 'راشيل سالومون', initials: 'RS', level: 'spec', managerId: 'p_ayah', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
 
-    // ===== On Ground — Hani =====
-    P({ id: 'p_hani', slackId: 'U06D1GQ58HG', name: 'Hani Ahmed', nameAr: 'هاني أحمد', initials: 'HA', level: 'sr_manager', managerId: 'p_ahmed', team: 'On Ground', teamAr: 'الميدان', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-01-29/10398251000210_8c6bc0f588ab1081bca7_original.png', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_zaidan', slackId: 'U06G2SHJB9R', name: 'Mohammed Zaidan', nameAr: 'محمد زيدان', initials: 'MZ', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', photo: S + '2025-08-08/9320247984950_c75c35bb7476935e3342_original.jpg', assignedEvents: ['e_marathon'], dailyCheckin: null }),
-    P({ id: 'p_faraj', slackId: 'U06G5DNPZA8', name: 'Ahmed Faraj', nameAr: 'أحمد فرج', initials: 'AF', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', photo: S + '2025-09-28/9593935231221_f8c3f8eaa8c189de7fd5_original.jpg', assignedEvents: ['e_riyadh_season'], dailyCheckin: null }),
-    P({ id: 'p_batarfi', slackId: 'U06CUT8FT4N', name: 'Mohammed Batarfi', nameAr: 'محمد باطرفي', initials: 'MB', level: 'sr_spec', managerId: 'p_hani', title: 'Event Operations Sr. Specialist (Logistics)', titleAr: 'أخصائي أول لعمليات الفعاليات (اللوجستيات)', employment: 'fulltime', photo: S + '2026-01-07/10275968135104_8c6bc6f01576ef2943ff_original.png', assignedEvents: [], dailyCheckin: null }),
+    // ===== On Ground — Henry =====
+    P({ id: 'p_hani', slackId: 'U000000020', name: 'Henry Adams', nameAr: 'هنري آدمز', initials: 'HA', level: 'sr_manager', managerId: 'p_ahmed', team: 'On Ground', teamAr: 'الميدان', title: 'Event Operations Sr. Manager', titleAr: 'مدير أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_zaidan', slackId: 'U000000021', name: 'Zachary Dean', nameAr: 'زاكاري دين', initials: 'ZD', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: ['e_marathon'], dailyCheckin: null }),
+    P({ id: 'p_faraj', slackId: 'U000000022', name: 'Felix Ford', nameAr: 'فيليكس فورد', initials: 'FF', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: ['e_riyadh_season'], dailyCheckin: null }),
+    P({ id: 'p_batarfi', slackId: 'U000000023', name: 'Blake Turner', nameAr: 'بليك تيرنر', initials: 'BT', level: 'sr_spec', managerId: 'p_hani', title: 'Event Operations Sr. Specialist (Logistics)', titleAr: 'أخصائي أول لعمليات الفعاليات (اللوجستيات)', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    P({ id: 'p_fouda', slackId: '', name: 'Ahmed Fouda', nameAr: 'أحمد فودة', initials: 'AF', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
-    P({ id: 'p_abdelaal', slackId: '', name: 'Ismail Abdelaal', nameAr: 'إسماعيل عبدالعال', initials: 'IA', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_fouda', slackId: '', name: 'Frank Doyle', nameAr: 'فرانك دويل', initials: 'FD', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
+    P({ id: 'p_abdelaal', slackId: '', name: 'Isaac Abbott', nameAr: 'إسحاق أبوت', initials: 'IA', level: 'manager', managerId: 'p_hani', title: 'Event Operations Manager - Execution', titleAr: 'مدير عمليات الفعاليات - التنفيذ', employment: 'fulltime', assignedEvents: [], dailyCheckin: null }),
 
-    // ===== Cashless — Omar =====
-    P({ id: 'p_zarea', slackId: 'U09CC2V09NZ', name: 'Omar Zarei', nameAr: 'عمر زارع', initials: 'OZ', level: 'manager', managerId: 'p_ahmed', team: 'Cashless', teamAr: 'الدفع الإلكتروني', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-09-28/9610706501713_e9746e70723f0eda464c_original.jpg', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
-    P({ id: 'p_rafah', slackId: 'U099C2KP1NU', name: 'Rafah Alansari', nameAr: 'رفاه الأنصاري', initials: 'RF', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائية أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2025-10-27/9783415011188_e21952c27f823d0d8c36_original.png', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
-    P({ id: 'p_aljazi', slackId: 'U097HCNCAG3', name: 'Aljazi Alshubaike', nameAr: 'الجازي الشبيكي', initials: 'AA', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', photo: S + '2026-06-17/11377561146789_e77f77e8c5519d602401_original.png', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
-    P({ id: 'p_rosa', slackId: 'U09CC2R0H29', name: 'Rosa Alansari', nameAr: 'روزا الأنصاري', initials: 'RA', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-09-02/9446013743222_95f79433181c565ba618_original.jpg', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
-    P({ id: 'p_altahini', slackId: 'U097HCRUYCB', name: 'Mohammed Altahini', nameAr: 'محمد الطحيني', initials: 'MT', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', photo: S + '2025-07-28/9248551467783_16b4f569fed9b2f5e808_original.jpg', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
+    // ===== Cashless — Oscar =====
+    P({ id: 'p_zarea', slackId: 'U000000024', name: 'Oscar Reyes', nameAr: 'أوسكار رييس', initials: 'OR', level: 'manager', managerId: 'p_ahmed', team: 'Cashless', teamAr: 'الدفع الإلكتروني', title: 'Event Operations Manager', titleAr: 'مدير عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_intl_summit'], dailyCheckin: null }),
+    P({ id: 'p_rafah', slackId: 'U000000025', name: 'Rebecca Anderson', nameAr: 'ريبيكا أندرسون', initials: 'RA', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائية أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_expo_booth'], dailyCheckin: null }),
+    P({ id: 'p_aljazi', slackId: 'U000000026', name: 'Alicia Sherwin', nameAr: 'أليشيا شيروين', initials: 'AS', level: 'sr_spec', managerId: 'p_zarea', title: 'Event Operations Sr. Specialist', titleAr: 'أخصائي أول لعمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_corp_gala'], dailyCheckin: null }),
+    P({ id: 'p_rosa', slackId: 'U000000027', name: 'Rosa Anders', nameAr: 'روزا أندرز', initials: 'RA', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائية عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_pop_concert'], dailyCheckin: null }),
+    P({ id: 'p_altahini', slackId: 'U000000028', name: 'Martin Thatcher', nameAr: 'مارتن ثاتشر', initials: 'MT', level: 'spec', managerId: 'p_zarea', title: 'Event Operations Specialist', titleAr: 'أخصائي عمليات الفعاليات', employment: 'fulltime', assignedEvents: ['e_school_fair'], dailyCheckin: null }),
   ];
 
   // Default any record without an explicit employment to full-time.
   PEOPLE.forEach(function (p) { if (!p.employment) p.employment = 'fulltime'; });
 
-  // ---- Real account directory (verified @webook.com emails) ----
+  // ---- Demo account directory (fake @example.com emails) ----
   // Sign-in is keyed on these EXACT emails: one email → one account, no cross-login.
-  // akram is the Super Admin (can View-as / open any account + manage access).
+  // adam.foster is the Super Admin (can View-as / open any account + manage access).
   //
   // PRIVACY: this plaintext map is the DEV source of truth only. build.js does NOT ship it
   // to the public bundle — it strips this literal and injects a SALTED-SHA256 hash map named
@@ -3094,7 +3089,7 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   // Unbuilt/dev runs + tests still use the plaintext map. EMAIL_SALT is a per-project constant
   // (not a secret — it only defeats generic rainbow tables). Keep it in sync with build.js.
   const EMAIL_SALT = 'tempo:webook:v1';
-const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7ceacc4d4860728a82', p_abdulrahman: '7f8d2dc11b7005e13871fbbb17c30f1ed0f031d60bcd1a541af62a0090b735fd', p_osama: '59bd186b1cb39a0f46428eb4f55908694b78b4239ebb673cc3e0f2bf123046ae', p_gamal: 'c8f5b9e27d52abefdb8bba5042b921143fc0f4bfa2b6b8b3d4d834fa39dbb66f', p_talal: 'c4a968e7b25f04f3bfa8a3d36613c9a6cfb17edaad41369ad32df3bf2c58d9d8', p_ahmed: '4011d17cecd67e61ab7b9fc890082c412669c655b77eb4edef17e72d7dc324a5', p_shamma: '838dbaa0c8ed5ae32e3f98a9ae0b6472338a3df5dbdb4f26905f6ef988f16139', p_idris: '68c9fff170a7ccf662983514b76d67603d52a76cb099eca58eeaea39e00d2e75', p_zaidan: 'd4ce6ce691b1365bf3194903e8342ba4c9fd864abf1b20c9ac45050eca0ce706', p_faraj: '96bc5903e21a0d2ee949d630a448274063ef959f70ab3f1616e6da3c27a9f3c3', p_meshalB: '785a26fc151c0b333ab7633ab9b3ed80ec705f89ea8d0e883161610544f8b210', p_fouda: '2614eb30bdbb4e4d506df9f1f835fe6bc80dacba00eb409806674ad1cefac59c', p_abdelaal: 'bfac7e4cca377228c7a6fb4706746908e0e7fadab649aceb68a2721548e7e449', p_motaa: 'c660382a5e89cc5d34c4213a7f9cca4adf34fc9cc4e0128b3a95fda57855ed40', p_hamdi: '043a7db438a5d42e04ef58cfd439d2c44e2fa50263b9a31182f10e1d3cf0e3d0', p_ayman: 'b893c4346ab90c95dec37e50e2901def2083e749cf8f6eac374869350d966c26', p_ayah: '7b0369d2d8e0dd5e682f3ca94bf3751ed76efd7837209b3e4abe1884974b34c8', p_hani: 'c9a321eefe9d29dcdafc3ec4ebe25ce7098e5598e22fb628b949d25bee66c32e', p_batool: '0b51a373228fd8fd169d3dcb4a59a12eff51cf6ee59ea9c3ab771beca912f559', p_farah: '3c158dcd0e8dea9dea93bd49ddea30271b59049eacf4f932c84c8da24d9a02fb', p_zarea: '83b9ea999e01c415b18be7ed807aa0df6b7246e61fb882f9abebb4350136366c', p_khaled: '89d422be747ce98c5af7e8eed50704dbe9df1e23ecdee3bcbc7d39f8165e520a', p_amen: 'd018ee7354cb65b6ad09bacd94f4a41227402a72b22584324789e174fb15eb0f', p_batarfi: '1aa668a1531b862eca71627929b9a5b3d26d7e13eda97079dd51dd27f1430ca4', p_rafah: 'dedcb7c28e971a7a5a69d24bab7944c33f86215d2a287c8c5e8bdea374823393', p_aljazi: 'a0ad7dfee009b24fc3b87b7ea6d243058ebcd4f3f91d858a2fcfebe182014a50', p_shahad: '64bccb8ba72689d90444df69625cb500f8eb75e7b0b6a750cfdf9f52e4b506a3', p_duha: '41d7b7a2e074b34895fc703d60ff0d9a5e30823612221fb2425c3848cd6c095c', p_ibrahim: 'ce31080440613eafcfc7f904727c29149fe583953d6c51e330c99fb57d990ce5', p_saleh: '851f96e1107c3a58f812bc9d23db3222a7d2bd3aa0b21e89a224c33b0df4bd17', p_rana: '6aca8af17bcdfc46e9c08e6ef630606742e6388eba49ef65f1a7d1a647ea5318', p_rosa: 'c26a4866957f373b22efb7e0c162ea38a91b9b830c27a9e8464c1ee359f9de35', p_altahini: '0c195ed862f0eaf7854c3545536e98aabbbdf1709346db91e639971a5ecca567', p_meshalA: '3e22a95551db21794faab963e3a42a7f138f97a737ad46bc1472b72f04036fa9', p_raghdaa: 'b30c5cb067cfbe03933e7cd70deabbb4cc994d580eef965b11bc56a4449f195d' };
+const EMAIL_HASHES = { p_akram: '4effe79a54618a38f68e7ea6a32e39489f1bdf38155933e79fddad7202455839', p_abdulrahman: 'ac37d8ad72f229697c5e2ebd9d3fc0b0a2e283c1a79443698cf7085fb7671b67', p_osama: '823b2148bebe84cefe98437a390ecb09338f49097b5a00e9a81678610f6a1d4f', p_gamal: 'f5490e1431fee75445a7862d0646043fb49ab7818d352cc86b2ea682b3c09e08', p_talal: '22f5fcb83ae7e329367f37480b68ec0f0e094bb23e75560777775b36dba8c264', p_ahmed: 'c715e0b06f89ab5cc095735d7768e5a7579ec900a2fbbadeba30765da56fadc8', p_shamma: 'e3442dbf794e90a1aeb2d056c9b12d35453d00b499d1efd152ee84b518afcf2e', p_idris: '699727a30dc6e080fb55466361efd63605082eddbbf23dabba7bd674c6a18206', p_zaidan: '9abce501a7ac256e2c139453051efa42a52d2d7e33ec52f375489dcbd7f168cf', p_faraj: 'eeb47d91f54b660f9e4c5a0917a6982a515908b28c98824e10822166e701c09d', p_meshalB: 'f7ef88304b6426d9e60cf4e9f4f7b0d0e3466b7b9a48e65c1a3f5153a4028da9', p_fouda: '1f534479c88d61c2c0ad4b207be3b88408e5f068d5640e822730d20537b0a0e8', p_abdelaal: 'a4e0666c4b9ce72299920012d53151e24d7c9d7e5f320b5b00168524f8428db8', p_motaa: '7b220306d7150849fb5198cb87d81a5bde5016627158b2392b53cb4f3d27da31', p_hamdi: 'cf82227f441624eb64b011c05e0280e4a77ce1509bac3298478676b0a2f6f088', p_ayman: '2dc2f698e7104ff00da40745efce35b907c721d76d384636f6047600751ae54f', p_ayah: '6a2e6e76d1fd5cfef7a9544a649e0c7da1ff76ad2e948ba17a0aaf1a1c45c540', p_hani: '3c6e22cfeb48ecd1cbd9959ca3351e2553536699eb97e35bd161288be12eda0b', p_batool: 'c45e856436914fe022a7b2401a8f0420cecbdacc1175bde58e6d90e5c3b2496d', p_farah: '4cca8dae224f5e7bcc27dac1570176fc91ac3873f33db7b29fe6da25c24713fb', p_zarea: '8199a3477e892802d56f971043cc0256125dff2947722002223a5e1c66a52194', p_khaled: '7473b11436f18ba96e2562c911e52d5031c0d8a9848cd58e0dcb4786ff1cdb2e', p_amen: 'f4df2bb1c5c5391dbfab8ae34e60cac41ca598ca3b834199c7c44063a9fbb98e', p_batarfi: 'a7067c295d8d8e08aed97453a68e9df7028872f44d060e4aa8ce56f06f10bda8', p_rafah: 'a80b4d142c525239055812715243ea8bdb9ec82661a336293508fa1253082b76', p_aljazi: '3596f0aeade634fd89308b1c7ab8afd4c23f7f95f7ce2805d0bc083bc96cbf95', p_shahad: '33734887b29c2ca2605cb261e3ad7d70b2b6fec8b2f12c798bcc3c678fe02a20', p_duha: '111912550290e0388f2638d9a381a8e42a35482745acf095da0f3345c17894b2', p_ibrahim: '2b8839c087a7afa61881a24c992a8c8ba20255b715e57df72a767da9a38f925d', p_saleh: '20b427847459cd298afb106f76ce7db492c5ff236d066fd77c88bb7b15a29d29', p_rana: '0c60bbfe97d03272eec288001ea9c71b5fdaa4ad8f5b3ea73e5da6f0915d5790', p_rosa: '273250336b325bf8a21dd7e8c73857e05c45da3a5af9fe6f25ee365501d00a23', p_altahini: '2512abbdca0e62ed10dee9cbec49267c0c08fb6d14e007c339e890ac5a4d5877', p_meshalA: '4b4cfc9b37e4f6fdce4288548307cb3d73d5b55b184cd1a3a798576e96911666', p_raghdaa: '203e65098da479d44f65da3e8e0c3fc5041849d9d616de347cc94b3f2912fe83' };
   // build.js injects `const EMAIL_HASHES = {...}` and removes the EMAILS literal for the
   // public bundle. In dev/tests EMAILS is present and EMAIL_HASHES is absent; guard both.
   const HAS_PLAINTEXT = typeof EMAILS !== 'undefined';
@@ -3103,7 +3098,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     // Only attach the plaintext address in dev/unbuilt runs. The public bundle ships hashes
     // only, so p.email stays undefined there — sign-in resolves via emailToId() (hash match).
     if (HAS_PLAINTEXT && EMAILS[p.id]) p.email = EMAILS[p.id];
-    if (p.id === 'p_akram') p.superAdmin = true;   // Mohammed Akram — Super Admin
+    if (p.id === 'p_akram') p.superAdmin = true;   // Adam Foster — Super Admin
   });
 
   // Resolve a normalized (lowercased, trimmed) email to a person id, WITHOUT exposing the
@@ -3123,7 +3118,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     return null;
   }
 
-  /* Tenure & role history (mocked). Osama = flight-risk story; Idris = new hire. */
+  /* Tenure & role history (mocked). Owen = flight-risk story; Marcus = new hire. */
   const TENURE = {
     p_ahmed:       { joined: '2018-09-01', roleStart: '2020-01-01', lastProgression: '2024-01-01', tier1Delivered: 16, monthsSinceTier1: 0 },
     p_ayman:       { joined: '2019-05-01', roleStart: '2022-01-01', lastProgression: '2024-06-01', tier1Delivered: 11, monthsSinceTier1: 0 },
@@ -3171,20 +3166,32 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   // remove/rename real-data.js (or set WP.config.forceSampleData) to fall straight
   // back to the sample directory. Enrichment (tenure/growth) still applies to real
   // people by id, and any real person missing from those maps just gets no extra.
-  (function preferRealDirectory() {
-    // config.js loads AFTER this file, so read the escape hatch from a pre-set
-    // global (window.FORCE_SAMPLE_DATA) or WP.config if it somehow exists already.
+  // Keep a stable reference to the sample directory so applyDirectory() can switch
+  // BACK to it when forceSampleData is toggled (it overwrites WP.data.PEOPLE otherwise).
+  var SAMPLE_PEOPLE = PEOPLE;
+  WP.data.applyDirectory = function applyDirectory() {
+    // Escape hatch: forceSampleData keeps the sample directory even when real-data.js
+    // is present (demos/screenshots). config.js loads AFTER this file, so on the FIRST
+    // call (from here) WP.config isn't set yet and this is false - real data wins by
+    // default, which is correct. app.js re-calls this at boot AFTER config loads, so
+    // the flag is finally honoured. window.FORCE_SAMPLE_DATA works pre-config too.
     var forceSample = (typeof window !== 'undefined' && window.FORCE_SAMPLE_DATA) ||
       (WP.config && WP.config.forceSampleData);
     var real = WP.data.REAL;
     if (forceSample || !real || !Array.isArray(real.PEOPLE) || !real.PEOPLE.length) {
-      WP.data.demoData = true;                 // running on sample data
-      return;
+      // Only switch the reference back if we're currently pointed at the REAL
+      // directory - otherwise leave WP.data.PEOPLE as-is (don't clobber a test's
+      // restored array or the untouched sample default).
+      if (WP.data.PEOPLE === (real && real.PEOPLE)) WP.data.PEOPLE = SAMPLE_PEOPLE;
+      WP.data.demoData = true;
+      return false;
     }
     real.PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
     WP.data.PEOPLE = real.PEOPLE;
     WP.data.demoData = false;                  // running on the real directory
-  })();
+    return true;
+  };
+  WP.data.applyDirectory();                    // first pass (pre-config: real wins if present)
 })(window.WP = window.WP || {});
 
 </script>
@@ -3712,13 +3719,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
  * configured wins:
  *
  *  1. EMAIL CODE (recommended) — set supabaseUrl + supabaseAnonKey below.
- *     The user enters their @webook.com email, gets a 6-digit code in their
+ *     The user enters their @example.com email, gets a 6-digit code in their
  *     inbox, and types it back. The code goes to the REAL mailbox, so typing
  *     someone else's email gets you nowhere. These two values are PUBLIC by
  *     design (safe to ship in the page). See ACCESS-SETUP.md → "Email code".
  *
  *  2. GOOGLE — set googleClientId to a Google OAuth Web Client ID. Google
- *     proves the @webook.com identity. See ACCESS-SETUP.md → "Google".
+ *     proves the @example.com identity. See ACCESS-SETUP.md → "Google".
  *
  *  3. DIRECTORY GATE (demo, default when nothing is set) — exact-email match
  *     only. Convenient for a trusted internal pilot, but NOT a real lock:
@@ -3746,17 +3753,17 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   // built-in email sender is rate-limited ("Could not send the code"), so the
   // verified-LINK path locks people out. Google (PR #51) is the intended provider
   // but is blocked on the real OAuth Client ID. The directory gate is instant
-  // (registered @webook.com email → straight in) but is NOT identity-proof:
-  // anyone who types a known @webook.com email gets in. Acceptable short-term for
+  // (registered @example.com email → straight in) but is NOT identity-proof:
+  // anyone who types a known @example.com email gets in. Acceptable short-term for
   // an internal pilot on an obscure URL; flip back to 'google' the moment the
   // Client ID is wired.
   // PASSWORD-ONLY (Akram, Jul 2026): the ONLY way in is a Supabase email+password.
   // A leftover Google/OAuth session is rejected at the session level (handleSession
   // → providerAllowedForMode). Nobody signs in without a password set via the
   // invite/reset link. Reversible: change this one word back to 'google'/'directory'.
-  // DIRECTORY (Akram, Jul 2026): unblock sign-in NOW — a registered @webook.com
+  // DIRECTORY (Akram, Jul 2026): unblock sign-in NOW — a registered @example.com
   // email goes straight in, no password, no external account needed. Not
-  // identity-proof (anyone who types a known @webook.com email gets in), fine as
+  // identity-proof (anyone who types a known @example.com email gets in), fine as
   // a short-term stopgap on an obscure URL. Flip back to 'password' once real
   // accounts exist.
   if (WP.config.authMode === undefined)        WP.config.authMode = 'directory';
@@ -3795,6 +3802,11 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   // real-data.js is present (for demos / screenshots). Reversible; default off so
   // real data wins automatically once imported. See docs/ROADMAP-golive.md.
   if (WP.config.forceSampleData === undefined) WP.config.forceSampleData = false;
+
+  // Sign-in email domain (login.js reads this). Demo default matches the fake
+  // demo directory (@example.com). Go-live (G2) sets this to the real company
+  // domain here - one line, no code change, reversible.
+  if (WP.config.authDomain === undefined) WP.config.authDomain = 'example.com';
 
   /* ----------------------------------------------------------------
    * Executive Status — live data endpoint + deck link (both reversible).
@@ -4504,16 +4516,16 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     signInTitle:    { en: 'Sign in to Webook Workload', ar: 'تسجيل الدخول إلى ويبوك ووركلود' },
     signInSub:      { en: 'Use your company email to continue.', ar: 'استخدم إيميل الشركة للمتابعة.' },
     emailLabel:     { en: 'Work email', ar: 'إيميل العمل' },
-    emailPh:        { en: 'name@webook.com', ar: 'name@webook.com' },
+    emailPh:        { en: 'name@example.com', ar: 'name@example.com' },
     continueBtn:    { en: 'Continue', ar: 'متابعة' },
     or:             { en: 'or', ar: 'أو' },
     signOut:        { en: 'Sign out', ar: 'تسجيل الخروج' },
     pickAccount:    { en: 'Or pick your account', ar: 'أو اختر حسابك' },
-    errBadDomain:   { en: 'Only @webook.com emails can sign in.', ar: 'فقط إيميلات @webook.com يمكنها الدخول.' },
+    errBadDomain:   { en: 'Only @example.com emails can sign in.', ar: 'فقط إيميلات @example.com يمكنها الدخول.' },
     errNoAccount:   { en: 'No account found for that email. Try “pick your account”.', ar: 'لا حساب لهذا الإيميل. جرّب «اختر حسابك».' },
     demoAuthNote:   { en: 'Prototype sign-in — no password. Your email is matched to your team profile and role.', ar: 'دخول تجريبي — بدون كلمة مرور. يُربط إيميلك بملفك ودورك في الفريق.' },
     verifyNote:     { en: 'Demo gate — your email must match a registered Workload account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في التطبيق. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
-    errVerify:      { en: 'Could not verify that Google account. Use your @webook.com account.', ar: 'تعذّر التحقق من حساب Google. استخدم حساب @webook.com.' },
+    errVerify:      { en: 'Could not verify that Google account. Use your @example.com account.', ar: 'تعذّر التحقق من حساب Google. استخدم حساب @example.com.' },
     // — email verification code (OTP) —
     sendCode:       { en: 'Email me a code', ar: 'أرسل لي رمزاً' },
     sendingCode:    { en: 'Sending…', ar: 'جارٍ الإرسال…' },
@@ -4526,13 +4538,13 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     changeEmail:    { en: 'Change email', ar: 'تغيير الإيميل' },
     errBadCode:     { en: 'That code is wrong or expired. Try again or resend.', ar: 'الرمز غير صحيح أو منتهٍ. حاول مجدداً أو أعد الإرسال.' },
     errSendCode:    { en: 'Could not send the code. Check the email and try again.', ar: 'تعذّر إرسال الرمز. تحقّق من الإيميل وحاول مجدداً.' },
-    verifiedNote:   { en: 'Verified sign-in — we email a one-time code to your @webook.com inbox. Only you receive it.', ar: 'دخول موثّق — نرسل رمزاً لمرة واحدة إلى بريد @webook.com الخاص بك. أنت وحدك تستلمه.' },
+    verifiedNote:   { en: 'Verified sign-in — we email a one-time code to your @example.com inbox. Only you receive it.', ar: 'دخول موثّق — نرسل رمزاً لمرة واحدة إلى بريد @example.com الخاص بك. أنت وحدك تستلمه.' },
     // — magic sign-in link (verified, no SMTP needed) —
     sendLink:       { en: 'Email me a sign-in link', ar: 'أرسل لي رابط دخول' },
     linkSentTo:     { en: 'We emailed a secure sign-in link to', ar: 'أرسلنا رابط دخول آمن إلى' },
     openLinkHint:   { en: 'Open that email on this device and tap the link to finish. The link only works from your inbox.', ar: 'افتح ذلك الإيميل على هذا الجهاز واضغط الرابط لإكمال الدخول. الرابط يعمل فقط من بريدك.' },
     resendLink:     { en: 'Resend link', ar: 'إعادة إرسال الرابط' },
-    verifiedNoteLink:{ en: 'Verified sign-in — we email a one-time link to your @webook.com inbox. Only you can open it.', ar: 'دخول موثّق — نرسل رابطاً لمرة واحدة إلى بريد @webook.com الخاص بك. أنت وحدك تفتحه.' },
+    verifiedNoteLink:{ en: 'Verified sign-in — we email a one-time link to your @example.com inbox. Only you can open it.', ar: 'دخول موثّق — نرسل رابطاً لمرة واحدة إلى بريد @example.com الخاص بك. أنت وحدك تفتحه.' },
     // — password sign-in (Supabase email + password) —
     signInBtn:      { en: 'Sign in', ar: 'تسجيل الدخول' },
     passwordLabel:  { en: 'Password', ar: 'كلمة المرور' },
@@ -4540,7 +4552,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     forgotPw:       { en: 'Forgot or set password', ar: 'نسيت أو تعيين كلمة المرور' },
     resetSent:      { en: "If that account exists, we emailed a link to set your password. Open it from your inbox.", ar: 'إن كان الحساب موجوداً، أرسلنا رابطاً لتعيين كلمة المرور. افتحه من بريدك.' },
     errBadCreds:    { en: 'Email or password is incorrect.', ar: 'الإيميل أو كلمة المرور غير صحيحة.' },
-    passwordNote:   { en: 'Sign in with your @webook.com email and password. Your verified session is your identity — you can only enter your own account.', ar: 'سجّل الدخول بإيميل @webook.com وكلمة المرور. جلستك الموثّقة هي هويتك — لا يمكنك الدخول إلا إلى حسابك.' },
+    passwordNote:   { en: 'Sign in with your @example.com email and password. Your verified session is your identity — you can only enter your own account.', ar: 'سجّل الدخول بإيميل @example.com وكلمة المرور. جلستك الموثّقة هي هويتك — لا يمكنك الدخول إلا إلى حسابك.' },
     verifyingSession:{ en: 'Verifying your sign-in…', ar: 'جارٍ التحقق من دخولك…' },
     // — set new password (recovery-return) —
     setPwTitle:     { en: 'Set your password', ar: 'تعيين كلمة المرور' },
@@ -4945,7 +4957,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     orgGroup_results:    { en: 'Results', ar: 'النتائج' },
     orgGroup_capability: { en: 'Capability', ar: 'الكفاءة' },
     orgHuman:       { en: 'This describes capability areas to plan around — never a person, and never a ranking.', ar: 'هذا يصف مجالات القدرات للتخطيط حولها — لا شخصاً، ولا ترتيباً.' },
-    securedNote:    { en: 'Restricted to @webook.com accounts your admin has granted access.', ar: 'مقصور على حسابات @webook.com التي منحها المدير صلاحية الدخول.' },
+    securedNote:    { en: 'Restricted to @example.com accounts your admin has granted access.', ar: 'مقصور على حسابات @example.com التي منحها المدير صلاحية الدخول.' },
     noAccessTag:    { en: 'No access', ar: 'لا صلاحية' },
     accessDenied:   { en: 'Access denied', ar: 'الدخول مرفوض' },
     accessDeniedSub:{ en: "this account hasn't been granted access. Ask your admin.", ar: 'هذا الحساب لم يُمنح صلاحية الدخول. كلّم المدير.' },
@@ -5620,14 +5632,14 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
 
   /* ---- Access allow-list (separate from role) ----
    * "Has this person been granted entry to the app at all?" Domain is enforced
-   * separately (must be @webook.com). Default: current team is granted; an admin
+   * separately (must be @example.com). Default: current team is granted; an admin
    * can revoke/grant from the Permissions screen. NOTE: this is the APP-LEVEL gate
    * — on a public static host it deters but does not truly lock (see SECURITY.md);
    * the real lock is an edge gate (Cloudflare Access) or a server backend. */
   // ACCESS ALLOWLIST (2026-07 lockdown) — only these people may enter the app; everyone
   // else hits the "no access" screen. Add ids here (or via the admin access screen) as
   // people are onboarded. Fully reversible: widen the list or restore the old
-  // "all non-tbc granted" line. Domain (@webook.com) + identity are still enforced separately.
+  // "all non-tbc granted" line. Domain (@example.com) + identity are still enforced separately.
   const ALLOWLIST = { p_akram: true, p_ahmed: true, p_farah: true, p_motaa: true };
   const GRANTED = {};
   WP.data.PEOPLE.forEach(function (p) { if (!p.tbc && ALLOWLIST[p.id]) GRANTED[p.id] = true; });
@@ -8697,21 +8709,24 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
  * Tempo — Sign in
  * ------------------------------------------------------------
  * Strongest configured method wins (see src/js/core/config.js):
- *   1. VERIFIED LINK (Supabase): enter @webook.com email → a one-time
+ *   1. VERIFIED LINK (Supabase): enter @example.com email → a one-time
  *      sign-in LINK is emailed to the REAL mailbox → open it → signed in.
  *      Typing someone else's email gets you nowhere: the link lands in
  *      THEIR inbox. (Supabase's default email sends a link; a literal typed
  *      6-digit code needs custom SMTP — see ACCESS-SETUP.md.)
- *   2. GOOGLE (GIS): Google proves the @webook.com identity.
+ *   2. GOOGLE (GIS): Google proves the @example.com identity.
  *   3. DIRECTORY GATE (demo default): exact-email match only — convenient,
  *      but NOT a real lock (anyone who types a known email gets in).
  * In every mode the email must match a registered Tempo account, and
- * akram@webook.com is the Super Admin (View-as any account + access mgmt).
+ * adam.foster@example.com is the Super Admin (View-as any account + access mgmt).
  * ========================================================== */
 (function (WP) {
   'use strict';
   const ui = WP.ui;
-  const DOMAIN = 'webook.com';
+  // Sign-in email domain. Demo default is example.com (matches the fake demo
+  // directory). Go-live (G2) sets WP.config.authDomain to the real company domain
+  // - one config line, no code change. Reversible.
+  const DOMAIN = (WP.config && WP.config.authDomain) || 'example.com';
 
   function emailOf(p) {
     if (p && p.email) return p.email;
@@ -14737,7 +14752,7 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
     const inputs = sec('Input',
       '<div style="display:flex;flex-direction:column;gap:14px;max-width:360px">' +
         '<label class="wbk-field"><span class="wbk-field-label">' + t('inEmail') + '</span>' +
-          '<input class="wbk-input" type="email" placeholder="name@webook.com" />' +
+          '<input class="wbk-input" type="email" placeholder="name@example.com" />' +
           '<span class="wbk-field-hint">' + t('inEmailHint') + '</span></label>' +
         '<label class="wbk-field is-error"><span class="wbk-field-label">' + t('inName') + '<span class="wbk-req">*</span></span>' +
           '<input class="wbk-input" value="" placeholder="' + t('inNamePh') + '" />' +
@@ -16458,12 +16473,12 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
         '<div class="sig-sep"></div>' +
         '<div class="sig-credit">' +
           '<div class="sig-role">' + t('sigManaged') + '</div>' +
-          '<div class="sig-name sig-name--accent">M. Akram</div>' +
+          '<div class="sig-name sig-name--accent">A. Foster</div>' +
         '</div>' +
         '<div class="sig-sep"></div>' +
         '<div class="sig-credit">' +
           '<div class="sig-role">' + t('sigDirected') + '</div>' +
-          '<div class="sig-name">Ahmed Othman</div>' +
+          '<div class="sig-name">Oliver Grant</div>' +
         '</div>' +
       '</div>';
   }
@@ -16521,6 +16536,10 @@ const EMAIL_HASHES = { p_akram: 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7
   });
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Re-select real vs sample directory now that config.js has loaded, so the
+    // forceSampleData escape hatch is finally honoured (mock-data's first pass ran
+    // before config existed). No-op when there's no real-data.js. See mock-data.js.
+    if (WP.data && WP.data.applyDirectory) WP.data.applyDirectory();
     if (WP.persist) WP.persist.hydrate();   // restore the user's saved work before first paint
     // Verified sign-in: consume a magic-link token from the URL and restore any
     // persisted Supabase session, so returning from the email link signs the user in.

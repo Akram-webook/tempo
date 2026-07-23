@@ -33,16 +33,16 @@ try{
   // ── a registered @webook.com email signs straight in — NO OTP / email-send path ──
   let otpCalled=false;
   WP._sb={auth:{signInWithOtp:function(){otpCalled=true;return Promise.resolve({data:{},error:null});},signOut:function(){return Promise.resolve({});}}};
-  view.querySelector('#login-email').value='motaa@webook.com';
+  view.querySelector('#login-email').value='marco.delgado@example.com';
   view.querySelector('#login-form').dispatchEvent(new window.Event('submit'));
   assert(WP.state.authed===true && WP.state.viewerId==='p_motaa','registered email signs in directly (motaa → p_motaa)');
   assert(otpCalled===false,'NO email-send / OTP path invoked in directory mode');
 
   // ── rejections still hold ──
   const f=WP.auth.findByEmail;
-  assert(f('nobody@webook.com').error==='errNoAccount','unknown @webook.com rejected');
+  assert(f('nobody@example.com').error==='errNoAccount','unknown @webook.com rejected');
   assert(f('akram@gmail.com').error==='errBadDomain','wrong domain rejected');
-  assert(f('ayman@webook.com').person.id==='p_ayman','another registered email resolves (ayman → p_ayman)');
+  assert(f('adrian.bell@example.com').person.id==='p_ayman','another registered email resolves (ayman → p_ayman)');
 
   // ── both themes + EN/AR still render the gate ──
   WP.state.authed=false;
