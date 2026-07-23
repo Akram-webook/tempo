@@ -31,31 +31,32 @@ export default {
   async fetch(request, env) {
     const origin = request.headers.get('origin') || '';
 
-    if (request.method === 'OPTIONS') return cors(null, 204, origin);
-    // Origin gate (defence in depth; CORS alone doesn't stop non-browser callers,
-    // but the token stays server-side regardless).
+    // Origin gate FIRST (defence in depth; CORS alone doesn't stop non-browser
+    // callers, but the token stays server-side regardless). Applies to the
+    // preflight too, so a disallowed origin never gets an allow-CORS preflight.
     if (origin !== ALLOWED_ORIGIN) return new Response('Forbidden', { status: 403 });
+    if (request.method === 'OPTIONS') return cors(null, 204);
 
     const url = new URL(request.url);
     if (request.method !== 'POST' || url.pathname !== '/feedback') {
-      return cors({ ok: false, error: 'Not found' }, 404, origin);
+      return cors({ ok: false, error: 'Not found' }, 404);
     }
 
     let body;
     try { body = await request.json(); }
-    catch { return cors({ ok: false, error: 'Invalid JSON' }, 400, origin); }
+    catch { return cors({ ok: false, error: 'Invalid JSON' }, 400); }
 
     const op = body && body.op;
     const item = body && body.item;
-    if (OPS.indexOf(op) < 0) return cors({ ok: false, error: 'Invalid op' }, 400, origin);
-    if (!item || typeof item !== 'object') return cors({ ok: false, error: 'Missing item' }, 400, origin);
+    if (OPS.indexOf(op) < 0) return cors({ ok: false, error: 'Invalid op' }, 400);
+    if (!item || typeof item !== 'object') return cors({ ok: false, error: 'Missing item' }, 400);
     if (op === 'create' && !String(item.note || '').trim()) {
-      return cors({ ok: false, error: 'Note required' }, 400, origin);
+      return cors({ ok: false, error: 'Note required' }, 400);
     }
     if ((op === 'update' || op === 'discard') && !String(item.id || '').trim()) {
-      return cors({ ok: false, error: 'Item id required' }, 400, origin);
+      return cors({ ok: false, error: 'Item id required' }, 400);
     }
-    if (!env.GITHUB_PAT) return cors({ ok: false, error: 'Not configured' }, 503, origin);
+    if (!env.GITHUB_PAT) return cors({ ok: false, error: 'Not configured' }, 503);
 
     // Map the CRUD item to the Action's flat string inputs. Forward ONLY the keys
     // that op may legitimately set - create carries the full record; update/discard
@@ -81,19 +82,20 @@ export default {
       });
       // GitHub returns 204 on an accepted dispatch. Anything else is a failure -
       // surface a generic error (never leak the upstream body, which could echo a token).
-      if (res.status === 204) return cors({ ok: true }, 200, origin);
-      return cors({ ok: false, error: 'Dispatch rejected (' + res.status + ')' }, 502, origin);
+      if (res.status === 204) return cors({ ok: true }, 200);
+      return cors({ ok: false, error: 'Dispatch rejected (' + res.status + ')' }, 502);
     } catch (err) {
-      return cors({ ok: false, error: 'Upstream error' }, 502, origin);
+      return cors({ ok: false, error: 'Upstream error' }, 502);
     }
   },
 };
 
-function cors(body, status, origin) {
-  // Echo the allowed origin only (never reflect an arbitrary Origin header).
-  const allow = origin === ALLOWED_ORIGIN ? ALLOWED_ORIGIN : ALLOWED_ORIGIN;
+function cors(body, status) {
+  // Always advertise the ONE allowed origin - never reflect the caller's Origin
+  // header (reflecting it would defeat the point of the allow-list). Requests from
+  // any other origin are already rejected with 403 before this is reached.
   const headers = {
-    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
