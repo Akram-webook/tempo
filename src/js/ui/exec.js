@@ -202,6 +202,7 @@
           date: it.ts || it.date || null,
           type: it.type || '',
           source: it.source || '',        // 'feedback' rows get the tag + lane treatment
+          toolSource: it.toolSource || '', // WHICH tool submitted it (workload | hr-portal | ...)
           lane: it.lane || '',
           wave: it.wave || null,
           klass: it.klass || '',          // carried through for the triage suggestion engine
@@ -221,8 +222,8 @@
         if (title) out.push({ title: title, status: f.status || f.Status, date: d, type: f.type || f.Type || '' });
       });
     }
-    // Apply the view-local Type + Status + Wave filters to the timeline items.
-    return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status) && matchesWave(it); });
+    // Apply the view-local Type + Status + Wave + Source filters to the timeline items.
+    return out.filter(function (it) { return matchesType(it.type) && matchesStatus(it.status) && matchesWave(it) && matchesSource(it); });
   }
 
   // Map a raw feedback warehouse item (data/feedback.json) into the SAME shape as
@@ -403,7 +404,11 @@
         status: FB_STATUS_TO_EXEC[it.status] || 'Planned',
         date: it.submittedAt || null,
         type: fbTypeFor(it),
-        source: 'feedback',            // marks it as an incoming idea, not shipped work
+        source: 'feedback',            // pipeline lane: an incoming idea, not shipped work
+        // Which TOOL submitted it (Phase 2). Migration: pre-Phase-2 records lack a
+        // source, so read it as 'workload' here — never rewrite the stored record.
+        // NOTE: distinct from `source:'feedback'` above (do not conflate the two).
+        toolSource: it.source ? String(it.source) : 'workload',
         lane: lane,                    // Frontend | Backend | Bug | Feature | ...
         wave: it.wave || null,
         klass: it.klass || '',         // raw classification (drives the suggestion)
@@ -483,6 +488,8 @@
     var triageBtn = '';
     if (isFb) {
       tags += '<span class="ex-tl-tag ex-tl-tag--fb">' + esc(t('execFbTag')) + '</span>';
+      // Which tool submitted it (Phase 2). Migrated/app rows read as "Workload".
+      tags += '<span class="ex-tl-tag ex-tl-tag--src">' + esc(sourceLabel(it.toolSource || 'workload')) + '</span>';
       if (it.lane) tags += '<span class="ex-tl-tag ex-tl-tag--lane">' + esc(it.lane) + '</span>';
       if (it.wave) tags += '<span class="ex-tl-tag ex-tl-tag--wave">' + esc(t('execWave') + ' ' + it.wave) + '</span>';
       if (it.id) {
@@ -737,6 +744,7 @@
   let filterType = 'all';    // all | bug | feature | improvement
   let filterStatus = 'all';  // all | done | working | planned
   let filterWave = 'all';    // 'all' | a 1-based wave index (as string) - focus one wave
+  let filterSource = 'all';  // all | a tool slug (workload | hr-portal | ...) - Phase 2
   // Delivered band(s) collapsed by default (finished wall). In "All" view there is
   // one Delivered band PER week-group, so we track which are open by a per-group key
   // (not a single flag - a single flag made one click expand every week's band).
@@ -769,7 +777,33 @@
     if (filterWave === 'all') return true;
     return String(it && it.wave || '') === String(filterWave);
   }
-  const anyFilterActive = function () { return filterType !== 'all' || filterStatus !== 'all' || filterWave !== 'all'; };
+  // Source (Phase 2): which TOOL submitted an item. Only feedback rows carry a
+  // tool source; a specific source therefore scopes to feedback from THAT tool and
+  // hides shipped delivery items (which have none), exactly like the Type filter.
+  function matchesSource(it) {
+    if (filterSource === 'all') return true;
+    if (!it || it.source !== 'feedback') return false;
+    return String(it.toolSource || 'workload') === String(filterSource);
+  }
+  const anyFilterActive = function () { return filterType !== 'all' || filterStatus !== 'all' || filterWave !== 'all' || filterSource !== 'all'; };
+
+  // Distinct tool sources present in the raw feedback (for the Source filter chips).
+  // 'workload' is always offered (the app itself + migrated pre-Phase-2 records).
+  function distinctSources(fbRaw) {
+    var set = { workload: 1 };
+    if (fbRaw && Array.isArray(fbRaw.items)) {
+      fbRaw.items.forEach(function (r) { var s = r && r.source ? String(r.source) : 'workload'; set[s] = 1; });
+    }
+    return Object.keys(set);
+  }
+  // Human label for a tool slug: known names get a proper name; unknown slugs are
+  // title-cased ("hr-portal" -> "HR Portal", "finance-hub" -> "Finance Hub").
+  function sourceLabel(slug) {
+    var s = String(slug || 'workload');
+    var known = { workload: 'Workload', 'hr-portal': 'HR Portal', 'finance-hub': 'Finance Hub' };
+    if (known[s]) return known[s];
+    return s.split('-').map(function (w) { return w ? w.charAt(0).toUpperCase() + w.slice(1) : w; }).join(' ');
+  }
 
   // WAVES section (GitHub-warehouse shape): one row per wave with progress bar +
   // health dot + notes + any open-PR blockers. This is the heart of the page now.
@@ -781,7 +815,7 @@
     // type they always show. This keeps "Status: Done" meaningful on waves while
     // "Type: Bugs" scopes to the typed timeline items only.
     waves = waves.filter(function (w) {
-      return matchesStatus(w.status) && (filterType === 'all');
+      return matchesStatus(w.status) && (filterType === 'all') && (filterSource === 'all');
     });
     if (!waves.length) {
       // Don't leave a bare heading when a filter empties the grid.
@@ -867,6 +901,16 @@
         '<select class="ex-fselect" data-filter-select="' + key + '" aria-label="' + esc(label) + '">' + options + '</select>' +
       '</div>';
     };
+    // Source group (Phase 2): only shown once feedback from >1 tool exists, so the
+    // control never appears for a single-source (Workload-only) history. Chips are
+    // built from the tools actually present, so a new embedding tool appears here
+    // automatically the first time it submits.
+    var sources = distinctSources(lastFeedbackRaw);
+    var sourceGroup = (sources.length > 1)
+      ? group(t('execFilterSource'), 'source', filterSource,
+          [{ v: 'all', l: t('execFilterAll') }].concat(
+            sources.map(function (s) { return { v: s, l: sourceLabel(s) }; })))
+      : '';
     return '<div class="section ex-filters">' +
       group(t('execFilterType'), 'type', filterType, [
         { v: 'all', l: t('execFilterAll') }, { v: 'bug', l: t('execFilterBugs') },
@@ -876,6 +920,7 @@
         { v: 'all', l: t('execFilterAll') }, { v: 'done', l: t('execBandDone') },
         { v: 'working', l: t('execBandWorking') }, { v: 'planned', l: t('execBandToDecide') },
       ]) +
+      sourceGroup +
     '</div>';
   }
 
@@ -1049,6 +1094,7 @@
         const val = b.getAttribute('data-val');
         if (key === 'type') filterType = val;
         else if (key === 'status') filterStatus = val;
+        else if (key === 'source') filterSource = val;
         if (lastBaseData) paintBody(host, lastBaseData);
       };
     });

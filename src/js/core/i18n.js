@@ -675,6 +675,7 @@
     execDeliveredScope1:   { en: '{done} of {total} planned items across 1 wave', ar: '{done} من {total} عنصراً مخططاً عبر موجة واحدة' },
     execFilterType:         { en: 'Type', ar: 'النوع' },
     execFilterStatus:       { en: 'Status', ar: 'الحالة' },
+    execFilterSource:       { en: 'Source', ar: 'المصدر' },
     execFilterAll:          { en: 'All', ar: 'الكل' },
     execFilterBugs:         { en: 'Bugs', ar: 'الأخطاء' },
     execFilterFeatures:     { en: 'Features', ar: 'الميزات' },

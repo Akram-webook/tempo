@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WBK Feedback widget — embed example</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; margin: 0; padding: 48px 24px; color: #18181b; background: #fafafa; }
+    main { max-width: 640px; margin: 0 auto; }
+    code { background: #f1f1f4; padding: 2px 6px; border-radius: 6px; }
+    pre { background: #f1f1f4; padding: 16px; border-radius: 10px; overflow: auto; }
+    .note { color: #5c6470; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>A pretend Webook tool</h1>
+    <p>This page is NOT the Tempo app — it stands in for any internal tool (e.g. an HR
+      portal). It embeds the Global Feedback widget with the two-line snippet below.
+      Look for the pink feedback button in the bottom-right, open it, and send a note.</p>
+
+    <pre><code>&lt;script src="https://akram-webook.github.io/tempo/widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;window.WBK.Feedback.init({ tool: 'hr-portal', endpoint: '&lt;proxy-url&gt;' })&lt;/script&gt;</code></pre>
+
+    <p class="note">Here the script is loaded from the local build (<code>../dist/widget.js</code>)
+      and the <code>endpoint</code> points at a <strong>demo shim</strong> defined in THIS page
+      (below) so you can see the full success flow without a live proxy. The shim is part of
+      the example page, never part of the widget bundle.</p>
+  </main>
+
+  <!-- Demo-only: intercept the widget's POST so the success toast shows offline.
+       This lives in the EXAMPLE page, not in dist/widget.js. -->
+  <script>
+    (function () {
+      var DEMO = 'https://demo.local/feedback-proxy';
+      var realFetch = window.fetch ? window.fetch.bind(window) : null;
+      window.fetch = function (url, opts) {
+        if (url === DEMO) {
+          try { console.log('[demo] widget POST', JSON.parse(opts.body)); } catch (e) {}
+          return Promise.resolve({ status: 200, json: function () { return Promise.resolve({ ok: true }); } });
+        }
+        return realFetch ? realFetch(url, opts) : Promise.reject(new Error('no fetch'));
+      };
+      window.__WBK_DEMO_ENDPOINT = DEMO;
+    })();
+  </script>
+
+  <!-- The two lines a real tool would add (endpoint filled from the demo shim here). -->
+  <script src="../dist/widget.js"></script>
+  <script>
+    window.WBK.Feedback.init({ tool: 'hr-portal', endpoint: window.__WBK_DEMO_ENDPOINT, locale: 'en' });
+  </script>
+</body>
+</html>
