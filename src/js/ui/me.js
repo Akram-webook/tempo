@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — "My Progress" (the employee's daily home)
+ * Tickets Distribution — "My Progress" (the employee's daily home)
  * ------------------------------------------------------------
  * The healthy-engagement dashboard: small wins, gentle streak,
  * endowed goal progress, recognition. No leaderboards, no shaming,

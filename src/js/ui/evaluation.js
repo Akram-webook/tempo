@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Performance Evaluation screen (downward)
+ * Tickets Distribution — Performance Evaluation screen (downward)
  * ------------------------------------------------------------
  * The LINE MANAGER (or director/admin) rates 16 weighted criteria
  * 1–5 and writes the qualitative feedback. Weighted overall → /5.

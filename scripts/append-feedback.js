@@ -37,6 +37,12 @@ function str(v) { return v == null ? '' : String(v); }
 function oneOf(v, allowed, fallback) { return allowed.indexOf(v) >= 0 ? v : fallback; }
 // Strip control chars + hard-cap length so a hostile field can't bloat/corrupt the file.
 function sanitize(v) { return str(v).slice(0, 2000).replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, ''); }
+// A tool-source identifier: a short lowercase slug ([a-z0-9-]). Anything else is
+// coerced down to a slug; blank/invalid -> 'workload' (the default source).
+function sourceSlug(v) {
+  const s = str(v).trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  return s || 'workload';
+}
 
 // Build a normalized item from raw input (env-style object) + a run id + a
 // "now" ISO string (passed in so the workflow controls the clock; Date is not
@@ -47,6 +53,10 @@ function buildItem(raw, runId, nowIso) {
     id: str(runId) || submittedAt,
     submittedAt: submittedAt,
     owner: str(raw.owner),
+    // Which TOOL submitted this (Phase 2). Set at create time and IMMUTABLE (never
+    // in UPDATABLE). Missing/blank -> 'workload' so pre-Phase-2 records and the app
+    // itself read as the Workload tool. A slug, control-stripped + length-capped.
+    source: sourceSlug(raw.source),
     area: str(raw.area),
     type: oneOf(str(raw.type), TYPES, 'Improvement'),
     klass: oneOf(str(raw.klass), KLASSES, ''),
@@ -119,6 +129,7 @@ function run() {
       note: process.env.FB_NOTE, type: process.env.FB_TYPE, klass: process.env.FB_KLASS,
       priority: process.env.FB_PRIORITY, owner: process.env.FB_OWNER, area: process.env.FB_AREA,
       context: process.env.FB_CONTEXT, url: process.env.FB_URL, submittedAt: process.env.FB_SUBMITTED_AT,
+      source: process.env.FB_SOURCE,
     };
     if (!str(raw.note).trim()) {
       console.error('append-feedback: empty note - refusing to append.');
@@ -162,6 +173,13 @@ function selftest() {
   assert(it.status === 'New', 'status is New');
   assert(it.wave === null, 'wave starts null (unassigned)');
   assert(it.submittedAt === '2026-01-01T00:00:00Z', 'submittedAt preserved');
+  assert(it.source === 'workload', 'missing source defaults to workload');
+
+  // source: a slug is preserved; junk is slugified; immutable on update.
+  const its = buildItem({ note: 'x', source: 'HR Portal!!' }, '', 'NOW');
+  assert(its.source === 'hr-portal', 'source coerced to a clean slug');
+  const it3 = buildItem({ note: 'x', source: 'hr-portal' }, '', 'NOW');
+  assert(it3.source === 'hr-portal', 'valid source slug passes through');
 
   // valid enums pass through.
   const it2 = buildItem({ note: 'x', type: 'Bug', klass: 'Backend', priority: 'Critical' }, '', 'NOW');
@@ -187,7 +205,7 @@ function selftest() {
 
   // --- applyOp: update / discard / guards ---
   const base = { generated: '', items: [
-    { id: 'x1', submittedAt: '2026-01-01T00:00:00Z', owner: 'real@owner', note: 'keep me', context: 'ctx', url: 'u',
+    { id: 'x1', submittedAt: '2026-01-01T00:00:00Z', owner: 'real@owner', source: 'workload', note: 'keep me', context: 'ctx', url: 'u',
       type: 'Bug', klass: 'Backend', priority: 'Medium', status: 'New', wave: null },
   ] };
   // update status + wave
@@ -205,10 +223,11 @@ function selftest() {
   threw = false; try { applyOp(base, 'update', { id: 'nope', status: 'New' }, 'T'); } catch (e) { threw = e.code === 'ENOITEM'; }
   assert(threw, 'unknown id rejected (ENOITEM)');
   // immutable fields cannot be overwritten via update
-  let inj = applyOp(base, 'update', { id: 'x1', status: 'Testing', submittedAt: '2000-01-01', owner: 'attacker@evil', note: 'HACKED' }, 'T');
+  let inj = applyOp(base, 'update', { id: 'x1', status: 'Testing', submittedAt: '2000-01-01', owner: 'attacker@evil', note: 'HACKED', source: 'evil-tool' }, 'T');
   assert(inj.items[0].submittedAt === '2026-01-01T00:00:00Z', 'submittedAt immutable on update');
   assert(inj.items[0].owner === 'real@owner', 'owner immutable on update');
   assert(inj.items[0].note === 'keep me', 'note immutable on update');
+  assert(inj.items[0].source === 'workload', 'source immutable on update (not overwriteable)');
   // prototype pollution attempt is inert (only whitelisted fields copied)
   let pp = applyOp(base, 'update', JSON.parse('{"id":"x1","status":"Testing","__proto__":{"isAdmin":true}}'), 'T');
   assert(pp.items[0].status === 'Testing' && ({}).isAdmin === undefined, 'prototype pollution inert');
@@ -236,4 +255,4 @@ if (require.main === module) {
   else run();
 }
 
-module.exports = { buildItem, appendItem, applyOp, readFile, sanitize, MAX_ITEMS, STATUSES, UPDATABLE };
+module.exports = { buildItem, appendItem, applyOp, readFile, sanitize, sourceSlug, MAX_ITEMS, STATUSES, UPDATABLE };

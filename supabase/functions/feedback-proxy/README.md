@@ -13,11 +13,24 @@ POST  { "op": "create" | "update" | "discard", "item": { ... } }
 -> 200 { "ok": true }            dispatch accepted; Action appends/updates + commits
 -> 4xx/5xx { "ok": false, "error": "..." }
 ```
-- `create`: `item.note` required; the Action assigns id/status/timestamps.
-- `update`: `item.id` + any of `status|wave|priority|triageNote|triagedBy`. id/owner/submittedAt/note immutable.
+- `create`: `item.note` required; the Action assigns id/status/timestamps. `item.source`
+  (which TOOL submitted — e.g. `workload`, `hr-portal`) is set on create and is immutable.
+- `update`: `item.id` + any of `status|wave|priority|triageNote|triagedBy`. id/owner/submittedAt/note/**source** immutable.
 - `discard`: `item.id`; sets status `Discarded` (idempotent).
 
-Only `https://akram-webook.github.io` may call it (else 403).
+## CORS — hard-coded allow-list (Phase 2)
+The embeddable widget (`dist/widget.js`) is served from `akram-webook.github.io` but
+**runs inside each tool's page**, so the browser `Origin` is that tool's host. CORS is
+therefore a hard-coded `ALLOWED_ORIGINS` **Set** in `index.ts`:
+
+```
+https://akram-webook.github.io   # Workload (Tempo)
+https://hr-portal.webook.com     # HR Portal
+https://finance-hub.webook.com   # Finance Hub
+```
+
+Any other origin gets `403`. **Onboarding a new tool = add its exact origin to that Set
+and redeploy the function.** Never a wildcard (`*.webook.com`), never a reflected Origin.
 
 ## Deploy (Akram - one time)
 ```bash
@@ -37,5 +50,6 @@ the Action's own validation, not by a Supabase user JWT. The token never leaves 
 
 ## Never
 - Never commit the PAT. `supabase secrets set` only.
-- Never widen CORS beyond the one origin.
+- Never widen CORS with a wildcard or by reflecting the caller's Origin — add each
+  tool's exact origin to the `ALLOWED_ORIGINS` Set explicitly.
 - Touches feedback only (via the Action). Never writes exec-status.json.

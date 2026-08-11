@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Engagement data (the "My Progress" dashboard)
+ * Tickets Distribution — Engagement data (the "My Progress" dashboard)
  * ------------------------------------------------------------
  * Healthy engagement, NOT addiction-to-overwork. Built on:
  *  - Progress Principle (small daily wins) → "Done today" feed

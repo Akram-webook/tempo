@@ -1,7 +1,14 @@
 /* Tempo bundler — inlines CSS, JS, and SVG assets into self-contained pages
  * (no build step at runtime; opens directly / GitHub Pages):
  *   dist/index.html  — the app
- *   dist/chart.html  — the standalone, public "Operations Chart" export (sample data) */
+ *   dist/chart.html  — the standalone, public "Operations Chart" export (sample data)
+ *   dist/widget.js   — the embeddable Global Feedback widget (Phase 2). Any Webook
+ *                      tool loads it with two lines; it is already self-contained
+ *                      (styles injected inline, endpoint passed via init config).
+ *
+ * Usage:
+ *   node build.js            → builds ALL outputs (index.html, chart.html, widget.js)
+ *   node build.js --widget   → builds ONLY dist/widget.js */
 const fs = require('fs'), path = require('path');
 const root = __dirname;
 
@@ -96,6 +103,26 @@ function buildPage(srcFile, outFile, opts) {
   console.log('Built dist/' + outFile + ' (' + kb + ' KB). Un-inlined left: js=' + leftJs + ' css=' + leftCss);
 }
 
+// The embeddable widget is a single self-contained source file — no inlining
+// needed. "Build" = stamp a banner + copy src/js/widget/index.js -> dist/widget.js
+// so the shipped bundle is byte-traceable to source (and the CI dist-drift gate
+// stays honest). The endpoint is NEVER baked in — it arrives via init(config).
+function buildWidget() {
+  const src = read('src/js/widget/index.js');
+  const banner = '/* WBK Global Feedback Widget — built from src/js/widget/index.js by build.js. Do not edit dist/. */\n';
+  const out = banner + src;
+  fs.writeFileSync(path.join(root, 'dist', 'widget.js'), out);
+  const kb = (Buffer.byteLength(out, 'utf8') / 1024).toFixed(0);
+  console.log('Built dist/widget.js (' + kb + ' KB). Self-contained; endpoint via init() (not baked in).');
+}
+
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
-buildPage('index.html', 'index.html');
-buildPage('chart.html', 'chart.html', { stripEmails: true });
+
+const widgetOnly = process.argv.indexOf('--widget') >= 0;
+if (widgetOnly) {
+  buildWidget();
+} else {
+  buildPage('index.html', 'index.html');
+  buildPage('chart.html', 'chart.html', { stripEmails: true });
+  buildWidget();
+}

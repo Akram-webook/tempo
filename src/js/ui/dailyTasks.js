@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Daily Tasks (auto-read from Slack #daily-checkin)
+ * Tickets Distribution — Daily Tasks (auto-read from Slack #daily-checkin)
  * ------------------------------------------------------------
  * IA: overview-first summary, then compact "smart cards" — one key line
  * (today's done) + icon chips for status. Full detail (remaining/learned)

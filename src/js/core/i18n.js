@@ -9,7 +9,7 @@
 
   const STRINGS = {
     appName:        { en: 'Webook',                 ar: 'ويبوك' },
-    subtitle:       { en: 'Workload',               ar: 'Workload' },
+    subtitle:       { en: 'Tickets Distribution',   ar: 'توزيع التذاكر' },
     workloadMap:    { en: 'Workload Map',           ar: 'خريطة الأحمال' },
     teamHealth:     { en: 'Team Health',            ar: 'صحة الفريق' },
     available:      { en: 'Available',              ar: 'متاح' },
@@ -305,7 +305,7 @@
     wbFlagged:      { en: 'People who may need relief', ar: 'أشخاص قد يحتاجون دعماً' },
     wbSuggested:    { en: 'Suggested', ar: 'المقترح' },
     wbEmptyTitle:   { en: 'No one is showing wellbeing risk right now', ar: 'لا أحد يُظهر مؤشّر خطر على الرفاهية حالياً' },
-    wbEmptyNote:    { en: 'That’s a good outcome — your team’s workload looks sustainable. Workload will flag rising strain here early.', ar: 'هذه نتيجة جيدة — يبدو حِمل فريقك مستداماً. سيُنبّهك التطبيق هنا مبكراً عند تزايد الضغط.' },
+    wbEmptyNote:    { en: 'That’s a good outcome — your team’s workload looks sustainable. Tickets Distribution will flag rising strain here early.', ar: 'هذه نتيجة جيدة — يبدو حِمل فريقك مستداماً. سيُنبّهك التطبيق هنا مبكراً عند تزايد الضغط.' },
     wbDenied:       { en: 'Wellbeing signals are visible only to a person’s manager, their director, and super-admin.', ar: 'مؤشّرات الرفاهية تظهر فقط لمدير الشخص ومديره الأعلى ومشرف النظام.' },
     wbError:        { en: 'Couldn’t compute wellbeing signals right now.', ar: 'تعذّر حساب مؤشّرات الرفاهية حالياً.' },
     /* ===== Fairness / Overload Radar (Builder B) — keep grouped; may rebase ===== */
@@ -320,7 +320,7 @@
     frSuggested:    { en: 'Suggested', ar: 'المقترح' },
     frNoData:       { en: 'Not enough assignment data yet for this team.', ar: 'لا توجد بيانات إسناد كافية لهذا الفريق بعد.' },
     frEmptyTitle:   { en: 'Not enough data to assess balance yet', ar: 'لا توجد بيانات كافية لتقييم التوازن بعد' },
-    frEmptyNote:    { en: 'No team has assignments to compare yet. Workload will surface concentration or imbalance here as work is assigned.', ar: 'لا يوجد فريق لديه مهام للمقارنة بعد. سيُظهر التطبيق هنا التركّز أو الاختلال عند إسناد العمل.' },
+    frEmptyNote:    { en: 'No team has assignments to compare yet. Tickets Distribution will surface concentration or imbalance here as work is assigned.', ar: 'لا يوجد فريق لديه مهام للمقارنة بعد. سيُظهر التطبيق هنا التركّز أو الاختلال عند إسناد العمل.' },
     frDenied:       { en: 'Team-balance signals are visible only to a director / super-admin (across teams) and a manager (their own team).', ar: 'إشارات توازن الفريق تظهر فقط للمدير الأعلى / مشرف النظام (عبر الفرق) وللمدير (فريقه فقط).' },
     frError:        { en: 'Couldn’t compute team-balance signals right now.', ar: 'تعذّر حساب إشارات توازن الفريق حالياً.' },
     /* ===== end Fairness group ===== */
@@ -568,7 +568,7 @@
     yesterdaySummary:{ en: 'What you did yesterday', ar: 'اللي سويته أمس' },
     nothingYesterday:{ en: 'Nothing logged yesterday — that’s okay.', ar: 'ما سُجّل شي أمس — عادي.' },
     // — login + account + nav —
-    signInTitle:    { en: 'Sign in to Webook Workload', ar: 'تسجيل الدخول إلى ويبوك ووركلود' },
+    signInTitle:    { en: 'Sign in to Tickets Distribution', ar: 'تسجيل الدخول إلى توزيع التذاكر' },
     signInSub:      { en: 'Use your company email to continue.', ar: 'استخدم إيميل الشركة للمتابعة.' },
     emailLabel:     { en: 'Work email', ar: 'إيميل العمل' },
     emailPh:        { en: 'name@example.com', ar: 'name@example.com' },
@@ -579,7 +579,7 @@
     errBadDomain:   { en: 'Only @example.com emails can sign in.', ar: 'فقط إيميلات @example.com يمكنها الدخول.' },
     errNoAccount:   { en: 'No account found for that email. Try “pick your account”.', ar: 'لا حساب لهذا الإيميل. جرّب «اختر حسابك».' },
     demoAuthNote:   { en: 'Prototype sign-in — no password. Your email is matched to your team profile and role.', ar: 'دخول تجريبي — بدون كلمة مرور. يُربط إيميلك بملفك ودورك في الفريق.' },
-    verifyNote:     { en: 'Demo gate — your email must match a registered Workload account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في التطبيق. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
+    verifyNote:     { en: 'Demo gate — your email must match a registered Tickets Distribution account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في التطبيق. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
     errVerify:      { en: 'Could not verify that Google account. Use your @example.com account.', ar: 'تعذّر التحقق من حساب Google. استخدم حساب @example.com.' },
     // — email verification code (OTP) —
     sendCode:       { en: 'Email me a code', ar: 'أرسل لي رمزاً' },
@@ -624,7 +624,7 @@
     navHome:        { en: 'Workload', ar: 'الأحمال' },
     execStatus:     { en: 'Project delivery', ar: 'تسليم المشروع' },
     execStatusSub:  { en: 'Build status — what shipped, what\'s next', ar: 'حالة البناء — ما تم تسليمه وما هو التالي' },
-    execEyebrow:    { en: 'WEBOOK · WORKLOAD — PROJECT DELIVERY', ar: 'ويبوك · حجم العمل — تسليم المشروع' },
+    execEyebrow:    { en: 'WEBOOK · TICKETS DISTRIBUTION — PROJECT DELIVERY', ar: 'ويبوك · توزيع التذاكر — تسليم المشروع' },
     execForWho:     { en: 'Build & delivery status for the project team — what shipped, what\'s in progress, and what needs a decision. Not an employee view.', ar: 'حالة بناء وتسليم المشروع لفريق العمل — ما تم تسليمه وما هو قيد التنفيذ وما يحتاج قراراً. ليست شاشة للموظفين.' },
     execOpenDeck:   { en: 'Open full status deck', ar: 'فتح عرض الحالة الكامل' },
     execSummary:    { en: '{done} shipped · {next} in progress · {need} need you', ar: '{done} مُنجز · {next} قيد التنفيذ · {need} بحاجة إليك' },
@@ -675,6 +675,7 @@
     execDeliveredScope1:   { en: '{done} of {total} planned items across 1 wave', ar: '{done} من {total} عنصراً مخططاً عبر موجة واحدة' },
     execFilterType:         { en: 'Type', ar: 'النوع' },
     execFilterStatus:       { en: 'Status', ar: 'الحالة' },
+    execFilterSource:       { en: 'Source', ar: 'المصدر' },
     execFilterAll:          { en: 'All', ar: 'الكل' },
     execFilterBugs:         { en: 'Bugs', ar: 'الأخطاء' },
     execFilterFeatures:     { en: 'Features', ar: 'الميزات' },
@@ -763,15 +764,15 @@
     prefComfortable:{ en: 'Comfortable', ar: 'مريحة' },
     prefCompact:    { en: 'Compact', ar: 'مدمجة' },
     prefDateFmt:    { en: 'Date format', ar: 'صيغة التاريخ' },
-    prefDateFmtNote:{ en: 'How dates appear across Workload.', ar: 'كيف تظهر التواريخ في التطبيق.' },
-    prefDateFmtInfo:{ en: 'How dates appear across Workload (follows your language). Example: {sample}', ar: 'كيف تظهر التواريخ في التطبيق (تتبع لغتك). مثال: {sample}' },
+    prefDateFmtNote:{ en: 'How dates appear across Tickets Distribution.', ar: 'كيف تظهر التواريخ في التطبيق.' },
+    prefDateFmtInfo:{ en: 'How dates appear across Tickets Distribution (follows your language). Example: {sample}', ar: 'كيف تظهر التواريخ في التطبيق (تتبع لغتك). مثال: {sample}' },
     prefDateAuto:   { en: 'Automatic (by language)', ar: 'تلقائي (حسب اللغة)' },
     prefSaved:      { en: 'Preference saved', ar: 'تم حفظ التفضيل' },
     // Notifications
     notifTitle:     { en: 'Notifications', ar: 'الإشعارات' },
-    notifSub:       { en: 'Choose how and what Workload tells you. Off by default means never bothered.', ar: 'اختر كيف وماذا يخبرك التطبيق. الإيقاف يعني عدم الإزعاج.' },
+    notifSub:       { en: 'Choose how and what Tickets Distribution tells you. Off by default means never bothered.', ar: 'اختر كيف وماذا يخبرك التطبيق. الإيقاف يعني عدم الإزعاج.' },
     notifChannels:  { en: 'How you’re notified', ar: 'طريقة الإشعار' },
-    notifChannelsNote:{ en: 'Turn a channel off to stop all Workload messages there.', ar: 'أوقف قناة لإيقاف كل رسائل التطبيق فيها.' },
+    notifChannelsNote:{ en: 'Turn a channel off to stop all Tickets Distribution messages there.', ar: 'أوقف قناة لإيقاف كل رسائل التطبيق فيها.' },
     notifEmail:     { en: 'Email', ar: 'البريد' },
     notifSlack:     { en: 'Slack', ar: 'سلاك' },
     notifInapp:     { en: 'In-app', ar: 'داخل التطبيق' },
@@ -827,8 +828,8 @@
     comingSoon:     { en: 'Coming soon', ar: 'قريباً' },
     // ── Privacy (My settings) ──
     pvTitle:        { en: 'Privacy', ar: 'الخصوصية' },
-    pvSub:          { en: 'Exactly what Workload holds about you, and how to get a copy.', ar: 'ما الذي يحتفظ به التطبيق عنك بالضبط، وكيف تحصل على نسخة منه.' },
-    pvHoldsTitle:   { en: 'What Workload keeps about you', ar: 'ما الذي يحتفظ به التطبيق عنك' },
+    pvSub:          { en: 'Exactly what Tickets Distribution holds about you, and how to get a copy.', ar: 'ما الذي يحتفظ به التطبيق عنك بالضبط، وكيف تحصل على نسخة منه.' },
+    pvHoldsTitle:   { en: 'What Tickets Distribution keeps about you', ar: 'ما الذي يحتفظ به التطبيق عنك' },
     pvSource:       { en: 'From', ar: 'المصدر' },
     // category labels
     pvCat_identity:    { en: 'Your details', ar: 'بياناتك' },
@@ -850,7 +851,7 @@
     pvNeverBody:    { en: 'Workload measures work and decisions — never people. No keystroke, mouse, presence or location tracking. No screen recording. No reading your private messages.', ar: 'يقيس التطبيق العمل والقرارات — لا الأشخاص أبداً. لا تتبّع لضغطات المفاتيح أو الفأرة أو الحضور أو الموقع. لا تسجيل للشاشة. لا قراءة لرسائلك الخاصة.' },
     // export
     pvExport:       { en: 'Export my data', ar: 'تصدير بياناتي' },
-    pvExportNote:   { en: 'Download everything Workload holds about you as a file. Only your own data.', ar: 'نزّل كل ما يحتفظ به التطبيق عنك كملف. بياناتك أنت فقط.' },
+    pvExportNote:   { en: 'Download everything Tickets Distribution holds about you as a file. Only your own data.', ar: 'نزّل كل ما يحتفظ به التطبيق عنك كملف. بياناتك أنت فقط.' },
     pvExportBtn:    { en: 'Download (JSON)', ar: 'تنزيل (JSON)' },
     pvExporting:    { en: 'Preparing…', ar: 'جارٍ التحضير…' },
     pvExportDone:   { en: 'Your data was downloaded.', ar: 'تم تنزيل بياناتك.' },
@@ -876,7 +877,7 @@
     membersEmpty:   { en: 'No members match your search.', ar: 'لا أعضاء يطابقون بحثك.' },
     googleContinue: { en: 'Continue with Google', ar: 'المتابعة عبر Google' },
     chooseAccount:  { en: 'Choose an account', ar: 'اختر حساباً' },
-    googleRestrict: { en: 'to continue to Webook Workload', ar: 'للمتابعة إلى Webook Workload' },
+    googleRestrict: { en: 'to continue to Tickets Distribution', ar: 'للمتابعة إلى توزيع التذاكر' },
     googleDemo:     { en: 'Demo of Google sign-in (restricted to webook.com). On deploy this becomes real Google Workspace OAuth.', ar: 'محاكاة لتسجيل Google (مقصور على webook.com). عند النشر يتحوّل إلى OAuth حقيقي عبر Google Workspace.' },
     useEmailInstead:{ en: 'Use email instead', ar: 'استخدم الإيميل بدلاً من ذلك' },
     backToGoogle:   { en: 'Back', ar: 'رجوع' },
@@ -1023,7 +1024,7 @@
 
     /* ── WBK PRO design-parity: breadcrumb / header / table / sub-tabs / KPI delta ── */
     breadcrumb:     { en: 'Breadcrumb', ar: 'مسار التنقل' },
-    bcTempo:        { en: 'Workload', ar: 'حجم العمل' },
+    bcTempo:        { en: 'Tickets Distribution', ar: 'توزيع التذاكر' },
     // page-header subtitles
     dashSubDirector:{ en: 'Org-wide capacity & team health · {n} people in scope', ar: 'السعة وصحة الفرق على مستوى المنظمة · {n} شخصاً ضمن النطاق' },
     dashSubManager: { en: 'Your team’s capacity & growth · {n} reports', ar: 'سعة فريقك ونموّه · {n} من المرؤوسين' },

@@ -59,7 +59,13 @@ assert(!/Adam Foster|akram@webook\.com/.test(sink[0]) && /\[redacted\]/.test(sin
 // Allowlist: events.js keeps ONE dev-only, isDevMode()-guarded console.warn (the derive
 // wiring-fault trace) by request — a deliberate, documented exception, not scattered logging.
 function walk(d) { return fs.readdirSync(d).flatMap(f => { const p = path.join(d, f); return fs.statSync(p).isDirectory() ? walk(p) : [p]; }); }
-const jsFiles = walk(path.join(root, 'src', 'js')).filter(f => f.endsWith('.js'));
+// src/js/widget/** is the STANDALONE embeddable bundle (dist/widget.js). It runs
+// inside foreign host pages where window.WP (and therefore WP.log) does not exist,
+// so it must use console.error/warn directly for its init/config guards — that is
+// by design, not stray app logging. It is excluded from this WP.log routing scan.
+const jsFiles = walk(path.join(root, 'src', 'js'))
+  .filter(f => f.endsWith('.js'))
+  .filter(f => !f.includes(path.join('js', 'widget') + path.sep));
 const ALLOW = [path.join('core', 'events.js')];
 const rawConsole = [];
 for (const f of jsFiles) {
