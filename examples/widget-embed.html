@@ -5,11 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WBK Feedback widget — embed example</title>
   <style>
-    body { font: 15px/1.6 system-ui, sans-serif; margin: 0; padding: 48px 24px; color: #18181b; background: #fafafa; }
+    /* A pretend WBK host tool, single dark theme. It exposes the WBK design tokens,
+       so the embedded widget adopts them automatically (token-first theming). */
+    :root {
+      --brand: #ff2c79; --brand-hover: #ff4d8d; --brand-glow: rgba(255,44,121,0.40);
+      --surface-base: #09090b; --surface-l2: #27272a; --surface-l3: #3f3f46;
+      --content-primary: #e4e4e7; --content-secondary: #a1a1aa;
+      --border: rgba(255,255,255,0.10); --border-strong: rgba(255,255,255,0.20);
+    }
+    body { font: 16px/1.6 Figtree, system-ui, sans-serif; margin: 0; padding: 48px 24px;
+      color: var(--content-primary); background: var(--surface-base); }
     main { max-width: 640px; margin: 0 auto; }
-    code { background: #f1f1f4; padding: 2px 6px; border-radius: 6px; }
-    pre { background: #f1f1f4; padding: 16px; border-radius: 10px; overflow: auto; }
-    .note { color: #5c6470; }
+    h1 { color: var(--content-primary); }
+    code { background: var(--surface-l3); padding: 2px 6px; border-radius: 4px; }
+    pre { background: var(--surface-l2); padding: 16px; border-radius: 8px; overflow: auto;
+      border: 1px solid var(--border); }
+    .note { color: var(--content-secondary); }
   </style>
 </head>
 <body>
