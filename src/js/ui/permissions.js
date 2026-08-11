@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Super Admin · Access management
+ * Tickets Distribution — Super Admin · Access management
  * ------------------------------------------------------------
  * The Super Admin (or Director) grants access by assigning each
  * person's ROLE. Changing a role changes what that person can see

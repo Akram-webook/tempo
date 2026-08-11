@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — SVG icon set (Lucide-style)
+ * Tickets Distribution — SVG icon set (Lucide-style)
  * ------------------------------------------------------------
  * Replaces emoji-as-icons (a UI/UX anti-pattern): emojis render
  * differently per device/OS and look unprofessional. These are

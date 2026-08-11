@@ -1,8 +1,8 @@
 {
-  "name": "tempo",
+  "name": "tickets-distribution",
   "version": "1.0.0",
   "private": true,
-  "description": "Tempo — internal Workforce-Intelligence / Operations app for Webook Event Operations. Vanilla JS (window.WP), no framework; src/ is bundled into dist/index.html by build.js.",
+  "description": "Tickets Distribution — internal Workforce-Intelligence / Operations app for Webook Event Operations (repo codename: tempo). Vanilla JS (window.WP), no framework; src/ is bundled into dist/index.html by build.js.",
   "scripts": {
     "build": "node build.js",
     "local": "node tools/local-server.js",
