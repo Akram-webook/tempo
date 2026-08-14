@@ -62,5 +62,32 @@
 
   var COUNTRY_FLAG = { 'Saudi Arabia': '🇸🇦', 'UAE': '🇦🇪' };
 
-  WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG };
+  // Real self-set Slack job titles (fetched from the #event-operations-department
+  // directory). Kept separate from the editable roster; surfaced in the drawer.
+  // (Slack exposes profile text but NOT avatar image URLs, so photos aren't here.)
+  var SLACK_TITLES = {
+    ahmed: 'Event Operations Director',
+    ayman: 'Event Operations Sr. Manager',
+    shahad: 'Event Operation Specialist',
+    batool: 'Events Operation Manager',
+    motaa: 'Events Ticketing Manager',
+    akram: 'Events Operation Manager',
+    maksosah: 'Sr. Event Operations Specialist',
+    shamma: 'Event Operations Specialist',
+    ayah: 'Sr. Event Operation Manager',
+    farah: 'Events Operations Manager',
+    howshan: 'Sr. Event Operation Specialist',
+    raghdaa: 'Events operation specialist',
+    hani: 'Event Operations Sr. Manager',
+    zaidan: 'Event Operations Manager',
+    faraj: 'Event Operations Manager',
+    batarfi: 'Events Operation Department',
+    omar: 'Event Operation Manager - Cashless',
+    rafah: 'Event Operations Senior Specialist',
+    aljazi: 'Senior Events Operation Specialist',
+    rosa: 'events operation specialist',
+    altahini: 'Event Operations Specialist',
+  };
+
+  WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG, SLACK_TITLES: SLACK_TITLES };
 })(window.WP = window.WP || {});

@@ -4232,7 +4232,34 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 
   var COUNTRY_FLAG = { 'Saudi Arabia': '🇸🇦', 'UAE': '🇦🇪' };
 
-  WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG };
+  // Real self-set Slack job titles (fetched from the #event-operations-department
+  // directory). Kept separate from the editable roster; surfaced in the drawer.
+  // (Slack exposes profile text but NOT avatar image URLs, so photos aren't here.)
+  var SLACK_TITLES = {
+    ahmed: 'Event Operations Director',
+    ayman: 'Event Operations Sr. Manager',
+    shahad: 'Event Operation Specialist',
+    batool: 'Events Operation Manager',
+    motaa: 'Events Ticketing Manager',
+    akram: 'Events Operation Manager',
+    maksosah: 'Sr. Event Operations Specialist',
+    shamma: 'Event Operations Specialist',
+    ayah: 'Sr. Event Operation Manager',
+    farah: 'Events Operations Manager',
+    howshan: 'Sr. Event Operation Specialist',
+    raghdaa: 'Events operation specialist',
+    hani: 'Event Operations Sr. Manager',
+    zaidan: 'Event Operations Manager',
+    faraj: 'Event Operations Manager',
+    batarfi: 'Events Operation Department',
+    omar: 'Event Operation Manager - Cashless',
+    rafah: 'Event Operations Senior Specialist',
+    aljazi: 'Senior Events Operation Specialist',
+    rosa: 'events operation specialist',
+    altahini: 'Event Operations Specialist',
+  };
+
+  WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG, SLACK_TITLES: SLACK_TITLES };
 })(window.WP = window.WP || {});
 
 </script>
@@ -16375,6 +16402,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
         '<dt>Squad</dt><dd><span class="ot-dot" style="background:' + c.color + ';display:inline-block;margin-inline-end:6px"></span>' + esc(p.squad) + '</dd>' +
         '<dt>Sub-team</dt><dd>' + esc(p.unit || '—') + '</dd>' +
         '<dt>Position</dt><dd>' + esc(p.level) + '</dd>' +
+        (DATA().SLACK_TITLES && DATA().SLACK_TITLES[p.id] ? '<dt>Title (Slack)</dt><dd>' + esc(DATA().SLACK_TITLES[p.id]) + '</dd>' : '') +
         '<dt>Working in</dt><dd>' + (p.status === 'open' ? '—' : (flag(p.country) + ' ' + esc(p.city) + ', ' + esc(p.country))) + '</dd>' +
         '<dt>Contract</dt><dd>' + esc(p.contract) + '</dd>' +
         '<dt>Nationality</dt><dd>' + esc(p.nationality || '—') + '</dd>' +

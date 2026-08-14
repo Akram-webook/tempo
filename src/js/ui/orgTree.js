@@ -210,6 +210,7 @@
         '<dt>Squad</dt><dd><span class="ot-dot" style="background:' + c.color + ';display:inline-block;margin-inline-end:6px"></span>' + esc(p.squad) + '</dd>' +
         '<dt>Sub-team</dt><dd>' + esc(p.unit || '—') + '</dd>' +
         '<dt>Position</dt><dd>' + esc(p.level) + '</dd>' +
+        (DATA().SLACK_TITLES && DATA().SLACK_TITLES[p.id] ? '<dt>Title (Slack)</dt><dd>' + esc(DATA().SLACK_TITLES[p.id]) + '</dd>' : '') +
         '<dt>Working in</dt><dd>' + (p.status === 'open' ? '—' : (flag(p.country) + ' ' + esc(p.city) + ', ' + esc(p.country))) + '</dd>' +
         '<dt>Contract</dt><dd>' + esc(p.contract) + '</dd>' +
         '<dt>Nationality</dt><dd>' + esc(p.nationality || '—') + '</dd>' +
