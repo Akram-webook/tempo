@@ -89,5 +89,37 @@
     altahini: 'Event Operations Specialist',
   };
 
-  WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG, SLACK_TITLES: SLACK_TITLES };
+  // Slack profile photos, snapshotted from the #event-operations-department
+  // directory (id → avatar URL). Re-sync on demand: re-scrape + replace this map.
+  // Missing here = no uploaded Slack photo (Meshal Alsmari) or not a channel
+  // member (Hamdi) → the card falls back to initials.
+  var E = 'https://ca.slack-edge.com/T06CF6Y0ETC-';
+  var IMG = {
+    ahmed: E + 'U099EREBS23-5eaec9a8cc3c-192',
+    ayman: E + 'U06D1GQ7XL2-3f81f365db07-192',
+    shahad: E + 'U06EA95C70W-959ffd1ed9f1-192',
+    batool: E + 'U06CM0JKYGP-74e279d52d0a-192',
+    motaa: E + 'U06CYJMJPJR-cd85e03b0c0b-192',
+    akram: E + 'U06H0ASQ761-53f137cdf645-192',
+    maksosah: E + 'U07LF0D3KSN-1fbe4f7bcf66-192',
+    khaled: E + 'U06D1GM1RRQ-8c9298f22d31-192',
+    shamma: E + 'U09AH1Z1X6C-833ee0a7c097-192',
+    idris: E + 'U09E1NA1B0W-4ec7d0a5589f-192',
+    ayah: E + 'U06DE5USEEM-e5386ad93e75-192',
+    farah: E + 'U0A2W19C2C8-553222f85c03-192',
+    amen: E + 'U06EY8NJHLG-f0e1a2776405-192',
+    howshan: E + 'U09PSSEP0HM-0604eee17742-192',
+    raghdaa: E + 'U0BAR4N4FPH-85afb2628a24-192',
+    hani: E + 'U06D1GQ58HG-8c6bc0f588ab-192',
+    zaidan: E + 'U06G2SHJB9R-c75c35bb7476-192',
+    faraj: E + 'U06G5DNPZA8-f8c3f8eaa8c1-192',
+    batarfi: E + 'U06CUT8FT4N-8c6bc6f01576-192',
+    omar: E + 'U09CC2V09NZ-e9746e70723f-192',
+    rafah: E + 'U099C2KP1NU-e21952c27f82-192',
+    aljazi: E + 'U097HCNCAG3-e77f77e8c551-192',
+    rosa: E + 'U09CC2R0H29-95f79433181c-192',
+    altahini: E + 'U097HCRUYCB-16b4f569fed9-192',
+  };
+
+  WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG, SLACK_TITLES: SLACK_TITLES, IMG: IMG };
 })(window.WP = window.WP || {});

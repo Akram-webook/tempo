@@ -154,8 +154,12 @@
       '<span class="ot-chip loc"><svg width="11" height="11" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.6" fill="#7f1d1d"/></svg>' + flag(p.country) + ' <b>' + esc(p.city) + '</b></span>';
     var fre = p.contract === 'Freelance' ? '<span class="ot-chip fre">FREELANCE</span>' : '';
     var leadchip = (p.lead && p.squad !== 'Leadership') ? '<span class="ot-chip lead">LEAD · ' + n + '</span>' : '';
+    var img = DATA().IMG && DATA().IMG[p.id];
+    var av = '<span class="ot-av">' +
+      (img ? '<img class="ot-av-pic" src="' + esc(img) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '') +
+      esc(initials(p.name)) + '</span>';
     return '<button class="' + cls.join(' ') + '" data-open="' + p.id + '" style="--sc:' + c.color + '">' +
-      '<span class="ot-av">' + esc(initials(p.name)) + '</span>' +
+      av +
       '<span class="ot-who"><span class="ot-l1">' + esc(p.name) + tags + '</span>' +
       '<span class="ot-l2">' + esc(role) + '</span>' +
       '<span class="ot-l3">' + loc + fre + leadchip + '</span></span></button>';

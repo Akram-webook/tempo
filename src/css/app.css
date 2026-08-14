@@ -2814,7 +2814,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 
 /* card */
 .ot-card{display:flex;gap:9px;align-items:flex-start;padding:8px 9px;border-radius:8px;background:var(--ot-l1);border:1px solid var(--ot-border);position:relative;overflow:hidden;width:100%;text-align:start}
-.ot-card .ot-av{width:26px;height:26px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:10px;line-height:1;font-weight:700;background:var(--ot-avatar);color:var(--ot-secondary)}
+.ot-card .ot-av{width:26px;height:26px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:10px;line-height:1;font-weight:700;background:var(--ot-avatar);color:var(--ot-secondary);position:relative;overflow:hidden}
+.ot-av-pic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .ot-who{min-width:0;flex:1}
 .ot-l1{display:flex;align-items:center;gap:6px;font-size:13px;line-height:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ot-l2{font-size:11px;line-height:15px;color:var(--ot-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
