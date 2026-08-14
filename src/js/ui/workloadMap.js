@@ -35,7 +35,13 @@
   // structure without the canvas filling with every specialist. Rule: a node is collapsed
   // only if its OWN level is Sr. Manager (rank 1) or below — so its reports (rank >= 2)
   // stay hidden; anyone above Sr. Manager (Director / C-level) renders expanded.
+  // Below this size there's nothing to hide: collapsing a small org just strands one
+  // card in a huge canvas (dead space). Expand everything so the whole team reads at a
+  // glance; the Sr.-Manager collapse rule only kicks in once the org is big enough that
+  // expanding it all would be noisy. (Balanced negative space, NN/g.)
+  const SMALL_ORG = 14;
   function defaultCollapsed(people) {
+    if (people.length <= SMALL_ORG) return {};   // small org → fully expanded, no dead space
     const hasKids = {};
     people.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
     const LV = WP.data.LEVELS;
@@ -470,7 +476,17 @@
     ];
     const periodItems = ['day', 'week', 'month', 'year'].map(function (k) {
       return { val: k, label: t(k), sel: k === win };
-    });
+    }).concat([{ val: 'custom', label: t('mapRangeCustom'), sel: win === 'custom' }]);
+    // Custom range → native From/To date pickers (real date filtering) in place of
+    // the prev/next/today navigator, which is meaningless for an arbitrary window.
+    const customRangeHTML = function () {
+      return '<div class="map-custom" role="group" aria-label="' + WP.ui.esc(t('mapRangeCustom')) + '">' +
+        '<label class="map-custom-l">' + WP.ui.esc(t('salesFrom')) + '</label>' +
+        '<input type="date" class="map-date" data-cfrom value="' + WP.ui.esc(WP.state.customFrom || '') + '" aria-label="' + WP.ui.esc(t('salesFrom')) + '"/>' +
+        '<label class="map-custom-l">' + WP.ui.esc(t('salesTo')) + '</label>' +
+        '<input type="date" class="map-date" data-cto value="' + WP.ui.esc(WP.state.customTo || '') + '" aria-label="' + WP.ui.esc(t('salesTo')) + '"/>' +
+      '</div>';
+    };
     // Density toggle (progressive disclosure) — DEFAULT compact. Only meaningful for the
     // tree; the list view has its own columns, so we don't show a redundant control there.
     const densityItems = [
@@ -480,8 +496,8 @@
     const toggle = '<div class="toolbar">' +
       ddMenu('view-dd', listMode ? 'list' : 'tree', listMode ? t('listView') : t('treeView'), viewItems) +
       (listMode ? '' : ddMenu('density-dd', density === 'compact' ? 'grid' : 'panel', density === 'compact' ? t('densityCompact') : t('densityDetailed'), densityItems)) +
-      ddMenu('period-dd', null, t(win), periodItems) +
-      dateNav(win, WP.state.refDate) +
+      ddMenu('period-dd', null, win === 'custom' ? t('mapRangeCustom') : t(win), periodItems) +
+      (win === 'custom' ? customRangeHTML() : dateNav(win, WP.state.refDate)) +
     '</div>';
 
     const legend = '';   // capacity-band legend removed (kept simple, per the tree redesign)
@@ -491,7 +507,7 @@
     const body = people.length === 0
       ? '<div class="map-empty">' + WP.ui.icon('users', 18) + ' <span>' + t('emptyTeam') + '</span>' +
           (focusPerson ? ' <button class="btn" id="empty-showall">' + t('showAll') + '</button>' : '') + '</div>'
-      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap).replace('class="tree-scroll"', 'class="tree-scroll' + animCls + (focusPerson ? ' is-focused' : '') + '"'));
+      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap).replace('class="tree-scroll"', 'class="tree-scroll' + animCls + (focusPerson ? ' is-focused' : '') + (base.length <= SMALL_ORG ? ' tree-scroll--snug' : '') + '"'));
     // FOCUS MODE: the breadcrumb (the #45 component) carries the way back. When focused,
     // the "People & workload" crumb becomes a link that restores the whole org ("Back to
     // Organization"); the focused team is the current page. Wired below via a capture-phase
@@ -606,7 +622,27 @@
     // compact toolbar dropdowns (View · Density · Period)
     setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });
     setupMenu(root, 'density-dd', function (v) { density = (v === 'detailed') ? 'detailed' : 'compact'; saveDensity(density); render(root); });
-    setupMenu(root, 'period-dd', function (v) { WP.setState({ window: v }); });
+    setupMenu(root, 'period-dd', function (v) {
+      if (v === 'custom' && (!WP.state.customFrom || !WP.state.customTo)) {
+        // Seed with the current month (matches what 'month' showed) so the switch is
+        // never an empty/broken window; the user then narrows/widens via the pickers.
+        const r = new Date((WP.state.refDate || todayISO()) + 'T00:00:00Z');
+        const from = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth(), 1)).toISOString().slice(0, 10);
+        const to = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).toISOString().slice(0, 10);
+        WP.setState({ window: v, customFrom: from, customTo: to });
+      } else { WP.setState({ window: v }); }
+    });
+    // Custom From/To date pickers — normalize inverted picks by swapping, so the
+    // window and the two inputs always stay consistent (the engine also swaps).
+    const cFrom = root.querySelector('[data-cfrom]');
+    const cTo = root.querySelector('[data-cto]');
+    function commitCustom(nextFrom, nextTo) {
+      let f = nextFrom || WP.state.customFrom, to = nextTo || WP.state.customTo;
+      if (f && to && f > to) { const tmp = f; f = to; to = tmp; }   // ISO strings sort lexically
+      WP.setState({ customFrom: f, customTo: to });
+    }
+    if (cFrom) cFrom.onchange = function () { if (cFrom.value) commitCustom(cFrom.value, null); };
+    if (cTo) cTo.onchange = function () { if (cTo.value) commitCustom(null, cTo.value); };
     closeMenusOnOutside(root);
     const esa = root.querySelector('#empty-showall');
     if (esa) esa.onclick = function () { setFocus(root, null); };

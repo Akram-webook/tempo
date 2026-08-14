@@ -12,6 +12,13 @@
     return (typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1200) < 821;
   })();
   function persistNav() { try { localStorage.setItem('tempo_nav', navClosed ? '1' : '0'); } catch (e) {} }
+  // Admin section collapse (Hick's Law — secondary/admin actions tucked behind
+  // one click). Default: collapsed, so the first scan shows only primary items.
+  let navAdminOpen = (function () {
+    try { const v = localStorage.getItem('tempo_nav_admin'); if (v != null) return v === '1'; } catch (e) {}
+    return false;
+  })();
+  function persistNavAdmin() { try { localStorage.setItem('tempo_nav_admin', navAdminOpen ? '1' : '0'); } catch (e) {} }
   function applyNav() {
     document.body.classList.toggle('nav-closed', navClosed);
     const tg = document.getElementById('nav-toggle');
@@ -35,11 +42,11 @@
 
     // primary navigation (vertical sidebar) — role-aware
     const nav = [
-      { id: 'dashboard',   routes: ['dashboard'],      icon: 'gauge',     label: t('navDashboard') },
-      { id: 'map',         routes: ['map', 'profile'], icon: 'users',     label: t('navHome') },
-      { id: 'me',          routes: ['me'],             icon: 'target',    label: t('myProgress') },
-      { id: 'evaluations', routes: ['evaluations', 'evaluation', 'upward'], icon: 'chart', label: t('evaluationsHub') },
-      { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks') },
+      { id: 'dashboard',   routes: ['dashboard'],      icon: 'gauge',     label: t('navDashboard'),  group: 'overview' },
+      { id: 'map',         routes: ['map', 'profile'], icon: 'users',     label: t('navHome'),       group: 'work' },
+      { id: 'me',          routes: ['me'],             icon: 'target',    label: t('myProgress'),    group: 'work' },
+      { id: 'evaluations', routes: ['evaluations', 'evaluation', 'upward'], icon: 'chart', label: t('evaluationsHub'), group: 'people' },
+      { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks'),    group: 'work' },
       // "Components" (WBK design-system showcase) is a dev/design reference, not an
       // operational surface - kept reachable at route 'library' but OFF the sidebar
       // to reduce nav noise. Re-add the { id:'library', ... } entry here to restore.
@@ -49,18 +56,18 @@
     // (WP.execDeckVisible). Sits right under the dashboard as a first-class
     // director entry point. Renders nothing otherwise. See src/js/ui/exec.js.
     if (WP.execDeckVisible && WP.execDeckVisible()) {
-      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execStatus') });
+      nav.splice(1, 0, { id: 'exec', routes: ['exec'], icon: 'chart', label: t('execStatus'), group: 'overview' });
     }
     // Wellbeing relief view — only for people who manage someone (line managers,
     // directors, super-admin). Never shown to peers (guardrail, Constitution II).
     if (WP.wellbeing && WP.wellbeing.canView(viewer)) {
-      nav.splice(4, 0, { id: 'wellbeing', routes: ['wellbeing'], icon: 'sprout', label: t('navWellbeing') });
+      nav.splice(4, 0, { id: 'wellbeing', routes: ['wellbeing'], icon: 'sprout', label: t('navWellbeing'), group: 'people' });
     }
     // Fairness / Overload Radar — team-balance support view. Director / super-admin
     // see across teams; a line manager sees only their own team. Never peer- or
     // employee-facing as a judgment (guardrail, Constitution II).
     if (WP.fairness && WP.fairness.canView(viewer)) {
-      nav.splice(5, 0, { id: 'fairness', routes: ['fairness'], icon: 'tree', label: t('navFairness') });
+      nav.splice(5, 0, { id: 'fairness', routes: ['fairness'], icon: 'tree', label: t('navFairness'), group: 'people' });
     }
     if (canManage) {
       // Weekly Intelligence Report — retired from the nav (2026-07 review): it is
@@ -70,20 +77,59 @@
       // nav.push({ id: 'weekly', routes: ['weekly'], icon: 'chart', label: t('navWeekly') });
       // Org capability (P6) — director/admin only, aggregated + k-anonymized. The
       // view re-checks the gate (defence in depth). Never people, never a ranking.
-      nav.push({ id: 'org', routes: ['org'], icon: 'tree', label: t('navOrg') });
-      nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle') });
+      nav.push({ id: 'org', routes: ['org'], icon: 'tree', label: t('navOrg'), group: 'people' });
+      // Organisation Tree — real Event Operations roster (names + reporting lines).
+      // Personal data, so director/admin only, like the views above. The view
+      // re-checks WP.ui.orgTree.canView (defence in depth).
+      nav.push({ id: 'orgtree', routes: ['orgtree'], icon: 'tree', label: t('navOrgTree'), group: 'people' });
+      // Events Sales — director/admin reporting (total events, per-client sports
+      // vs entertainment, cashless + on-ground revenue, anti-fraud). The view
+      // re-checks WP.sales.canView (defence in depth).
+      nav.push({ id: 'sales', routes: ['sales'], icon: 'chart', label: t('navSales'), group: 'business' });
+      nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle'), group: 'admin' });
       // Admins — create + invite admin accounts. Super Admin only (manageAdmins cap).
-      if (WP.can('manageAdmins')) nav.push({ id: 'admins', routes: ['admins'], icon: 'users', label: t('navAdmins') });
-      nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings') });
+      if (WP.can('manageAdmins')) nav.push({ id: 'admins', routes: ['admins'], icon: 'users', label: t('navAdmins'), group: 'admin' });
+      nav.push({ id: 'settings',    routes: ['settings'],    icon: 'settings', label: t('settings'), group: 'admin' });
     }
     // MVP flag: drop the deferred nav entries (library/weekly/wellbeing/
     // fairness/org). One line returns them — WP.deferred() is false when
     // mvp is off. Nothing is removed from `nav` permanently.
     const visibleNav = nav.filter(function (n) { return !WP.deferred(n.id); });
-    const navHTML = visibleNav.map(function (n) {
+    // Group the flat list into labeled sections (Hick's Law: fewer choices to
+    // scan at first glance). Items keep their group; any without one fall into
+    // 'overview'. The Admin group is collapsible (secondary actions, one click).
+    const GROUPS = [
+      { id: 'overview', label: t('navGrpOverview') },
+      { id: 'work',     label: t('navGrpWork') },
+      { id: 'people',   label: t('navGrpPeople') },
+      { id: 'business', label: t('navGrpBusiness') },
+      { id: 'admin',    label: t('navGrpAdmin'), collapsible: true },
+    ];
+    const itemHTML = function (n) {
       const active = n.routes.indexOf(route) >= 0 ? ' active' : '';
       const cur = active ? ' aria-current="page"' : '';
       return '<button type="button" class="nav-item' + active + '" data-go="' + n.id + '"' + cur + '>' + ic(n.icon) + '<span>' + n.label + '</span></button>';
+    };
+    const navHTML = GROUPS.map(function (g) {
+      const items = visibleNav.filter(function (n) { return (n.group || 'overview') === g.id; });
+      if (!items.length) return '';
+      // Does the active route live in this group? Force-open a collapsed Admin
+      // group when the user is on one of its pages, so the active item is visible.
+      const hasActive = items.some(function (n) { return n.routes.indexOf(route) >= 0; });
+      if (g.collapsible) {
+        const open = navAdminOpen || hasActive;
+        return '<div class="nav-group nav-group--collapsible' + (open ? ' is-open' : '') + '" data-nav-group="' + g.id + '">' +
+          '<button type="button" class="nav-group-h nav-group-toggle" data-nav-toggle="' + g.id + '"' +
+            ' aria-expanded="' + (open ? 'true' : 'false') + '">' +
+            '<span>' + g.label + '</span>' + '<span class="ar ' + (open ? 'ar-up' : 'ar-dn') + ' nav-group-caret"></span>' +
+          '</button>' +
+          '<div class="nav-group-items">' + items.map(itemHTML).join('') + '</div>' +
+        '</div>';
+      }
+      return '<div class="nav-group" data-nav-group="' + g.id + '">' +
+        '<div class="nav-group-h">' + g.label + '</div>' +
+        '<div class="nav-group-items">' + items.map(itemHTML).join('') + '</div>' +
+      '</div>';
     }).join('');
 
     // account dropdown (bottom of sidebar, opens upward)
@@ -150,6 +196,19 @@
       WP.setState({ route: id, selectedId: null });
     }
     bar.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { go(b.dataset.go); }; });
+    // Collapsible group toggle (Admin) — flips + remembers, no navigation. Toggles
+    // classes in place (no full re-render) so it stays snappy and keyboard-usable.
+    bar.querySelectorAll('[data-nav-toggle]').forEach(function (b) {
+      b.onclick = function (e) {
+        e.stopPropagation();
+        navAdminOpen = !navAdminOpen; persistNavAdmin();
+        const grp = b.closest('.nav-group');
+        if (grp) grp.classList.toggle('is-open', navAdminOpen);
+        b.setAttribute('aria-expanded', navAdminOpen ? 'true' : 'false');
+        const caret = b.querySelector('.nav-group-caret');
+        if (caret) { caret.classList.toggle('ar-up', navAdminOpen); caret.classList.toggle('ar-dn', !navAdminOpen); }
+      };
+    });
     const bh = appbar.querySelector('#brand-home');
     if (bh) bh.onclick = function () { go('dashboard'); };
     const a = bar.querySelector('#assign');
@@ -202,6 +261,8 @@
     if (route === 'activity' && !WP.can('manageAdmins')) return 'map';
     if (route === 'admins' && !WP.can('manageAdmins')) return 'map';
     if (route === 'exec' && !(WP.execDeckVisible && WP.execDeckVisible())) return 'dashboard';
+    if (route === 'sales' && !(WP.sales && WP.sales.canView(WP.viewer && WP.viewer()))) return 'dashboard';
+    if (route === 'orgtree' && !(WP.ui.orgTree && WP.ui.orgTree.canView(WP.viewer && WP.viewer()))) return 'dashboard';
     return route;
   }
 
@@ -243,6 +304,8 @@
     else if (route === 'settings') WP.ui.settings.render(root);
     else if (route === 'activity') WP.ui.activity.render(root);
     else if (route === 'exec') WP.ui.exec.render(root);
+    else if (route === 'sales') WP.ui.sales.render(root);
+    else if (route === 'orgtree') WP.ui.orgTree.render(root);
     else if (route === 'daily') WP.ui.dailyTasks.render(root);
     else if (route === 'permissions') WP.ui.permissions.render(root);
     else if (route === 'evaluation') WP.ui.evaluation.render(root);

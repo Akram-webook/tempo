@@ -51,5 +51,33 @@ checks.forEach(([name, got, exp]) => {
   delete WP.data.EVENTS.e_badtier; delete WP.data.EVENTS.e_goodtier;
 })();
 
+// Regression: custom from→to window (workload-map date filter). Bounds come from
+// WP.state; the range reads as an average monthly load (divisor = months spanned).
+// Chaos cases that once could break it: inverted bounds, and missing/invalid bounds.
+(function customWindow() {
+  const eq = (name, got, exp) => { const ok = got === exp; if (!ok) failed++; console.log((ok ? 'PASS' : 'FAIL') + '  ' + name + '  → ' + got + (ok ? '' : ' (expected ' + exp + ')')); };
+  const D = (y, mo, d) => Date.UTC(y, mo, d);
+  // A single calendar month → divisor 1, exact bounds.
+  WP.state = { customFrom: '2026-06-01', customTo: '2026-06-30' };
+  let b = WP.capacity.windowBounds('custom', ref);
+  eq('custom: start bound', b.start, D(2026, 5, 1));
+  eq('custom: end bound', b.end, D(2026, 5, 30));
+  eq('custom: ~1 month → divisor 1', b.divisor, 1);
+  // Inverted bounds (To before From) must SWAP, not break.
+  WP.state = { customFrom: '2026-06-30', customTo: '2026-06-01' };
+  b = WP.capacity.windowBounds('custom', ref);
+  eq('custom inverted: swapped start', b.start, D(2026, 5, 1));
+  eq('custom inverted: swapped end', b.end, D(2026, 5, 30));
+  // A 3-month span → divisor 3 (averaged).
+  WP.state = { customFrom: '2026-04-01', customTo: '2026-06-30' };
+  eq('custom 3-month → divisor 3', WP.capacity.windowBounds('custom', ref).divisor, 3);
+  // Missing/invalid bounds → safe fallback to the month window (never NaN/broken).
+  WP.state = {};
+  const fb = WP.capacity.windowBounds('custom', ref), mo = WP.capacity.windowBounds('month', ref);
+  eq('custom no-bounds → month fallback (start)', fb.start, mo.start);
+  eq('custom no-bounds → month fallback (end)', fb.end, mo.end);
+  WP.state = undefined;
+})();
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'ALL PASS'));
 process.exit(failed ? 1 : 0);

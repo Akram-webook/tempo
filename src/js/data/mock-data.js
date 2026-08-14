@@ -130,10 +130,21 @@
     p_rana: 'rachel.salomon@example.com', p_rosa: 'rosa.anders@example.com', p_altahini: 'martin.thatcher@example.com',
     p_meshalA: 'miles.sanders@example.com', p_raghdaa: 'regina@example.com',
   };
+  // Real company-domain sign-in aliases (in addition to the demo @example.com
+  // directory above). Lets the actual owner sign in with their @webook.com email
+  // while the fake demo accounts keep working for tests/screenshots. Akram is the
+  // Super Admin (same account as p_akram / "Adam Foster" in the demo directory).
+  const EMAIL_ALIASES = {
+    'akram@webook.com': 'p_akram',
+  };
   // build.js injects `const EMAIL_HASHES = {...}` and removes the EMAILS literal for the
   // public bundle. In dev/tests EMAILS is present and EMAIL_HASHES is absent; guard both.
   const HAS_PLAINTEXT = typeof EMAILS !== 'undefined';
   const HASHES = (typeof EMAIL_HASHES !== 'undefined') ? EMAIL_HASHES : null;
+  // Aliases mirror the same dev-plaintext / built-hash split as EMAILS above, so no
+  // real @webook.com address ships in the public bundle (build.js hashes the keys).
+  const HAS_ALIASES = typeof EMAIL_ALIASES !== 'undefined';
+  const ALIAS_HASHES = (typeof EMAIL_ALIAS_HASHES !== 'undefined') ? EMAIL_ALIAS_HASHES : null;
   PEOPLE.forEach(function (p) {
     // Only attach the plaintext address in dev/unbuilt runs. The public bundle ships hashes
     // only, so p.email stays undefined there — sign-in resolves via emailToId() (hash match).
@@ -148,12 +159,14 @@
   function emailToId(email) {
     const e = String(email || '').trim().toLowerCase();
     if (!e) return null;
+    if (HAS_ALIASES && EMAIL_ALIASES[e]) return EMAIL_ALIASES[e];
     if (HAS_PLAINTEXT) {
       for (const id in EMAILS) { if (EMAILS[id].toLowerCase() === e) return id; }
     }
-    if (HASHES && WP.sha256) {
-      const h = WP.sha256(EMAIL_SALT + e);
-      for (const id in HASHES) { if (HASHES[id] === h) return id; }
+    const hash = (ALIAS_HASHES || HASHES) && WP.sha256 ? WP.sha256(EMAIL_SALT + e) : null;
+    if (ALIAS_HASHES && hash && ALIAS_HASHES[hash]) return ALIAS_HASHES[hash];
+    if (HASHES && hash) {
+      for (const id in HASHES) { if (HASHES[id] === hash) return id; }
     }
     return null;
   }

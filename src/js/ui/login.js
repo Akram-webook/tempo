@@ -20,6 +20,13 @@
   // directory). Go-live (G2) sets WP.config.authDomain to the real company domain
   // - one config line, no code change. Reversible.
   const DOMAIN = (WP.config && WP.config.authDomain) || 'example.com';
+  // Every domain allowed to sign in: the primary authDomain plus any extras
+  // (e.g. the real company @webook.com). A bare "name" (no @) still defaults to
+  // the primary DOMAIN; a full address must match one of these.
+  function allowedDomains() {
+    const extra = (WP.config && WP.config.authDomainsExtra) || [];
+    return [DOMAIN].concat(extra).map(function (d) { return String(d).toLowerCase(); });
+  }
 
   function emailOf(p) {
     if (p && p.email) return p.email;
@@ -30,7 +37,7 @@
     if (!email) return { error: 'errNoAccount' };
     if (email.indexOf('@') < 0) email += '@' + DOMAIN;
     const domain = email.slice(email.indexOf('@') + 1);
-    if (domain !== DOMAIN) return { error: 'errBadDomain' };
+    if (allowedDomains().indexOf(domain) < 0) return { error: 'errBadDomain' };
     // Resolve via the data layer, which matches plaintext (dev) OR salted hashes (public
     // bundle) — so no real address list ships in dist. Falls back to a p.email scan only if
     // the resolver is unavailable (older data module).

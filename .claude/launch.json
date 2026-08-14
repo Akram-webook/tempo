@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tempo-local",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["tools/local-server.js", "--port", "4000", "--no-build"],
+      "port": 4000
+    }
+  ]
+}

@@ -134,7 +134,7 @@
   // Persist the session so a reload keeps you signed in and on the same page
   // (no re-login after every update). Safe if storage is unavailable.
   // NOTE: refDate is intentionally NOT saved — every load defaults to TODAY (active by default).
-  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId', 'prefs'];
+  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId', 'prefs', 'customFrom', 'customTo'];
   const NEEDS_SELECTION = { profile: 1, evaluation: 1, upward: 1 };
   (function restore() {
     try {

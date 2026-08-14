@@ -785,6 +785,23 @@ main.full-bleed { max-width: none; }
 .sb-nav { display: flex; flex-direction: column; gap: 2px; }
 .sb-nav .nav-item { width: 100%; justify-content: flex-start; }
 .sb-nav .nav-item span { display: inline; }
+
+/* Grouped nav (Hick's Law) — labeled sections chunk the flat list. */
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-group + .nav-group { margin-top: 10px; }
+.nav-group-h { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-muted); padding: 4px 12px; }
+.nav-group-items { display: flex; flex-direction: column; gap: 2px; }
+/* Collapsible Admin section — header is a real button; caret reflects state. */
+.nav-group-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; border: 0; background: transparent; cursor: pointer; font: inherit; text-align: start; }
+.nav-group-toggle:hover { color: var(--text-secondary); }
+.nav-group-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); border-radius: var(--radius-sm); }
+.nav-group-caret { opacity: .6; margin-inline-end: 2px; }
+/* Collapsed by default: hide the items unless the group carries .is-open. */
+.nav-group--collapsible .nav-group-items { display: none; }
+.nav-group--collapsible.is-open .nav-group-items { display: flex; }
+
 .nav-backdrop { display: none; }
 
 /* Desktop: the sidebar PUSHES the content (Claude-style), animating its width.
@@ -1147,6 +1164,19 @@ button.flame:focus-visible { outline: 2px solid var(--state-overloaded); outline
   max-height: calc(100vh - 96px);   /* bound the height so a tall/expanded tree scrolls instead of clipping */
   display: flex; align-items: safe center; justify-content: safe center;    /* safe center → top stays reachable when the tree overflows */
 }
+/* Custom range date pickers in the map toolbar. */
+.map-custom { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.map-custom-l { font-size: 12px; color: var(--text-muted); }
+.map-date { font: inherit; font-size: 13px; padding: 5px 9px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); border-radius: var(--radius-sm); cursor: pointer;
+  color-scheme: light dark; }
+.map-date:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); border-color: var(--brand); }
+
+/* Small org → don't reserve a full-viewport canvas for a handful of cards (that
+   left one card stranded in a sea of black). Snug height sized to the content,
+   top-aligned so the spine starts near the controls. Big orgs keep the tall,
+   pannable canvas above. (Balanced negative space, NN/g.) */
+.tree-scroll--snug { min-height: 0; max-height: none; align-items: start; padding-top: 8px; }
 .tree-scroll.panning { cursor: grabbing; }                       /* active pan = closed fist */
 .tree-scroll.panning, .tree-scroll.panning * { cursor: grabbing !important; user-select: none; }
 
@@ -2790,6 +2820,211 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 @keyframes fbSpin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .fb-spin { animation: none; } }
 
+/* ============================================================
+ * Events Sales (director dashboard) — token-driven, RTL-safe, theme-aware.
+ * Charts are hand-built SVG/CSS (no chart library — architecture lock).
+ * ========================================================== */
+.sales-sec-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.sales-sec-head h3 { margin: 0; }
+.sales-sec-head .sub { margin: 0; }
+
+/* Filter bar — drives every panel. */
+.sales-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow); }
+.sales-fgroup { display: flex; align-items: center; gap: 8px; }
+.sales-flabel { font-size: 12px; color: var(--text-muted); }
+/* Thin divider grouping the period/date controls from category+client. */
+.sales-fsep { width: 1px; align-self: stretch; min-height: 24px; background: var(--border); margin: 0 2px; }
+@media (max-width: 640px) { .sales-fsep { display: none; } }
+.sales-seg { display: inline-flex; align-items: center; gap: 2px; padding: 2px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px; }
+.sales-seg-btn { font: inherit; font-size: 13px; padding: 5px 12px; border: 0; background: transparent;
+  color: var(--text-secondary); border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.sales-seg-btn:hover { color: var(--text); }
+.sales-seg-btn.is-on { background: var(--brand); color: var(--brand-contrast); }
+.sales-select { font: inherit; font-size: 13px; padding: 6px 10px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); border-radius: var(--radius-sm); cursor: pointer; max-width: 220px; }
+/* Reset flows right after the controls (not stranded on its own row). It sits
+   left of the divider margin so the bar stays a single ~64px row when it fits,
+   and wraps tidily under the controls — no empty band — when it doesn't. */
+.sales-reset { margin-inline-start: 4px; display: inline-flex; align-items: center; gap: 5px; font: inherit;
+  font-size: 13px; padding: 6px 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
+  border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.sales-reset:hover { border-color: var(--brand); color: var(--text); }
+
+/* KPI row — reuses .card; carries a trend delta. Four even cards that fill the
+   row and step 4 → 2 → 1 (never 3+1), so there's no orphan card / dead band.
+   The doubled class outweighs the global `main .metrics` cap so cards fill 1fr. */
+.sales-kpis { grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); }
+.sales-kpis.sales-kpis--4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 980px) { .sales-kpis.sales-kpis--4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .sales-kpis.sales-kpis--4 { grid-template-columns: 1fr; } }
+/* Compact month selects for the custom range. */
+.sales-select--sm { max-width: 150px; }
+/* Fit the big number inside its card: the delta wraps under it instead of
+   overflowing and being clipped by the neighbouring card's background. */
+.sales-kpis .value { font-size: 25px; line-height: 1.15; display: flex; flex-wrap: wrap;
+  align-items: baseline; column-gap: 8px; row-gap: 2px; overflow-wrap: anywhere; }
+.sales-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700;
+  vertical-align: middle; }
+.sales-delta.is-up { color: var(--state-positive); }
+.sales-delta.is-down { color: var(--state-negative); }
+.sales-delta.is-down svg { transform: rotate(180deg); }
+
+/* Auto-insight strip — plain-language read of the numbers. Mirrors the KPI
+   rhythm: 4 → 2 → 1 across breakpoints, so it never leaves an orphan card. */
+.sales-insights { display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 22px; }
+@media (max-width: 980px) { .sales-insights { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .sales-insights { grid-template-columns: 1fr; } }
+.sales-ins { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; box-shadow: var(--shadow); border-inline-start: 3px solid var(--brand);
+  display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sales-ins-k { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); }
+.sales-ins-h { font-size: 20px; font-weight: 700; display: flex; align-items: baseline; flex-wrap: wrap;
+  column-gap: 8px; row-gap: 2px; min-width: 0; }
+.sales-ins-h .sales-delta { font-size: 20px; }
+.sales-ins-h-t { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+.sales-ins-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.sales-ins-s { font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.sales-ins-share { font-weight: 600; color: var(--text); }
+.sales-tag { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+.sales-tag.is-warn { color: var(--state-negative); background: var(--state-negative-bg, transparent); border-color: var(--state-negative); }
+.sales-tag.is-ok { color: var(--state-positive); background: var(--state-positive-bg, transparent); border-color: var(--state-positive); }
+
+/* Empty state — a filter combination with no matching sales. */
+.sales-empty { display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 8px; padding: 40px 20px; }
+.sales-empty svg { color: var(--text-muted); margin-bottom: 4px; }
+.sales-empty h3 { margin: 0; }
+.sales-empty p { margin: 0; color: var(--text-secondary); max-width: 40ch; }
+.sales-empty .sales-reset { margin-top: 8px; }
+
+/* Trend peak / low markers. */
+.sales-mark { stroke-width: 2; }
+.sales-mark-lb { fill: var(--brand-text); font-size: 11px; font-weight: 700; }
+.sales-mark-lb--low { fill: var(--text-muted); font-weight: 600; }
+
+/* Trend chart (inline SVG area + line). */
+.sales-metric { margin-inline-start: auto; }
+.sales-svg { display: block; width: 100%; height: auto; }
+.sales-grid-line { stroke: var(--border); stroke-width: 1; }
+.sales-ax-x, .sales-ax-y { fill: var(--text-muted); font-size: 11px; }
+.sales-ax-x { text-anchor: middle; }
+.sales-ax-y { text-anchor: end; }
+.sales-area { fill-opacity: 0.14; }
+.sales-line { stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.sales-pt { stroke: var(--surface); stroke-width: 1.5; }
+
+/* Donuts (share). */
+.sales-donuts { display: flex; flex-direction: column; gap: 14px; }
+.sales-donutcard { margin-bottom: 0; }
+.sales-donutwrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.sales-donut { width: 128px; height: 128px; flex: none; }
+.sales-donut-seg { transition: stroke-dashoffset .4s ease; }
+.sales-lg-list { display: flex; flex-direction: column; gap: 12px; flex: 1 1 150px; min-width: 0; }
+/* Label over value (dot spanning both) — never overflows the card in the
+   narrow right-column layout, where a single label+value line would clip. */
+.sales-lgrow { display: grid; grid-template-columns: 12px 1fr; column-gap: 9px; row-gap: 1px;
+  align-items: baseline; font-size: 14px; min-width: 0; }
+.sales-lgrow-l { grid-column: 2; color: var(--text-secondary); }
+.sales-lgrow-v { grid-column: 2; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sales-dot { grid-row: 1 / span 2; align-self: center; width: 12px; height: 12px; border-radius: 4px; flex: none; }
+
+/* Top clients — horizontal bar ranking. */
+.sales-tc { display: flex; flex-direction: column; gap: 12px; }
+.sales-tc-row { display: grid; grid-template-columns: minmax(110px, 190px) 1fr auto; align-items: center; gap: 12px; }
+.sales-tc-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sales-tc-track { position: relative; height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.sales-tc-fill { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 999px; transition: width .4s ease; }
+.sales-tc-val { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-secondary); }
+
+/* Category badges in the per-client table. */
+.sales-cat-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid transparent; }
+.sales-cat-badge--info { color: var(--state-info); background: var(--state-info-bg); border-color: var(--state-info); }
+.sales-cat-badge--brand { color: var(--brand-text); background: var(--brand-soft); border-color: var(--brand); }
+.sales-org-nm { font-weight: 600; }
+
+/* Anti-fraud. */
+.sales-fraud-rates { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 16px; }
+.sales-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+  padding: 6px 12px; border: 1px solid var(--border); background: var(--surface-2); border-radius: 999px;
+  font-variant-numeric: tabular-nums; }
+.sales-pill-k { color: var(--text-muted); font-weight: 500; }
+.sales-tr-total td { font-weight: 700; border-top: 2px solid var(--border); }
+.sales-note { font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+
+@media (max-width: 640px) {
+  .sales-tc-row { grid-template-columns: 1fr auto; }
+  .sales-tc-track { grid-column: 1 / -1; order: 3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sales-donut-seg, .sales-tc-fill { transition: none; }
+}
+
+/* ============================================================
+ * Organisation Tree (Event Operations) — webook brand v2.0
+ * ========================================================== */
+.otree-view .otc-stats { grid-template-columns: repeat(3, minmax(120px, 220px)); justify-content: start; }
+.otc-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 4px 0 18px; }
+.otc-search { position: relative; flex: 1 1 240px; max-width: 360px; display: flex; align-items: center; }
+.otc-search svg { position: absolute; inset-inline-start: 12px; color: var(--text-muted); }
+.otc-search input { width: 100%; font: inherit; font-size: 14px; padding: 9px 14px 9px 36px; padding-inline-start: 36px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; outline: none; }
+.otc-search input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.otc-legend { display: flex; gap: 15px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-inline-start: auto; }
+.otc-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-inline-end: 6px; vertical-align: -1px; }
+.otc-lg-lead { background: var(--brand); }
+.otc-lg-new { background: var(--state-notice); }
+.otc-lg-open { background: transparent; border: 1.5px dashed var(--text-muted); }
+
+.otc-exec { display: flex; flex-direction: column; align-items: center; margin-bottom: 4px; }
+.otc-exec .otc-card { width: min(360px, 92%); }
+.otc-drop { width: 2px; height: 16px; background: var(--border); }
+
+.otc-scroll { overflow-x: auto; padding: 10px 2px 6px; }
+.otc-board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(232px, 1fr); gap: 16px; align-items: start; min-width: min-content; }
+@media (max-width: 1100px) { .otc-board { grid-auto-columns: minmax(226px, 280px); } }
+.otc-col { display: flex; flex-direction: column; gap: 10px; position: relative; padding-top: 14px; }
+.otc-col::before { content: ""; position: absolute; top: 0; left: 50%; width: 2px; height: 14px; background: var(--border); }
+.otc-head { text-align: center; font-weight: 800; font-size: 13px; letter-spacing: .04em; text-transform: uppercase;
+  border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); background: var(--cat); color: var(--cat-ink, #000);
+  border: 1px solid rgba(255,255,255,.10); }
+
+.otc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm, 10px);
+  padding: 11px 12px; display: flex; gap: 11px; align-items: center; box-shadow: var(--shadow); position: relative;
+  transition: transform .12s ease, border-color .12s ease, opacity .12s ease; }
+.otc-card:hover { transform: translateY(-1px); }
+.otc-av { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 800; font-size: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.otc-who { min-width: 0; }
+.otc-nm { font-weight: 700; font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.otc-rl { font-size: 11.5px; color: var(--text-muted); line-height: 1.25; margin-top: 2px; }
+
+.otc-card.is-lead { border-color: color-mix(in srgb, var(--brand) 42%, transparent); }
+.otc-card.is-lead::before { content: ""; position: absolute; inset-inline-start: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--brand); }
+.otc-card.is-you { outline: 2px solid var(--brand); outline-offset: 1px; }
+.otc-you { position: absolute; top: -8px; inset-inline-end: 8px; background: var(--brand); color: var(--brand-contrast, #fff);
+  font-size: 9.5px; font-weight: 800; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
+.otc-card.is-new { border-color: rgba(255,222,0,.45); }
+.otc-card.is-new .otc-av { background: var(--state-notice) !important; color: #000; }
+.otc-tag { display: inline-block; margin-top: 3px; font-size: 9.5px; font-weight: 800; color: #000; background: var(--state-notice);
+  padding: 1px 8px; border-radius: 999px; letter-spacing: .04em; text-transform: uppercase; }
+.otc-card.is-open { border-style: dashed; background: var(--surface-2); }
+.otc-card.is-open .otc-av { background: transparent; border: 1.5px dashed var(--text-muted); color: var(--text-muted); box-shadow: none; }
+.otc-card.is-open .otc-nm { color: var(--text-muted); }
+.otc-card.is-open .otc-rl { color: var(--text-muted); }
+.otc-card.is-dim { opacity: .16; }
+.otc-col.is-faded .otc-head { opacity: .32; }
+
+.otc-sub { margin-top: 8px; border: 1px dashed var(--border); border-radius: 12px; padding: 10px; }
+.otc-sub-h { text-align: center; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--state-notice); margin: 0 0 9px; }
+.otc-sub .otc-card { margin-bottom: 8px; }
+.otc-sub .otc-card:last-child { margin-bottom: 0; }
+
+@media (prefers-reduced-motion: reduce) { .otc-card { transition: none; } }
+
 </style>
   <style>
     /* Standalone export chrome — slim header, no sidebar. Tokens only. */
@@ -3091,10 +3326,19 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   // (not a secret — it only defeats generic rainbow tables). Keep it in sync with build.js.
   const EMAIL_SALT = 'tempo:webook:v1';
 const EMAIL_HASHES = {};
+  // Real company-domain sign-in aliases (in addition to the demo @example.com
+  // directory above). Lets the actual owner sign in with their @webook.com email
+  // while the fake demo accounts keep working for tests/screenshots. Akram is the
+  // Super Admin (same account as p_akram / "Adam Foster" in the demo directory).
+const EMAIL_ALIAS_HASHES = {};
   // build.js injects `const EMAIL_HASHES = {...}` and removes the EMAILS literal for the
   // public bundle. In dev/tests EMAILS is present and EMAIL_HASHES is absent; guard both.
   const HAS_PLAINTEXT = typeof EMAILS !== 'undefined';
   const HASHES = (typeof EMAIL_HASHES !== 'undefined') ? EMAIL_HASHES : null;
+  // Aliases mirror the same dev-plaintext / built-hash split as EMAILS above, so no
+  // real @webook.com address ships in the public bundle (build.js hashes the keys).
+  const HAS_ALIASES = typeof EMAIL_ALIASES !== 'undefined';
+  const ALIAS_HASHES = (typeof EMAIL_ALIAS_HASHES !== 'undefined') ? EMAIL_ALIAS_HASHES : null;
   PEOPLE.forEach(function (p) {
     // Only attach the plaintext address in dev/unbuilt runs. The public bundle ships hashes
     // only, so p.email stays undefined there — sign-in resolves via emailToId() (hash match).
@@ -3109,12 +3353,14 @@ const EMAIL_HASHES = {};
   function emailToId(email) {
     const e = String(email || '').trim().toLowerCase();
     if (!e) return null;
+    if (HAS_ALIASES && EMAIL_ALIASES[e]) return EMAIL_ALIASES[e];
     if (HAS_PLAINTEXT) {
       for (const id in EMAILS) { if (EMAILS[id].toLowerCase() === e) return id; }
     }
-    if (HASHES && WP.sha256) {
-      const h = WP.sha256(EMAIL_SALT + e);
-      for (const id in HASHES) { if (HASHES[id] === h) return id; }
+    const hash = (ALIAS_HASHES || HASHES) && WP.sha256 ? WP.sha256(EMAIL_SALT + e) : null;
+    if (ALIAS_HASHES && hash && ALIAS_HASHES[hash]) return ALIAS_HASHES[hash];
+    if (HASHES && hash) {
+      for (const id in HASHES) { if (HASHES[id] === hash) return id; }
     }
     return null;
   }
@@ -3809,6 +4055,12 @@ const EMAIL_HASHES = {};
   // domain here - one line, no code change, reversible.
   if (WP.config.authDomain === undefined) WP.config.authDomain = 'example.com';
 
+  // Additional domains allowed to sign in alongside authDomain. Lets the real
+  // company domain (@webook.com) work on the internal pilot while the fake demo
+  // directory (@example.com) keeps functioning for tests/screenshots. login.js
+  // accepts an email whose domain is authDomain OR any entry here. Reversible.
+  if (WP.config.authDomainsExtra === undefined) WP.config.authDomainsExtra = ['webook.com'];
+
   /* ----------------------------------------------------------------
    * Executive Status — live data endpoint + deck link (both reversible).
    * ----------------------------------------------------------------
@@ -3975,6 +4227,7 @@ const EMAIL_HASHES = {};
     week:           { en: 'Week',                   ar: 'أسبوع' },
     month:          { en: 'Month',                  ar: 'شهر' },
     year:           { en: 'Year',                   ar: 'سنة' },
+    mapRangeCustom: { en: 'Custom range',           ar: 'نطاق مخصص' },
     today:          { en: 'Today',                  ar: 'اليوم' },
     prevPeriod:     { en: 'Previous',               ar: 'السابق' },
     nextPeriod:     { en: 'Next',                   ar: 'التالي' },
@@ -4532,7 +4785,7 @@ const EMAIL_HASHES = {};
     or:             { en: 'or', ar: 'أو' },
     signOut:        { en: 'Sign out', ar: 'تسجيل الخروج' },
     pickAccount:    { en: 'Or pick your account', ar: 'أو اختر حسابك' },
-    errBadDomain:   { en: 'Only @example.com emails can sign in.', ar: 'فقط إيميلات @example.com يمكنها الدخول.' },
+    errBadDomain:   { en: 'Use your @webook.com company email to sign in.', ar: 'استخدم بريد @webook.com الخاص بالعمل لتسجيل الدخول.' },
     errNoAccount:   { en: 'No account found for that email. Try “pick your account”.', ar: 'لا حساب لهذا الإيميل. جرّب «اختر حسابك».' },
     demoAuthNote:   { en: 'Prototype sign-in — no password. Your email is matched to your team profile and role.', ar: 'دخول تجريبي — بدون كلمة مرور. يُربط إيميلك بملفك ودورك في الفريق.' },
     verifyNote:     { en: 'Demo gate — your email must match a registered Workload account. To require an emailed verification code, enable Email code (see ACCESS-SETUP.md).', ar: 'بوابة تجريبية — يجب أن يطابق إيميلك حساباً مسجّلاً في التطبيق. لطلب رمز تحقق عبر الإيميل، فعّل «رمز الإيميل» (راجع ACCESS-SETUP.md).' },
@@ -4838,6 +5091,25 @@ const EMAIL_HASHES = {};
     backToGoogle:   { en: 'Back', ar: 'رجوع' },
     // — dashboard —
     navDashboard:   { en: 'Dashboard', ar: 'اللوحة' },
+    // Sidebar section headers (Hick's Law — chunk items into scannable groups).
+    navGrpOverview: { en: 'Overview', ar: 'نظرة عامة' },
+    navGrpWork:     { en: 'My work', ar: 'عملي' },
+    navGrpPeople:   { en: 'People & performance', ar: 'الأفراد والأداء' },
+    navGrpBusiness: { en: 'Business', ar: 'الأعمال' },
+    navGrpAdmin:    { en: 'Admin', ar: 'الإدارة' },
+    // Organisation Tree (Event Operations org chart page)
+    navOrgTree:     { en: 'Organisation Tree', ar: 'الهيكل التنظيمي' },
+    orgTreeTitle:   { en: 'Organisation Tree', ar: 'الهيكل التنظيمي' },
+    orgTreeSub:     { en: 'Event Operations · reporting structure and squads', ar: 'عمليات الفعاليات · هيكل التبعية والفرق' },
+    orgTreeDenied:  { en: 'This view is available to directors and admins only.', ar: 'هذا العرض متاح للمدراء والمشرفين فقط.' },
+    orgTreeYou:     { en: 'You', ar: 'أنت' },
+    orgTreeIncoming:{ en: 'Incoming', ar: 'قادم' },
+    orgTreePeople:  { en: 'People', ar: 'الأفراد' },
+    orgTreeSquads:  { en: 'Squads', ar: 'الفرق' },
+    orgTreeOpen:    { en: 'Open roles', ar: 'شواغر' },
+    orgTreeOpenRole:{ en: 'Open role (TBC)', ar: 'شاغر (لاحقًا)' },
+    orgTreeLead:    { en: 'Squad lead', ar: 'قائد الفريق' },
+    orgTreeSearch:  { en: 'Search people, squads or roles…', ar: 'ابحث عن أشخاص أو فرق أو أدوار…' },
     toggleNav:      { en: 'Show / hide menu', ar: 'إظهار / إخفاء القائمة' },
     collapseNav:    { en: 'Collapse menu', ar: 'طيّ القائمة' },
     expandNav:      { en: 'Expand menu', ar: 'فتح القائمة' },
@@ -4951,6 +5223,105 @@ const EMAIL_HASHES = {};
     rdFairDisc:     { en: 'Flags where the organisation has not invested yet — never a score, rank, or verdict on the person.', ar: 'يشير إلى ما لم تستثمر فيه المنظمة بعد — وليس درجةً أو ترتيباً أو حكماً على الشخص.' },
     rdTier1Short:   { en: 'Tier-1 delivered', ar: 'إنجازات الفئة الأولى' },
     dashFairShot:   { en: 'Fair shot due', ar: 'فرصة مستحقّة' },
+    // ---- Events Sales (director/admin reporting) ----
+    navSales:            { en: 'Sales', ar: 'المبيعات' },
+    salesTitle:          { en: 'Events Sales', ar: 'مبيعات الفعاليات' },
+    salesSubtitle:       { en: 'Events, revenue and anti-fraud across clients — sample data', ar: 'الفعاليات والإيرادات ومكافحة الاحتيال عبر العملاء — بيانات تجريبية' },
+    salesDenied:         { en: 'This section is available to directors and admins only.', ar: 'هذا القسم متاح للمدراء والمشرفين فقط.' },
+    salesRangeLabel:     { en: 'Range', ar: 'الفترة' },
+    salesRange:          { en: '{n} months', ar: '{n} أشهر' },
+    salesEventsLabel:    { en: 'events', ar: 'فعالية' },
+    salesAll:            { en: 'All', ar: 'الكل' },
+    salesClient:         { en: 'Client', ar: 'العميل' },
+    salesAllClients:     { en: 'All clients', ar: 'كل العملاء' },
+    salesReset:          { en: 'Reset', ar: 'إعادة تعيين' },
+    salesMetric:         { en: 'Metric', ar: 'المقياس' },
+    salesVsPrev:         { en: 'vs previous period', ar: 'مقارنة بالفترة السابقة' },
+    salesKpiAvg:         { en: 'Avg / event', ar: 'المعدل لكل فعالية' },
+    salesKpiClients:     { en: 'Active clients', ar: 'العملاء النشطون' },
+    salesKpiClientsSub:  { en: 'with sales this range', ar: 'لديهم مبيعات في الفترة' },
+    salesTopClients:     { en: 'Top clients', ar: 'أبرز العملاء' },
+    salesTopClientsSub:  { en: 'by revenue, this range', ar: 'حسب الإيراد، خلال الفترة' },
+    salesNoClients:      { en: 'No clients match these filters', ar: 'لا يوجد عملاء مطابقون لهذه المرشحات' },
+    // KPI cards
+    salesKpiEvents:      { en: 'Total events', ar: 'إجمالي الفعاليات' },
+    salesKpiEventsSub:   { en: '{n}/mo average', ar: 'المعدل {n} شهرياً' },
+    salesKpiRevenue:     { en: 'Total revenue', ar: 'إجمالي الإيرادات' },
+    salesKpiRevenueSub:  { en: 'across {n} clients', ar: 'عبر {n} عملاء' },
+    salesKpiCashless:    { en: 'Cashless share', ar: 'حصة الدفع الإلكتروني' },
+    salesKpiOnGround:    { en: 'On-ground share', ar: 'حصة الدفع الميداني' },
+    // Monthly trend
+    salesTrend:          { en: 'Monthly sales', ar: 'المبيعات الشهرية' },
+    salesTrendSub:       { en: 'Events sold and revenue per month', ar: 'الفعاليات المُباعة والإيرادات لكل شهر' },
+    salesTrendEvHint:    { en: 'number above each bar = events', ar: 'الرقم أعلى كل عمود = عدد الفعاليات' },
+    // Category split
+    salesCategorySplit:  { en: 'Sports vs entertainment', ar: 'الرياضة مقابل الترفيه' },
+    salesCategorySub:    { en: 'Revenue and events by category', ar: 'الإيرادات والفعاليات حسب الفئة' },
+    salesSports:         { en: 'Sports', ar: 'رياضة' },
+    salesEntertainment:  { en: 'Entertainment', ar: 'ترفيه' },
+    // Revenue mix
+    salesRevenueMix:     { en: 'Revenue mix', ar: 'مزيج الإيرادات' },
+    salesRevenueMixSub:  { en: 'Cashless vs on-ground', ar: 'الدفع الإلكتروني مقابل الميداني' },
+    salesCashless:       { en: 'Cashless', ar: 'دفع إلكتروني' },
+    salesOnGround:       { en: 'On-ground', ar: 'دفع ميداني' },
+    // Per-client table
+    salesByOrg:          { en: 'Sales by client', ar: 'المبيعات حسب العميل' },
+    salesByOrgSub:       { en: 'Per organization, this range', ar: 'لكل جهة، خلال هذه الفترة' },
+    salesSearchOrg:      { en: 'Search clients…', ar: 'ابحث عن عميل…' },
+    salesColOrg:         { en: 'Organization', ar: 'الجهة' },
+    salesColCategory:    { en: 'Category', ar: 'الفئة' },
+    salesColEvents:      { en: 'Events', ar: 'الفعاليات' },
+    salesColCashless:    { en: 'Cashless', ar: 'إلكتروني' },
+    salesColOnGround:    { en: 'On-ground', ar: 'ميداني' },
+    salesColTotal:       { en: 'Total', ar: 'الإجمالي' },
+    // Anti-fraud
+    salesFraud:          { en: 'Anti-fraud', ar: 'مكافحة الاحتيال' },
+    salesFraudSub:       { en: 'Payment screening and recovery', ar: 'فحص المدفوعات والاسترداد' },
+    salesFraudScreened:  { en: 'Transactions screened', ar: 'المعاملات المفحوصة' },
+    salesFraudScreenedSub:{ en: 'cashless transactions', ar: 'معاملات إلكترونية' },
+    salesFraudBlocked:   { en: 'Fraud blocked', ar: 'احتيال محجوب' },
+    salesFraudFlaggedSub:{ en: 'of {n} flagged', ar: 'من {n} مُشتبه' },
+    salesFraudAtRisk:    { en: 'Value at risk', ar: 'القيمة المعرّضة للخطر' },
+    salesFraudAtRiskSub: { en: 'blocked before payout', ar: 'مَحجوبة قبل الصرف' },
+    salesFraudRecovered: { en: 'Recovery rate', ar: 'نسبة الاسترداد' },
+    salesFraudRecoveredSub:{ en: '{v} recovered', ar: 'تم استرداد {v}' },
+    salesFraudBlockRate: { en: 'Block rate', ar: 'نسبة الحجب' },
+    salesFraudRate:      { en: 'Fraud rate', ar: 'معدل الاحتيال' },
+    salesFraudRateUnit:  { en: 'bps', ar: 'نقطة أساس' },
+    salesFraudChargebacks:{ en: 'Chargebacks', ar: 'ردود المبالغ' },
+    salesFraudColMonth:  { en: 'Month', ar: 'الشهر' },
+    salesFraudColScreened:{ en: 'Screened', ar: 'مفحوصة' },
+    salesFraudColFlagged:{ en: 'Flagged', ar: 'مُشتبهة' },
+    salesFraudColBlocked:{ en: 'Blocked', ar: 'محجوبة' },
+    salesFraudColAtRisk: { en: 'At risk', ar: 'معرّضة' },
+    salesFraudColRecovered:{ en: 'Recovered', ar: 'مُستردّة' },
+    salesFraudTotal:     { en: 'Total', ar: 'الإجمالي' },
+    salesFraudNote:      { en: 'Blocked transactions are those confirmed fraudulent by screening; recovery is the value returned of the total at risk.', ar: 'المعاملات المحجوبة هي التي أكّد الفحص أنها احتيالية؛ والاسترداد هو القيمة المُعادة من إجمالي القيمة المعرّضة للخطر.' },
+    // Auto-insight strip — reads the numbers and tells the director the story.
+    salesInsights:       { en: 'At a glance', ar: 'نظرة سريعة' },
+    salesInsMomentum:    { en: 'Momentum', ar: 'الزخم' },
+    salesInsDriver:      { en: 'Main driver', ar: 'المحرّك الرئيسي' },
+    salesInsTopClient:   { en: 'Top client', ar: 'أبرز عميل' },
+    salesInsMix:         { en: 'Payment mix', ar: 'مزيج الدفع' },
+    salesInsVs:          { en: '{cur} vs {prev} prior period', ar: '{cur} مقابل {prev} في الفترة السابقة' },
+    salesInsRevPlain:    { en: '{rev} this period', ar: '{rev} هذه الفترة' },
+    salesInsNewPeriod:   { en: 'No prior period to compare', ar: 'لا توجد فترة سابقة للمقارنة' },
+    salesInsDriverVol:   { en: 'event volume', ar: 'حجم الفعاليات' },
+    salesInsDriverSpend: { en: 'revenue per event', ar: 'الإيراد لكل فعالية' },
+    salesInsDriverSub:   { en: '{other} on the other axis', ar: '{other} على المحور الآخر' },
+    salesInsOfRevenue:   { en: 'of period revenue', ar: 'من إيراد الفترة' },
+    salesInsConcRisk:    { en: 'concentration to watch', ar: 'تركّز يستحق المتابعة' },
+    salesInsConcOk:      { en: 'healthy spread', ar: 'توزيع صحّي' },
+    salesInsFlat:        { en: 'flat', ar: 'مستقر' },
+    salesPeak:           { en: 'Peak', ar: 'الذروة' },
+    salesLow:            { en: 'Low', ar: 'الأدنى' },
+    salesEmptyTitle:     { en: 'No sales match these filters', ar: 'لا توجد مبيعات مطابقة لهذه المرشحات' },
+    salesEmptyHint:      { en: 'Try a wider range, or clear the category / client filter.', ar: 'جرّب فترة أوسع، أو أزل مرشّح الفئة / العميل.' },
+    salesRangeCustom:    { en: 'Custom', ar: 'مخصص' },
+    salesRangeShort:     { en: '{n} mo', ar: '{n} ش' },
+    salesFrom:           { en: 'From', ar: 'من' },
+    salesTo:             { en: 'To', ar: 'إلى' },
+    salesActiveInline:   { en: '{n} active this range', ar: '{n} نشط خلال الفترة' },
     // Org-capability view (director/admin only, k-anonymized aggregate).
     navOrg:         { en: 'Org capability', ar: 'قدرات المنظمة' },
     orgTitle:       { en: 'Org capability', ar: 'قدرات المنظمة' },
@@ -5234,7 +5605,7 @@ const EMAIL_HASHES = {};
   // Persist the session so a reload keeps you signed in and on the same page
   // (no re-login after every update). Safe if storage is unavailable.
   // NOTE: refDate is intentionally NOT saved — every load defaults to TODAY (active by default).
-  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId', 'prefs'];
+  const SAVE_KEYS = ['authed', 'viewerId', 'theme', 'lang', 'window', 'route', 'selectedId', 'prefs', 'customFrom', 'customTo'];
   const NEEDS_SELECTION = { profile: 1, evaluation: 1, upward: 1 };
   (function restore() {
     try {
@@ -5569,6 +5940,21 @@ const EMAIL_HASHES = {};
 
   /* Build [start,end] ms bounds for a window around a reference date. */
   function windowBounds(windowKey, refDate) {
+    // Custom range — an arbitrary from→to window (read from WP.state, mirroring how
+    // refDate falls back to WP.state). Capacity is a point-in-time metric, so a range
+    // reads as the AVERAGE monthly load across it: divisor = months spanned (like year
+    // uses /12). Fully guarded — inverted bounds swap; missing/invalid bounds fall
+    // through to the month window so a bad custom state can never break the engine.
+    if (windowKey === 'custom') {
+      const cf = WP.state && WP.state.customFrom, ct = WP.state && WP.state.customTo;
+      const sMs = cf ? parse(cf).getTime() : NaN, eMs = ct ? parse(ct).getTime() : NaN;
+      if (isFinite(sMs) && isFinite(eMs)) {
+        const start = Math.min(sMs, eMs), end = Math.max(sMs, eMs);
+        const days = Math.round((end - start) / MS_DAY) + 1;
+        return { start: start, end: end, divisor: Math.max(1, Math.round(days / 30.4)) };
+      }
+      // bounds missing/invalid → behave like the month window (safe default)
+    }
     const ref = refDate ? new Date(refDate) : new Date();
     const y = ref.getUTCFullYear(), m = ref.getUTCMonth(), d = ref.getUTCDate();
     if (windowKey === 'day') {
@@ -7248,7 +7634,13 @@ const EMAIL_HASHES = {};
   // structure without the canvas filling with every specialist. Rule: a node is collapsed
   // only if its OWN level is Sr. Manager (rank 1) or below — so its reports (rank >= 2)
   // stay hidden; anyone above Sr. Manager (Director / C-level) renders expanded.
+  // Below this size there's nothing to hide: collapsing a small org just strands one
+  // card in a huge canvas (dead space). Expand everything so the whole team reads at a
+  // glance; the Sr.-Manager collapse rule only kicks in once the org is big enough that
+  // expanding it all would be noisy. (Balanced negative space, NN/g.)
+  const SMALL_ORG = 14;
   function defaultCollapsed(people) {
+    if (people.length <= SMALL_ORG) return {};   // small org → fully expanded, no dead space
     const hasKids = {};
     people.forEach(function (p) { if (p.managerId) hasKids[p.managerId] = true; });
     const LV = WP.data.LEVELS;
@@ -7683,7 +8075,17 @@ const EMAIL_HASHES = {};
     ];
     const periodItems = ['day', 'week', 'month', 'year'].map(function (k) {
       return { val: k, label: t(k), sel: k === win };
-    });
+    }).concat([{ val: 'custom', label: t('mapRangeCustom'), sel: win === 'custom' }]);
+    // Custom range → native From/To date pickers (real date filtering) in place of
+    // the prev/next/today navigator, which is meaningless for an arbitrary window.
+    const customRangeHTML = function () {
+      return '<div class="map-custom" role="group" aria-label="' + WP.ui.esc(t('mapRangeCustom')) + '">' +
+        '<label class="map-custom-l">' + WP.ui.esc(t('salesFrom')) + '</label>' +
+        '<input type="date" class="map-date" data-cfrom value="' + WP.ui.esc(WP.state.customFrom || '') + '" aria-label="' + WP.ui.esc(t('salesFrom')) + '"/>' +
+        '<label class="map-custom-l">' + WP.ui.esc(t('salesTo')) + '</label>' +
+        '<input type="date" class="map-date" data-cto value="' + WP.ui.esc(WP.state.customTo || '') + '" aria-label="' + WP.ui.esc(t('salesTo')) + '"/>' +
+      '</div>';
+    };
     // Density toggle (progressive disclosure) — DEFAULT compact. Only meaningful for the
     // tree; the list view has its own columns, so we don't show a redundant control there.
     const densityItems = [
@@ -7693,8 +8095,8 @@ const EMAIL_HASHES = {};
     const toggle = '<div class="toolbar">' +
       ddMenu('view-dd', listMode ? 'list' : 'tree', listMode ? t('listView') : t('treeView'), viewItems) +
       (listMode ? '' : ddMenu('density-dd', density === 'compact' ? 'grid' : 'panel', density === 'compact' ? t('densityCompact') : t('densityDetailed'), densityItems)) +
-      ddMenu('period-dd', null, t(win), periodItems) +
-      dateNav(win, WP.state.refDate) +
+      ddMenu('period-dd', null, win === 'custom' ? t('mapRangeCustom') : t(win), periodItems) +
+      (win === 'custom' ? customRangeHTML() : dateNav(win, WP.state.refDate)) +
     '</div>';
 
     const legend = '';   // capacity-band legend removed (kept simple, per the tree redesign)
@@ -7704,7 +8106,7 @@ const EMAIL_HASHES = {};
     const body = people.length === 0
       ? '<div class="map-empty">' + WP.ui.icon('users', 18) + ' <span>' + t('emptyTeam') + '</span>' +
           (focusPerson ? ' <button class="btn" id="empty-showall">' + t('showAll') + '</button>' : '') + '</div>'
-      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap).replace('class="tree-scroll"', 'class="tree-scroll' + animCls + (focusPerson ? ' is-focused' : '') + '"'));
+      : (listMode ? '<div id="map-table"></div>' : treeChart(people, snapById, colMap).replace('class="tree-scroll"', 'class="tree-scroll' + animCls + (focusPerson ? ' is-focused' : '') + (base.length <= SMALL_ORG ? ' tree-scroll--snug' : '') + '"'));
     // FOCUS MODE: the breadcrumb (the #45 component) carries the way back. When focused,
     // the "People & workload" crumb becomes a link that restores the whole org ("Back to
     // Organization"); the focused team is the current page. Wired below via a capture-phase
@@ -7819,7 +8221,27 @@ const EMAIL_HASHES = {};
     // compact toolbar dropdowns (View · Density · Period)
     setupMenu(root, 'view-dd', function (v) { listMode = (v === 'list'); render(root); });
     setupMenu(root, 'density-dd', function (v) { density = (v === 'detailed') ? 'detailed' : 'compact'; saveDensity(density); render(root); });
-    setupMenu(root, 'period-dd', function (v) { WP.setState({ window: v }); });
+    setupMenu(root, 'period-dd', function (v) {
+      if (v === 'custom' && (!WP.state.customFrom || !WP.state.customTo)) {
+        // Seed with the current month (matches what 'month' showed) so the switch is
+        // never an empty/broken window; the user then narrows/widens via the pickers.
+        const r = new Date((WP.state.refDate || todayISO()) + 'T00:00:00Z');
+        const from = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth(), 1)).toISOString().slice(0, 10);
+        const to = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).toISOString().slice(0, 10);
+        WP.setState({ window: v, customFrom: from, customTo: to });
+      } else { WP.setState({ window: v }); }
+    });
+    // Custom From/To date pickers — normalize inverted picks by swapping, so the
+    // window and the two inputs always stay consistent (the engine also swaps).
+    const cFrom = root.querySelector('[data-cfrom]');
+    const cTo = root.querySelector('[data-cto]');
+    function commitCustom(nextFrom, nextTo) {
+      let f = nextFrom || WP.state.customFrom, to = nextTo || WP.state.customTo;
+      if (f && to && f > to) { const tmp = f; f = to; to = tmp; }   // ISO strings sort lexically
+      WP.setState({ customFrom: f, customTo: to });
+    }
+    if (cFrom) cFrom.onchange = function () { if (cFrom.value) commitCustom(cFrom.value, null); };
+    if (cTo) cTo.onchange = function () { if (cTo.value) commitCustom(null, cTo.value); };
     closeMenusOnOutside(root);
     const esa = root.querySelector('#empty-showall');
     if (esa) esa.onclick = function () { setFocus(root, null); };

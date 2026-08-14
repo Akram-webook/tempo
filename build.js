@@ -85,10 +85,26 @@ function hashEmailsBlock(html, mode) {
   return html.replace(m[0], 'const EMAIL_HASHES = ' + hashMap + ';');
 }
 
+// Same privacy treatment for the real-domain sign-in aliases (`const EMAIL_ALIASES
+// = { 'akram@webook.com': 'p_akram' }`). Here the KEY is the real email, so we hash
+// the KEY and keep the person id, emitting `const EMAIL_ALIAS_HASHES = {...}`.
+function hashAliasesBlock(html, mode) {
+  const m = html.match(/^[ \t]*const EMAIL_ALIASES = \{([\s\S]*?)\};/m);
+  if (!m) return html;                                      // nothing to strip
+  let hashMap = '{}';
+  if (mode !== 'strip') {
+    const pairs = [...m[1].matchAll(/'([^']+)'\s*:\s*'([^']+)'/g)]
+      .map(x => "'" + hashEmail(x[1]) + "': '" + x[2] + "'");
+    hashMap = '{ ' + pairs.join(', ') + ' }';
+  }
+  return html.replace(m[0], 'const EMAIL_ALIAS_HASHES = ' + hashMap + ';');
+}
+
 function buildPage(srcFile, outFile, opts) {
   let html = inlineShell(srcFile);
   // App page → hash the directory (sign-in matches on hash). Chart page → empty map (no auth).
   html = hashEmailsBlock(html, (opts && opts.stripEmails) ? 'strip' : 'hash');
+  html = hashAliasesBlock(html, (opts && opts.stripEmails) ? 'strip' : 'hash');
   fs.writeFileSync(path.join(root, 'dist', outFile), html);
   const kb = (Buffer.byteLength(html, 'utf8') / 1024).toFixed(0);
   const leftJs = (html.match(/<script\s+src="src\//g) || []).length;

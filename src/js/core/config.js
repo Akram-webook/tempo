@@ -94,6 +94,12 @@
   // domain here - one line, no code change, reversible.
   if (WP.config.authDomain === undefined) WP.config.authDomain = 'example.com';
 
+  // Additional domains allowed to sign in alongside authDomain. Lets the real
+  // company domain (@webook.com) work on the internal pilot while the fake demo
+  // directory (@example.com) keeps functioning for tests/screenshots. login.js
+  // accepts an email whose domain is authDomain OR any entry here. Reversible.
+  if (WP.config.authDomainsExtra === undefined) WP.config.authDomainsExtra = ['webook.com'];
+
   /* ----------------------------------------------------------------
    * Executive Status — live data endpoint + deck link (both reversible).
    * ----------------------------------------------------------------

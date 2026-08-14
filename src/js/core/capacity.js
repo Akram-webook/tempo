@@ -53,6 +53,21 @@
 
   /* Build [start,end] ms bounds for a window around a reference date. */
   function windowBounds(windowKey, refDate) {
+    // Custom range — an arbitrary from→to window (read from WP.state, mirroring how
+    // refDate falls back to WP.state). Capacity is a point-in-time metric, so a range
+    // reads as the AVERAGE monthly load across it: divisor = months spanned (like year
+    // uses /12). Fully guarded — inverted bounds swap; missing/invalid bounds fall
+    // through to the month window so a bad custom state can never break the engine.
+    if (windowKey === 'custom') {
+      const cf = WP.state && WP.state.customFrom, ct = WP.state && WP.state.customTo;
+      const sMs = cf ? parse(cf).getTime() : NaN, eMs = ct ? parse(ct).getTime() : NaN;
+      if (isFinite(sMs) && isFinite(eMs)) {
+        const start = Math.min(sMs, eMs), end = Math.max(sMs, eMs);
+        const days = Math.round((end - start) / MS_DAY) + 1;
+        return { start: start, end: end, divisor: Math.max(1, Math.round(days / 30.4)) };
+      }
+      // bounds missing/invalid → behave like the month window (safe default)
+    }
     const ref = refDate ? new Date(refDate) : new Date();
     const y = ref.getUTCFullYear(), m = ref.getUTCMonth(), d = ref.getUTCDate();
     if (windowKey === 'day') {
