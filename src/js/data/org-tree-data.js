@@ -14,21 +14,27 @@
     { id: 'hamdi', name: 'Hamdi Missaoui', role: 'Chief Commercial Officer', squad: 'Leadership', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Tunisia', contract: 'Full-time', level: 'Exec', manager: null, status: 'active', lead: true, start: '2019-01' },
     { id: 'ahmed', name: 'Ahmed Othman', role: 'Event Operations Director', squad: 'Leadership', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Director', manager: 'hamdi', status: 'active', lead: true, start: '2020-03' },
 
-    // Automation & Execution (5, 0 FL) — sub-team: Anti-Fraud
+    // Automation & Execution (4, 0 FL) — Ayman → Batool (leads Anti-Fraud) + Shahad
     { id: 'ayman', name: 'Ayman Albasha', role: 'Event Operations Sr. Manager', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Syria', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-02' },
+    { id: 'batool', name: 'Batool Emad', role: 'Event Operations Manager — Anti-Fraud', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'ayman', status: 'active', lead: true, start: '2022-05' },
+    { id: 'alhanouf', name: 'Alhanouf Alkhalaf', role: 'Event Operations Specialist — Anti-Fraud', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'batool', status: 'active', lead: false, start: '2024-02' },
     { id: 'shahad', name: 'Shahad Joudah', role: 'Event Operations Specialist — Trainer', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'ayman', status: 'active', lead: false, start: '2023-06' },
-    { id: 'batool', name: 'Batool Emad', role: 'Event Operations Manager — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'ayman', status: 'active', lead: true, start: '2022-05' },
-    { id: 'af1', name: 'TBC', role: 'Event Operations Specialist — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Specialist', manager: 'batool', status: 'open', lead: false, start: null },
-    { id: 'af2', name: 'TBC', role: 'Event Operations Coordinator — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Coordinator', manager: 'batool', status: 'open', lead: false, start: null },
 
-    // Sports (7, 1 FL) — sub-team: Akram’s Pod
+    // Sports (11, 1 FL) — Motaa → three team leads (Akram · Khaled · Maksousa), each with their own reports
     { id: 'motaa', name: 'Motaa Aldarra', role: 'Event Operations Sr. Manager', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Syria', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-04' },
-    { id: 'akram', name: 'Mohammed Akram', role: 'Event Operations Manager', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'motaa', status: 'active', lead: true, start: '2022-09', you: true },
-    { id: 'maksosah', name: 'Abdulrahman Maksousa', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Jeddah', nationality: 'Syria', contract: 'Freelance', level: 'Sr. Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-01' },
-    { id: 'khaled', name: 'Khaled Jeneina', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Jordan', contract: 'Full-time', level: 'Sr. Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-03' },
-    { id: 'shamma', name: 'Shamma Alsagr', role: 'Event Operations Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2024-02' },
-    { id: 'idris', name: 'Mohammed Idris', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'motaa', status: 'active', lead: false, start: '2023-11' },
-    { id: 'sp1', name: 'TBC', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Specialist', manager: 'motaa', status: 'open', lead: false, start: null },
+    // — Akram's team
+    { id: 'akram', name: 'Mohammed Akram', role: 'Event Operations Manager', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'motaa', status: 'active', lead: true, start: '2022-09', you: true, order: 1 },
+    { id: 'idris', name: 'Mohammed Idris', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-11' },
+    { id: 'osama', name: 'Osama', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2024-04' },
+    { id: 'mgamal', name: 'Muhammad Gamal Ali', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2024-06' },
+    // — Khaled's team
+    { id: 'khaled', name: 'Khaled Jeneina', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Jordan', contract: 'Full-time', level: 'Sr. Specialist', manager: 'motaa', status: 'active', lead: true, start: '2023-03', order: 2 },
+    { id: 'saleh', name: 'Saleh Almohaimeed', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'khaled', status: 'active', lead: false, start: '2024-05' },
+    { id: 'ibrahim', name: 'Ibrahim Saleh al-bard', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'khaled', status: 'active', lead: false, start: '2024-07' },
+    // — Maksousa's team
+    { id: 'maksosah', name: 'Abdulrahman Maksousa', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Jeddah', nationality: 'Syria', contract: 'Freelance', level: 'Sr. Specialist', manager: 'motaa', status: 'active', lead: true, start: '2023-01', order: 3 },
+    { id: 'shamma', name: 'Shamma Alsagr', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'maksosah', status: 'active', lead: false, start: '2024-02' },
+    { id: 'tala', name: 'Tala', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'maksosah', status: 'active', lead: false, start: '2024-08' },
 
     // Entertainment (6, 2 FL) — sub-team: Live Shows
     { id: 'ayah', name: 'Ayah Nasif', role: 'Event Operations Sr. Manager', squad: 'Entertainment', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-07' },
@@ -91,8 +97,9 @@
 
   // Slack profile photos, snapshotted from the #event-operations-department
   // directory (id → avatar URL). Re-sync on demand: re-scrape + replace this map.
-  // Missing here = no uploaded Slack photo (Meshal Alsmari) or not a channel
-  // member (Hamdi) → the card falls back to initials.
+  // Missing here = no uploaded Slack photo (Meshal Alsmari), not a channel member
+  // (Hamdi), or a newer hire not yet snapshotted (Alhanouf, Osama, Muhammad Gamal
+  // Ali, Saleh, Ibrahim, Tala) → the card + drawer fall back to initials.
   var E = 'https://ca.slack-edge.com/T06CF6Y0ETC-';
   var IMG = {
     ahmed: E + 'U099EREBS23-5eaec9a8cc3c-192',

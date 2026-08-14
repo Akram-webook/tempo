@@ -801,6 +801,9 @@ main.full-bleed { max-width: none; }
    this stops the bar floating mid-page — no dead space below it. */
 .view-main { display: flex; flex-direction: column; }
 .view-main > #view { flex: 1 0 auto; }
+/* Keep the reminder host at its natural height — never let a tall view (a 100vh
+   min-height page) shrink this flex item down to just its border (a stray line). */
+.view-main > #eval-banner { flex: none; }
 .view-main > #sig-bar { flex: none; margin-top: auto; }
 .sidebar { background: var(--surface); overflow: hidden; }
 .sb-wrap { display: flex; flex-direction: column; gap: 3px; padding: 16px 12px; overflow-y: auto; box-sizing: border-box; height: 100%; }
@@ -2997,21 +3000,21 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ot-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
 .ot-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ot-amber-text);
   background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.25);border-radius:999px;padding:3px 10px;margin-bottom:8px}
-.ot-title{margin:0;font-size:24px;line-height:28px;font-weight:800;letter-spacing:-.01em}
-.ot-sub{margin:4px 0 0;font-size:12.5px;color:var(--ot-secondary);max-width:70ch}
+.ot-title{margin:0;font-size:21px;line-height:26px;font-weight:800;letter-spacing:-.01em}
+.ot-sub{margin:4px 0 0;font-size:12px;color:var(--ot-secondary);max-width:70ch}
 .ot-stats{display:flex;align-items:center}
-.ot-stat{display:flex;flex-direction:column;align-items:flex-end;padding:0 14px;border-inline-start:1px solid var(--ot-border)}
+.ot-stat{display:flex;flex-direction:column;align-items:flex-end;padding:0 11px;border-inline-start:1px solid var(--ot-border)}
 .ot-stat:first-child{border-inline-start:0}
-.ot-stat .v{font-size:20px;line-height:24px;font-weight:800}
-.ot-stat .l{font-size:10px;line-height:14px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ot-secondary);margin-top:2px}
+.ot-stat .v{font-size:16px;line-height:20px;font-weight:800}
+.ot-stat .l{font-size:9px;line-height:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ot-secondary);margin-top:2px}
 .ot-stat .v.fl{color:var(--ot-amber-text)} .ot-stat .v.op{color:var(--brand)}
-.ot-pinst{background:transparent;border:0;padding:0 12px;display:flex;flex-direction:column;align-items:center;border-inline-start:1px solid var(--ot-border)}
-.ot-pinst .v{font-size:20px;line-height:22px;font-weight:800} .ot-pinst .l{font-size:10px;line-height:14px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ot-secondary)}
-.ot-pinmark{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+.ot-pinst{background:transparent;border:0;padding:0 10px;display:flex;flex-direction:column;align-items:center;border-inline-start:1px solid var(--ot-border)}
+.ot-pinst .v{font-size:16px;line-height:18px;font-weight:800} .ot-pinst .l{font-size:9px;line-height:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ot-secondary)}
+.ot-pinmark{width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
   background:linear-gradient(145deg,var(--ot-pin-1),var(--ot-pin-2));display:grid;place-items:center;
-  box-shadow:0 3px 7px rgba(0,0,0,.45);position:relative;transition:transform .15s,box-shadow .15s;margin-bottom:1px}
-.ot-pinmark::after{content:'';position:absolute;width:17px;height:17px;border-radius:999px;background:#fff;left:5.5px;top:5.5px;box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
-.ot-fgl{transform:rotate(45deg);font-size:12px;line-height:1;position:relative;z-index:1}
+  box-shadow:0 2px 5px rgba(0,0,0,.45);position:relative;transition:transform .15s,box-shadow .15s;margin-bottom:1px}
+.ot-pinmark::after{content:'';position:absolute;width:13px;height:13px;border-radius:999px;background:#fff;left:4.5px;top:4.5px;box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
+.ot-fgl{transform:rotate(45deg);font-size:10px;line-height:1;position:relative;z-index:1}
 .ot-pinshadow{width:12px;height:3px;border-radius:999px;background:rgba(0,0,0,.35);margin:2px auto 0}
 .ot-pinst:hover .ot-pinmark{transform:rotate(-45deg) translateY(-2px)}
 .ot-pinst.on .ot-pinmark{box-shadow:0 0 0 3px rgba(234,67,53,.25),0 3px 7px rgba(0,0,0,.45)}
@@ -3113,8 +3116,13 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ot-drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;width:370px;max-width:92vw;background:var(--ot-l1);border-inline-start:1px solid var(--ot-border-strong);z-index:61;transform:translateX(100%);transition:transform .2s;padding:20px;overflow-y:auto;color:var(--ot-primary)}
 [dir="rtl"] .ot-drawer{transform:translateX(-100%)}
 .ot-drawer.on{transform:translateX(0)}
-.ot-drawer h2{margin:0;font-size:18px;font-weight:700}
-.ot-drole{color:var(--ot-secondary);font-size:13px;margin:2px 0 14px}
+.ot-dhead{display:flex;align-items:center;gap:12px;margin:0 42px 16px 0}
+.ot-dav{width:48px;height:48px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:15px;font-weight:700;background:var(--sc,var(--ot-avatar));color:#fff;position:relative;overflow:hidden}
+.ot-dav.open{background:transparent;border:1px dashed var(--ot-border-strong);color:var(--ot-secondary)}
+.ot-dav-pic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.ot-dhead-t{min-width:0}
+.ot-drawer h2{margin:0;font-size:18px;font-weight:700;line-height:1.2}
+.ot-drole{color:var(--ot-secondary);font-size:13px;margin:2px 0 0}
 .ot-drawer dl{display:grid;grid-template-columns:120px 1fr;gap:8px 10px;font-size:13px;margin:0}
 .ot-drawer dt{color:var(--ot-secondary)} .ot-drawer dd{margin:0;color:var(--ot-primary)}
 .ot-sect{margin-top:16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ot-secondary)}
@@ -4185,21 +4193,27 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     { id: 'hamdi', name: 'Hamdi Missaoui', role: 'Chief Commercial Officer', squad: 'Leadership', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Tunisia', contract: 'Full-time', level: 'Exec', manager: null, status: 'active', lead: true, start: '2019-01' },
     { id: 'ahmed', name: 'Ahmed Othman', role: 'Event Operations Director', squad: 'Leadership', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Director', manager: 'hamdi', status: 'active', lead: true, start: '2020-03' },
 
-    // Automation & Execution (5, 0 FL) — sub-team: Anti-Fraud
+    // Automation & Execution (4, 0 FL) — Ayman → Batool (leads Anti-Fraud) + Shahad
     { id: 'ayman', name: 'Ayman Albasha', role: 'Event Operations Sr. Manager', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Syria', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-02' },
+    { id: 'batool', name: 'Batool Emad', role: 'Event Operations Manager — Anti-Fraud', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'ayman', status: 'active', lead: true, start: '2022-05' },
+    { id: 'alhanouf', name: 'Alhanouf Alkhalaf', role: 'Event Operations Specialist — Anti-Fraud', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'batool', status: 'active', lead: false, start: '2024-02' },
     { id: 'shahad', name: 'Shahad Joudah', role: 'Event Operations Specialist — Trainer', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'ayman', status: 'active', lead: false, start: '2023-06' },
-    { id: 'batool', name: 'Batool Emad', role: 'Event Operations Manager — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'ayman', status: 'active', lead: true, start: '2022-05' },
-    { id: 'af1', name: 'TBC', role: 'Event Operations Specialist — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Specialist', manager: 'batool', status: 'open', lead: false, start: null },
-    { id: 'af2', name: 'TBC', role: 'Event Operations Coordinator — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Coordinator', manager: 'batool', status: 'open', lead: false, start: null },
 
-    // Sports (7, 1 FL) — sub-team: Akram’s Pod
+    // Sports (11, 1 FL) — Motaa → three team leads (Akram · Khaled · Maksousa), each with their own reports
     { id: 'motaa', name: 'Motaa Aldarra', role: 'Event Operations Sr. Manager', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Syria', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-04' },
-    { id: 'akram', name: 'Mohammed Akram', role: 'Event Operations Manager', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'motaa', status: 'active', lead: true, start: '2022-09', you: true },
-    { id: 'maksosah', name: 'Abdulrahman Maksousa', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Jeddah', nationality: 'Syria', contract: 'Freelance', level: 'Sr. Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-01' },
-    { id: 'khaled', name: 'Khaled Jeneina', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Jordan', contract: 'Full-time', level: 'Sr. Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-03' },
-    { id: 'shamma', name: 'Shamma Alsagr', role: 'Event Operations Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2024-02' },
-    { id: 'idris', name: 'Mohammed Idris', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'motaa', status: 'active', lead: false, start: '2023-11' },
-    { id: 'sp1', name: 'TBC', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Specialist', manager: 'motaa', status: 'open', lead: false, start: null },
+    // — Akram's team
+    { id: 'akram', name: 'Mohammed Akram', role: 'Event Operations Manager', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'motaa', status: 'active', lead: true, start: '2022-09', you: true, order: 1 },
+    { id: 'idris', name: 'Mohammed Idris', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-11' },
+    { id: 'osama', name: 'Osama', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2024-04' },
+    { id: 'mgamal', name: 'Muhammad Gamal Ali', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2024-06' },
+    // — Khaled's team
+    { id: 'khaled', name: 'Khaled Jeneina', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Jordan', contract: 'Full-time', level: 'Sr. Specialist', manager: 'motaa', status: 'active', lead: true, start: '2023-03', order: 2 },
+    { id: 'saleh', name: 'Saleh Almohaimeed', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'khaled', status: 'active', lead: false, start: '2024-05' },
+    { id: 'ibrahim', name: 'Ibrahim Saleh al-bard', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'khaled', status: 'active', lead: false, start: '2024-07' },
+    // — Maksousa's team
+    { id: 'maksosah', name: 'Abdulrahman Maksousa', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Jeddah', nationality: 'Syria', contract: 'Freelance', level: 'Sr. Specialist', manager: 'motaa', status: 'active', lead: true, start: '2023-01', order: 3 },
+    { id: 'shamma', name: 'Shamma Alsagr', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'maksosah', status: 'active', lead: false, start: '2024-02' },
+    { id: 'tala', name: 'Tala', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'maksosah', status: 'active', lead: false, start: '2024-08' },
 
     // Entertainment (6, 2 FL) — sub-team: Live Shows
     { id: 'ayah', name: 'Ayah Nasif', role: 'Event Operations Sr. Manager', squad: 'Entertainment', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-07' },
@@ -4262,8 +4276,9 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 
   // Slack profile photos, snapshotted from the #event-operations-department
   // directory (id → avatar URL). Re-sync on demand: re-scrape + replace this map.
-  // Missing here = no uploaded Slack photo (Meshal Alsmari) or not a channel
-  // member (Hamdi) → the card falls back to initials.
+  // Missing here = no uploaded Slack photo (Meshal Alsmari), not a channel member
+  // (Hamdi), or a newer hire not yet snapshotted (Alhanouf, Osama, Muhammad Gamal
+  // Ali, Saleh, Ibrahim, Tala) → the card + drawer fall back to initials.
   var E = 'https://ca.slack-edge.com/T06CF6Y0ETC-';
   var IMG = {
     ahmed: E + 'U099EREBS23-5eaec9a8cc3c-192',
@@ -16252,7 +16267,10 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   var chain = function (p) { var out = [], c = p; while (c && c.manager) { c = byId(c.manager); if (c) out.unshift(c); } return out; };
   var LEVEL_RANK = { 'Exec': 0, 'Director': 1, 'Sr. Manager': 2, 'Manager': 3, 'Sr. Specialist': 4, 'Specialist': 5, 'Coordinator': 6 };
   var bySeniority = function (a, b) {
-    return (LEVEL_RANK[a.level] == null ? 9 : LEVEL_RANK[a.level]) - (LEVEL_RANK[b.level] == null ? 9 : LEVEL_RANK[b.level])
+    // Optional `order` pins sibling order explicitly (peers the data owner wants in a
+    // specific sequence); people without it sort after, by seniority as before.
+    return (a.order == null ? 99 : a.order) - (b.order == null ? 99 : b.order)
+      || (LEVEL_RANK[a.level] == null ? 9 : LEVEL_RANK[a.level]) - (LEVEL_RANK[b.level] == null ? 9 : LEVEL_RANK[b.level])
       || (b.lead ? 1 : 0) - (a.lead ? 1 : 0)
       || (a.status === 'open') - (b.status === 'open')
       || a.name.localeCompare(b.name);
@@ -16433,8 +16451,13 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     var repList = reps.length ? reps.map(function (r) {
       return '<button class="ot-dreport" data-goto="' + r.id + '"><span class="ot-dot" style="background:' + squadOf(r.squad).color + '"></span>' + esc(r.name) + ' — ' + esc(r.role.replace(/^Event Operations\s*/, '')) + '</button>';
     }).join('') : '<div class="ot-foot">No direct reports.</div>';
+    var img = DATA().IMG && DATA().IMG[p.id];
+    var dav = '<span class="ot-dav' + (p.status === 'open' ? ' open' : '') + '" style="--sc:' + c.color + '">' +
+      (img ? '<img class="ot-dav-pic" src="' + esc(img) + '" alt="" referrerpolicy="no-referrer">' : '') +
+      esc(initials(p.name)) + '</span>';
     return '<button class="ot-dclose" data-dclose="1" aria-label="Close">✕</button>' +
-      '<h2>' + esc(p.name) + '</h2><div class="ot-drole">' + esc(p.role) + '</div>' +
+      '<div class="ot-dhead">' + dav + '<div class="ot-dhead-t"><h2>' + esc(p.name) + '</h2>' +
+      '<div class="ot-drole">' + esc(p.role) + '</div></div></div>' +
       '<dl>' +
         '<dt>Squad</dt><dd><span class="ot-dot" style="background:' + c.color + ';display:inline-block;margin-inline-end:6px"></span>' + esc(p.squad) + '</dd>' +
         '<dt>Sub-team</dt><dd>' + esc(p.unit || '—') + '</dd>' +
@@ -18482,7 +18505,10 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     const t = WP.i18n.t, viewer = WP.viewer();
     const cyc = WP.evaluation && WP.evaluation.activeCycle && WP.evaluation.activeCycle();
     const req = (viewer && WP.evaluation && WP.evaluation.requiredFor) ? WP.evaluation.requiredFor(viewer.id) : null;
-    if (!viewer || viewer.id === '__admin__' || !cyc || cyc.status !== 'Active' || !req || req.total === 0 || req.pending === 0) {
+    // The Org Tree is a standalone, full-canvas directory view with its own header;
+    // the cross-page reminder strip doesn't belong on it (and its 100vh min-height
+    // squeezed the banner into a thin line). Suppress it there.
+    if (WP.state.route === 'orgtree' || !viewer || viewer.id === '__admin__' || !cyc || cyc.status !== 'Active' || !req || req.total === 0 || req.pending === 0) {
       host.innerHTML = ''; host.hidden = true; return;
     }
     const di = WP.evaluation.dueInfo && WP.evaluation.dueInfo();

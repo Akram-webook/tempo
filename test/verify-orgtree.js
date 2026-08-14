@@ -25,19 +25,19 @@ function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 
 try {
   const D = WP.orgTreeData;
-  assert(!!D && D.PEOPLE.length === 29, '29 positions in the roster (got ' + (D && D.PEOPLE.length) + ')');
+  assert(!!D && D.PEOPLE.length === 32, '32 positions in the roster (got ' + (D && D.PEOPLE.length) + ')');
   assert(D.SQUADS.length === 5, '5 squads');
   const ppl = D.PEOPLE.filter(p => p.status !== 'open');
-  assert(ppl.length === 26, 'headcount excludes open → 26 people (got ' + ppl.length + ')');
-  assert(ppl.filter(p => p.country === 'Saudi Arabia').length === 23, '23 people in Saudi Arabia');
+  assert(ppl.length === 32, 'headcount excludes open → 32 people (got ' + ppl.length + ')');
+  assert(ppl.filter(p => p.country === 'Saudi Arabia').length === 29, '29 people in Saudi Arabia');
   assert(ppl.filter(p => p.country === 'UAE').length === 3, '3 people in UAE');
   assert(ppl.filter(p => p.contract === 'Freelance').length === 6, '6 freelancers');
-  assert(D.PEOPLE.filter(p => p.status === 'open').length === 3, '3 open roles (TBC)');
+  assert(D.PEOPLE.filter(p => p.status === 'open').length === 0, '0 open roles');
   assert(D.PEOPLE.filter(p => p.status === 'incoming').length === 1, '1 incoming');
   const sc = n => D.PEOPLE.filter(p => p.squad === n).length;
-  assert(sc('Automation & Execution') === 5 && sc('Sports') === 7 && sc('Entertainment') === 6 && sc('On Ground') === 4 && sc('Cashless') === 5, 'squad sizes 5/7/6/4/5');
-  // 4 sub-teams
-  assert([...new Set(D.PEOPLE.map(p => p.unit).filter(Boolean))].length === 4, 'four sub-teams');
+  assert(sc('Automation & Execution') === 4 && sc('Sports') === 11 && sc('Entertainment') === 6 && sc('On Ground') === 4 && sc('Cashless') === 5, 'squad sizes 4/11/6/4/5');
+  // 2 sub-teams (Live Shows · Execution)
+  assert([...new Set(D.PEOPLE.map(p => p.unit).filter(Boolean))].length === 2, 'two sub-teams');
   // manager links resolve
   D.PEOPLE.forEach(p => { if (p.manager) assert(!!D.PEOPLE.find(x => x.id === p.manager), p.id + ' manager resolves'); });
 
@@ -59,8 +59,8 @@ try {
   assert(/ot-tree/.test(out), 'render: tree present');
   assert(/ot-bus/.test(out), 'render: horizontal bus present');
   assert((out.match(/ot-chead/g) || []).length === 5, 'render: five squad headers');
-  assert((out.match(/class="ot-card/g) || []).length === 29, 'render: 29 cards (got ' + (out.match(/class="ot-card/g) || []).length + ')');
-  assert(host.querySelectorAll('[data-open]').length === 29, 'render: 29 clickable cards');
+  assert((out.match(/class="ot-card/g) || []).length === 32, 'render: 32 cards (got ' + (out.match(/class="ot-card/g) || []).length + ')');
+  assert(host.querySelectorAll('[data-open]').length === 32, 'render: 32 clickable cards');
   assert(/data-q/.test(out) && /data-ddbtn/.test(out) && /data-fbtn/.test(out), 'render: search + squad dropdown + filters controls');
   assert(/ot-pinmark/.test(out), 'render: CSS map pins in the stat strip');
   assert(/ot-kids/.test(out), 'render: recursive nesting present');
@@ -82,4 +82,4 @@ if (errors.length) {
   console.error('FAIL — verify-orgtree\n' + errors.join('\n'));
   process.exit(1);
 }
-console.log('PASS — organisation tree: derived counts reconcile (26 people · 23 SA / 3 UAE · 6 freelance · 3 open · squads 5/7/6/4/5 · 4 sub-teams), renders stat strip + pins + search + squad dropdown + filters + recursive tree + bus (29 cards) with the viewer YOU badge, and gates to director/admin only.');
+console.log('PASS — organisation tree: derived counts reconcile (32 people · 29 SA / 3 UAE · 6 freelance · 0 open · squads 4/11/6/4/5 · 2 sub-teams), renders stat strip + pins + search + squad dropdown + filters + recursive tree + bus (32 cards) with the viewer YOU badge, and gates to director/admin only.');

@@ -394,7 +394,10 @@
     const t = WP.i18n.t, viewer = WP.viewer();
     const cyc = WP.evaluation && WP.evaluation.activeCycle && WP.evaluation.activeCycle();
     const req = (viewer && WP.evaluation && WP.evaluation.requiredFor) ? WP.evaluation.requiredFor(viewer.id) : null;
-    if (!viewer || viewer.id === '__admin__' || !cyc || cyc.status !== 'Active' || !req || req.total === 0 || req.pending === 0) {
+    // The Org Tree is a standalone, full-canvas directory view with its own header;
+    // the cross-page reminder strip doesn't belong on it (and its 100vh min-height
+    // squeezed the banner into a thin line). Suppress it there.
+    if (WP.state.route === 'orgtree' || !viewer || viewer.id === '__admin__' || !cyc || cyc.status !== 'Active' || !req || req.total === 0 || req.pending === 0) {
       host.innerHTML = ''; host.hidden = true; return;
     }
     const di = WP.evaluation.dueInfo && WP.evaluation.dueInfo();

@@ -27,7 +27,10 @@
   var chain = function (p) { var out = [], c = p; while (c && c.manager) { c = byId(c.manager); if (c) out.unshift(c); } return out; };
   var LEVEL_RANK = { 'Exec': 0, 'Director': 1, 'Sr. Manager': 2, 'Manager': 3, 'Sr. Specialist': 4, 'Specialist': 5, 'Coordinator': 6 };
   var bySeniority = function (a, b) {
-    return (LEVEL_RANK[a.level] == null ? 9 : LEVEL_RANK[a.level]) - (LEVEL_RANK[b.level] == null ? 9 : LEVEL_RANK[b.level])
+    // Optional `order` pins sibling order explicitly (peers the data owner wants in a
+    // specific sequence); people without it sort after, by seniority as before.
+    return (a.order == null ? 99 : a.order) - (b.order == null ? 99 : b.order)
+      || (LEVEL_RANK[a.level] == null ? 9 : LEVEL_RANK[a.level]) - (LEVEL_RANK[b.level] == null ? 9 : LEVEL_RANK[b.level])
       || (b.lead ? 1 : 0) - (a.lead ? 1 : 0)
       || (a.status === 'open') - (b.status === 'open')
       || a.name.localeCompare(b.name);
@@ -208,8 +211,13 @@
     var repList = reps.length ? reps.map(function (r) {
       return '<button class="ot-dreport" data-goto="' + r.id + '"><span class="ot-dot" style="background:' + squadOf(r.squad).color + '"></span>' + esc(r.name) + ' — ' + esc(r.role.replace(/^Event Operations\s*/, '')) + '</button>';
     }).join('') : '<div class="ot-foot">No direct reports.</div>';
+    var img = DATA().IMG && DATA().IMG[p.id];
+    var dav = '<span class="ot-dav' + (p.status === 'open' ? ' open' : '') + '" style="--sc:' + c.color + '">' +
+      (img ? '<img class="ot-dav-pic" src="' + esc(img) + '" alt="" referrerpolicy="no-referrer">' : '') +
+      esc(initials(p.name)) + '</span>';
     return '<button class="ot-dclose" data-dclose="1" aria-label="Close">✕</button>' +
-      '<h2>' + esc(p.name) + '</h2><div class="ot-drole">' + esc(p.role) + '</div>' +
+      '<div class="ot-dhead">' + dav + '<div class="ot-dhead-t"><h2>' + esc(p.name) + '</h2>' +
+      '<div class="ot-drole">' + esc(p.role) + '</div></div></div>' +
       '<dl>' +
         '<dt>Squad</dt><dd><span class="ot-dot" style="background:' + c.color + ';display:inline-block;margin-inline-end:6px"></span>' + esc(p.squad) + '</dd>' +
         '<dt>Sub-team</dt><dd>' + esc(p.unit || '—') + '</dd>' +
