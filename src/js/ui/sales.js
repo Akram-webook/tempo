@@ -245,7 +245,7 @@
   function trendHTML(rows) {
     var t = WP.i18n.t;
     var isRev = trendMetric !== 'events';
-    var color = isRev ? 'var(--brand)' : 'var(--state-info)';
+    var color = isRev ? 'var(--brand)' : 'var(--wbk-blue)';
     var W = 760, H = 250, padL = 58, padR = 16, padT = 16, padB = 30;
     var plotW = W - padL - padR, plotH = H - padT - padB;
     var n = rows.length;
@@ -341,7 +341,7 @@
     var max = rows.reduce(function (a, o) { return Math.max(a, o.revenue); }, 0) || 1;
     var bars = rows.map(function (o) {
       var pct = Math.max(1, Math.round((o.revenue / max) * 100));
-      var color = o.category === 'sports' ? 'var(--state-info)' : 'var(--brand)';
+      var color = o.category === 'sports' ? 'var(--wbk-blue)' : 'var(--brand)';
       return '<div class="sales-tc-row">' +
         '<span class="sales-tc-name" title="' + esc(orgLabel(o)) + '">' + esc(orgLabel(o)) + '</span>' +
         '<span class="sales-tc-track"><span class="sales-tc-fill" style="width:' + pct + '%;background:' + color + '"></span></span>' +
@@ -472,12 +472,12 @@
 
     var donuts =
       (showCat ? donutPanel(t('salesCategorySplit'), t('salesCategorySub'), [
-        { label: t('salesSports'), value: cat.sports.revenue, color: 'var(--state-info)' },
+        { label: t('salesSports'), value: cat.sports.revenue, color: 'var(--wbk-blue)' },
         { label: t('salesEntertainment'), value: cat.entertainment.revenue, color: 'var(--brand)' },
       ]) : '') +
       donutPanel(t('salesRevenueMix'), t('salesRevenueMixSub'), [
-        { label: t('salesCashless'), value: tot.cashless, color: 'var(--exec-green)' },
-        { label: t('salesOnGround'), value: tot.onGround, color: 'var(--exec-violet)' },
+        { label: t('salesCashless'), value: tot.cashless, color: 'var(--wbk-sea)' },
+        { label: t('salesOnGround'), value: tot.onGround, color: 'var(--wbk-violet)' },
       ]);
 
     var hasData = tot.events > 0;

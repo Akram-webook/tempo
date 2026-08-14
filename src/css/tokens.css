@@ -55,6 +55,16 @@
   --link:          #C81E5E; /* Content-Link — text-safe on white */
   --brand-disabled-bg: #FFD4E4; /* Bg-Brand-Disabled */
 
+  /* WBK Brand Visual Guidelines v2.0 — secondary palette, for FILLS only
+     (chart segments, category dots, bars), never as text on light. Category
+     coding is shared with the org chart. Brand constants: same in dark. */
+  --wbk-blue:   #0047C7; /* Zima Blue — Sports */
+  --wbk-sea:    #00FFD0; /* Sea Green — Cashless */
+  --wbk-violet: #7A4AFF; /* Ultra Violet — On-ground */
+  --wbk-lime:   #B3E100; /* Vivid Lime */
+  --wbk-orange: #F46241; /* Neon Orange */
+  --wbk-yellow: #FFDE00; /* Golden Yellow */
+
   /* inverse — Primary button (navy) + on-dark content */
   --inverse-bg:    #071437; /* Bg-Primary-Inverse / Surface-Base-Inverse */
   --inverse-text:  #F9F9F9; /* Content-Primary-Inverse */
