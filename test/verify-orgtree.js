@@ -1,7 +1,9 @@
-/* Organisation Tree — the Event Operations org chart page. Loads the real
- * bundle in jsdom, renders the view in EN + AR, and asserts the full roster,
- * squad structure, open roles, incoming flag, the viewer "You" badge, the
- * signed-in gate, and search wiring. Mirrors the other verify-*.js harnesses. */
+/* Organisation Tree (Event Operations) — the OrgTree spec, in tempo.
+ * Loads the real bundle in jsdom, checks every derived count reconciles to
+ * WP.orgTreeData.PEOPLE (headcount/positions/countries/freelance/open + squad
+ * sizes), renders the board as a manager and asserts the spec surfaces (stat
+ * strip, search, squad dropdown, filters button, recursive tree + bus, 29
+ * cards), and gates to director/admin only. */
 const fs = require('fs'), path = require('path');
 const { JSDOM } = require('jsdom');
 const root = path.join(__dirname, '..');
@@ -22,62 +24,56 @@ const WP = window.WP;
 function assert(c, m) { if (!c) errors.push('[assert] ' + m); }
 
 try {
-  assert(!!(WP.ui && WP.ui.orgTree), 'WP.ui.orgTree exists');
-  const O = WP.ui.orgTree._org;
-  assert(O.exec.length === 2, 'exec spine has 2 (CCO + Director)');
-  assert(O.teams.length === 5, 'five squads');
+  const D = WP.orgTreeData;
+  assert(!!D && D.PEOPLE.length === 29, '29 positions in the roster (got ' + (D && D.PEOPLE.length) + ')');
+  assert(D.SQUADS.length === 5, '5 squads');
+  const ppl = D.PEOPLE.filter(p => p.status !== 'open');
+  assert(ppl.length === 26, 'headcount excludes open → 26 people (got ' + ppl.length + ')');
+  assert(ppl.filter(p => p.country === 'Saudi Arabia').length === 23, '23 people in Saudi Arabia');
+  assert(ppl.filter(p => p.country === 'UAE').length === 3, '3 people in UAE');
+  assert(ppl.filter(p => p.contract === 'Freelance').length === 6, '6 freelancers');
+  assert(D.PEOPLE.filter(p => p.status === 'open').length === 3, '3 open roles (TBC)');
+  assert(D.PEOPLE.filter(p => p.status === 'incoming').length === 1, '1 incoming');
+  const sc = n => D.PEOPLE.filter(p => p.squad === n).length;
+  assert(sc('Automation & Execution') === 5 && sc('Sports') === 7 && sc('Entertainment') === 6 && sc('On Ground') === 4 && sc('Cashless') === 5, 'squad sizes 5/7/6/4/5');
+  // 4 sub-teams
+  assert([...new Set(D.PEOPLE.map(p => p.unit).filter(Boolean))].length === 4, 'four sub-teams');
+  // manager links resolve
+  D.PEOPLE.forEach(p => { if (p.manager) assert(!!D.PEOPLE.find(x => x.id === p.manager), p.id + ' manager resolves'); });
 
-  // Independent roster tally from the data.
-  let filled = O.exec.length, open = 0, incoming = 0, names = [];
-  O.exec.forEach(p => names.push(p.name));
-  O.teams.forEach(t => {
-    const all = [t.lead, ...t.reports].concat(t.sub ? [t.sub.lead, ...t.sub.reports] : []);
-    all.forEach(p => { if (p.open) open++; else filled++; if (p.neu) incoming++; names.push(p.name); });
-  });
-  assert(filled === 26, '26 filled roles (got ' + filled + ')');
-  assert(open === 3, '3 open TBC roles (got ' + open + ')');
-  assert(incoming === 1, 'exactly one incoming member');
-  ['Hamdi Missaoui', 'Ahmed Othman', 'Motaa Aldarra', 'Ayah Nasif', 'Omar Zarea', 'Mohammed Akram', 'Batool Emad']
-    .forEach(n => assert(names.indexOf(n) >= 0, 'roster includes ' + n));
+  // i18n
+  assert(WP.i18n.t('navOrgTree') !== 'navOrgTree', 'navOrgTree exists');
+  assert(WP.i18n.t('orgTreeSub2') !== 'orgTreeSub2', 'orgTreeSub2 exists');
 
-  // i18n present (EN) + AR.
-  assert(WP.i18n.t('navOrgTree') !== 'navOrgTree', 'navOrgTree string exists');
-  assert(WP.i18n.t('orgTreeTitle') !== 'orgTreeTitle', 'orgTreeTitle string exists');
-
-  // Render (signed in) — EN.
-  WP.state.authed = true; WP.state.viewerId = 'p_akram'; WP.state.lang = 'en';
-  const host = window.document.createElement('div');
-  WP.ui.orgTree.render(host);
-  let out = host.innerHTML;
-  assert(/otc-board/.test(out), 'render: board present');
-  assert(/otc-head/.test(out), 'render: squad headers present');
-  assert(out.indexOf('Anti-Fraud') >= 0, 'render: Anti-Fraud sub-unit present');
-  assert((out.match(/otc-card/g) || []).length === 29, 'render: 29 cards (26 people + 3 TBC) — got ' + (out.match(/otc-card/g) || []).length);
-  assert((out.match(/is-open/g) || []).length === 3, 'render: 3 open-role cards');
-  assert(/otc-you/.test(out) && out.indexOf('Mohammed Akram') >= 0, 'render: viewer "You" badge on the viewer card');
-  assert(out.indexOf(WP.i18n.t('orgTreeTitle')) >= 0, 'render: EN title present');
-  assert(/data-otc-search/.test(out), 'render: search control present');
-
-  // AR render (RTL).
-  WP.state.lang = 'ar';
-  WP.ui.orgTree.render(host);
-  assert(host.innerHTML.indexOf('الهيكل التنظيمي') >= 0, 'render: AR title present');
-  WP.state.lang = 'en';
-
-  // RBAC: real personal data → director/admin only, not every employee.
+  // RBAC
   assert(WP.ui.orgTree.canView({ level: 'director' }) === true, 'director can view');
   assert(WP.ui.orgTree.canView({ superAdmin: true }) === true, 'super admin can view');
   assert(WP.ui.orgTree.canView({ level: 'spec' }) === false, 'specialist cannot view');
   assert(WP.ui.orgTree.canView(null) === false, 'no viewer cannot view');
 
-  // Denied render for a non-manager — no board, just the gate message.
+  // render as super admin
+  WP.state.authed = true; WP.state.viewerId = 'p_akram'; WP.state.lang = 'en';
+  const host = window.document.createElement('div');
+  WP.ui.orgTree.render(host);
+  const out = host.innerHTML;
+  assert(/ot-tree/.test(out), 'render: tree present');
+  assert(/ot-bus/.test(out), 'render: horizontal bus present');
+  assert((out.match(/ot-chead/g) || []).length === 5, 'render: five squad headers');
+  assert((out.match(/class="ot-card/g) || []).length === 29, 'render: 29 cards (got ' + (out.match(/class="ot-card/g) || []).length + ')');
+  assert(host.querySelectorAll('[data-open]').length === 29, 'render: 29 clickable cards');
+  assert(/data-q/.test(out) && /data-ddbtn/.test(out) && /data-fbtn/.test(out), 'render: search + squad dropdown + filters controls');
+  assert(/ot-pinmark/.test(out), 'render: CSS map pins in the stat strip');
+  assert(/ot-kids/.test(out), 'render: recursive nesting present');
+  assert(/ot-tag you/.test(out) && out.indexOf('Mohammed Akram') >= 0, 'render: viewer YOU badge');
+
+  // denied render for a non-manager
   const origViewer = WP.viewer;
   WP.viewer = () => ({ id: 'x', level: 'spec' });
-  const denyHost = window.document.createElement('div');
-  WP.ui.orgTree.render(denyHost);
+  const deny = window.document.createElement('div');
+  WP.ui.orgTree.render(deny);
   WP.viewer = origViewer;
-  assert(!/otc-board/.test(denyHost.innerHTML), 'non-manager: no board rendered');
-  assert(denyHost.innerHTML.indexOf(WP.i18n.t('orgTreeDenied')) >= 0, 'non-manager: gate message shown');
+  assert(!/ot-tree/.test(deny.innerHTML), 'non-manager: no tree');
+  assert(deny.innerHTML.indexOf(WP.i18n.t('orgTreeDenied')) >= 0, 'non-manager: gate message');
 } catch (e) {
   errors.push('[throw] ' + e.message + '\n' + e.stack);
 }
@@ -86,4 +82,4 @@ if (errors.length) {
   console.error('FAIL — verify-orgtree\n' + errors.join('\n'));
   process.exit(1);
 }
-console.log('PASS — organisation tree: roster reconciles (26 people + 3 TBC across 5 squads + Anti-Fraud + exec spine), renders the board/headers/sub-unit with the viewer "You" badge in EN + AR, and gates to director+admin only.');
+console.log('PASS — organisation tree: derived counts reconcile (26 people · 23 SA / 3 UAE · 6 freelance · 3 open · squads 5/7/6/4/5 · 4 sub-teams), renders stat strip + pins + search + squad dropdown + filters + recursive tree + bus (29 cards) with the viewer YOU badge, and gates to director/admin only.');

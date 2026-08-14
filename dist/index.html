@@ -83,6 +83,15 @@
   --wbk-orange: #F46241; /* Neon Orange */
   --wbk-yellow: #FFDE00; /* Golden Yellow */
 
+  /* Organisation Tree — the spec's fixed dark palette (dark-only view). Kept as
+     tokens so the component CSS in app.css stays hex-free (token-purity). */
+  --ot-bg:#09090b; --ot-l1:#18181b; --ot-l2:#27272a;
+  --ot-primary:#e4e4e7; --ot-secondary:#a1a1aa;
+  --ot-border:rgba(255,255,255,.10); --ot-border-strong:rgba(255,255,255,.18);
+  --ot-amber:#f59e0b; --ot-amber-text:#fbbf24;
+  --ot-pin-1:#f45244; --ot-pin-2:#d33223;
+  --ot-label:#c4b5fd; --ot-avatar:#3f3f46;
+
   /* inverse — Primary button (navy) + on-dark content */
   --inverse-bg:    #071437; /* Bg-Primary-Inverse / Surface-Base-Inverse */
   --inverse-text:  #F9F9F9; /* Content-Primary-Inverse */
@@ -2978,66 +2987,142 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 }
 
 /* ============================================================
- * Organisation Tree (Event Operations) — webook brand v2.0
+ * Organisation Tree (Event Operations) — OrgTree spec, namespaced .ot-*,
+ * fixed dark palette via --ot-* tokens; squad colour via inline --sc.
  * ========================================================== */
-.otree-view .otc-stats { grid-template-columns: repeat(3, minmax(120px, 220px)); justify-content: start; }
-.otc-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 4px 0 18px; }
-.otc-search { position: relative; flex: 1 1 240px; max-width: 360px; display: flex; align-items: center; }
-.otc-search svg { position: absolute; inset-inline-start: 12px; color: var(--text-muted); }
-.otc-search input { width: 100%; font: inherit; font-size: 14px; padding: 9px 14px 9px 36px; padding-inline-start: 36px;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; outline: none; }
-.otc-search input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
-.otc-legend { display: flex; gap: 15px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-inline-start: auto; }
-.otc-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-inline-end: 6px; vertical-align: -1px; }
-.otc-lg-lead { background: var(--brand); }
-.otc-lg-new { background: var(--state-notice); }
-.otc-lg-open { background: transparent; border: 1.5px dashed var(--text-muted); }
+.ot-view{background:var(--ot-bg);color:var(--ot-primary);min-block-size:calc(100vh - 54px);padding:14px 20px 24px;font-variant-numeric:tabular-nums}
+.ot-view button{font-family:inherit;color:inherit;cursor:pointer}
 
-.otc-exec { display: flex; flex-direction: column; align-items: center; margin-bottom: 4px; }
-.otc-exec .otc-card { width: min(360px, 92%); }
-.otc-drop { width: 2px; height: 16px; background: var(--border); }
+/* header */
+.ot-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.ot-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--ot-amber-text);
+  background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.25);border-radius:999px;padding:3px 10px;margin-bottom:8px}
+.ot-title{margin:0;font-size:24px;line-height:28px;font-weight:800;letter-spacing:-.01em}
+.ot-sub{margin:4px 0 0;font-size:12.5px;color:var(--ot-secondary);max-width:70ch}
+.ot-stats{display:flex;align-items:center}
+.ot-stat{display:flex;flex-direction:column;align-items:flex-end;padding:0 14px;border-inline-start:1px solid var(--ot-border)}
+.ot-stat:first-child{border-inline-start:0}
+.ot-stat .v{font-size:20px;line-height:24px;font-weight:800}
+.ot-stat .l{font-size:10px;line-height:14px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ot-secondary);margin-top:2px}
+.ot-stat .v.fl{color:var(--ot-amber-text)} .ot-stat .v.op{color:var(--brand)}
+.ot-pinst{background:transparent;border:0;padding:0 12px;display:flex;flex-direction:column;align-items:center;border-inline-start:1px solid var(--ot-border)}
+.ot-pinst .v{font-size:20px;line-height:22px;font-weight:800} .ot-pinst .l{font-size:10px;line-height:14px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ot-secondary)}
+.ot-pinmark{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  background:linear-gradient(145deg,var(--ot-pin-1),var(--ot-pin-2));display:grid;place-items:center;
+  box-shadow:0 3px 7px rgba(0,0,0,.45);position:relative;transition:transform .15s,box-shadow .15s;margin-bottom:1px}
+.ot-pinmark::after{content:'';position:absolute;width:17px;height:17px;border-radius:999px;background:#fff;left:5.5px;top:5.5px;box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
+.ot-fgl{transform:rotate(45deg);font-size:12px;line-height:1;position:relative;z-index:1}
+.ot-pinshadow{width:12px;height:3px;border-radius:999px;background:rgba(0,0,0,.35);margin:2px auto 0}
+.ot-pinst:hover .ot-pinmark{transform:rotate(-45deg) translateY(-2px)}
+.ot-pinst.on .ot-pinmark{box-shadow:0 0 0 3px rgba(234,67,53,.25),0 3px 7px rgba(0,0,0,.45)}
 
-.otc-scroll { overflow-x: auto; padding: 10px 2px 6px; }
-.otc-board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(232px, 1fr); gap: 16px; align-items: start; min-width: min-content; }
-@media (max-width: 1100px) { .otc-board { grid-auto-columns: minmax(226px, 280px); } }
-.otc-col { display: flex; flex-direction: column; gap: 10px; position: relative; padding-top: 14px; }
-.otc-col::before { content: ""; position: absolute; top: 0; left: 50%; width: 2px; height: 14px; background: var(--border); }
-.otc-head { text-align: center; font-weight: 800; font-size: 13px; letter-spacing: .04em; text-transform: uppercase;
-  border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); background: var(--cat); color: var(--cat-ink, #000);
-  border: 1px solid rgba(255,255,255,.10); }
+/* sticky bar */
+.ot-bar{position:sticky;top:0;z-index:40;background:rgba(9,9,11,.9);backdrop-filter:blur(24px);
+  border-top:1px solid var(--ot-border);border-bottom:1px solid var(--ot-border);padding:10px 0;margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ot-search{position:relative;width:250px}
+.ot-search input{width:100%;height:38px;background:var(--ot-l2);border:1px solid var(--ot-border);color:var(--ot-primary);border-radius:999px;padding:0 14px 0 38px;padding-inline-start:38px;font-size:14px;outline:none}
+.ot-search input::placeholder{color:var(--ot-secondary)}
+.ot-search svg{position:absolute;inset-inline-start:13px;top:50%;transform:translateY(-50%);opacity:.55}
+.ot-dd{position:relative}
+.ot-ddbtn{min-width:224px;height:38px;display:flex;align-items:center;gap:9px;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:999px;padding:0 14px;font-size:13px;font-weight:600}
+.ot-ddbtn .cnt{margin-inline-start:auto;color:var(--ot-secondary);font-weight:600}
+.ot-ddbtn .ot-car{transition:transform .15s;opacity:.7}
+.ot-dd.open .ot-ddbtn .ot-car{transform:rotate(180deg)}
+.ot-dot{width:9px;height:9px;border-radius:999px;flex:none}
+.ot-ddmenu{position:absolute;top:44px;inset-inline-start:0;min-width:300px;background:var(--ot-l2);border:1px solid var(--ot-border-strong);border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,.66);padding:6px;z-index:50}
+.ot-ddrow{display:flex;align-items:center;gap:9px;width:100%;background:transparent;border:0;border-radius:4px;padding:8px 10px;font-size:13px;font-weight:600;text-align:start}
+.ot-ddrow:hover{background:rgba(255,255,255,.05)}
+.ot-ddrow .cnt{margin-inline-start:auto;color:var(--ot-secondary)}
+.ot-ddsep{height:1px;background:var(--ot-border);margin:5px 6px}
+.ot-flp{font-size:9px;line-height:1;font-weight:700;color:var(--ot-amber-text);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:999px;padding:2px 6px;letter-spacing:.03em;margin-inline-start:6px}
+.ot-fbtn{position:relative;margin-inline-start:auto;height:38px;display:flex;align-items:center;gap:7px;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:999px;padding:0 14px;font-size:13px;font-weight:600}
+.ot-fcount{background:var(--brand);color:#fff;font-size:10px;line-height:1;font-weight:700;border-radius:999px;padding:2px 6px}
+.ot-fpanel{width:100%;padding:12px 2px 2px;display:flex;flex-direction:column;gap:10px}
+.ot-frow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ot-fk{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ot-secondary);width:64px}
+.ot-seg{display:inline-flex;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:999px;padding:2px}
+.ot-seg button{height:28px;padding:0 12px;border:0;background:transparent;color:var(--ot-secondary);border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.ot-seg button.on{background:var(--brand);color:#fff}
+.ot-result{width:100%;display:flex;align-items:center;gap:12px;font-size:12px;color:var(--ot-secondary);padding-top:8px}
+.ot-rst{background:transparent;border:0;color:var(--brand);font-size:12px;font-weight:600;padding:0}
 
-.otc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm, 10px);
-  padding: 11px 12px; display: flex; gap: 11px; align-items: center; box-shadow: var(--shadow); position: relative;
-  transition: transform .12s ease, border-color .12s ease, opacity .12s ease; }
-.otc-card:hover { transform: translateY(-1px); }
-.otc-av { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-  font-weight: 800; font-size: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
-.otc-who { min-width: 0; }
-.otc-nm { font-weight: 700; font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.otc-rl { font-size: 11.5px; color: var(--text-muted); line-height: 1.25; margin-top: 2px; }
+/* squad info line */
+.ot-info{margin:12px 0 0}
+.ot-info-inner{display:flex;align-items:center;flex-wrap:wrap;gap:10px;border-inline-start:3px solid var(--sc,var(--ot-secondary));background:var(--ot-l1);border-radius:4px;padding:9px 12px;font-size:13px}
+.ot-info b{color:var(--ot-primary)}
+.ot-isep{width:3px;height:3px;border-radius:999px;background:var(--ot-border-strong)}
+.ot-info .ot-flp{margin:0}
+.ot-xclose{margin-inline-start:auto;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--ot-primary)}
 
-.otc-card.is-lead { border-color: color-mix(in srgb, var(--brand) 42%, transparent); }
-.otc-card.is-lead::before { content: ""; position: absolute; inset-inline-start: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--brand); }
-.otc-card.is-you { outline: 2px solid var(--brand); outline-offset: 1px; }
-.otc-you { position: absolute; top: -8px; inset-inline-end: 8px; background: var(--brand); color: var(--brand-contrast, #fff);
-  font-size: 9.5px; font-weight: 800; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
-.otc-card.is-new { border-color: rgba(255,222,0,.45); }
-.otc-card.is-new .otc-av { background: var(--state-notice) !important; color: #000; }
-.otc-tag { display: inline-block; margin-top: 3px; font-size: 9.5px; font-weight: 800; color: #000; background: var(--state-notice);
-  padding: 1px 8px; border-radius: 999px; letter-spacing: .04em; text-transform: uppercase; }
-.otc-card.is-open { border-style: dashed; background: var(--surface-2); }
-.otc-card.is-open .otc-av { background: transparent; border: 1.5px dashed var(--text-muted); color: var(--text-muted); box-shadow: none; }
-.otc-card.is-open .otc-nm { color: var(--text-muted); }
-.otc-card.is-open .otc-rl { color: var(--text-muted); }
-.otc-card.is-dim { opacity: .16; }
-.otc-col.is-faded .otc-head { opacity: .32; }
+/* tree */
+.ot-tree{margin-top:14px}
+.ot-spine{display:flex;flex-direction:column;align-items:center}
+.ot-spine .ot-card{width:390px;max-width:90%}
+.ot-stem{width:2px;height:16px;background:var(--ot-border-strong)}
+.ot-bus{display:grid;gap:12px;height:18px}
+.ot-bus>div{position:relative}
+.ot-bus>div::before{content:'';position:absolute;top:0;left:-7px;right:50%;height:2px;background:var(--ot-border-strong)}
+.ot-bus>div::after{content:'';position:absolute;top:0;left:50%;right:-7px;height:2px;background:var(--ot-border-strong)}
+.ot-bus>div:first-child::before,.ot-bus>div:last-child::after{display:none}
+.ot-bus>div span{position:absolute;top:0;left:calc(50% - 1px);width:2px;height:18px;background:var(--ot-border-strong)}
+.ot-cols{display:grid;gap:12px;align-items:start}
+.ot-col{min-width:0}
+.ot-chead{display:flex;align-items:center;gap:8px;width:100%;background:var(--ot-l2);border:1px solid var(--ot-border);border-inline-start:3px solid var(--sc);border-radius:4px;padding:8px 10px;margin-bottom:8px;font-size:12px;line-height:16px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sc)}
+.ot-chead .cnt{margin-inline-start:auto;color:var(--ot-secondary);font-weight:700;letter-spacing:0}
+.ot-chead .ot-flp{margin:0}
+.ot-kids{margin-inline-start:12px;padding-inline-start:12px;border-inline-start:1px solid var(--ot-border);margin-top:4px}
+.ot-kids>.ot-branch{margin-top:4px;position:relative}
+.ot-kids>.ot-branch::before{content:'';position:absolute;inset-inline-start:-12px;top:22px;width:9px;height:1px;background:var(--ot-border)}
+.ot-ulabel{font-size:9px;line-height:14px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ot-label);margin:8px 0 2px 2px}
 
-.otc-sub { margin-top: 8px; border: 1px dashed var(--border); border-radius: 12px; padding: 10px; }
-.otc-sub-h { text-align: center; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--state-notice); margin: 0 0 9px; }
-.otc-sub .otc-card { margin-bottom: 8px; }
-.otc-sub .otc-card:last-child { margin-bottom: 0; }
+/* card */
+.ot-card{display:flex;gap:9px;align-items:flex-start;padding:8px 9px;border-radius:8px;background:var(--ot-l1);border:1px solid var(--ot-border);position:relative;overflow:hidden;width:100%;text-align:start}
+.ot-card .ot-av{width:26px;height:26px;flex:none;border-radius:999px;display:grid;place-items:center;font-size:10px;line-height:1;font-weight:700;background:var(--ot-avatar);color:var(--ot-secondary)}
+.ot-who{min-width:0;flex:1}
+.ot-l1{display:flex;align-items:center;gap:6px;font-size:13px;line-height:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ot-l2{font-size:11px;line-height:15px;color:var(--ot-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.ot-l3{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px}
+.ot-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;line-height:1;font-weight:600;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);color:var(--ot-secondary)}
+.ot-chip.loc b{color:var(--ot-primary);font-weight:700}
+.ot-chip.fre{background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.25);color:var(--ot-amber-text)}
+.ot-chip.lead{background:color-mix(in srgb,var(--sc) 16%,transparent);color:var(--sc);border:1px solid color-mix(in srgb,var(--sc) 40%,transparent)}
+.ot-tag{font-size:9px;line-height:1;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.04em}
+.ot-tag.you{background:var(--brand);color:#fff}
+.ot-tag.inc{background:rgba(245,158,11,.12);color:var(--ot-amber-text);border:1px solid rgba(245,158,11,.25)}
+.ot-tag.opn{border:1px dashed var(--ot-border-strong);color:var(--ot-secondary)}
+.ot-card.fre .ot-av{box-shadow:0 0 0 2px var(--ot-bg),0 0 0 4px var(--ot-amber)}
+.ot-card.fre::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 70%,rgba(245,158,11,.06));pointer-events:none}
+.ot-card.lead{box-shadow:inset 3px 0 0 var(--sc);background:color-mix(in srgb,var(--sc) 9%,var(--ot-l1))}
+.ot-card.lead .ot-l1{color:#fff}
+.ot-card.lead .ot-av{background:var(--sc);color:#fff}
+.ot-card.open .ot-av{background:transparent;border:1px dashed var(--ot-border-strong);color:var(--ot-secondary)}
+.ot-card.open .ot-l1{color:var(--ot-secondary)}
+.ot-card.dim{opacity:.24;filter:saturate(.2)}
 
-@media (prefers-reduced-motion: reduce) { .otc-card { transition: none; } }
+/* isolated density */
+.ot-tree.iso .ot-cols{grid-template-columns:1fr!important;max-width:980px;margin:0 auto}
+.ot-tree.iso .ot-card{padding:10px 12px}
+.ot-tree.iso .ot-card .ot-av{width:30px;height:30px;font-size:11px}
+.ot-tree.iso .ot-l1{font-size:14px}
+.ot-tree.iso .ot-l2{font-size:12px}
+
+/* drawer */
+.ot-scrim{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:60;opacity:0;visibility:hidden;transition:opacity .18s}
+.ot-scrim.on{opacity:1;visibility:visible}
+.ot-drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;width:370px;max-width:92vw;background:var(--ot-l1);border-inline-start:1px solid var(--ot-border-strong);z-index:61;transform:translateX(100%);transition:transform .2s;padding:20px;overflow-y:auto;color:var(--ot-primary)}
+[dir="rtl"] .ot-drawer{transform:translateX(-100%)}
+.ot-drawer.on{transform:translateX(0)}
+.ot-drawer h2{margin:0;font-size:18px;font-weight:700}
+.ot-drole{color:var(--ot-secondary);font-size:13px;margin:2px 0 14px}
+.ot-drawer dl{display:grid;grid-template-columns:120px 1fr;gap:8px 10px;font-size:13px;margin:0}
+.ot-drawer dt{color:var(--ot-secondary)} .ot-drawer dd{margin:0;color:var(--ot-primary)}
+.ot-sect{margin-top:16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ot-secondary)}
+.ot-crumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:12px;color:var(--ot-secondary)}
+.ot-crumbs b{color:var(--ot-primary)}
+.ot-dreport{display:flex;align-items:center;gap:8px;width:100%;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:4px;padding:7px 9px;margin-top:6px;font-size:12px;font-weight:600;text-align:start}
+.ot-dclose{position:absolute;top:16px;inset-inline-end:16px;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:999px;width:30px;height:30px;display:grid;place-items:center}
+.ot-foot{margin-top:16px;font-size:11px;color:var(--ot-secondary)}
+@media (prefers-reduced-motion:reduce){.ot-view *{transition:none!important}}
 
 </style>
 </head>
@@ -4079,6 +4164,75 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     RECORDS: RECORDS,
     FRAUD: FRAUD,
   };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Organisation Tree data (Event Operations)
+ * ------------------------------------------------------------
+ * THE ONLY THING TO REPLACE. Every count, dropdown entry, city filter and stat
+ * derives from PEOPLE. "people/headcount" excludes status:'open'; "positions"
+ * includes them. Sample data — real personnel stays out of the public build
+ * (this view is director/admin gated; ships on a feature branch, not main).
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  var PEOPLE = [
+    // Leadership (2)
+    { id: 'hamdi', name: 'Hamdi Missaoui', role: 'Chief Commercial Officer', squad: 'Leadership', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Tunisia', contract: 'Full-time', level: 'Exec', manager: null, status: 'active', lead: true, start: '2019-01' },
+    { id: 'ahmed', name: 'Ahmed Othman', role: 'Event Operations Director', squad: 'Leadership', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Director', manager: 'hamdi', status: 'active', lead: true, start: '2020-03' },
+
+    // Automation & Execution (5, 0 FL) — sub-team: Anti-Fraud
+    { id: 'ayman', name: 'Ayman Albasha', role: 'Event Operations Sr. Manager', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Syria', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-02' },
+    { id: 'shahad', name: 'Shahad Joudah', role: 'Event Operations Specialist — Trainer', squad: 'Automation & Execution', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'ayman', status: 'active', lead: false, start: '2023-06' },
+    { id: 'batool', name: 'Batool Emad', role: 'Event Operations Manager — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'ayman', status: 'active', lead: true, start: '2022-05' },
+    { id: 'af1', name: 'TBC', role: 'Event Operations Specialist — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Specialist', manager: 'batool', status: 'open', lead: false, start: null },
+    { id: 'af2', name: 'TBC', role: 'Event Operations Coordinator — Anti-Fraud', squad: 'Automation & Execution', unit: 'Anti-Fraud', country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Coordinator', manager: 'batool', status: 'open', lead: false, start: null },
+
+    // Sports (7, 1 FL) — sub-team: Akram’s Pod
+    { id: 'motaa', name: 'Motaa Aldarra', role: 'Event Operations Sr. Manager', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Syria', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-04' },
+    { id: 'akram', name: 'Mohammed Akram', role: 'Event Operations Manager', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'motaa', status: 'active', lead: true, start: '2022-09', you: true },
+    { id: 'maksosah', name: 'Abdulrahman Maksousa', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Jeddah', nationality: 'Syria', contract: 'Freelance', level: 'Sr. Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-01' },
+    { id: 'khaled', name: 'Khaled Jeneina', role: 'Event Operations Sr. Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Jordan', contract: 'Full-time', level: 'Sr. Specialist', manager: 'akram', status: 'active', lead: false, start: '2023-03' },
+    { id: 'shamma', name: 'Shamma Alsagr', role: 'Event Operations Specialist', squad: 'Sports', unit: 'Akram’s Pod', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'akram', status: 'active', lead: false, start: '2024-02' },
+    { id: 'idris', name: 'Mohammed Idris', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'motaa', status: 'active', lead: false, start: '2023-11' },
+    { id: 'sp1', name: 'TBC', role: 'Event Operations Specialist', squad: 'Sports', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: null, contract: 'Full-time', level: 'Specialist', manager: 'motaa', status: 'open', lead: false, start: null },
+
+    // Entertainment (6, 2 FL) — sub-team: Live Shows
+    { id: 'ayah', name: 'Ayah Nasif', role: 'Event Operations Sr. Manager', squad: 'Entertainment', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-07' },
+    { id: 'farah', name: 'Farah Alsmay', role: 'Event Operations Manager — Live Shows', squad: 'Entertainment', unit: 'Live Shows', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Manager', manager: 'ayah', status: 'active', lead: true, start: '2022-08' },
+    { id: 'amen', name: 'Amen Shannah', role: 'Event Operations Sr. Specialist', squad: 'Entertainment', unit: 'Live Shows', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Syria', contract: 'Full-time', level: 'Sr. Specialist', manager: 'farah', status: 'active', lead: false, start: '2023-05' },
+    { id: 'howshan', name: 'Meshal Bin Howshan', role: 'Event Operations Sr. Specialist', squad: 'Entertainment', unit: 'Live Shows', country: 'UAE', city: 'Abu Dhabi', nationality: 'Saudi Arabia', contract: 'Freelance', level: 'Sr. Specialist', manager: 'farah', status: 'active', lead: false, start: '2023-09' },
+    { id: 'alsmari', name: 'Meshal Alsmari', role: 'Event Operations Coordinator', squad: 'Entertainment', unit: null, country: 'Saudi Arabia', city: 'Jeddah', nationality: 'Saudi Arabia', contract: 'Freelance', level: 'Coordinator', manager: 'ayah', status: 'active', lead: false, start: '2024-01' },
+    { id: 'raghdaa', name: 'Raghdaa Abuazzah', role: 'Event Operations Coordinator', squad: 'Entertainment', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Coordinator', manager: 'ayah', status: 'incoming', lead: false, start: '2026-09' },
+
+    // On Ground (4, 1 FL) — sub-team: Execution
+    { id: 'hani', name: 'Hani Ahmed', role: 'Event Operations Sr. Manager', squad: 'On Ground', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Sr. Manager', manager: 'ahmed', status: 'active', lead: true, start: '2021-05' },
+    { id: 'zaidan', name: 'Mohamed Zaidan', role: 'Event Operations Manager — Execution', squad: 'On Ground', unit: 'Execution', country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Manager', manager: 'hani', status: 'active', lead: true, start: '2022-06' },
+    { id: 'faraj', name: 'Ahmed Faraj', role: 'Event Operations Manager — Execution', squad: 'On Ground', unit: 'Execution', country: 'UAE', city: 'Dubai', nationality: 'Egypt', contract: 'Full-time', level: 'Manager', manager: 'zaidan', status: 'active', lead: false, start: '2022-10' },
+    { id: 'batarfi', name: 'Mohammed Batarfi', role: 'Event Operations Sr. Specialist — Logistics', squad: 'On Ground', unit: 'Execution', country: 'UAE', city: 'Dubai', nationality: 'Saudi Arabia', contract: 'Freelance', level: 'Sr. Specialist', manager: 'zaidan', status: 'active', lead: false, start: '2023-07' },
+
+    // Cashless (5, 2 FL)
+    { id: 'omar', name: 'Omar Zarea', role: 'Event Operations Manager', squad: 'Cashless', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Egypt', contract: 'Full-time', level: 'Manager', manager: 'ahmed', status: 'active', lead: true, start: '2022-01' },
+    { id: 'rafah', name: 'Rafah Alansari', role: 'Event Operations Sr. Specialist', squad: 'Cashless', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Sr. Specialist', manager: 'omar', status: 'active', lead: false, start: '2023-02' },
+    { id: 'aljazi', name: 'Aljazi Alshubaike', role: 'Event Operations Sr. Specialist', squad: 'Cashless', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Freelance', level: 'Sr. Specialist', manager: 'omar', status: 'active', lead: false, start: '2023-08' },
+    { id: 'rosa', name: 'Rosa Alansari', role: 'Event Operations Specialist', squad: 'Cashless', unit: null, country: 'Saudi Arabia', city: 'Jeddah', nationality: 'Saudi Arabia', contract: 'Freelance', level: 'Specialist', manager: 'omar', status: 'active', lead: false, start: '2024-03' },
+    { id: 'altahini', name: 'Mohammed Altahini', role: 'Event Operations Specialist', squad: 'Cashless', unit: null, country: 'Saudi Arabia', city: 'Riyadh', nationality: 'Saudi Arabia', contract: 'Full-time', level: 'Specialist', manager: 'omar', status: 'active', lead: false, start: '2024-05' },
+  ];
+
+  var SQUADS = [
+    { name: 'Automation & Execution', color: '#8b5cf6' },
+    { name: 'Sports', color: '#2563eb' },
+    { name: 'Entertainment', color: '#ff2c79' },
+    { name: 'On Ground', color: '#f97316' },
+    { name: 'Cashless', color: '#22e3b0' },
+  ];
+
+  var COUNTRY_FLAG = { 'Saudi Arabia': '🇸🇦', 'UAE': '🇦🇪' };
+
+  WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG };
 })(window.WP = window.WP || {});
 
 </script>
@@ -5225,6 +5379,11 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     navOrgTree:     { en: 'Organisation Tree', ar: 'الهيكل التنظيمي' },
     orgTreeTitle:   { en: 'Organisation Tree', ar: 'الهيكل التنظيمي' },
     orgTreeSub:     { en: 'Event Operations · reporting structure and squads', ar: 'عمليات الفعاليات · هيكل التبعية والفرق' },
+    orgTreeSub2:    { en: 'Event Operations · click a squad to open it on its own · indented = reports to the card above · no orange mark = full-time staff', ar: 'عمليات الفعاليات · اضغط على فريق لعرضه وحده · الإزاحة = يتبع البطاقة الأعلى · بدون علامة برتقالية = موظف بدوام كامل' },
+    orgTreeSample:  { en: 'Sample data', ar: 'بيانات تجريبية' },
+    orgTreeSearch2: { en: 'Search name or role…', ar: 'ابحث عن اسم أو دور…' },
+    orgTreeFilters: { en: 'Filters', ar: 'المرشحات' },
+    orgTreeAll:     { en: 'All squads', ar: 'كل الفرق' },
     orgTreeDenied:  { en: 'This view is available to directors and admins only.', ar: 'هذا العرض متاح للمدراء والمشرفين فقط.' },
     orgTreeYou:     { en: 'You', ar: 'أنت' },
     orgTreeIncoming:{ en: 'Incoming', ar: 'قادم' },
@@ -16007,123 +16166,237 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 /* ============================================================
  * Tempo — Organisation Tree (Event Operations)
  * ------------------------------------------------------------
- * A dedicated, on-brand org chart of the Event Operations department: the exec
- * spine (CCO -> Director) and five category-coded squads (+ the Anti-Fraud
- * sub-unit), with squad leads, members and open (TBC) roles. Presentation only,
- * DOM built here; no engine dependency. Visible to any signed-in employee (an
- * org chart is all-staff), with a defence-in-depth authed re-check.
+ * The OrgTree spec, built for tempo's architecture: vanilla WP.ui module (no
+ * framework), colours via tokens (--ot-* / --brand / inline squad --sc) so
+ * app.css stays hex-free (token-purity), classes namespaced .ot-* so they can't
+ * collide with the app's shared CSS. Same DOM shape / CSS values as the spec.
  *
- * Styled to the webook Brand Visual Guidelines v2.0 — Electric Pink #FF2C79 as
- * the key colour, brand-only palette, category-coded squads, outlined icons.
+ * Real personal data → director/admin only (canView = canManage), defence-in-
+ * depth re-check here + a route guard in app.js.
  * ========================================================== */
 (function (WP) {
   'use strict';
   var ui = WP.ui;
   var esc = function (s) { return ui.esc(String(s == null ? '' : s)); };
 
-  /* Roster — reconciled to the Slack directory (authoritative spellings). */
-  var ORG = {
-    exec: [
-      { name: 'Hamdi Missaoui', role: 'Chief Commercial Officer' },
-      { name: 'Ahmed Othman',   role: 'Event Operations Director' },
-    ],
-    teams: [
-      { name: 'Automation & Execution', cat: '#7A4AFF', ink: '#fff',
-        lead: { name: 'Ayman Albasha', role: 'Event Operations Sr. Manager' },
-        reports: [ { name: 'Shahad Joudah', role: 'Event Operations Specialist - Trainer' } ],
-        sub: { name: 'Anti-Fraud',
-          lead: { name: 'Batool Emad', role: 'Event Operations Manager - Anti-Fraud' },
-          reports: [
-            { name: 'TBC', role: 'Event Operations Specialist - Anti-Fraud', open: true },
-            { name: 'TBC', role: 'Event Operations Coordinator - Anti-Fraud', open: true },
-          ] } },
-      { name: 'Sports', cat: '#0047C7', ink: '#fff',
-        lead: { name: 'Motaa Aldarra', role: 'Event Operations Sr. Manager' },
-        reports: [
-          { name: 'Mohammed Akram',       role: 'Event Operations Manager', you: true },
-          { name: 'Abdulrahman Maksousa', role: 'Event Operations Sr. Specialist' },
-          { name: 'Khaled Jeneina',       role: 'Event Operations Sr. Specialist' },
-          { name: 'Shamma Alsagr',        role: 'Event Operations Specialist' },
-          { name: 'Mohammed Idris',       role: 'Event Operations Specialist' },
-          { name: 'TBC',                  role: 'Event Operations Specialist', open: true },
-        ] },
-      { name: 'Entertainment', cat: '#FF2C79', ink: '#fff',
-        lead: { name: 'Ayah Nasif', role: 'Event Operations Sr. Manager' },
-        reports: [
-          { name: 'Farah Alsmay',      role: 'Event Operations Manager' },
-          { name: 'Amen Shannah',      role: 'Event Operations Sr. Specialist' },
-          { name: 'Meshal Bin Howshan', role: 'Event Operations Sr. Specialist' },
-          { name: 'Meshal Alsmari',    role: 'Event Operations Coordinator' },
-          { name: 'Raghdaa Abuazzah',  role: 'Event Operations Coordinator', neu: true },
-        ] },
-      { name: 'On Ground', cat: '#F46241', ink: '#fff',
-        lead: { name: 'Hani Ahmed', role: 'Event Operations Sr. Manager' },
-        reports: [
-          { name: 'Mohamed Zaidan',   role: 'Event Operations Manager - Execution' },
-          { name: 'Ahmed Faraj',      role: 'Event Operations Manager - Execution' },
-          { name: 'Mohammed Batarfi', role: 'Event Operations Sr. Specialist (Logistics)' },
-        ] },
-      { name: 'Cashless', cat: '#00FFD0', ink: '#000',
-        lead: { name: 'Omar Zarea', role: 'Event Operations Manager' },
-        reports: [
-          { name: 'Rafah Alansari',    role: 'Event Operations Sr. Specialist' },
-          { name: 'Aljazi Alshubaike', role: 'Event Operations Sr. Specialist' },
-          { name: 'Rosa Alansari',     role: 'Event Operations Specialist' },
-          { name: 'Mohammed Altahini', role: 'Event Operations Specialist' },
-        ] },
-    ],
+  function DATA() { return WP.orgTreeData || { PEOPLE: [], SQUADS: [], COUNTRY_FLAG: {} }; }
+  var PEOPLE = function () { return DATA().PEOPLE; };
+  var SQUADS = function () { return DATA().SQUADS; };
+  var FLAG = function () { return DATA().COUNTRY_FLAG; };
+
+  /* ---- helpers ---- */
+  var byId = function (id) { return PEOPLE().filter(function (p) { return p.id === id; })[0]; };
+  var squadOf = function (n) { return SQUADS().filter(function (s) { return s.name === n; })[0] || { color: '#a1a1aa' }; };
+  var initials = function (n) { return n === 'TBC' ? '?' : n.split(' ').slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase(); };
+  var reportsOf = function (id) { return PEOPLE().filter(function (p) { return p.manager === id; }); };
+  var chain = function (p) { var out = [], c = p; while (c && c.manager) { c = byId(c.manager); if (c) out.unshift(c); } return out; };
+  var LEVEL_RANK = { 'Exec': 0, 'Director': 1, 'Sr. Manager': 2, 'Manager': 3, 'Sr. Specialist': 4, 'Specialist': 5, 'Coordinator': 6 };
+  var bySeniority = function (a, b) {
+    return (LEVEL_RANK[a.level] == null ? 9 : LEVEL_RANK[a.level]) - (LEVEL_RANK[b.level] == null ? 9 : LEVEL_RANK[b.level])
+      || (b.lead ? 1 : 0) - (a.lead ? 1 : 0)
+      || (a.status === 'open') - (b.status === 'open')
+      || a.name.localeCompare(b.name);
   };
+  var isPerson = function (p) { return p.status !== 'open'; };
+  var people = function () { return PEOPLE().filter(isPerson); };
+  var flag = function (c) { return FLAG()[c] || ''; };
 
-  /* Avatar colours: brand palette only; ink chosen by luminance for legibility. */
-  var BRAND = ['#FF2C79', '#7A4AFF', '#00FFD0', '#B3E100', '#F46241', '#0047C7', '#FFDE00'];
-  function inkFor(hex) {
-    var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.6 ? '#000' : '#fff';
-  }
-  function initials(n) {
-    var p = String(n).trim().split(/\s+/).filter(Boolean);
-    if (!p.length) return '?';
-    return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : (p[0][1] || ''))).toUpperCase();
-  }
-  function swatch(n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; return BRAND[h % BRAND.length]; }
+  /* ---- state ---- */
+  var S = { q: '', squad: null, country: 'all', city: 'all', contract: 'all', level: 'all', ddOpen: false, fOpen: false };
 
-  function card(p, opts) {
-    opts = opts || {};
-    var cls = ['otc-card'];
-    if (opts.lead) cls.push('is-lead');
-    if (p.open) cls.push('is-open');
-    if (p.neu) cls.push('is-new');
-    if (p.you) cls.push('is-you');
-    var av;
-    if (p.open) av = '<span class="otc-av">?</span>';
-    else if (p.neu) av = '<span class="otc-av">' + esc(initials(p.name)) + '</span>';
-    else { var c = swatch(p.name); av = '<span class="otc-av" style="background:' + c + ';color:' + inkFor(c) + '">' + esc(initials(p.name)) + '</span>'; }
-    var s = (p.name + ' ' + p.role + ' ' + (opts.team || '')).toLowerCase();
-    return '<div class="' + cls.join(' ') + '" data-s="' + esc(s) + '">' +
-      (p.you ? '<span class="otc-you">' + esc(WP.i18n.t('orgTreeYou')) + '</span>' : '') + av +
-      '<div class="otc-who"><div class="otc-nm">' + esc(p.name) + '</div>' +
-        '<div class="otc-rl">' + esc(p.role) + '</div>' +
-        (p.neu ? '<span class="otc-tag">' + esc(WP.i18n.t('orgTreeIncoming')) + '</span>' : '') +
-      '</div></div>';
+  function filtersActive() { return !!(S.q || S.country !== 'all' || S.city !== 'all' || S.contract !== 'all' || S.level !== 'all'); }
+  function secondaryCount() { return [S.country !== 'all', S.contract !== 'all', S.level !== 'all'].filter(Boolean).length; }
+  function matches(p) {
+    if (S.squad && p.squad !== S.squad) return false;
+    if (S.q) { var h = (p.name + ' ' + p.role + ' ' + p.squad + ' ' + (p.unit || '') + ' ' + p.city).toLowerCase(); if (h.indexOf(S.q.toLowerCase()) < 0) return false; }
+    if (S.country !== 'all' && p.country !== S.country) return false;
+    if (S.city !== 'all' && p.city !== S.city) return false;
+    if (S.contract !== 'all' && p.contract !== S.contract) return false;
+    if (S.level !== 'all' && p.level !== S.level) return false;
+    return true;
   }
+  function dim(p) { var s = S.squad; S.squad = null; var m = matches(p); S.squad = s; return filtersActive() && !m; }
 
-  function statsHTML() {
-    var t = WP.i18n.t, filled = ORG.exec.length, open = 0;
-    ORG.teams.forEach(function (tm) {
-      [tm.lead].concat(tm.reports, tm.sub ? [tm.sub.lead].concat(tm.sub.reports) : [])
-        .forEach(function (p) { if (p.open) open++; else filled++; });
-    });
-    return '<div class="metrics otc-stats">' +
-      '<div class="card"><div class="label">' + esc(t('orgTreePeople')) + '</div><div class="value" style="color:var(--brand-text)">' + filled + '</div></div>' +
-      '<div class="card"><div class="label">' + esc(t('orgTreeSquads')) + '</div><div class="value">' + ORG.teams.length + '</div></div>' +
-      '<div class="card"><div class="label">' + esc(t('orgTreeOpen')) + '</div><div class="value">' + open + '</div></div>' +
-    '</div>';
-  }
-
-  // Director/admin only — this is real personal data (names + reporting lines),
-  // so it's gated like the other people-data views (Sales, Org capability),
-  // not shown to every signed-in employee. Defence-in-depth re-check here.
   function canView(viewer) { return !!(WP.access && WP.access.canManage(viewer)); }
+  function squadCount(name) { return PEOPLE().filter(function (p) { return p.squad === name; }).length; }
+  function squadFL(name) { return PEOPLE().filter(function (p) { return p.squad === name && isPerson(p) && p.contract === 'Freelance'; }).length; }
+
+  /* ---- stat strip ---- */
+  function statStripHTML() {
+    var ppl = people();
+    var sa = ppl.filter(function (p) { return p.country === 'Saudi Arabia'; }).length;
+    var ae = ppl.filter(function (p) { return p.country === 'UAE'; }).length;
+    var fl = ppl.filter(function (p) { return p.contract === 'Freelance'; }).length;
+    var open = PEOPLE().filter(function (p) { return p.status === 'open'; }).length;
+    var pin = function (c, n) {
+      return '<button class="ot-pinst' + (S.country === c ? ' on' : '') + '" data-country="' + esc(c) + '">' +
+        '<span class="ot-pinmark"><span class="ot-fgl">' + flag(c) + '</span></span><span class="ot-pinshadow"></span>' +
+        '<span class="v">' + n + '</span><span class="l">' + esc(c) + '</span></button>';
+    };
+    return '<div class="ot-stat"><span class="v">' + ppl.length + '</span><span class="l">People</span></div>' +
+      pin('Saudi Arabia', sa) + pin('UAE', ae) +
+      '<div class="ot-stat"><span class="v fl">' + fl + '</span><span class="l">Freelance</span></div>' +
+      '<div class="ot-stat"><span class="v op">' + open + '</span><span class="l">Open roles</span></div>';
+  }
+
+  /* ---- squad dropdown ---- */
+  function ddBtnHTML() {
+    if (S.squad) { var c = squadOf(S.squad);
+      return '<span class="ot-dot" style="background:' + c.color + '"></span>' + esc(S.squad) + '<span class="cnt">' + squadCount(S.squad) + '</span><span class="ot-car">▾</span>';
+    }
+    return '<span class="ot-dot" style="background:#a1a1aa"></span>All squads<span class="cnt">' + PEOPLE().length + '</span><span class="ot-car">▾</span>';
+  }
+  function ddMenuHTML() {
+    var rows = '<button class="ot-ddrow" data-sq=""><span class="ot-dot" style="background:#a1a1aa"></span>All squads<span class="cnt">' + PEOPLE().length + '</span></button><div class="ot-ddsep"></div>';
+    rows += SQUADS().map(function (s) { var fl = squadFL(s.name);
+      return '<button class="ot-ddrow" data-sq="' + esc(s.name) + '"><span class="ot-dot" style="background:' + s.color + '"></span>' + esc(s.name) +
+        (fl ? '<span class="ot-flp">' + fl + ' FL</span>' : '') + '<span class="cnt">' + squadCount(s.name) + '</span></button>';
+    }).join('');
+    return rows;
+  }
+
+  /* ---- filters panel ---- */
+  function filtersPanelHTML() {
+    var countries = ['Saudi Arabia', 'UAE'];
+    var citiesIn = S.country === 'all'
+      ? Array.from(new Set(people().map(function (p) { return p.city; })))
+      : Array.from(new Set(people().filter(function (p) { return p.country === S.country; }).map(function (p) { return p.city; })));
+    var seg = function (key, opts) {
+      return '<div class="ot-seg">' + opts.map(function (o) {
+        return '<button data-k="' + key + '" data-v="' + esc(o.v) + '" class="' + (String(S[key]) === String(o.v) ? 'on' : '') + '">' + esc(o.l) + '</button>';
+      }).join('') + '</div>';
+    };
+    var cOpts = [{ v: 'all', l: 'Both' }].concat(countries.map(function (c) { return { v: c, l: flag(c) + ' ' + c + ' ' + people().filter(function (p) { return p.country === c; }).length }; }));
+    var cityOpts = [{ v: 'all', l: 'All cities' }].concat(citiesIn.map(function (c) { return { v: c, l: c }; }));
+    var contractOpts = [{ v: 'all', l: 'Both' }, { v: 'Full-time', l: 'Full-time staff' }, { v: 'Freelance', l: 'Freelance' }];
+    var levelOpts = [{ v: 'all', l: 'All' }, { v: 'Sr. Manager', l: 'Sr. Manager' }, { v: 'Manager', l: 'Manager' }, { v: 'Sr. Specialist', l: 'Sr. Specialist' }, { v: 'Specialist', l: 'Specialist' }, { v: 'Coordinator', l: 'Coordinator' }];
+    return '<div class="ot-frow"><span class="ot-fk">Country</span>' + seg('country', cOpts) + seg('city', cityOpts) + '</div>' +
+      '<div class="ot-frow"><span class="ot-fk">Contract</span>' + seg('contract', contractOpts) + '</div>' +
+      '<div class="ot-frow"><span class="ot-fk">Position</span>' + seg('level', levelOpts) + '</div>';
+  }
+
+  /* ---- result line ---- */
+  function resultHTML() {
+    if (!filtersActive() && !S.squad) return '';
+    var pool = S.squad ? PEOPLE().filter(function (p) { return p.squad === S.squad; }) : PEOPLE();
+    var shown = pool.filter(matches).length;
+    return 'Showing <b>' + shown + '</b> of <b>' + PEOPLE().length + '</b> positions <button class="ot-rst" data-reset="1">Reset</button>';
+  }
+
+  /* ---- squad info line ---- */
+  function infoHTML() {
+    if (!S.squad) return '';
+    var c = squadOf(S.squad);
+    var inSquad = PEOPLE().filter(function (p) { return p.squad === S.squad; });
+    var ppl = inSquad.filter(isPerson);
+    var lead = inSquad.filter(function (p) { return p.lead && byId(p.manager) && byId(p.manager).squad !== S.squad; })[0];
+    var fl = ppl.filter(function (p) { return p.contract === 'Freelance'; }).length;
+    var cities = {}; ppl.forEach(function (p) { cities[p.city] = (cities[p.city] || 0) + 1; });
+    var cityStr = Object.keys(cities).map(function (k) { return esc(k) + ' ' + cities[k]; }).join(' <span class="ot-isep"></span> ');
+    var units = Array.from(new Set(inSquad.map(function (p) { return p.unit; }).filter(Boolean)));
+    return '<span style="--sc:' + c.color + '" class="ot-info-inner">' +
+      '<span><b>' + esc(S.squad) + '</b></span><span class="ot-isep"></span>' +
+      (lead ? '<span>led by <b>' + esc(lead.name) + '</b></span><span class="ot-isep"></span>' : '') +
+      '<span><b>' + ppl.length + '</b> people' + (fl ? ' <span class="ot-flp">' + fl + ' freelance</span>' : '') + '</span><span class="ot-isep"></span>' +
+      '<span>' + cityStr + '</span>' +
+      (units.length ? '<span class="ot-isep"></span><span>teams inside: <b>' + units.map(esc).join(', ') + '</b></span>' : '') +
+      '<button class="ot-xclose" data-reset="1">✕ ' + esc(WP.i18n.t('orgTreeAll')) + '</button></span>';
+  }
+
+  /* ---- person card ---- */
+  function cardHTML(p, iso) {
+    var c = squadOf(p.squad); var cls = ['ot-card'];
+    if (p.lead && p.squad !== 'Leadership') cls.push('lead');
+    if (p.contract === 'Freelance') cls.push('fre');
+    if (p.status === 'open') cls.push('open');
+    if (dim(p)) cls.push('dim');
+    var role = iso ? p.role : p.role.replace(/^Event Operations\s*/, '');
+    var n = reportsOf(p.id).length;
+    var tags = (p.you ? '<span class="ot-tag you">' + esc(WP.i18n.t('orgTreeYou')) + '</span>' : '') +
+      (p.status === 'incoming' ? '<span class="ot-tag inc">' + esc(WP.i18n.t('orgTreeIncoming')) + '</span>' : '') +
+      (p.status === 'open' ? '<span class="ot-tag opn">OPEN</span>' : '');
+    var loc = p.status === 'open' ? '' :
+      '<span class="ot-chip loc"><svg width="11" height="11" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.6" fill="#7f1d1d"/></svg>' + flag(p.country) + ' <b>' + esc(p.city) + '</b></span>';
+    var fre = p.contract === 'Freelance' ? '<span class="ot-chip fre">FREELANCE</span>' : '';
+    var leadchip = (p.lead && p.squad !== 'Leadership') ? '<span class="ot-chip lead">LEAD · ' + n + '</span>' : '';
+    return '<button class="' + cls.join(' ') + '" data-open="' + p.id + '" style="--sc:' + c.color + '">' +
+      '<span class="ot-av">' + esc(initials(p.name)) + '</span>' +
+      '<span class="ot-who"><span class="ot-l1">' + esc(p.name) + tags + '</span>' +
+      '<span class="ot-l2">' + esc(role) + '</span>' +
+      '<span class="ot-l3">' + loc + fre + leadchip + '</span></span></button>';
+  }
+  function childrenHTML(p, iso) {
+    var kids = reportsOf(p.id); if (!kids.length) return '';
+    var same = kids.filter(function (k) { return (k.unit || null) === (p.unit || null); }).sort(bySeniority);
+    var diff = kids.filter(function (k) { return (k.unit || null) !== (p.unit || null); });
+    var groups = {}; diff.forEach(function (k) { (groups[k.unit] = groups[k.unit] || []).push(k); });
+    var html = same.map(function (k) { return '<div class="ot-branch">' + personHTML(k, iso) + '</div>'; }).join('');
+    Object.keys(groups).forEach(function (u) {
+      html += '<div class="ot-branch"><div class="ot-ulabel">▸ ' + esc(u) + '</div>' +
+        groups[u].sort(bySeniority).map(function (k) { return personHTML(k, iso); }).join('') + '</div>';
+    });
+    return '<div class="ot-kids">' + html + '</div>';
+  }
+  function personHTML(p, iso) { return cardHTML(p, iso) + childrenHTML(p, iso); }
+  function rootsOf(name) { return PEOPLE().filter(function (p) { return p.squad === name && (!byId(p.manager) || byId(p.manager).squad !== name); }).sort(bySeniority); }
+
+  /* ---- tree ---- */
+  function treeHTML() {
+    var iso = !!S.squad;
+    var squads = iso ? SQUADS().filter(function (s) { return s.name === S.squad; }) : SQUADS();
+    var gtc = 'repeat(' + squads.length + ',1fr)';
+    var cols = squads.map(function (s) {
+      var fl = squadFL(s.name), total = squadCount(s.name);
+      var matched = PEOPLE().filter(function (p) { return p.squad === s.name && matches(p); }).length;
+      var cnt = filtersActive() ? (matched + ' / ' + total) : ('' + total);
+      var head = '<div class="ot-chead" data-sq="' + esc(s.name) + '" style="--sc:' + s.color + '">' + esc(s.name) +
+        (fl ? '<span class="ot-flp">' + fl + ' FL</span>' : '') + '<span class="cnt">' + cnt + '</span></div>';
+      var body = rootsOf(s.name).map(function (r) { return personHTML(r, iso); }).join('');
+      return '<div class="ot-col" style="--sc:' + s.color + '">' + head + body + '</div>';
+    }).join('');
+    var spine = iso ? '' :
+      '<div class="ot-spine">' + cardHTML(byId('hamdi'), false) + '<div class="ot-stem"></div>' + cardHTML(byId('ahmed'), false) + '</div>' +
+      '<div class="ot-stem" style="margin:0 auto"></div>' +
+      '<div class="ot-bus" style="grid-template-columns:' + gtc + '">' + SQUADS().map(function () { return '<div><span></span></div>'; }).join('') + '</div>';
+    return '<div class="ot-tree' + (iso ? ' iso' : '') + '">' + spine + '<div class="ot-cols" style="grid-template-columns:' + gtc + '">' + cols + '</div></div>';
+  }
+
+  /* ---- drawer ---- */
+  function drawerHTML(p) {
+    var c = squadOf(p.squad), mgr = byId(p.manager);
+    var crumbs = chain(p).map(function (x) { return '<b>' + esc(x.name) + '</b>'; }).join(' › ') || '<span>—</span>';
+    var reps = reportsOf(p.id).sort(bySeniority);
+    var repList = reps.length ? reps.map(function (r) {
+      return '<button class="ot-dreport" data-goto="' + r.id + '"><span class="ot-dot" style="background:' + squadOf(r.squad).color + '"></span>' + esc(r.name) + ' — ' + esc(r.role.replace(/^Event Operations\s*/, '')) + '</button>';
+    }).join('') : '<div class="ot-foot">No direct reports.</div>';
+    return '<button class="ot-dclose" data-dclose="1" aria-label="Close">✕</button>' +
+      '<h2>' + esc(p.name) + '</h2><div class="ot-drole">' + esc(p.role) + '</div>' +
+      '<dl>' +
+        '<dt>Squad</dt><dd><span class="ot-dot" style="background:' + c.color + ';display:inline-block;margin-inline-end:6px"></span>' + esc(p.squad) + '</dd>' +
+        '<dt>Sub-team</dt><dd>' + esc(p.unit || '—') + '</dd>' +
+        '<dt>Position</dt><dd>' + esc(p.level) + '</dd>' +
+        '<dt>Working in</dt><dd>' + (p.status === 'open' ? '—' : (flag(p.country) + ' ' + esc(p.city) + ', ' + esc(p.country))) + '</dd>' +
+        '<dt>Contract</dt><dd>' + esc(p.contract) + '</dd>' +
+        '<dt>Nationality</dt><dd>' + esc(p.nationality || '—') + '</dd>' +
+        '<dt>Status</dt><dd>' + esc(p.status) + '</dd>' +
+        '<dt>Start</dt><dd>' + esc(p.start || '—') + '</dd>' +
+        '<dt>Reports to</dt><dd>' + (mgr ? esc(mgr.name) : '—') + '</dd>' +
+      '</dl>' +
+      '<div class="ot-sect">Reporting line</div><div class="ot-crumbs">' + crumbs + '</div>' +
+      '<div class="ot-sect">Direct reports (' + reps.length + ')</div>' + repList;
+  }
+  function openDrawer(id) {
+    var p = byId(id); if (!p || !_root) return;
+    var d = _root.querySelector('[data-drawer]'), sc = _root.querySelector('[data-scrim]');
+    d.innerHTML = drawerHTML(p); d.classList.add('on'); sc.classList.add('on');
+    d.querySelector('[data-dclose]').onclick = closeDrawer;
+    d.querySelectorAll('[data-goto]').forEach(function (b) { b.onclick = function () { openDrawer(b.dataset.goto); }; });
+    var f = d.querySelector('[data-dclose]'); if (f) f.focus();
+  }
+  function closeDrawer() { if (!_root) return; var d = _root.querySelector('[data-drawer]'), sc = _root.querySelector('[data-scrim]'); if (d) d.classList.remove('on'); if (sc) sc.classList.remove('on'); }
+
+  /* ---- render (mount shell once) + update (dynamic regions) ---- */
+  var _root = null, _docWired = false;
 
   function render(root) {
     var t = WP.i18n.t;
@@ -16133,57 +16406,74 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
         '<div class="section ex-clear">' + ui.icon('lock', 18) + ' <span>' + esc(t('orgTreeDenied')) + '</span></div></div>';
       return;
     }
-
-    var exec = ORG.exec.map(function (p, i) {
-      return card(p, { lead: true }) + (i < ORG.exec.length - 1 ? '<div class="otc-drop"></div>' : '');
-    }).join('');
-
-    var board = ORG.teams.map(function (tm) {
-      var inner = '<div class="otc-head" style="--cat:' + tm.cat + ';--cat-ink:' + tm.ink + '">' + esc(tm.name) + '</div>';
-      inner += card(tm.lead, { lead: true, team: tm.name });
-      inner += tm.reports.map(function (r) { return card(r, { team: tm.name }); }).join('');
-      if (tm.sub) {
-        inner += '<div class="otc-sub"><p class="otc-sub-h">' + esc(tm.sub.name) + '</p>' +
-          card(tm.sub.lead, { lead: true, team: tm.name + ' ' + tm.sub.name }) +
-          tm.sub.reports.map(function (r) { return card(r, { team: tm.name + ' ' + tm.sub.name }); }).join('') + '</div>';
-      }
-      return '<div class="otc-col">' + inner + '</div>';
-    }).join('');
-
-    root.innerHTML = '<div class="view-pad otree-view">' +
-      ui.provenanceNote() +
-      ui.pageHeader({
-        crumbs: [{ label: t('navDashboard'), route: 'dashboard' }, { label: t('orgTreeTitle') }],
-        title: t('orgTreeTitle'),
-        subtitle: t('orgTreeSub'),
-      }) +
-      statsHTML() +
-      '<div class="otc-tools"><label class="otc-search">' + ui.icon('search', 16) +
-        '<input type="search" data-otc-search placeholder="' + esc(t('orgTreeSearch')) + '" aria-label="' + esc(t('orgTreeSearch')) + '" autocomplete="off"></label>' +
-        '<div class="otc-legend">' +
-          '<span><i class="otc-lg-lead"></i>' + esc(t('orgTreeLead')) + '</span>' +
-          '<span><i class="otc-lg-new"></i>' + esc(t('orgTreeIncoming')) + '</span>' +
-          '<span><i class="otc-lg-open"></i>' + esc(t('orgTreeOpenRole')) + '</span>' +
+    _root = root;
+    root.innerHTML =
+      '<div class="ot-view">' +
+        '<div class="ot-head">' +
+          '<div class="ot-head-l"><span class="ot-badge">⚠ ' + esc(t('orgTreeSample')) + '</span>' +
+            '<h1 class="ot-title">' + esc(t('orgTreeTitle')) + '</h1>' +
+            '<p class="ot-sub">' + esc(t('orgTreeSub2')) + '</p></div>' +
+          '<div class="ot-stats" data-stats></div>' +
         '</div>' +
+        '<div class="ot-bar">' +
+          '<label class="ot-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
+            '<input data-q type="search" placeholder="' + esc(t('orgTreeSearch2')) + '" autocomplete="off" aria-label="' + esc(t('orgTreeSearch2')) + '"></label>' +
+          '<div class="ot-dd"><button class="ot-ddbtn" data-ddbtn aria-haspopup="true"></button><div class="ot-ddmenu" data-ddmenu role="menu"></div></div>' +
+          '<button class="ot-fbtn" data-fbtn><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg> ' + esc(t('orgTreeFilters')) + ' <span class="ot-fcount" data-fcount hidden></span></button>' +
+          '<div class="ot-fpanel" data-fpanel hidden></div>' +
+          '<div class="ot-result" data-result hidden></div>' +
+        '</div>' +
+        '<div class="ot-info" data-info hidden></div>' +
+        '<div data-tree></div>' +
       '</div>' +
-      '<div class="otc-exec">' + exec + '</div>' +
-      '<div class="otc-scroll"><div class="otc-board">' + board + '</div></div>' +
-    '</div>';
+      '<div class="ot-scrim" data-scrim></div>' +
+      '<aside class="ot-drawer" data-drawer role="dialog" aria-modal="true" aria-label="Person details"></aside>';
 
-    // Search: dim non-matching cards, fade a squad whose cards all drop out.
-    var q = root.querySelector('[data-otc-search]');
-    if (q) q.oninput = function () {
-      var v = q.value.trim().toLowerCase();
-      root.querySelectorAll('.otc-card').forEach(function (c) { c.classList.toggle('is-dim', !!v && c.dataset.s.indexOf(v) < 0); });
-      root.querySelectorAll('.otc-col').forEach(function (col) {
-        var any = [].slice.call(col.querySelectorAll('.otc-card')).some(function (c) { return !c.classList.contains('is-dim'); });
-        col.classList.toggle('is-faded', !!v && !any);
-      });
-    };
+    // static wiring (survives updates)
+    var q = root.querySelector('[data-q]');
+    q.value = S.q;
+    q.oninput = function () { S.q = q.value; update(); };
+    root.querySelector('[data-ddbtn]').onclick = function (e) { e.stopPropagation(); S.ddOpen = !S.ddOpen; update(); };
+    root.querySelector('[data-fbtn]').onclick = function () { S.fOpen = !S.fOpen; update(); };
+    root.querySelector('[data-scrim]').onclick = closeDrawer;
+
+    if (!_docWired) {
+      _docWired = true;
+      document.addEventListener('click', function (e) { if (_root && !e.target.closest('.ot-dd') && S.ddOpen) { S.ddOpen = false; update(); } });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDrawer(); if (S.ddOpen) { S.ddOpen = false; update(); } } });
+    }
+    update();
+  }
+
+  function update() {
+    if (!_root) return;
+    var q = function (sel) { return _root.querySelector(sel); };
+    q('[data-stats]').innerHTML = statStripHTML();
+    q('[data-ddbtn]').innerHTML = ddBtnHTML();
+    var dd = _root.querySelector('.ot-dd'); dd.classList.toggle('open', S.ddOpen);
+    var menu = q('[data-ddmenu]'); menu.hidden = !S.ddOpen; menu.innerHTML = S.ddOpen ? ddMenuHTML() : '';
+    var fp = q('[data-fpanel]'); fp.hidden = !S.fOpen; fp.innerHTML = S.fOpen ? filtersPanelHTML() : '';
+    var fc = q('[data-fcount]'), n = secondaryCount(); fc.hidden = !n; fc.textContent = n;
+    var rl = q('[data-result]'); var rh = resultHTML(); rl.hidden = !rh; rl.innerHTML = rh;
+    var info = q('[data-info]'); var ih = infoHTML(); info.hidden = !ih; info.innerHTML = ih;
+    q('[data-tree]').innerHTML = treeHTML();
+
+    // dynamic wiring
+    _root.querySelectorAll('[data-country]').forEach(function (b) { b.onclick = function () { S.country = S.country === b.dataset.country ? 'all' : b.dataset.country; S.city = 'all'; update(); }; });
+    if (S.ddOpen) menu.querySelectorAll('[data-sq]').forEach(function (r) { r.onclick = function () { S.squad = r.dataset.sq || null; S.ddOpen = false; update(); }; });
+    if (S.fOpen) fp.querySelectorAll('button[data-k]').forEach(function (b) { b.onclick = function () { var k = b.dataset.k; S[k] = b.dataset.v === 'all' ? 'all' : b.dataset.v; if (k === 'country') S.city = 'all'; update(); }; });
+    _root.querySelectorAll('[data-reset]').forEach(function (b) { b.onclick = function () {
+      // info-line reset only clears the squad; the result-line Reset clears everything.
+      if (b.classList.contains('ot-xclose')) { S.squad = null; }
+      else { S.q = ''; S.squad = null; S.country = 'all'; S.city = 'all'; S.contract = 'all'; S.level = 'all'; var qi = _root.querySelector('[data-q]'); if (qi) qi.value = ''; }
+      update();
+    }; });
+    _root.querySelectorAll('.ot-chead[data-sq]').forEach(function (h) { h.onclick = function () { S.squad = h.dataset.sq; update(); }; });
+    _root.querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { openDrawer(b.dataset.open); }; });
   }
 
   WP.ui = WP.ui || {};
-  WP.ui.orgTree = { render: render, canView: canView, _org: ORG };
+  WP.ui.orgTree = { render: render, canView: canView, _state: S };
 })(window.WP = window.WP || {});
 
 </script>

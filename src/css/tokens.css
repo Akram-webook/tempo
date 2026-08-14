@@ -65,6 +65,15 @@
   --wbk-orange: #F46241; /* Neon Orange */
   --wbk-yellow: #FFDE00; /* Golden Yellow */
 
+  /* Organisation Tree — the spec's fixed dark palette (dark-only view). Kept as
+     tokens so the component CSS in app.css stays hex-free (token-purity). */
+  --ot-bg:#09090b; --ot-l1:#18181b; --ot-l2:#27272a;
+  --ot-primary:#e4e4e7; --ot-secondary:#a1a1aa;
+  --ot-border:rgba(255,255,255,.10); --ot-border-strong:rgba(255,255,255,.18);
+  --ot-amber:#f59e0b; --ot-amber-text:#fbbf24;
+  --ot-pin-1:#f45244; --ot-pin-2:#d33223;
+  --ot-label:#c4b5fd; --ot-avatar:#3f3f46;
+
   /* inverse — Primary button (navy) + on-dark content */
   --inverse-bg:    #071437; /* Bg-Primary-Inverse / Surface-Base-Inverse */
   --inverse-text:  #F9F9F9; /* Content-Primary-Inverse */
