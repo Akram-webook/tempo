@@ -84,6 +84,20 @@
   // again to re-hide them for a lean go-live cut.
   if (WP.config.mvp === undefined) WP.config.mvp = false;
 
+  // COCKPIT-ONLY pilot cut (weekend Workload MVP). When true, the sidebar shows
+  // ONLY the Workload cockpit (+ Org Tree / Permissions / Settings / Admins for
+  // managers), stray routes redirect to the cockpit, and the cross-cutting
+  // distractions (eval banner, feedback FAB, notifications bell, daily prompt) are
+  // suppressed — so the pilot is exactly the decision loop and nothing else.
+  // Nothing is deleted; set to false to restore the full app. Separate from `mvp`
+  // (which stays the advanced-layer gate). See docs/SPEC-workload-mvp.md.
+  if (WP.config.cockpitOnly === undefined) WP.config.cockpitOnly = true;
+  // Routes/nav-ids kept when cockpitOnly. Everything else is hidden + redirects home.
+  WP.COCKPIT_KEEP = ['workload', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
+  WP.cockpitHidden = function (id) {
+    return !!(WP.config && WP.config.cockpitOnly) && WP.COCKPIT_KEEP.indexOf(id) < 0;
+  };
+
   // G1 go-live escape hatch: force the sample directory even when a generated
   // real-data.js is present (for demos / screenshots). Reversible; default off so
   // real data wins automatically once imported. See docs/ROADMAP-golive.md.

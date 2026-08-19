@@ -13,7 +13,7 @@ const errors=[];const benign=/font|stylesheet|localStorage|Security|scrollIntoVi
 ['error','warn'].forEach(k=>{const o=window.console[k].bind(window.console);window.console[k]=(...a)=>{const s=a.join(' ');if(!benign.test(s))errors.push('['+k+'] '+s);o(...a);};});
 window.addEventListener('error',e=>{if(!benign.test(String(e.message)))errors.push('[onerror] '+e.message);});
 for(const s of srcs){try{new window.Function(fs.readFileSync(path.join(root,s),'utf8')).call(window);}catch(e){errors.push('[load '+s+'] '+e.message);}}
-const WP=window.WP;function assert(c,m){if(!c)errors.push('[assert] '+m);}
+const WP=window.WP; WP.config.cockpitOnly=false;function assert(c,m){if(!c)errors.push('[assert] '+m);}
 const evalJs=fs.readFileSync(path.join(root,'src/js/ui/evaluation.js'),'utf8');
 const evalsJs=fs.readFileSync(path.join(root,'src/js/ui/evaluations.js'),'utf8');
 const reportJs=fs.existsSync(path.join(root,'src/js/ui/weeklyReport.js'))?fs.readFileSync(path.join(root,'src/js/ui/weeklyReport.js'),'utf8'):'';

@@ -9,7 +9,7 @@ const errors=[];const benign=/font|stylesheet|localStorage|Security|scrollIntoVi
 ['error','warn'].forEach(k=>{const o=window.console[k].bind(window.console);window.console[k]=(...a)=>{const s=a.join(' ');if(!benign.test(s))errors.push('['+k+'] '+s);o(...a);};});
 window.addEventListener('error',e=>{if(!benign.test(String(e.message)))errors.push('[onerror] '+e.message);});
 for(const s of srcs){try{new window.Function(fs.readFileSync(path.join(root,s),'utf8')).call(window);}catch(e){errors.push('[load '+s+'] '+e.message);}}
-const WP=window.WP;function assert(c,m){if(!c)errors.push('[assert] '+m);}
+const WP=window.WP; WP.config.cockpitOnly=false;function assert(c,m){if(!c)errors.push('[assert] '+m);}
 try{
   WP.state.authed=true;WP.state.lang='en';
   // a manager with reports → land on dashboard via full app render → mandatory banner shows

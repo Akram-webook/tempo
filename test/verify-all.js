@@ -18,7 +18,7 @@ const benign = /font|stylesheet|localStorage|Security|scrollIntoView|Not impleme
 ['error', 'warn'].forEach(k => { const o = window.console[k].bind(window.console); window.console[k] = (...a) => { const s = a.join(' '); if (!benign.test(s)) errors.push('[' + k + '] ' + s); o(...a); }; });
 window.addEventListener('error', e => { if (!benign.test(String(e.message))) errors.push('[onerror] ' + e.message); });
 for (const s of srcs) { try { new window.Function(fs.readFileSync(path.join(root, s), 'utf8')).call(window); } catch (e) { errors.push('[load ' + s + '] ' + e.message); } }
-const WP = window.WP;
+const WP = window.WP; WP.config.cockpitOnly=false;
 
 WP.state.authed = true; WP.state.lang = 'en';
 const routes = ['dashboard', 'map', 'me', 'evaluations', 'evaluation', 'upward', 'daily', 'library', 'permissions', 'settings', 'fairness', 'profile'];

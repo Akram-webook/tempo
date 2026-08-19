@@ -4583,6 +4583,20 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   // again to re-hide them for a lean go-live cut.
   if (WP.config.mvp === undefined) WP.config.mvp = false;
 
+  // COCKPIT-ONLY pilot cut (weekend Workload MVP). When true, the sidebar shows
+  // ONLY the Workload cockpit (+ Org Tree / Permissions / Settings / Admins for
+  // managers), stray routes redirect to the cockpit, and the cross-cutting
+  // distractions (eval banner, feedback FAB, notifications bell, daily prompt) are
+  // suppressed — so the pilot is exactly the decision loop and nothing else.
+  // Nothing is deleted; set to false to restore the full app. Separate from `mvp`
+  // (which stays the advanced-layer gate). See docs/SPEC-workload-mvp.md.
+  if (WP.config.cockpitOnly === undefined) WP.config.cockpitOnly = true;
+  // Routes/nav-ids kept when cockpitOnly. Everything else is hidden + redirects home.
+  WP.COCKPIT_KEEP = ['workload', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
+  WP.cockpitHidden = function (id) {
+    return !!(WP.config && WP.config.cockpitOnly) && WP.COCKPIT_KEEP.indexOf(id) < 0;
+  };
+
   // G1 go-live escape hatch: force the sample directory even when a generated
   // real-data.js is present (for demos / screenshots). Reversible; default off so
   // real data wins automatically once imported. See docs/ROADMAP-golive.md.
@@ -19117,7 +19131,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     // MVP flag: drop the deferred nav entries (library/weekly/wellbeing/
     // fairness/org). One line returns them — WP.deferred() is false when
     // mvp is off. Nothing is removed from `nav` permanently.
-    const visibleNav = nav.filter(function (n) { return !WP.deferred(n.id); });
+    const visibleNav = nav.filter(function (n) { return !WP.deferred(n.id) && !WP.cockpitHidden(n.id); });
     // Group the flat list into labeled sections (Hick's Law: fewer choices to
     // scan at first glance). Items keep their group; any without one fall into
     // 'overview'. The Admin group is collapsible (secondary actions, one click).
@@ -19182,7 +19196,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     // sidebar = New request + nav (pushes content like Claude's sidebar)
     bar.innerHTML =
       '<div class="sb-wrap">' +
-        (WP.access.canAct(viewer) ? '<button class="btn primary sb-new" id="assign">' + ic('plus') + ' ' + t('newRequest') + '</button>' : '') +
+        (WP.access.canAct(viewer) && !(WP.config && WP.config.cockpitOnly) ? '<button class="btn primary sb-new" id="assign">' + ic('plus') + ' ' + t('newRequest') + '</button>' : '') +
         '<nav class="sb-nav" aria-label="' + t('navDashboard') + '">' + navHTML + '</nav>' +
       '</div>';
 
@@ -19208,7 +19222,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 
     // Notification bell + inbox (Phase 1) — mounted into the appbar before the
     // account control. Renders nothing when disabled or signed out.
-    if (WP.ui.notifications) WP.ui.notifications.mount(appbar);
+    if (WP.ui.notifications && !(WP.config && WP.config.cockpitOnly)) WP.ui.notifications.mount(appbar);
 
     // reflect remembered open/closed state
     applyNav();
@@ -19280,6 +19294,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   // clean). If a persisted/stale route is denied, the router just renders the
   // fallback; setState-driven navigation is where the persisted value updates.
   function effectiveRoute(route) {
+    if (WP.cockpitHidden(route)) return 'workload';
     if (WP.deferred(route)) return 'workload';
     if (route === 'activity' && !WP.can('manageAdmins')) return 'workload';
     if (route === 'admins' && !WP.can('manageAdmins')) return 'workload';
@@ -19294,7 +19309,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     // Global Feedback FAB — mounts into its own host that survives every render;
     // shows on all authed pages, hides itself on the sign-in screen. Called on
     // every render so it toggles with auth and re-mounts if the host was cleared.
-    if (WP.ui.feedback) WP.ui.feedback.mount();
+    if (WP.ui.feedback && !(WP.config && WP.config.cockpitOnly)) WP.ui.feedback.mount();
     const bar = document.getElementById('topbar');
     const appbar = document.getElementById('appbar');
     const backdrop = document.getElementById('nav-backdrop');
@@ -19355,8 +19370,10 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
       a.onclick = function (e) { e.preventDefault(); WP.setState({ route: a.dataset.bcGo, selectedId: null }); };
     });
 
-    // mandatory evaluation banner — follows a manager across every page until done
-    renderEvalBanner();
+    // mandatory evaluation banner — follows a manager across every page until done.
+    // Suppressed in the cockpit-only pilot (evaluations are out of MVP scope).
+    if (WP.config && WP.config.cockpitOnly) { const eb = document.getElementById('eval-banner'); if (eb) { eb.innerHTML = ''; eb.hidden = true; } }
+    else renderEvalBanner();
 
     // Signature / credits bar — decorative footer, authed app only
     renderSignatureBar();

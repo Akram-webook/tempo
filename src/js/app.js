@@ -95,7 +95,7 @@
     // MVP flag: drop the deferred nav entries (library/weekly/wellbeing/
     // fairness/org). One line returns them — WP.deferred() is false when
     // mvp is off. Nothing is removed from `nav` permanently.
-    const visibleNav = nav.filter(function (n) { return !WP.deferred(n.id); });
+    const visibleNav = nav.filter(function (n) { return !WP.deferred(n.id) && !WP.cockpitHidden(n.id); });
     // Group the flat list into labeled sections (Hick's Law: fewer choices to
     // scan at first glance). Items keep their group; any without one fall into
     // 'overview'. The Admin group is collapsible (secondary actions, one click).
@@ -160,7 +160,7 @@
     // sidebar = New request + nav (pushes content like Claude's sidebar)
     bar.innerHTML =
       '<div class="sb-wrap">' +
-        (WP.access.canAct(viewer) ? '<button class="btn primary sb-new" id="assign">' + ic('plus') + ' ' + t('newRequest') + '</button>' : '') +
+        (WP.access.canAct(viewer) && !(WP.config && WP.config.cockpitOnly) ? '<button class="btn primary sb-new" id="assign">' + ic('plus') + ' ' + t('newRequest') + '</button>' : '') +
         '<nav class="sb-nav" aria-label="' + t('navDashboard') + '">' + navHTML + '</nav>' +
       '</div>';
 
@@ -186,7 +186,7 @@
 
     // Notification bell + inbox (Phase 1) — mounted into the appbar before the
     // account control. Renders nothing when disabled or signed out.
-    if (WP.ui.notifications) WP.ui.notifications.mount(appbar);
+    if (WP.ui.notifications && !(WP.config && WP.config.cockpitOnly)) WP.ui.notifications.mount(appbar);
 
     // reflect remembered open/closed state
     applyNav();
@@ -258,6 +258,7 @@
   // clean). If a persisted/stale route is denied, the router just renders the
   // fallback; setState-driven navigation is where the persisted value updates.
   function effectiveRoute(route) {
+    if (WP.cockpitHidden(route)) return 'workload';
     if (WP.deferred(route)) return 'workload';
     if (route === 'activity' && !WP.can('manageAdmins')) return 'workload';
     if (route === 'admins' && !WP.can('manageAdmins')) return 'workload';
@@ -272,7 +273,7 @@
     // Global Feedback FAB — mounts into its own host that survives every render;
     // shows on all authed pages, hides itself on the sign-in screen. Called on
     // every render so it toggles with auth and re-mounts if the host was cleared.
-    if (WP.ui.feedback) WP.ui.feedback.mount();
+    if (WP.ui.feedback && !(WP.config && WP.config.cockpitOnly)) WP.ui.feedback.mount();
     const bar = document.getElementById('topbar');
     const appbar = document.getElementById('appbar');
     const backdrop = document.getElementById('nav-backdrop');
@@ -333,8 +334,10 @@
       a.onclick = function (e) { e.preventDefault(); WP.setState({ route: a.dataset.bcGo, selectedId: null }); };
     });
 
-    // mandatory evaluation banner — follows a manager across every page until done
-    renderEvalBanner();
+    // mandatory evaluation banner — follows a manager across every page until done.
+    // Suppressed in the cockpit-only pilot (evaluations are out of MVP scope).
+    if (WP.config && WP.config.cockpitOnly) { const eb = document.getElementById('eval-banner'); if (eb) { eb.innerHTML = ''; eb.hidden = true; } }
+    else renderEvalBanner();
 
     // Signature / credits bar — decorative footer, authed app only
     renderSignatureBar();
