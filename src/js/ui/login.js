@@ -19,7 +19,7 @@
   // Sign-in email domain. Demo default is example.com (matches the fake demo
   // directory). Go-live (G2) sets WP.config.authDomain to the real company domain
   // - one config line, no code change. Reversible.
-  const DOMAIN = (WP.config && WP.config.authDomain) || 'example.com';
+  const DOMAIN = (WP.config && WP.config.authDomain) || 'webook.com';
   // Every domain allowed to sign in: the primary authDomain plus any extras
   // (e.g. the real company @webook.com). A bare "name" (no @) still defaults to
   // the primary DOMAIN; a full address must match one of these.

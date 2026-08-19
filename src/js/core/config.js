@@ -89,16 +89,16 @@
   // real data wins automatically once imported. See docs/ROADMAP-golive.md.
   if (WP.config.forceSampleData === undefined) WP.config.forceSampleData = false;
 
-  // Sign-in email domain (login.js reads this). Demo default matches the fake
-  // demo directory (@example.com). Go-live (G2) sets this to the real company
-  // domain here - one line, no code change, reversible.
-  if (WP.config.authDomain === undefined) WP.config.authDomain = 'example.com';
+  // Sign-in email domain (login.js reads this). This is the real company domain
+  // (@webook.com) — it drives the email placeholder, the wrong-domain message,
+  // and the bare-name fallback. One line, no code change, reversible.
+  if (WP.config.authDomain === undefined) WP.config.authDomain = 'webook.com';
 
-  // Additional domains allowed to sign in alongside authDomain. Lets the real
-  // company domain (@webook.com) work on the internal pilot while the fake demo
-  // directory (@example.com) keeps functioning for tests/screenshots. login.js
-  // accepts an email whose domain is authDomain OR any entry here. Reversible.
-  if (WP.config.authDomainsExtra === undefined) WP.config.authDomainsExtra = ['webook.com'];
+  // Additional domains allowed to sign in alongside authDomain. Keeps the fake
+  // demo directory (@example.com) working for tests/screenshots while the real
+  // company domain (@webook.com) is primary. login.js accepts an email whose
+  // domain is authDomain OR any entry here. Reversible.
+  if (WP.config.authDomainsExtra === undefined) WP.config.authDomainsExtra = ['example.com'];
 
   /* ----------------------------------------------------------------
    * Executive Status — live data endpoint + deck link (both reversible).
