@@ -42,6 +42,68 @@
     e_marathon:      { id: 'e_marathon',      tier: 3, nameEn: 'City Marathon Logistics',nameAr: 'لوجستيات الماراثون',start: '2026-06-19', end: '2026-06-21', city: 'Riyadh', intl: false },
     e_school_fair:   { id: 'e_school_fair',   tier: 3, nameEn: 'School Fair Setup',      nameAr: 'تجهيز معرض المدرسة',start: '2026-06-24', end: '2026-06-26', city: 'Riyadh', intl: false },
     e_pop_concert:   { id: 'e_pop_concert',   tier: 3, nameEn: 'Pop-up Concert',         nameAr: 'حفل مفاجئ',         start: '2026-06-27', end: '2026-06-29', city: 'Dammam', intl: false },
+
+    // ── Workload-cockpit scenario (now-anchored to DEMO_TODAY = 2026-08-19) ──
+    // These drive the MVP Workload cockpit's per-day timeline / forecast / pressure.
+    // The June events above are left untouched (legacy screens + engine.test.js
+    // reference June). requiredSkill gates NEW what-if recommendations only — it does
+    // NOT retro-validate existing assignments. See docs/SPEC-workload-mvp.md.
+    e_ns2:      { id: 'e_ns2',      tier: 1, nameEn: 'Riyadh Season 2 — Launch', nameAr: 'موسم الرياض ٢ — الافتتاح', start: '2026-08-15', end: '2026-08-28', city: 'Riyadh', intl: false },
+    e_supercup: { id: 'e_supercup', tier: 1, nameEn: 'Saudi Super Cup Final',    nameAr: 'نهائي كأس السوبر',        start: '2026-08-24', end: '2026-08-30', city: 'Jeddah', intl: false },
+    e_cashless: { id: 'e_cashless', tier: 2, nameEn: 'Cashless Rollout — Boulevard', nameAr: 'تفعيل الدفع — البوليفارد', start: '2026-08-12', end: '2026-08-22', city: 'Riyadh', intl: false, requiredSkill: 'cashless' },
+    e_wynn:     { id: 'e_wynn',     tier: 2, nameEn: 'Wynn Concert Series',      nameAr: 'سلسلة حفلات وين',        start: '2026-08-18', end: '2026-08-26', city: 'Riyadh', intl: false, requiredSkill: 'av' },
+    e_biban:    { id: 'e_biban',    tier: 2, nameEn: 'Biban Expo Build',         nameAr: 'بناء معرض بيبان',        start: '2026-08-20', end: '2026-09-03', city: 'Riyadh', intl: false },
+    e_founders: { id: 'e_founders', tier: 2, nameEn: 'Founders Gala',            nameAr: 'حفل المؤسسين',           start: '2026-08-26', end: '2026-08-28', city: 'Riyadh', intl: false, requiredSkill: 'av' },
+    e_corniche: { id: 'e_corniche', tier: 3, nameEn: 'Corniche Run',             nameAr: 'جري الكورنيش',           start: '2026-08-21', end: '2026-08-23', city: 'Jeddah', intl: false, requiredSkill: 'logistics' },
+    e_b2s:      { id: 'e_b2s',      tier: 3, nameEn: 'Back-to-School Fair',      nameAr: 'معرض العودة للمدارس',    start: '2026-08-29', end: '2026-08-31', city: 'Riyadh', intl: false },
+    e_souq:     { id: 'e_souq',     tier: 3, nameEn: 'Pop-up Souq',              nameAr: 'سوق مؤقت',               start: '2026-08-19', end: '2026-08-20', city: 'Dammam', intl: false },
+  };
+
+  // DEMO anchor: the cockpit pins "today" here so the demo story is stable no matter
+  // when it is opened (real Date.now() is banned in the engine for determinism). The
+  // cockpit falls back to the real date only when running on non-demo (real) data.
+  const DEMO_TODAY = '2026-08-19';
+
+  // Per-DAY intensity by tier = "% of a person consumed on each day the event is active."
+  // Reuses the tier weights (Mega 50 / Medium 25 / Standard 10) as a daily figure — NOT
+  // clocked hours (Constitution Art. II). Two overlapping Mega events on one day = 100%.
+  const DAY_INTENSITY = { 1: 50, 2: 25, 3: 10 };
+
+  // 5-level status bands for the cockpit (configurable; operational rules, not science).
+  // Distinct from the legacy 4-band STATES the old map/dashboard use.
+  const LOAD_STATES = [
+    { key: 'healthy',    min: 0,   max: 70,  labelEn: 'Healthy',    labelAr: 'صحي',        token: '--state-available' },
+    { key: 'watch',      min: 71,  max: 85,  labelEn: 'Watch',      labelAr: 'مراقبة',     token: '--state-balanced' },
+    { key: 'high',       min: 86,  max: 100, labelEn: 'High',       labelAr: 'مرتفع',      token: '--state-near' },
+    { key: 'overloaded', min: 101, max: 115, labelEn: 'Overloaded', labelAr: 'محمّل زيادة', token: '--state-overloaded' },
+    { key: 'critical',   min: 116, max: 9999,labelEn: 'Critical',   labelAr: 'حرج',        token: '--state-overloaded' },
+  ];
+
+  // Skills (for skill-aware what-if recommendations only). Additive; absent = no listed skill.
+  const SKILLS = {
+    p_akram: ['ticketing', 'logistics'], p_motaa: ['ticketing', 'av'], p_abdulrahman: ['ticketing'],
+    p_osama: ['av', 'ticketing'], p_khaled: ['av'], p_ibrahim: ['av'], p_meshalB: ['av'],
+    p_saleh: ['logistics'], p_batarfi: ['logistics'], p_zaidan: ['logistics'], p_gamal: ['logistics'],
+    p_zarea: ['cashless'], p_rosa: ['cashless'], p_aljazi: ['cashless'], p_altahini: ['cashless'], p_talal: ['cashless', 'ticketing'],
+    p_batool: ['antifraud'], p_idris: ['ticketing'],
+  };
+
+  // Now-anchored cockpit assignments — APPENDED to each person's existing assignedEvents
+  // (never replacing). June-window loads are unaffected (August events don't overlap June),
+  // so engine.test.js and legacy screens stay correct. Scenario (at DEMO_TODAY):
+  //   Adam  → 110% today (Overloaded), stays overloaded through Aug 22
+  //   Owen  → 110% today (Overloaded), peaks 125% (Critical) Aug 24  (future critical)
+  //   Kevin → 25% today (Healthy), climbs to ~100% (High) next week (future pressure)
+  //   Marco/Simon/others → Healthy / available (reassignment pool)
+  const MVP_ASSIGN = {
+    p_akram: ['e_ns2', 'e_cashless', 'e_wynn', 'e_corniche', 'e_souq'],
+    p_osama: ['e_ns2', 'e_wynn', 'e_cashless', 'e_supercup', 'e_souq'],
+    p_khaled: ['e_wynn', 'e_supercup', 'e_biban'],
+    p_motaa: ['e_founders'],
+    p_talal: ['e_souq'],
+    p_idris: ['e_biban'],
+    p_zarea: ['e_cashless'],
+    p_rosa: ['e_cashless'],
   };
 
   function P(o) { return o; }
@@ -205,12 +267,24 @@
   };
   PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
 
+  // Apply cockpit skills + now-anchored assignments (additive, non-destructive).
+  PEOPLE.forEach(function (p) {
+    if (SKILLS[p.id]) p.skills = SKILLS[p.id].slice();
+    var extra = MVP_ASSIGN[p.id];
+    if (extra && extra.length) {
+      p.assignedEvents = (p.assignedEvents || []).concat(
+        extra.filter(function (id) { return (p.assignedEvents || []).indexOf(id) < 0; })
+      );
+    }
+  });
+
   const CEILING = 100;
   // Preserve anything a pre-loaded module set on WP.data (e.g. G1 real-data.js's
   // WP.data.REAL) - we build a fresh object below, so carry REAL across.
   const PRELOADED_REAL = WP.data && WP.data.REAL;
   const PRELOADED_REAL_FLAG = WP.data && WP.data.realDataLoaded;
-  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING, emailToId: emailToId };
+  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING, emailToId: emailToId,
+    DEMO_TODAY, DAY_INTENSITY, LOAD_STATES, SKILLS };
   if (PRELOADED_REAL) { WP.data.REAL = PRELOADED_REAL; WP.data.realDataLoaded = PRELOADED_REAL_FLAG; }
 
   // G1 real-data hook (Go-Live Foundation, wave 5). If the generated, gitignored

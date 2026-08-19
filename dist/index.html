@@ -3355,6 +3355,68 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
     e_marathon:      { id: 'e_marathon',      tier: 3, nameEn: 'City Marathon Logistics',nameAr: 'لوجستيات الماراثون',start: '2026-06-19', end: '2026-06-21', city: 'Riyadh', intl: false },
     e_school_fair:   { id: 'e_school_fair',   tier: 3, nameEn: 'School Fair Setup',      nameAr: 'تجهيز معرض المدرسة',start: '2026-06-24', end: '2026-06-26', city: 'Riyadh', intl: false },
     e_pop_concert:   { id: 'e_pop_concert',   tier: 3, nameEn: 'Pop-up Concert',         nameAr: 'حفل مفاجئ',         start: '2026-06-27', end: '2026-06-29', city: 'Dammam', intl: false },
+
+    // ── Workload-cockpit scenario (now-anchored to DEMO_TODAY = 2026-08-19) ──
+    // These drive the MVP Workload cockpit's per-day timeline / forecast / pressure.
+    // The June events above are left untouched (legacy screens + engine.test.js
+    // reference June). requiredSkill gates NEW what-if recommendations only — it does
+    // NOT retro-validate existing assignments. See docs/SPEC-workload-mvp.md.
+    e_ns2:      { id: 'e_ns2',      tier: 1, nameEn: 'Riyadh Season 2 — Launch', nameAr: 'موسم الرياض ٢ — الافتتاح', start: '2026-08-15', end: '2026-08-28', city: 'Riyadh', intl: false },
+    e_supercup: { id: 'e_supercup', tier: 1, nameEn: 'Saudi Super Cup Final',    nameAr: 'نهائي كأس السوبر',        start: '2026-08-24', end: '2026-08-30', city: 'Jeddah', intl: false },
+    e_cashless: { id: 'e_cashless', tier: 2, nameEn: 'Cashless Rollout — Boulevard', nameAr: 'تفعيل الدفع — البوليفارد', start: '2026-08-12', end: '2026-08-22', city: 'Riyadh', intl: false, requiredSkill: 'cashless' },
+    e_wynn:     { id: 'e_wynn',     tier: 2, nameEn: 'Wynn Concert Series',      nameAr: 'سلسلة حفلات وين',        start: '2026-08-18', end: '2026-08-26', city: 'Riyadh', intl: false, requiredSkill: 'av' },
+    e_biban:    { id: 'e_biban',    tier: 2, nameEn: 'Biban Expo Build',         nameAr: 'بناء معرض بيبان',        start: '2026-08-20', end: '2026-09-03', city: 'Riyadh', intl: false },
+    e_founders: { id: 'e_founders', tier: 2, nameEn: 'Founders Gala',            nameAr: 'حفل المؤسسين',           start: '2026-08-26', end: '2026-08-28', city: 'Riyadh', intl: false, requiredSkill: 'av' },
+    e_corniche: { id: 'e_corniche', tier: 3, nameEn: 'Corniche Run',             nameAr: 'جري الكورنيش',           start: '2026-08-21', end: '2026-08-23', city: 'Jeddah', intl: false, requiredSkill: 'logistics' },
+    e_b2s:      { id: 'e_b2s',      tier: 3, nameEn: 'Back-to-School Fair',      nameAr: 'معرض العودة للمدارس',    start: '2026-08-29', end: '2026-08-31', city: 'Riyadh', intl: false },
+    e_souq:     { id: 'e_souq',     tier: 3, nameEn: 'Pop-up Souq',              nameAr: 'سوق مؤقت',               start: '2026-08-19', end: '2026-08-20', city: 'Dammam', intl: false },
+  };
+
+  // DEMO anchor: the cockpit pins "today" here so the demo story is stable no matter
+  // when it is opened (real Date.now() is banned in the engine for determinism). The
+  // cockpit falls back to the real date only when running on non-demo (real) data.
+  const DEMO_TODAY = '2026-08-19';
+
+  // Per-DAY intensity by tier = "% of a person consumed on each day the event is active."
+  // Reuses the tier weights (Mega 50 / Medium 25 / Standard 10) as a daily figure — NOT
+  // clocked hours (Constitution Art. II). Two overlapping Mega events on one day = 100%.
+  const DAY_INTENSITY = { 1: 50, 2: 25, 3: 10 };
+
+  // 5-level status bands for the cockpit (configurable; operational rules, not science).
+  // Distinct from the legacy 4-band STATES the old map/dashboard use.
+  const LOAD_STATES = [
+    { key: 'healthy',    min: 0,   max: 70,  labelEn: 'Healthy',    labelAr: 'صحي',        token: '--state-available' },
+    { key: 'watch',      min: 71,  max: 85,  labelEn: 'Watch',      labelAr: 'مراقبة',     token: '--state-balanced' },
+    { key: 'high',       min: 86,  max: 100, labelEn: 'High',       labelAr: 'مرتفع',      token: '--state-near' },
+    { key: 'overloaded', min: 101, max: 115, labelEn: 'Overloaded', labelAr: 'محمّل زيادة', token: '--state-overloaded' },
+    { key: 'critical',   min: 116, max: 9999,labelEn: 'Critical',   labelAr: 'حرج',        token: '--state-overloaded' },
+  ];
+
+  // Skills (for skill-aware what-if recommendations only). Additive; absent = no listed skill.
+  const SKILLS = {
+    p_akram: ['ticketing', 'logistics'], p_motaa: ['ticketing', 'av'], p_abdulrahman: ['ticketing'],
+    p_osama: ['av', 'ticketing'], p_khaled: ['av'], p_ibrahim: ['av'], p_meshalB: ['av'],
+    p_saleh: ['logistics'], p_batarfi: ['logistics'], p_zaidan: ['logistics'], p_gamal: ['logistics'],
+    p_zarea: ['cashless'], p_rosa: ['cashless'], p_aljazi: ['cashless'], p_altahini: ['cashless'], p_talal: ['cashless', 'ticketing'],
+    p_batool: ['antifraud'], p_idris: ['ticketing'],
+  };
+
+  // Now-anchored cockpit assignments — APPENDED to each person's existing assignedEvents
+  // (never replacing). June-window loads are unaffected (August events don't overlap June),
+  // so engine.test.js and legacy screens stay correct. Scenario (at DEMO_TODAY):
+  //   Adam  → 110% today (Overloaded), stays overloaded through Aug 22
+  //   Owen  → 110% today (Overloaded), peaks 125% (Critical) Aug 24  (future critical)
+  //   Kevin → 25% today (Healthy), climbs to ~100% (High) next week (future pressure)
+  //   Marco/Simon/others → Healthy / available (reassignment pool)
+  const MVP_ASSIGN = {
+    p_akram: ['e_ns2', 'e_cashless', 'e_wynn', 'e_corniche', 'e_souq'],
+    p_osama: ['e_ns2', 'e_wynn', 'e_cashless', 'e_supercup', 'e_souq'],
+    p_khaled: ['e_wynn', 'e_supercup', 'e_biban'],
+    p_motaa: ['e_founders'],
+    p_talal: ['e_souq'],
+    p_idris: ['e_biban'],
+    p_zarea: ['e_cashless'],
+    p_rosa: ['e_cashless'],
   };
 
   function P(o) { return o; }
@@ -3502,12 +3564,24 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   };
   PEOPLE.forEach(function (p) { Object.assign(p, TENURE[p.id] || {}); });
 
+  // Apply cockpit skills + now-anchored assignments (additive, non-destructive).
+  PEOPLE.forEach(function (p) {
+    if (SKILLS[p.id]) p.skills = SKILLS[p.id].slice();
+    var extra = MVP_ASSIGN[p.id];
+    if (extra && extra.length) {
+      p.assignedEvents = (p.assignedEvents || []).concat(
+        extra.filter(function (id) { return (p.assignedEvents || []).indexOf(id) < 0; })
+      );
+    }
+  });
+
   const CEILING = 100;
   // Preserve anything a pre-loaded module set on WP.data (e.g. G1 real-data.js's
   // WP.data.REAL) - we build a fresh object below, so carry REAL across.
   const PRELOADED_REAL = WP.data && WP.data.REAL;
   const PRELOADED_REAL_FLAG = WP.data && WP.data.realDataLoaded;
-  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING, emailToId: emailToId };
+  WP.data = { TIERS, STATES, HEALTHY_STATE, LEVELS, EVENTS, PEOPLE, CEILING, emailToId: emailToId,
+    DEMO_TODAY, DAY_INTENSITY, LOAD_STATES, SKILLS };
   if (PRELOADED_REAL) { WP.data.REAL = PRELOADED_REAL; WP.data.realDataLoaded = PRELOADED_REAL_FLAG; }
 
   // G1 real-data hook (Go-Live Foundation, wave 5). If the generated, gitignored
@@ -6634,6 +6708,322 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   WP.capacity = {
     loadForPerson, loadBreakdown, stateForLoad, isHealthy, burnoutSignal,
     snapshot, teamMetrics, simulateAssignment, windowBounds, priorRefDate,
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Workload Cockpit Engine  (MVP)
+ * ------------------------------------------------------------
+ * Pure functions. No DOM. Reads WP.data + WP.dates only.
+ * Companion to core/capacity.js (the legacy calendar-window load model);
+ * this module adds the PER-DAY, forward-looking model the manager cockpit needs:
+ * today / next-7 / next-14 timeline, forecast, pressure, pressure windows,
+ * team drivers, and skill-aware what-if.
+ *
+ * LOCKED MODEL (documented assumptions — never hidden; see docs/SPEC-workload-mvp.md):
+ *   - We measure a tier-weighted LOAD INDEX, never clocked hours (Constitution Art. II).
+ *   - Each event active on a day adds its tier's daily intensity to the owner's day:
+ *       Mega 50 · Medium 25 · Standard 10   (WP.data.DAY_INTENSITY)
+ *     Two overlapping Mega events on one day = 100% of that person that day.
+ *   - dayLoad(person, date) = Σ intensity of that person's events active on `date`.
+ *   - "Effort" is captured by the event TIER — the estimate that genuinely exists
+ *     in the data — not by invented per-task hours (no fake precision; brief §9/§25).
+ *   - Status bands (WP.data.LOAD_STATES) are OPERATIONAL rules, not science, and are
+ *     configurable: Healthy 0-70 · Watch 71-85 · High 86-100 · Overloaded 101-115 · Critical >115.
+ *   - Pressure ≠ load. Pressure is a transparent, factor-visible composite of peak load,
+ *     concurrency, deadline proximity and top-tier presence — never an opaque AI score.
+ *   - refISO ("today") pins to WP.data.DEMO_TODAY on demo data so the story is stable;
+ *     real data would pass the real date. No Date.now() in the engine (determinism).
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  var DEFAULT_HORIZON = 14;
+
+  /* The reference "today" ISO. Demo data pins to DEMO_TODAY for a stable story;
+   * real data can pass an explicit ref. Falls back through WP.state then a fixed anchor. */
+  function refToday(refISO) {
+    if (refISO) return String(refISO).slice(0, 10);
+    if (WP.state && WP.state.cockpitRef) return String(WP.state.cockpitRef).slice(0, 10);
+    if (WP.data && WP.data.demoData && WP.data.DEMO_TODAY) return WP.data.DEMO_TODAY;
+    if (WP.state && WP.state.refDate) return String(WP.state.refDate).slice(0, 10);
+    return (WP.data && WP.data.DEMO_TODAY) || '2026-08-19';
+  }
+
+  function shift(iso, days) {
+    if (WP.dates && WP.dates.shiftISO) return WP.dates.shiftISO(iso, days);
+    var d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function intensity(ev) {
+    var map = (WP.data && WP.data.DAY_INTENSITY) || { 1: 50, 2: 25, 3: 10 };
+    return map[ev && ev.tier] || 0;   // unknown/missing tier → 0 (fail-safe, never throw)
+  }
+
+  /* Event active on an ISO day? Inclusive [start, end]. String compare is valid for
+   * zero-padded YYYY-MM-DD. Missing bounds → not active (fail-safe). */
+  function activeOn(ev, iso) {
+    if (!ev || !ev.start || !ev.end) return false;
+    return ev.start <= iso && iso <= ev.end;
+  }
+
+  function eventsOf(person) {
+    var EVENTS = (WP.data && WP.data.EVENTS) || {};
+    return (person && person.assignedEvents || [])
+      .map(function (id) { return EVENTS[id]; })
+      .filter(Boolean);
+  }
+
+  /* Events active for a person on a given day, with their intensity. */
+  function driversOn(person, iso) {
+    return eventsOf(person)
+      .filter(function (ev) { return activeOn(ev, iso); })
+      .map(function (ev) { return { id: ev.id, tier: ev.tier, intensity: intensity(ev), event: ev }; })
+      .sort(function (a, b) { return b.intensity - a.intensity; });
+  }
+
+  /* Load index (0..N) for one person on one day = Σ active-event intensities. */
+  function dayLoad(person, iso) {
+    return driversOn(person, iso).reduce(function (s, d) { return s + d.intensity; }, 0);
+  }
+
+  /* Map a load index to its 5-level state band (configurable). */
+  function stateFor(load) {
+    var S = (WP.data && WP.data.LOAD_STATES) || [];
+    return S.find(function (b) { return load >= b.min && load <= b.max; }) || S[S.length - 1] || { key: 'healthy', labelEn: 'Healthy', labelAr: 'صحي' };
+  }
+
+  /* Forward per-day timeline: [{date, load, state, drivers, offset}] for `days` days from refISO. */
+  function timeline(person, refISO, days) {
+    var ref = refToday(refISO), n = days || DEFAULT_HORIZON, out = [];
+    for (var i = 0; i < n; i++) {
+      var iso = shift(ref, i), load = dayLoad(person, iso);
+      out.push({ date: iso, offset: i, load: load, state: stateFor(load), drivers: driversOn(person, iso) });
+    }
+    return out;
+  }
+
+  function peakOf(tl) {
+    return tl.reduce(function (m, d) { return d.load > m.load ? d : m; }, { load: -1, date: null });
+  }
+  function avgOf(tl) {
+    if (!tl.length) return 0;
+    return Math.round(tl.reduce(function (s, d) { return s + d.load; }, 0) / tl.length);
+  }
+
+  /* Forecast: today's load + the PEAK (worst day) across next-7 and next-14, plus averages.
+   * Peak is the headline because hiding the peak behind an average is the exact failure this
+   * cockpit fixes (a "healthy" week sitting on top of a two-day overload). */
+  function forecast(person, refISO) {
+    var ref = refToday(refISO);
+    var full = timeline(person, ref, DEFAULT_HORIZON);
+    var d7 = full.slice(0, 7), d14 = full;
+    var today = full[0], p7 = peakOf(d7), p14 = peakOf(d14);
+    return {
+      ref: ref,
+      today: today.load, todayState: today.state,
+      peak7: p7.load, peak7Date: p7.date, peak7State: stateFor(p7.load),
+      peak14: p14.load, peak14Date: p14.date, peak14State: stateFor(p14.load),
+      avg7: avgOf(d7), avg14: avgOf(d14),
+      timeline: full,
+    };
+  }
+
+  /* Max simultaneous events on any single day in the window (concurrency signal). */
+  function maxConcurrency(person, refISO, days) {
+    var tl = timeline(person, refISO, days || DEFAULT_HORIZON), mx = 0;
+    tl.forEach(function (d) { if (d.drivers.length > mx) mx = d.drivers.length; });
+    return mx;
+  }
+
+  /* Earliest assigned-event END within `within` days of ref (deadline crunch), or null. */
+  function nextDeadline(person, refISO, within) {
+    var ref = refToday(refISO), lim = shift(ref, (within == null ? 3 : within));
+    var ends = eventsOf(person)
+      .filter(function (ev) { return ev.end >= ref && ev.end <= lim; })
+      .map(function (ev) { return { id: ev.id, end: ev.end, event: ev }; })
+      .sort(function (a, b) { return a.end < b.end ? -1 : 1; });
+    return ends[0] || null;
+  }
+
+  /* PRESSURE — transparent, factor-visible. Not an opaque score:
+   *   score = 0.6·min(peak14,130) + concurrencyBoost + deadlineBoost + megaBoost  (0..100)
+   * Every factor is returned so the UI can show exactly WHY. Weights are tunable. */
+  function pressure(person, refISO) {
+    var ref = refToday(refISO);
+    var fc = forecast(person, ref);
+    var conc = maxConcurrency(person, ref, DEFAULT_HORIZON);
+    var dl = nextDeadline(person, ref, 3);
+    var mega = fc.timeline.some(function (d) { return d.drivers.some(function (x) { return x.tier === 1; }); });
+    var concBoost = conc >= 3 ? 12 : conc >= 2 ? 6 : 0;
+    var dlBoost = dl ? 8 : 0;
+    var megaBoost = mega ? 6 : 0;
+    var score = Math.max(0, Math.min(100, Math.round(0.6 * Math.min(fc.peak14, 130) + concBoost + dlBoost + megaBoost)));
+    var level = score >= 90 ? 'critical' : score >= 70 ? 'high' : score >= 45 ? 'elevated' : 'low';
+    return {
+      score: score, level: level,
+      factors: {
+        peakLoad: fc.peak14, peakDate: fc.peak14Date,
+        maxConcurrent: conc, deadline: dl ? dl.end : null, deadlineEvent: dl ? dl.id : null,
+        megaActive: mega,
+      },
+    };
+  }
+
+  /* Per-person cockpit snapshot. */
+  function snapshot(person, refISO) {
+    var fc = forecast(person, refISO);
+    return {
+      id: person.id,
+      today: fc.today, todayState: fc.todayState,
+      peak7: fc.peak7, peak7Date: fc.peak7Date, peak7State: fc.peak7State,
+      peak14: fc.peak14, peak14Date: fc.peak14Date, peak14State: fc.peak14State,
+      pressure: pressure(person, fc.ref),
+      forecast: fc,
+    };
+  }
+
+  /* Team roll-up: counts + averages that DON'T smooth away the peak. */
+  function teamMetrics(people, refISO) {
+    var ref = refToday(refISO);
+    var snaps = people.map(function (p) { return snapshot(p, ref); });
+    var n = snaps.length || 1;
+    var overloadedToday = 0, atRisk7 = 0, healthyToday = 0, sumToday = 0, peakTeam = 0, peakTeamDate = null;
+    snaps.forEach(function (s) {
+      sumToday += s.today;
+      if (s.todayState.key === 'overloaded' || s.todayState.key === 'critical') overloadedToday++;
+      if (s.todayState.key === 'healthy') healthyToday++;
+      // "at risk" = not overloaded today, but peaks High+ within 7 days
+      if (s.peak7 >= 86 && !(s.todayState.key === 'overloaded' || s.todayState.key === 'critical')) atRisk7++;
+      if (s.peak7 > peakTeam) { peakTeam = s.peak7; peakTeamDate = s.peak7Date; }
+    });
+    return {
+      ref: ref, snaps: snaps, size: snaps.length,
+      avgToday: Math.round(sumToday / n),
+      overloadedToday: overloadedToday, atRisk7: atRisk7, healthyToday: healthyToday,
+      teamPeak7: peakTeam, teamPeak7Date: peakTeamDate,
+    };
+  }
+
+  /* Pressure windows for ONE person: contiguous runs of days at High+ (>=86) in the horizon. */
+  function personWindows(person, refISO, days) {
+    var tl = timeline(person, refISO, days || DEFAULT_HORIZON);
+    var runs = [], cur = null;
+    tl.forEach(function (d) {
+      if (d.load >= 86) {
+        if (!cur) cur = { from: d.date, to: d.date, peak: d.load, peakDate: d.date, driverSet: {} };
+        else cur.to = d.date;
+        if (d.load > cur.peak) { cur.peak = d.load; cur.peakDate = d.date; }
+        d.drivers.forEach(function (x) { cur.driverSet[x.id] = (cur.driverSet[x.id] || 0) + x.intensity; });
+      } else if (cur) { runs.push(cur); cur = null; }
+    });
+    if (cur) runs.push(cur);
+    return runs.map(function (r) {
+      var drivers = Object.keys(r.driverSet)
+        .map(function (id) { return { id: id, weight: r.driverSet[id] }; })
+        .sort(function (a, b) { return b.weight - a.weight; });
+      return {
+        personId: person.id, from: r.from, to: r.to, peak: r.peak, peakDate: r.peakDate,
+        drivers: drivers,
+        action: r.peak > 115 ? 'add-support' : 'redistribute',   // >Critical needs headcount; else move 1–2 items
+      };
+    });
+  }
+
+  /* Team pressure windows, worst first (top `limit`). */
+  function pressureWindows(people, refISO, limit) {
+    var all = [];
+    people.forEach(function (p) { all = all.concat(personWindows(p, refISO, DEFAULT_HORIZON)); });
+    all.sort(function (a, b) { return b.peak - a.peak; });
+    return limit ? all.slice(0, limit) : all;
+  }
+
+  /* Which EVENTS generate the most demand across the team in the horizon.
+   * demand = intensity × (person-days it is active for assigned owners in the window). */
+  function driversRollup(people, refISO, limit) {
+    var ref = refToday(refISO), n = DEFAULT_HORIZON, tally = {};
+    people.forEach(function (p) {
+      eventsOf(p).forEach(function (ev) {
+        for (var i = 0; i < n; i++) {
+          if (activeOn(ev, shift(ref, i))) {
+            tally[ev.id] = tally[ev.id] || { id: ev.id, event: ev, demand: 0, people: {} };
+            tally[ev.id].demand += intensity(ev);
+            tally[ev.id].people[p.id] = true;
+          }
+        }
+      });
+    });
+    var out = Object.keys(tally).map(function (id) {
+      var t = tally[id]; t.peopleCount = Object.keys(t.people).length; return t;
+    }).sort(function (a, b) { return b.demand - a.demand; });
+    return limit ? out.slice(0, limit) : out;
+  }
+
+  /* WHAT-IF: project adding an event to a person (peak over next-14 before→after). */
+  function simulate(person, eventId, refISO) {
+    var ref = refToday(refISO);
+    var before = forecast(person, ref);
+    var trial = Object.assign({}, person, { assignedEvents: (person.assignedEvents || []).concat([eventId]) });
+    var after = forecast(trial, ref);
+    return {
+      beforePeak: before.peak14, afterPeak: after.peak14,
+      beforeToday: before.today, afterToday: after.today,
+      delta: after.peak14 - before.peak14,
+      afterState: stateFor(after.peak14),
+      softLocked: after.peak14 > 100,     // pushing into Overloaded requires a logged override
+    };
+  }
+
+  function canDo(person, ev) {
+    if (!ev || !ev.requiredSkill) return true;
+    return ((person && person.skills) || []).indexOf(ev.requiredSkill) >= 0;
+  }
+
+  /* Does adding this event create a CRITICAL day (>115) for the person? (overlap/overload guard) */
+  function createsCritical(person, ev, refISO) {
+    return simulate(person, ev.id, refISO).afterPeak > 115;
+  }
+
+  /* Rank candidates for a NEW assignment. Order (each an explainable reason):
+   *   1) can perform the work (required skill)   2) does NOT create a critical overload
+   *   3) lowest projected peak load               4) tiebreak: lowest today load
+   * Returns every candidate with {skillMatch, sim, reasons[], recommended}. */
+  function rankCandidates(eventId, people, refISO) {
+    var EVENTS = (WP.data && WP.data.EVENTS) || {};
+    var ev = EVENTS[eventId];
+    var ref = refToday(refISO);
+    var rows = people.map(function (p) {
+      var sim = simulate(p, eventId, ref);
+      var skillMatch = canDo(p, ev);
+      var safe = sim.afterPeak <= 115;
+      var reasons = [];
+      if (ev && ev.requiredSkill) reasons.push((skillMatch ? 'has ' : 'missing ') + ev.requiredSkill);
+      reasons.push('projected ' + sim.beforePeak + '% → ' + sim.afterPeak + '%');
+      if (!safe) reasons.push('would hit critical');
+      return { person: p, id: p.id, skillMatch: skillMatch, safe: safe, sim: sim, reasons: reasons };
+    });
+    rows.sort(function (a, b) {
+      return (b.skillMatch - a.skillMatch)                 // skilled first
+        || (b.safe - a.safe)                                // non-critical first
+        || (a.sim.afterPeak - b.sim.afterPeak)              // lowest projected peak
+        || (a.sim.afterToday - b.sim.afterToday);           // tiebreak: lowest today
+    });
+    // recommend the top row only if it can actually do the work and stays non-critical
+    if (rows[0]) rows[0].recommended = rows[0].skillMatch && rows[0].safe;
+    return rows;
+  }
+
+  WP.workload = {
+    refToday: refToday, dayLoad: dayLoad, driversOn: driversOn, stateFor: stateFor,
+    timeline: timeline, forecast: forecast, pressure: pressure, snapshot: snapshot,
+    maxConcurrency: maxConcurrency, nextDeadline: nextDeadline,
+    teamMetrics: teamMetrics, personWindows: personWindows, pressureWindows: pressureWindows,
+    driversRollup: driversRollup, simulate: simulate, canDo: canDo,
+    createsCritical: createsCritical, rankCandidates: rankCandidates,
+    HORIZON: DEFAULT_HORIZON,
   };
 })(window.WP = window.WP || {});
 
