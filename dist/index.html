@@ -3133,6 +3133,117 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ot-foot{margin-top:16px;font-size:11px;color:var(--ot-secondary)}
 @media (prefers-reduced-motion:reduce){.ot-view *{transition:none!important}}
 
+/* ============================================================
+ * Workload cockpit (MVP) — token-driven, RTL-safe (logical props),
+ * light/dark via the same --state-* / --surface / --border tokens.
+ * Colour is never the only signal: every state also carries a label
+ * and a number. State→token map: healthy=available(green),
+ * watch=balanced(yellow), high=near(orange), overloaded/critical=overloaded(red).
+ * ========================================================== */
+.wl-kpis{grid-template-columns:repeat(6,1fr)}
+@media (max-width:1100px){.wl-kpis{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:640px){.wl-kpis{grid-template-columns:repeat(2,1fr)}}
+.wl-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:start}
+@media (max-width:900px){.wl-grid{grid-template-columns:1fr}}
+
+/* load chip — dot + number + label (colour never alone) */
+.wl-chip{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--c,var(--text));white-space:nowrap}
+.wl-dot{width:9px;height:9px;border-radius:999px;background:var(--c,var(--text-muted));flex:none}
+.wl-chip-l{color:var(--text-muted);font-weight:500;font-size:12px}
+.wl-pr--low{--c:var(--state-available)}.wl-pr--elevated{--c:var(--state-balanced)}
+.wl-pr--high{--c:var(--state-near)}.wl-pr--critical{--c:var(--state-overloaded)}
+
+/* team workload rows */
+.wl-row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--border);cursor:pointer;border-inline-start:3px solid var(--node-accent,transparent)}
+.wl-row:last-child{border-bottom:0}
+.wl-row:hover{background:var(--surface-2)}
+.wl-row .avatar{width:34px;height:34px;margin:0}
+.wl-meta{min-width:0;flex:1}
+.wl-meta .nm{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl-meta .ttl{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl-peaks{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:end}
+.wl-sub2{font-size:11px;color:var(--text-muted);white-space:nowrap}
+
+/* 14-day mini spark */
+.wl-spark{display:inline-flex;gap:2px;align-items:flex-end;flex:none}
+.wl-sp{width:5px;height:16px;border-radius:2px;background:var(--surface-3)}
+.wl-sp--healthy{background:var(--state-available)}.wl-sp--watch{background:var(--state-balanced)}
+.wl-sp--high{background:var(--state-near)}.wl-sp--overloaded{background:var(--state-overloaded)}
+.wl-sp--critical{background:var(--state-overloaded);box-shadow:inset 0 0 0 1px var(--surface)}
+
+/* heatmap */
+.wl-hm-scroll{overflow-x:auto;padding-bottom:4px}
+.wl-hm-row{display:flex;gap:3px;align-items:center;margin-bottom:3px;min-width:max-content}
+.wl-hm-head{color:var(--text-muted);font-size:10px}
+.wl-hm-name{width:78px;flex:none;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:start}
+.wl-hm-col{width:30px;flex:none;text-align:center}
+.wl-hm-col.is-today{color:var(--brand);font-weight:700}
+.wl-hm-cell{width:30px;height:26px;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;background:var(--surface-2);color:var(--text-muted)}
+.wl-hm--healthy{background:var(--state-available-bg);color:var(--text)}
+.wl-hm--watch{background:var(--state-balanced-bg);color:var(--text)}
+.wl-hm--high{background:var(--state-near-bg);color:var(--text)}
+.wl-hm--overloaded{background:var(--state-overloaded-bg);color:var(--text)}
+.wl-hm--critical{background:var(--state-overloaded-bg);color:var(--text);box-shadow:inset 0 0 0 2px var(--state-overloaded)}
+.wl-hm-row[role=button]{cursor:pointer}
+.wl-hm-row[role=button]:hover .wl-hm-name{color:var(--brand)}
+.wl-hm-more{margin-top:6px}
+.wl-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:11px;color:var(--text-muted)}
+.wl-lg{display:inline-flex;align-items:center;gap:6px}
+.wl-lg .wl-hm-cell{width:16px;height:16px}
+
+/* pressure windows */
+.wl-win{padding:10px 0;border-bottom:1px solid var(--border)}
+.wl-win:last-child{border-bottom:0}
+.wl-win-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wl-win-when{font-size:12px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:5px}
+.wl-win-why{margin-top:3px}
+.wl-win-act{font-size:12px;margin-top:5px;color:var(--brand);display:flex;align-items:center;gap:5px}
+
+/* drivers + actions */
+.wl-drv{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.wl-drv:last-child{border-bottom:0}
+.wl-drv .nm{flex:1;font-size:13px;font-weight:600}
+.wl-tier{width:8px;height:8px;border-radius:2px;flex:none}
+.wl-tier--1{background:var(--state-overloaded)}.wl-tier--2{background:var(--state-near)}.wl-tier--3{background:var(--state-available)}
+.wl-act{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.wl-act:last-child{border-bottom:0}
+.wl-act-txt{font-size:13px}
+
+/* drawer + what-if overlays */
+.wl-drawer-scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60}
+.wl-drawer{position:fixed;inset-block:0;inset-inline-end:0;width:min(460px,92vw);background:var(--surface);border-inline-start:1px solid var(--border);box-shadow:var(--shadow);z-index:61;padding:22px;overflow-y:auto}
+.wl-drawer h2{margin:0;font-size:19px;font-weight:700}
+.wl-drawer h3{margin:18px 0 8px;font-size:13px;display:flex;align-items:center;gap:6px}
+.wl-dclose{position:absolute;top:16px;inset-inline-end:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer}
+.wl-dhead{display:flex;align-items:center;gap:12px;margin-inline-end:40px}
+.wl-dhead .avatar{width:46px;height:46px;margin:0}
+.wl-dov{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.wl-dov .label{font-size:11px;color:var(--text-muted);margin-bottom:3px}
+.wl-dnote{margin-top:10px;display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+.wl-tl{display:flex;gap:3px;overflow-x:auto;padding-bottom:4px}
+.wl-tl-day{display:flex;flex-direction:column;align-items:center;gap:3px}
+.wl-tl-d{font-size:9px;color:var(--text-muted);white-space:nowrap}
+.wl-tl-day.is-today .wl-tl-d{color:var(--brand);font-weight:700}
+.wl-why{font-size:13px;line-height:1.6;font-variant-numeric:tabular-nums}
+.wl-why>div{margin-bottom:4px}
+.wl-facts{display:flex;flex-wrap:wrap;gap:6px}
+
+/* what-if candidates */
+.wl-wi-from{margin-top:2px}
+.wl-cands{margin-top:14px}
+.wl-cand{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border)}
+.wl-cand:last-child{border-bottom:0}
+.wl-cand.is-rec{background:var(--state-available-bg);border-radius:8px;padding-inline:10px;border-bottom:0;margin-bottom:4px}
+.wl-cand .avatar{width:34px;height:34px;margin:0}
+.wl-cand-meta{flex:1;min-width:0}
+.wl-cand-meta .nm{font-weight:600;font-size:14px}
+.wl-cand-proj{font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums;margin:2px 0}
+.wl-cand-why{display:flex;flex-wrap:wrap;gap:4px}
+.wl-rec{color:var(--state-available);font-size:11px;font-weight:700}
+.wl-warn{color:var(--state-overloaded);font-size:11px;font-weight:700}
+.wl-wi-note{margin-top:14px;display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+@media (prefers-reduced-motion:reduce){.wl-drawer,.wl-row{transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -5518,6 +5629,77 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     backToGoogle:   { en: 'Back', ar: 'رجوع' },
     // — dashboard —
     navDashboard:   { en: 'Dashboard', ar: 'اللوحة' },
+
+    // ── Workload cockpit (MVP) ──
+    navWorkload:    { en: 'Workload', ar: 'الأحمال' },
+    wlTitle:        { en: 'Workload cockpit', ar: 'لوحة الأحمال' },
+    wlSub:          { en: '{n} people · demo data — tier-weighted load, not hours', ar: '{n} موظفين · بيانات تجريبية — حمل مُرجّح بالفئة، ليس ساعات' },
+    wlMyTitle:      { en: 'My workload', ar: 'أحمالي' },
+    wlMySub:        { en: 'Your load today and across the next 14 days.', ar: 'حملك اليوم وعلى مدى الـ14 يومًا القادمة.' },
+    hzToday:        { en: 'Today', ar: 'اليوم' },
+    hz7:            { en: 'Next 7 days', ar: '7 أيام' },
+    hz14:           { en: 'Next 14 days', ar: '14 يومًا' },
+    kAvgToday:      { en: 'Avg load today', ar: 'متوسط الحمل اليوم' },
+    kAvgTodaySub:   { en: 'across the team', ar: 'عبر الفريق' },
+    kAvgTodayInfo:  { en: 'Tier-weighted load index (not clocked hours): each active event adds Mega 50 / Medium 25 / Standard 10 per day.', ar: 'مؤشر حمل مُرجّح بالفئة (وليس ساعات): كل فعالية نشطة تضيف ضخم 50 / متوسط 25 / قياسي 10 يوميًا.' },
+    kOverloaded:    { en: 'Overloaded now', ar: 'محمّل زيادة الآن' },
+    kOverloadedSub: { en: 'over 100% today', ar: 'أكثر من 100% اليوم' },
+    kAtRisk:        { en: 'At risk (7d)', ar: 'معرّض للخطر (7 أيام)' },
+    kAtRiskSub:     { en: 'peaks High+ within 7 days', ar: 'يبلغ ذروة عالية خلال 7 أيام' },
+    kHealthy:       { en: 'Healthy now', ar: 'صحي الآن' },
+    ofN:            { en: 'of {n}', ar: 'من {n}' },
+    kTeamPeak:      { en: 'Team peak (7d)', ar: 'ذروة الفريق (7 أيام)' },
+    onDate:         { en: 'on {d}', ar: 'في {d}' },
+    kWindows:       { en: 'Pressure windows', ar: 'نوافذ الضغط' },
+    kWindowsSub:    { en: 'next 14 days', ar: 'خلال 14 يومًا' },
+    secTeam:        { en: 'Team workload', ar: 'أحمال الفريق' },
+    secWindows:     { en: 'Pressure windows', ar: 'نوافذ الضغط' },
+    secHeatmap:     { en: '14-day pressure heatmap', ar: 'خريطة الضغط لـ14 يومًا' },
+    secDrivers:     { en: 'Workload drivers', ar: 'مسبّبات الحمل' },
+    secActions:     { en: 'Recommended actions', ar: 'إجراءات مقترحة' },
+    peakShort:      { en: 'peak', ar: 'ذروة' },
+    todayShort:     { en: 'Today', ar: 'اليوم' },
+    andMore:        { en: '+{n} more', ar: '+{n} آخرين' },
+    allClearTeam:   { en: 'No one is overloaded and no pressure windows ahead.', ar: 'لا أحد محمّل زيادة ولا نوافذ ضغط قادمة.' },
+    drivenBy:       { en: 'Driven by', ar: 'بسبب' },
+    actRedistribute:{ en: 'Redistribute 1–2 items', ar: 'أعِد توزيع 1–2 مهمة' },
+    actAddSupport:  { en: 'Add support', ar: 'أضِف دعمًا' },
+    nPeople:        { en: '{n} people', ar: '{n} أشخاص' },
+    actNone:        { en: 'No action needed — the team has room.', ar: 'لا إجراء مطلوب — لدى الفريق متسع.' },
+    peaksAt:        { en: 'peaks {load}% on {date}', ar: 'يبلغ {load}% في {date}' },
+    simReassign:    { en: 'Simulate reassignment', ar: 'محاكاة إعادة الإسناد' },
+    openDetail:     { en: 'Open detail', ar: 'افتح التفاصيل' },
+    dwToday:        { en: 'Today', ar: 'اليوم' },
+    dwPeak7:        { en: 'Peak 7d', ar: 'ذروة 7 أيام' },
+    dwPeak14:       { en: 'Peak 14d', ar: 'ذروة 14 يومًا' },
+    dwPressure:     { en: 'Pressure', ar: 'الضغط' },
+    dwTimeline:     { en: 'Timeline — next 14 days', ar: 'الجدول الزمني — 14 يومًا' },
+    dwWhy:          { en: 'Why this load', ar: 'سبب هذا الحمل' },
+    dwActions:      { en: 'Reassign work', ar: 'إعادة إسناد العمل' },
+    dwCapacityNote: { en: 'Load is a tier-weighted index (Mega 50 / Medium 25 / Standard 10 per active day), not clocked hours. Leave and days-off are not modelled yet.', ar: 'الحمل مؤشر مُرجّح بالفئة (ضخم 50 / متوسط 25 / قياسي 10 لكل يوم نشط)، وليس ساعات. الإجازات وأيام العطل غير محتسبة بعد.' },
+    whyTodayLbl:    { en: 'Today:', ar: 'اليوم:' },
+    whyPeakLbl:     { en: 'Peak ({date}):', ar: 'الذروة ({date}):' },
+    whyIdle:        { en: 'No active events today.', ar: 'لا فعاليات نشطة اليوم.' },
+    noDrivers:      { en: 'No events to reassign.', ar: 'لا فعاليات لإعادة إسنادها.' },
+    fPeak:          { en: 'Peak {load}% ({date})', ar: 'ذروة {load}% ({date})' },
+    fConc:          { en: '{n} events same day', ar: '{n} فعاليات في اليوم نفسه' },
+    fDeadline:      { en: 'Deadline {d}', ar: 'موعد نهائي {d}' },
+    fMega:          { en: 'Mega event active', ar: 'فعالية ضخمة نشطة' },
+    pr_low:         { en: 'Low', ar: 'منخفض' },
+    pr_elevated:    { en: 'Elevated', ar: 'مرتفع نسبيًا' },
+    pr_high:        { en: 'High', ar: 'عالٍ' },
+    pr_critical:    { en: 'Critical', ar: 'حرج' },
+    wiTitle:        { en: 'Reassign: {event}', ar: 'إعادة إسناد: {event}' },
+    wiFrom:         { en: 'From {name}', ar: 'من {name}' },
+    wiNeeds:        { en: 'needs {skill}', ar: 'يتطلب {skill}' },
+    wiRecommended:  { en: 'Recommended', ar: 'موصى به' },
+    wiNoSkill:      { en: 'lacks skill', ar: 'يفتقر للمهارة' },
+    wiApply:        { en: 'Apply', ar: 'تطبيق' },
+    wiNote:         { en: 'Projections use the same load model. You decide — nothing moves until you apply.', ar: 'التوقعات تستخدم نموذج الحمل نفسه. القرار لك — لا شيء يتغيّر حتى تطبّق.' },
+    wiDone:         { en: 'Reassigned', ar: 'تمت إعادة الإسناد' },
+    wiOverrideTitle:{ en: 'Overload override', ar: 'تجاوز التحميل الزائد' },
+    wiOverrideBody: { en: 'This pushes them past 100%. Add a reason to proceed.', ar: 'هذا يتجاوز 100%. أضِف سببًا للمتابعة.' },
+    wiOverrideOk:   { en: 'Reassign anyway', ar: 'أعِد الإسناد على أي حال' },
     // Sidebar section headers (Hick's Law — chunk items into scannable groups).
     navGrpOverview: { en: 'Overview', ar: 'نظرة عامة' },
     navGrpWork:     { en: 'My work', ar: 'عملي' },
@@ -6092,7 +6274,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     authed: false,         // signed in via company email?
     window: 'month',       // 'week' | 'month' | 'year'
     viewerId: 'p_ahmed',   // who is "logged in" (set at sign-in; admin can View-as)
-    route: 'dashboard',    // current screen
+    route: 'workload',     // current screen (Workload cockpit = home)
     selectedId: null,      // person whose profile is open
     refDate: new Date().toISOString().slice(0, 10), // default to TODAY (current period active)
     prefs: null,           // personal settings (set below from DEFAULT_PREFS); per-user persisted
@@ -10749,6 +10931,345 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   }
 
   WP.ui.dashboard = { render: render };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Webook Workload — Manager Cockpit  (MVP)
+ * ------------------------------------------------------------
+ * The one screen a manager opens to answer, in ~30s:
+ *   are we going to be overloaded · who · when · why · what to do.
+ * Reads WP.workload (pure engine). No hours — a tier-weighted load index.
+ * Route: 'workload'. Individual drawer + skill-aware what-if live here.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  var ui = WP.ui;
+
+  function t(k) { return WP.i18n.t(k); }
+  function esc(s) { return ui.esc(s); }
+  function evName(ev) { return WP.i18n.eventName ? WP.i18n.eventName(ev) : (ev && (WP.state.lang === 'ar' ? ev.nameAr : ev.nameEn) || ev.id); }
+  function fdate(iso) { try { return WP.i18n.shortDate ? WP.i18n.shortDate(iso) : iso.slice(5); } catch (e) { return iso.slice(5); } }
+  function stColor(state) { return ui.stateColor(state); }
+  function stLabel(state) { return WP.i18n.stateLabel ? WP.i18n.stateLabel(state) : (WP.state.lang === 'ar' ? state.labelAr : state.labelEn); }
+
+  var HORIZONS = [
+    { val: 'today', label: 'hzToday' }, { val: '7', label: 'hz7' }, { val: '14', label: 'hz14' },
+  ];
+  function horizon() { return WP.state.cockpitHorizon || '14'; }
+  function primaryLoad(snap) {
+    var h = horizon();
+    return h === 'today' ? { load: snap.today, state: snap.todayState, date: snap.forecast.ref }
+      : h === '7' ? { load: snap.peak7, state: snap.peak7State, date: snap.peak7Date }
+      : { load: snap.peak14, state: snap.peak14State, date: snap.peak14Date };
+  }
+
+  /* ---- small view helpers ---- */
+  function loadChip(load, state) {
+    return '<span class="wl-chip" style="--c:' + stColor(state) + '">' +
+      '<span class="wl-dot"></span>' + load + '%<span class="wl-chip-l"> ' + esc(stLabel(state)) + '</span></span>';
+  }
+  function kpi(label, value, sub, info) {
+    var inf = info ? ' <span class="kpi-info" tabindex="0" role="img" aria-label="' + esc(info) + '" title="' + esc(info) + '">' + ui.icon('info', 13) + '</span>' : '';
+    return '<div class="card"><div class="label">' + esc(label) + inf + '</div>' +
+      '<div class="value">' + value + '</div><div class="sub">' + (sub || '') + '</div></div>';
+  }
+  // A 14-day mini heat strip for one person (no numbers — the row chip carries the value).
+  function spark(snap) {
+    return '<span class="wl-spark" aria-hidden="true">' + snap.forecast.timeline.map(function (d) {
+      return '<i class="wl-sp wl-sp--' + d.state.key + '" title="' + fdate(d.date) + ': ' + d.load + '%"></i>';
+    }).join('') + '</span>';
+  }
+
+  /* ---- the "why" breakdown for a given day (load = Σ event intensities) ---- */
+  function whyParts(person, iso) {
+    return WP.workload.driversOn(person, iso).map(function (dr) {
+      return esc(evName(dr.event)) + ' ' + dr.intensity + '%';
+    });
+  }
+
+  /* ============================ TEAM COCKPIT ============================ */
+  function teamView(root, viewer) {
+    var people = WP.access.visiblePeople(viewer).filter(function (p) { return !p.tbc; });
+    var ref = WP.workload.refToday();
+    var tm = WP.workload.teamMetrics(people, ref);
+    // rank people by pressure, worst first
+    var ranked = tm.snaps.map(function (s) { return { s: s, p: WP.access.byId(s.id) }; })
+      .filter(function (r) { return r.p; })
+      .sort(function (a, b) { return b.s.pressure.score - a.s.pressure.score || b.s.peak14 - a.s.peak14; });
+    var windows = WP.workload.pressureWindows(people, ref, 6);
+    var drivers = WP.workload.driversRollup(people, ref, 5);
+
+    var kpis = '<div class="metrics wl-kpis">' +
+      kpi(t('kAvgToday'), tm.avgToday + '%', t('kAvgTodaySub'), t('kAvgTodayInfo')) +
+      kpi(t('kOverloaded'), tm.overloadedToday, t('kOverloadedSub')) +
+      kpi(t('kAtRisk'), tm.atRisk7, t('kAtRiskSub')) +
+      kpi(t('kHealthy'), tm.healthyToday, t('ofN').replace('{n}', people.length)) +
+      kpi(t('kTeamPeak'), tm.teamPeak7 + '%', tm.teamPeak7Date ? t('onDate').replace('{d}', fdate(tm.teamPeak7Date)) : '—') +
+      kpi(t('kWindows'), windows.length, t('kWindowsSub')) +
+    '</div>';
+
+    // team workload list (ranked by risk)
+    var listRows = ranked.map(function (r) {
+      var pl = primaryLoad(r.s);
+      return '<div class="wl-row" data-open="' + r.s.id + '" tabindex="0" role="button" ' +
+        'aria-label="' + esc(t('openDetail') + ' — ' + WP.i18n.name(r.p)) + '" style="--node-accent:' + stColor(pl.state) + '">' +
+        ui.avatar(r.p, stColor(pl.state)) +
+        '<div class="wl-meta"><div class="nm">' + esc(WP.i18n.name(r.p)) + '</div>' +
+          '<div class="ttl">' + esc(WP.i18n.title(r.p)) + '</div></div>' +
+        spark(r.s) +
+        '<span class="wl-peaks">' + loadChip(pl.load, pl.state) +
+          '<span class="wl-sub2">' + t('peakShort') + ' ' + r.s.peak14 + '% · ' + esc(t('pr_' + r.s.pressure.level)) + '</span></span>' +
+      '</div>';
+    }).join('') || '<div class="sub">' + t('allClearTeam') + '</div>';
+
+    // heatmap (people × 14 days)
+    var days = WP.workload.timeline(ranked[0] ? ranked[0].p : people[0], ref, WP.workload.HORIZON);
+    var head = '<div class="wl-hm-row wl-hm-head"><span class="wl-hm-name"></span>' +
+      days.map(function (d, i) { return '<span class="wl-hm-col' + (i === 0 ? ' is-today' : '') + '">' + (i === 0 ? t('todayShort') : fdate(d.date)) + '</span>'; }).join('') + '</div>';
+    var HM_CAP = 16;
+    var hmRows = ranked.slice(0, HM_CAP).map(function (r) {
+      var tl = WP.workload.timeline(r.p, ref, WP.workload.HORIZON);
+      return '<div class="wl-hm-row" data-open="' + r.s.id + '" tabindex="0" role="button" aria-label="' + esc(WP.i18n.name(r.p)) + '">' +
+        '<span class="wl-hm-name">' + esc(WP.i18n.name(r.p).split(' ')[0]) + '</span>' +
+        tl.map(function (d) {
+          return '<span class="wl-hm-cell wl-hm--' + d.state.key + '" title="' + esc(WP.i18n.name(r.p)) + ' · ' + fdate(d.date) + ': ' + d.load + '% (' + esc(stLabel(d.state)) + ')">' + (d.load || '') + '</span>';
+        }).join('') + '</div>';
+    }).join('');
+    var hmMore = ranked.length > HM_CAP ? '<div class="sub wl-hm-more">' + t('andMore').replace('{n}', ranked.length - HM_CAP) + '</div>' : '';
+    var legend = '<div class="wl-legend">' + WP.data.LOAD_STATES.map(function (b) {
+      return '<span class="wl-lg"><i class="wl-hm-cell wl-hm--' + b.key + '"></i>' + esc(WP.state.lang === 'ar' ? b.labelAr : b.labelEn) + ' (' + b.min + (b.max >= 9999 ? '+' : '–' + b.max) + ')</span>';
+    }).join('') + '</div>';
+
+    // pressure windows
+    var winHtml = windows.length ? windows.map(function (w) {
+      var p = WP.access.byId(w.personId);
+      var drv = w.drivers.slice(0, 3).map(function (d) { return esc(evName(WP.data.EVENTS[d.id])); }).join(' · ');
+      var range = w.from === w.to ? fdate(w.from) : fdate(w.from) + ' → ' + fdate(w.to);
+      return '<div class="wl-win"><div class="wl-win-top">' +
+        '<b>' + esc(p ? WP.i18n.name(p) : w.personId) + '</b>' +
+        '<span class="wl-chip" style="--c:' + stColor(WP.workload.stateFor(w.peak)) + '"><span class="wl-dot"></span>' + w.peak + '%</span></div>' +
+        '<div class="wl-win-when">' + ui.icon('clock', 13) + ' ' + range + '</div>' +
+        '<div class="wl-win-why sub">' + t('drivenBy') + ': ' + drv + '</div>' +
+        '<div class="wl-win-act">' + ui.icon('arrowRight', 13) + ' ' + t(w.action === 'add-support' ? 'actAddSupport' : 'actRedistribute') + '</div>' +
+      '</div>';
+    }).join('') : '<div class="sub">' + t('noWindows') + '</div>';
+
+    // workload drivers (top events)
+    var drvHtml = drivers.length ? drivers.map(function (d) {
+      return '<div class="wl-drv"><span class="wl-tier wl-tier--' + d.event.tier + '"></span>' +
+        '<span class="nm">' + esc(evName(d.event)) + '</span>' +
+        '<span class="sub">' + t('nPeople').replace('{n}', d.peopleCount) + '</span></div>';
+    }).join('') : '<div class="sub">—</div>';
+
+    root.innerHTML =
+      ui.provenanceNote() +
+      ui.pageHeader({
+        crumbs: [{ label: t('bcTempo'), route: 'workload' }, { label: t('navWorkload') }],
+        title: t('wlTitle'),
+        subtitle: t('wlSub').replace('{n}', people.length),
+        right: ui.subTabs(HORIZONS.map(function (h) { return { val: h.val, label: t(h.label) }; }), horizon()),
+      }) +
+      kpis +
+      '<div class="wl-grid">' +
+        '<div class="section wl-c-main"><h3>' + ui.icon('users', 16) + ' ' + t('secTeam') + '</h3>' + listRows + '</div>' +
+        '<div class="section wl-c-side"><h3>' + ui.icon('alert', 16) + ' ' + t('secWindows') + '</h3>' + winHtml + '</div>' +
+      '</div>' +
+      '<div class="section"><h3>' + ui.icon('grid', 16) + ' ' + t('secHeatmap') + '</h3>' +
+        '<div class="wl-hm-scroll">' + head + hmRows + '</div>' + hmMore + legend + '</div>' +
+      '<div class="wl-grid">' +
+        '<div class="section wl-c-side"><h3>' + ui.icon('flame', 16) + ' ' + t('secDrivers') + '</h3>' + drvHtml + '</div>' +
+        '<div class="section wl-c-main"><h3>' + ui.icon('sparkles', 16) + ' ' + t('secActions') + '</h3>' + actionsHtml(windows) + '</div>' +
+      '</div>';
+
+    wire(root);
+  }
+
+  // Recommended actions derived ONLY from real pressure windows (no filler).
+  function actionsHtml(windows) {
+    if (!windows.length) return '<div class="sub">' + t('actNone') + '</div>';
+    return windows.slice(0, 4).map(function (w) {
+      var p = WP.access.byId(w.personId);
+      var top = w.drivers[0] ? WP.data.EVENTS[w.drivers[0].id] : null;
+      var verb = w.action === 'add-support' ? t('actAddSupport') : t('actRedistribute');
+      return '<div class="wl-act">' +
+        '<div class="wl-act-txt">' + esc(verb) + ' — <b>' + esc(p ? WP.i18n.name(p) : w.personId) + '</b> ' +
+          t('peaksAt').replace('{load}', w.peak).replace('{date}', fdate(w.peakDate)) + '</div>' +
+        (top ? '<button class="btn" data-whatif="' + esc(top.id) + '" data-from="' + esc(w.personId) + '">' + ui.icon('arrowRight', 14) + ' ' + t('simReassign') + '</button>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  /* ============================ INDIVIDUAL DRAWER ============================ */
+  function openDrawer(personId) {
+    var p = WP.access.byId(personId); if (!p) return;
+    var ref = WP.workload.refToday();
+    var snap = WP.workload.snapshot(p, ref);
+    var pr = snap.pressure;
+    var host = document.getElementById('overlay-host'); if (!host) return;
+
+    var tl = snap.forecast.timeline;
+    var strip = tl.map(function (d, i) {
+      return '<div class="wl-tl-day' + (i === 0 ? ' is-today' : '') + '">' +
+        '<span class="wl-hm-cell wl-hm--' + d.state.key + '" title="' + d.load + '%">' + (d.load || '') + '</span>' +
+        '<span class="wl-tl-d">' + (i === 0 ? t('todayShort') : fdate(d.date)) + '</span></div>';
+    }).join('');
+
+    // WHY: today's math, explicit
+    var parts = whyParts(p, ref);
+    var whyToday = parts.length
+      ? snap.today + '% = ' + parts.join(' + ')
+      : t('whyIdle');
+
+    // drivers (peak day)
+    var peakParts = whyParts(p, snap.peak14Date);
+    // pressure factors
+    var f = pr.factors;
+    var factorChips = [
+      t('fPeak').replace('{load}', f.peakLoad).replace('{date}', fdate(f.peakDate)),
+      t('fConc').replace('{n}', f.maxConcurrent),
+      f.deadline ? t('fDeadline').replace('{d}', fdate(f.deadline)) : null,
+      f.megaActive ? t('fMega') : null,
+    ].filter(Boolean).map(function (x) { return '<span class="tag">' + esc(x) + '</span>'; }).join('');
+
+    // actions: reassign each current driver
+    var drv = WP.workload.driversOn(p, snap.peak14Date);
+    var actions = drv.length ? drv.map(function (d) {
+      return '<div class="wl-act"><div class="wl-act-txt">' + esc(evName(d.event)) + ' <span class="sub">' + d.intensity + '%</span></div>' +
+        '<button class="btn" data-whatif="' + esc(d.id) + '" data-from="' + esc(p.id) + '">' + t('simReassign') + '</button></div>';
+    }).join('') : '<div class="sub">' + t('noDrivers') + '</div>';
+
+    host.innerHTML =
+      '<div class="wl-drawer-scrim" data-close="1"></div>' +
+      '<aside class="wl-drawer" role="dialog" aria-modal="true" aria-label="' + esc(WP.i18n.name(p)) + '">' +
+        '<button class="wl-dclose" data-close="1" aria-label="' + esc(t('close')) + '">' + ui.icon('x', 16) + '</button>' +
+        '<div class="wl-dhead">' + ui.avatar(p, stColor(snap.todayState)) +
+          '<div><h2>' + esc(WP.i18n.name(p)) + '</h2><div class="sub">' + esc(WP.i18n.title(p)) + '</div></div></div>' +
+        // overview
+        '<div class="wl-dov">' +
+          '<div><div class="label">' + t('dwToday') + '</div>' + loadChip(snap.today, snap.todayState) + '</div>' +
+          '<div><div class="label">' + t('dwPeak7') + '</div>' + loadChip(snap.peak7, snap.peak7State) + '</div>' +
+          '<div><div class="label">' + t('dwPeak14') + '</div>' + loadChip(snap.peak14, snap.peak14State) + '</div>' +
+          '<div><div class="label">' + t('dwPressure') + '</div><span class="wl-chip wl-pr--' + pr.level + '"><span class="wl-dot"></span>' + esc(t('pr_' + pr.level)) + '</span></div>' +
+        '</div>' +
+        '<div class="wl-dnote sub">' + ui.icon('info', 13) + ' ' + t('dwCapacityNote') + '</div>' +
+        // timeline
+        '<h3>' + ui.icon('clock', 15) + ' ' + t('dwTimeline') + '</h3><div class="wl-tl">' + strip + '</div>' +
+        // why / explainability
+        '<h3>' + ui.icon('info', 15) + ' ' + t('dwWhy') + '</h3>' +
+        '<div class="wl-why"><div>' + t('whyTodayLbl') + ' ' + esc(whyToday) + '</div>' +
+          (peakParts.length ? '<div>' + t('whyPeakLbl').replace('{date}', fdate(snap.peak14Date)) + ' ' + snap.peak14 + '% = ' + peakParts.join(' + ') + '</div>' : '') + '</div>' +
+        // pressure
+        '<h3>' + ui.icon('flame', 15) + ' ' + t('dwPressure') + '</h3><div class="wl-facts">' + factorChips + '</div>' +
+        // actions
+        '<h3>' + ui.icon('sparkles', 15) + ' ' + t('dwActions') + '</h3>' + actions +
+      '</aside>';
+
+    host.querySelectorAll('[data-close]').forEach(function (el) { el.onclick = function () { host.innerHTML = ''; }; });
+    host.querySelectorAll('[data-whatif]').forEach(function (b) {
+      b.onclick = function () { openWhatIf(b.dataset.whatif, b.dataset.from); };
+    });
+    document.onkeydown = function (e) { if (e.key === 'Escape') { host.innerHTML = ''; document.onkeydown = null; } };
+  }
+
+  /* ============================ WHAT-IF ============================ */
+  function openWhatIf(eventId, fromId) {
+    var ev = WP.data.EVENTS[eventId]; if (!ev) return;
+    var viewer = WP.viewer();
+    var ref = WP.workload.refToday();
+    var pool = WP.access.visiblePeople(viewer).filter(function (p) { return !p.tbc && p.id !== fromId; });
+    var rows = WP.workload.rankCandidates(eventId, pool, ref);
+    var host = document.getElementById('overlay-host'); if (!host) return;
+    var from = WP.access.byId(fromId);
+
+    var body = rows.slice(0, 8).map(function (r, i) {
+      var afterState = WP.workload.stateFor(r.sim.afterPeak);
+      var reason = r.reasons.map(function (x) { return '<span class="tag">' + esc(x) + '</span>'; }).join('');
+      return '<div class="wl-cand' + (r.recommended ? ' is-rec' : '') + '">' +
+        ui.avatar(r.person, stColor(afterState)) +
+        '<div class="wl-cand-meta"><div class="nm">' + esc(WP.i18n.name(r.person)) +
+          (r.recommended ? ' <span class="wl-rec">' + ui.icon('check', 12) + ' ' + t('wiRecommended') + '</span>' : '') +
+          (!r.skillMatch ? ' <span class="wl-warn">' + t('wiNoSkill') + '</span>' : '') + '</div>' +
+          '<div class="wl-cand-proj">' + r.sim.beforePeak + '% → <b style="color:' + stColor(afterState) + '">' + r.sim.afterPeak + '%</b> ' + esc(stLabel(afterState)) + '</div>' +
+          '<div class="wl-cand-why">' + reason + '</div></div>' +
+        '<button class="btn' + (r.recommended ? ' primary' : '') + '" data-apply="' + esc(r.id) + '"' + (r.sim.softLocked ? ' data-soft="1"' : '') + '>' + t('wiApply') + '</button>' +
+      '</div>';
+    }).join('');
+
+    host.innerHTML =
+      '<div class="wl-drawer-scrim" data-close="1"></div>' +
+      '<aside class="wl-drawer wl-wi" role="dialog" aria-modal="true" aria-label="' + esc(t('wiTitle')) + '">' +
+        '<button class="wl-dclose" data-close="1" aria-label="' + esc(t('close')) + '">' + ui.icon('x', 16) + '</button>' +
+        '<h2>' + t('wiTitle').replace('{event}', esc(evName(ev))) + '</h2>' +
+        '<div class="sub wl-wi-from">' + (from ? t('wiFrom').replace('{name}', esc(WP.i18n.name(from))) : '') +
+          (ev.requiredSkill ? ' · ' + t('wiNeeds').replace('{skill}', esc(ev.requiredSkill)) : '') + '</div>' +
+        '<div class="wl-cands">' + (body || '<div class="sub">—</div>') + '</div>' +
+        '<div class="sub wl-wi-note">' + ui.icon('info', 13) + ' ' + t('wiNote') + '</div>' +
+      '</aside>';
+
+    host.querySelectorAll('[data-close]').forEach(function (el) { el.onclick = function () { host.innerHTML = ''; }; });
+    host.querySelectorAll('[data-apply]').forEach(function (b) {
+      b.onclick = function () { applyReassign(eventId, fromId, b.dataset.apply, !!b.dataset.soft); };
+    });
+  }
+
+  // Manager-initiated reassignment. Soft-locked (would overload) → confirm w/ reason (logged).
+  function applyReassign(eventId, fromId, toId, soft) {
+    var doIt = function (reason) {
+      var from = WP.access.byId(fromId), to = WP.access.byId(toId);
+      if (from) from.assignedEvents = (from.assignedEvents || []).filter(function (id) { return id !== eventId; });
+      if (to && (to.assignedEvents || []).indexOf(eventId) < 0) to.assignedEvents = (to.assignedEvents || []).concat([eventId]);
+      if (WP.logEvent) WP.logEvent('workload.reassign', { event: eventId, from: fromId, to: toId, override: reason || null });
+      var host = document.getElementById('overlay-host'); if (host) host.innerHTML = '';
+      ui.toast(t('wiDone'), 'ok');
+      WP.render();
+    };
+    if (soft && WP.ui.prompt) {
+      WP.ui.prompt({ title: t('wiOverrideTitle'), body: t('wiOverrideBody'), okLabel: t('wiOverrideOk') })
+        .then(function (r) { if (r != null && String(r).trim()) doIt(String(r).trim()); });
+    } else { doIt(null); }
+  }
+
+  /* ---- personal (non-manager) mini view ---- */
+  function personalView(root, viewer) {
+    var ref = WP.workload.refToday();
+    var snap = WP.workload.snapshot(viewer, ref);
+    var parts = whyParts(viewer, ref);
+    root.innerHTML =
+      ui.provenanceNote() +
+      ui.pageHeader({ crumbs: [{ label: t('bcTempo'), route: 'workload' }, { label: t('navWorkload') }], title: t('wlMyTitle'), subtitle: t('wlMySub') }) +
+      '<div class="metrics wl-kpis">' +
+        kpi(t('dwToday'), snap.today + '%', stLabel(snap.todayState)) +
+        kpi(t('dwPeak7'), snap.peak7 + '%', stLabel(snap.peak7State)) +
+        kpi(t('dwPeak14'), snap.peak14 + '%', stLabel(snap.peak14State)) +
+      '</div>' +
+      '<div class="section"><h3>' + ui.icon('info', 16) + ' ' + t('dwWhy') + '</h3>' +
+        '<div class="wl-why">' + (parts.length ? snap.today + '% = ' + parts.join(' + ') : t('whyIdle')) + '</div>' +
+        '<div class="wl-dnote sub">' + ui.icon('info', 13) + ' ' + t('dwCapacityNote') + '</div></div>';
+  }
+
+  function wire(root) {
+    root.querySelectorAll('[data-open]').forEach(function (el) {
+      var open = function () { openDrawer(el.dataset.open); };
+      el.onclick = open;
+      el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
+    });
+    root.querySelectorAll('[data-whatif]').forEach(function (b) {
+      b.onclick = function (e) { e.stopPropagation(); openWhatIf(b.dataset.whatif, b.dataset.from); };
+    });
+    root.querySelectorAll('[data-subtab]').forEach(function (b) {
+      b.onclick = function () { WP.setState({ cockpitHorizon: b.dataset.subtab }); };
+    });
+  }
+
+  function render(root) {
+    var viewer = WP.viewer();
+    if (WP.access.canManage(viewer)) teamView(root, viewer);
+    else personalView(root, viewer);
+  }
+
+  WP.ui.cockpit = { render: render, openDrawer: openDrawer, openWhatIf: openWhatIf };
 })(window.WP = window.WP || {});
 
 </script>
@@ -18543,6 +19064,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 
     // primary navigation (vertical sidebar) — role-aware
     const nav = [
+      { id: 'workload',    routes: ['workload'],       icon: 'gauge',     label: t('navWorkload'),   group: 'overview' },
       { id: 'dashboard',   routes: ['dashboard'],      icon: 'gauge',     label: t('navDashboard'),  group: 'overview' },
       { id: 'map',         routes: ['map', 'profile'], icon: 'users',     label: t('navHome'),       group: 'work' },
       { id: 'me',          routes: ['me'],             icon: 'target',    label: t('myProgress'),    group: 'work' },
@@ -18711,7 +19233,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
       };
     });
     const bh = appbar.querySelector('#brand-home');
-    if (bh) bh.onclick = function () { go('dashboard'); };
+    if (bh) bh.onclick = function () { go('workload'); };
     const a = bar.querySelector('#assign');
     if (a) a.onclick = function () { if (isMobile()) { navClosed = true; persistNav(); applyNav(); } WP.ui.assignmentDrawer.openRequest(); };
 
@@ -18748,7 +19270,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     const va = appbar.querySelector('#acct-viewas');
     if (va) va.onchange = function (e) {
       WP.logEvent({ type: 'view-as', by: WP.state.viewerId, target: e.target.value });
-      WP.setState({ viewerId: e.target.value, route: 'dashboard', selectedId: null });
+      WP.setState({ viewerId: e.target.value, route: 'workload', selectedId: null });
     };
   }
 
@@ -18758,12 +19280,12 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   // clean). If a persisted/stale route is denied, the router just renders the
   // fallback; setState-driven navigation is where the persisted value updates.
   function effectiveRoute(route) {
-    if (WP.deferred(route)) return 'dashboard';
-    if (route === 'activity' && !WP.can('manageAdmins')) return 'map';
-    if (route === 'admins' && !WP.can('manageAdmins')) return 'map';
-    if (route === 'exec' && !(WP.execDeckVisible && WP.execDeckVisible())) return 'dashboard';
-    if (route === 'sales' && !(WP.sales && WP.sales.canView(WP.viewer && WP.viewer()))) return 'dashboard';
-    if (route === 'orgtree' && !(WP.ui.orgTree && WP.ui.orgTree.canView(WP.viewer && WP.viewer()))) return 'dashboard';
+    if (WP.deferred(route)) return 'workload';
+    if (route === 'activity' && !WP.can('manageAdmins')) return 'workload';
+    if (route === 'admins' && !WP.can('manageAdmins')) return 'workload';
+    if (route === 'exec' && !(WP.execDeckVisible && WP.execDeckVisible())) return 'workload';
+    if (route === 'sales' && !(WP.sales && WP.sales.canView(WP.viewer && WP.viewer()))) return 'workload';
+    if (route === 'orgtree' && !(WP.ui.orgTree && WP.ui.orgTree.canView(WP.viewer && WP.viewer()))) return 'workload';
     return route;
   }
 
@@ -18800,7 +19322,8 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     // RBAC-denied route falls back to its safe home here.
     const route = effectiveRoute(WP.state.route);
     topbar();
-    if (route === 'dashboard') WP.ui.dashboard.render(root);
+    if (route === 'workload') WP.ui.cockpit.render(root);
+    else if (route === 'dashboard') WP.ui.dashboard.render(root);
     else if (route === 'profile') WP.ui.profile.render(root);
     else if (route === 'settings') WP.ui.settings.render(root);
     else if (route === 'activity') WP.ui.activity.render(root);

@@ -23,7 +23,7 @@
     authed: false,         // signed in via company email?
     window: 'month',       // 'week' | 'month' | 'year'
     viewerId: 'p_ahmed',   // who is "logged in" (set at sign-in; admin can View-as)
-    route: 'dashboard',    // current screen
+    route: 'workload',     // current screen (Workload cockpit = home)
     selectedId: null,      // person whose profile is open
     refDate: new Date().toISOString().slice(0, 10), // default to TODAY (current period active)
     prefs: null,           // personal settings (set below from DEFAULT_PREFS); per-user persisted

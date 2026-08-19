@@ -42,6 +42,7 @@
 
     // primary navigation (vertical sidebar) — role-aware
     const nav = [
+      { id: 'workload',    routes: ['workload'],       icon: 'gauge',     label: t('navWorkload'),   group: 'overview' },
       { id: 'dashboard',   routes: ['dashboard'],      icon: 'gauge',     label: t('navDashboard'),  group: 'overview' },
       { id: 'map',         routes: ['map', 'profile'], icon: 'users',     label: t('navHome'),       group: 'work' },
       { id: 'me',          routes: ['me'],             icon: 'target',    label: t('myProgress'),    group: 'work' },
@@ -210,7 +211,7 @@
       };
     });
     const bh = appbar.querySelector('#brand-home');
-    if (bh) bh.onclick = function () { go('dashboard'); };
+    if (bh) bh.onclick = function () { go('workload'); };
     const a = bar.querySelector('#assign');
     if (a) a.onclick = function () { if (isMobile()) { navClosed = true; persistNav(); applyNav(); } WP.ui.assignmentDrawer.openRequest(); };
 
@@ -247,7 +248,7 @@
     const va = appbar.querySelector('#acct-viewas');
     if (va) va.onchange = function (e) {
       WP.logEvent({ type: 'view-as', by: WP.state.viewerId, target: e.target.value });
-      WP.setState({ viewerId: e.target.value, route: 'dashboard', selectedId: null });
+      WP.setState({ viewerId: e.target.value, route: 'workload', selectedId: null });
     };
   }
 
@@ -257,12 +258,12 @@
   // clean). If a persisted/stale route is denied, the router just renders the
   // fallback; setState-driven navigation is where the persisted value updates.
   function effectiveRoute(route) {
-    if (WP.deferred(route)) return 'dashboard';
-    if (route === 'activity' && !WP.can('manageAdmins')) return 'map';
-    if (route === 'admins' && !WP.can('manageAdmins')) return 'map';
-    if (route === 'exec' && !(WP.execDeckVisible && WP.execDeckVisible())) return 'dashboard';
-    if (route === 'sales' && !(WP.sales && WP.sales.canView(WP.viewer && WP.viewer()))) return 'dashboard';
-    if (route === 'orgtree' && !(WP.ui.orgTree && WP.ui.orgTree.canView(WP.viewer && WP.viewer()))) return 'dashboard';
+    if (WP.deferred(route)) return 'workload';
+    if (route === 'activity' && !WP.can('manageAdmins')) return 'workload';
+    if (route === 'admins' && !WP.can('manageAdmins')) return 'workload';
+    if (route === 'exec' && !(WP.execDeckVisible && WP.execDeckVisible())) return 'workload';
+    if (route === 'sales' && !(WP.sales && WP.sales.canView(WP.viewer && WP.viewer()))) return 'workload';
+    if (route === 'orgtree' && !(WP.ui.orgTree && WP.ui.orgTree.canView(WP.viewer && WP.viewer()))) return 'workload';
     return route;
   }
 
@@ -299,7 +300,8 @@
     // RBAC-denied route falls back to its safe home here.
     const route = effectiveRoute(WP.state.route);
     topbar();
-    if (route === 'dashboard') WP.ui.dashboard.render(root);
+    if (route === 'workload') WP.ui.cockpit.render(root);
+    else if (route === 'dashboard') WP.ui.dashboard.render(root);
     else if (route === 'profile') WP.ui.profile.render(root);
     else if (route === 'settings') WP.ui.settings.render(root);
     else if (route === 'activity') WP.ui.activity.render(root);
