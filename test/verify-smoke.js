@@ -23,7 +23,7 @@ window.HTMLElement.prototype.scrollIntoView = function () {};
 window.addEventListener('error', e => { if (!benign.test(String(e.message))) errors.push('[onerror] ' + e.message); });
 
 // The set of routes the shell knows how to render — the router must land inside this set.
-const VALID_ROUTES = ['dashboard', 'map', 'me', 'evaluations', 'evaluation', 'upward', 'daily', 'library', 'permissions', 'settings', 'fairness', 'profile'];
+const VALID_ROUTES = ['workload', 'dashboard', 'map', 'me', 'evaluations', 'evaluation', 'upward', 'daily', 'library', 'permissions', 'settings', 'fairness', 'profile', 'orgtree'];
 
 setTimeout(() => {
   try {
