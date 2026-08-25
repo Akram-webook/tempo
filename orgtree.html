@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Organisation Tree · Event Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-brand:#ff2c79;
+  --surface-base:#09090b;
+  --surface-l1:#18181b;
+  --surface-l2:#27272a;
+  --content-primary:#e4e4e7;
+  --content-secondary:#a1a1aa;
+  --border-tertiary:#ffffff1a;
+  --border-strong:#ffffff2e;
+  --amber:#f59e0b; --amber-text:#fbbf24;
+  --radius-m:8px; --radius-s:4px; --radius-pill:999px;
+  --font-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-display:"Gellix","Figtree",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--surface-base);color:var(--content-primary);
+     font:400 16px/24px var(--font-body);font-variant-numeric:tabular-nums;margin:0}
+button{font-family:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--bg-brand);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.wrap{max-width:1560px;margin:0 auto;padding:12px 24px 14px}
+
+/* ── header ───────────────────────────────────────────── */
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+.sample{display:inline-flex;align-items:center;gap:6px;background:#f59e0b1a;border:1px solid #f59e0b40;
+  color:var(--amber-text);border-radius:var(--radius-pill);padding:4px 10px;font:600 11px/14px var(--font-body)}
+h1{font:800 28px/32px var(--font-display);margin:8px 0 2px}
+.subline{color:var(--content-secondary);font:400 13px/18px var(--font-body);margin:0}
+
+/* stat strip */
+.stats{display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:flex-end}
+.stat{display:flex;align-items:center;gap:8px;padding:0 16px;border-inline-start:1px solid var(--border-tertiary)}
+.stats>.stat:first-child{border-inline-start:0}
+.stat .v{font:700 20px/24px var(--font-display)}
+.stat .l{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.07em;color:var(--content-secondary)}
+.stat .v.fl{color:var(--amber-text)} .stat .v.op{color:var(--bg-brand)}
+.pinst{display:flex;flex-direction:column;align-items:center;gap:0;background:none;border:0;padding:2px 2px 0}
+.pinmark{width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  background:linear-gradient(145deg,#f45244,#d33223);display:grid;place-items:center;
+  box-shadow:0 3px 7px #00000073;position:relative;transition:transform .15s,box-shadow .15s}
+.pinmark::after{content:'';position:absolute;width:17px;height:17px;border-radius:999px;
+  background:#fff;left:5.5px;top:5.5px;box-shadow:inset 0 1px 2px #0000002e}
+.pinmark .fgl{transform:rotate(45deg);font-size:12px;line-height:1;position:relative;z-index:1}
+.pinshadow{width:12px;height:3px;border-radius:999px;background:#00000059;margin:2px auto 0}
+.pinst:hover .pinmark{transform:rotate(-45deg) translateY(-2px)}
+.pinst.on .pinmark{box-shadow:0 0 0 3px #ea433540,0 3px 7px #00000073}
+.pincol{display:flex;align-items:center;gap:8px}
+
+/* ── sticky bar ───────────────────────────────────────── */
+.bar{position:sticky;top:0;z-index:40;background:#09090be6;backdrop-filter:blur(64px);
+  border-top:1px solid var(--border-tertiary);border-bottom:1px solid var(--border-tertiary);
+  margin-top:10px;padding:8px 0}
+.barrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.search{position:relative;width:250px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.55}
+.search input{width:100%;background:var(--surface-l2);border:1px solid var(--border-tertiary);
+  color:inherit;border-radius:var(--radius-pill);padding:9px 14px 9px 34px;font:400 14px/18px var(--font-body)}
+.search input::placeholder{color:var(--content-secondary)}
+
+.dd{position:relative}
+.ddbtn{display:flex;align-items:center;gap:8px;min-width:224px;background:var(--surface-l2);
+  border:1px solid var(--border-tertiary);border-radius:var(--radius-pill);padding:8px 12px;font:600 14px/18px var(--font-body)}
+.ddbtn .dot{width:9px;height:9px;border-radius:999px;flex:none;background:var(--content-secondary)}
+.ddbtn .cnt{margin-left:auto;color:var(--content-secondary);font-weight:700}
+.ddbtn .car{transition:transform .15s}
+.dd.open .ddbtn .car{transform:rotate(180deg)}
+.ddmenu{position:absolute;top:calc(100% + 6px);left:0;min-width:300px;background:var(--surface-l2);
+  border:1px solid var(--border-strong);border-radius:var(--radius-m);box-shadow:0 18px 40px #000000a8;
+  padding:6px;z-index:50;display:none}
+.dd.open .ddmenu{display:block}
+.ddrow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;text-align:left;
+  padding:9px 10px;border-radius:var(--radius-s);font:500 14px/18px var(--font-body)}
+.ddrow:hover{background:#ffffff0d}
+.ddrow .dot{width:9px;height:9px;border-radius:999px;flex:none}
+.ddrow .rc{margin-left:auto;color:var(--content-secondary);font-weight:700}
+.ddrow .fl{background:#f59e0b1a;color:var(--amber-text);border-radius:var(--radius-pill);
+  padding:1px 7px;font:700 10px/16px var(--font-body);margin-left:auto}
+.ddrow .fl+.rc{margin-left:10px}
+.ddsep{height:1px;background:var(--border-tertiary);margin:5px 4px}
+
+.fbtn{margin-left:auto;display:flex;align-items:center;gap:7px;background:var(--surface-l2);
+  border:1px solid var(--border-tertiary);border-radius:var(--radius-pill);padding:8px 14px;font:600 14px/18px var(--font-body)}
+.fbtn .badge{background:var(--bg-brand);color:#fff;border-radius:var(--radius-pill);
+  min-width:18px;height:18px;display:grid;place-items:center;padding:0 5px;font:700 11px/18px var(--font-body)}
+
+/* floating popovers (Filters + Display) — overlay, never push the tree */
+.pop{position:relative}
+.popmenu{position:absolute;top:calc(100% + 8px);right:0;min-width:320px;background:var(--surface-l2);
+  border:1px solid var(--border-strong);border-radius:var(--radius-m);box-shadow:0 18px 40px #000000a8;
+  padding:12px;z-index:50;display:none}
+.pop.open .popmenu{display:block}
+.popttl{font:800 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.07em;color:var(--content-secondary);margin:0 0 8px}
+
+/* display menu — toggle rows */
+.drow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;text-align:left;
+  padding:8px 6px;border-radius:var(--radius-s);font:500 13px/18px var(--font-body)}
+.drow:hover{background:#ffffff0d}
+.drow .sw{width:34px;height:20px;border-radius:999px;background:var(--surface-base);border:1px solid var(--border-strong);
+  position:relative;flex:none;transition:background .15s}
+.drow .sw::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:999px;background:var(--content-secondary);transition:transform .15s,background .15s}
+.drow.on .sw{background:var(--bg-brand);border-color:transparent}
+.drow.on .sw::after{transform:translateX(14px);background:#fff}
+.drow .dlabel{flex:1}
+
+/* filters panel (inside the popover — compact vertical stack) */
+.fpanel{display:flex;flex-direction:column;gap:10px}
+.fgroup{display:flex;flex-direction:column;gap:6px}
+.fgroup>.gl{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.06em;
+  color:var(--content-secondary)}
+.seg{display:inline-flex;background:var(--surface-l2);border:1px solid var(--border-tertiary);
+  border-radius:var(--radius-pill);padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{background:none;border:0;border-radius:var(--radius-pill);padding:5px 12px;font:600 13px/16px var(--font-body);color:var(--content-secondary)}
+.seg button.on{background:var(--bg-brand);color:#fff}
+.popmenu .seg{background:var(--surface-base)}
+.popmenu .seg button{padding:5px 10px;font-size:12px}
+.card .av.anon{background:#3f3f46;color:var(--content-secondary);font-size:14px}
+
+.resultline{display:flex;align-items:center;gap:10px;margin-top:10px;color:var(--content-secondary);font:400 13px/18px var(--font-body)}
+.resultline[hidden]{display:none}
+.resultline .rst{background:none;border:0;color:var(--bg-brand);font:600 13px/18px var(--font-body);padding:0}
+
+/* squad info line */
+.infoline{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:12px;
+  border-left:3px solid var(--content-secondary);background:var(--surface-l1);border-radius:var(--radius-s);
+  padding:9px 12px;font:400 13px/18px var(--font-body)}
+.infoline .sep{width:3px;height:3px;border-radius:999px;background:var(--content-secondary);opacity:.6}
+.infoline b{font-weight:700}
+.infoline .fl{color:var(--amber-text);font-weight:700}
+.infoline .close{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--surface-l2);
+  border:1px solid var(--border-tertiary);border-radius:var(--radius-pill);padding:5px 11px;font:600 12px/16px var(--font-body)}
+
+/* ── tree ─────────────────────────────────────────────── */
+.tree{margin-top:12px}
+.spine{display:flex;flex-direction:column;align-items:center}
+.leadwrap{width:390px;max-width:92vw}   /* leadership cards: fixed width, centred (bus stays full-width) */
+.stem{width:2px;height:11px;background:var(--border-strong)}
+.bus{display:grid;gap:12px;height:18px;width:100%}
+.bus>div{position:relative}
+.bus>div::before{content:'';position:absolute;top:0;left:-7px;right:50%;height:2px;background:var(--border-strong)}
+.bus>div::after {content:'';position:absolute;top:0;left:50%;right:-7px;height:2px;background:var(--border-strong)}
+.bus>div:first-child::before,.bus>div:last-child::after{display:none}
+.bus>div span{position:absolute;top:0;left:calc(50% - 1px);width:2px;height:18px;background:var(--border-strong)}
+
+.cols{display:grid;gap:12px;align-items:start}
+.chead{display:flex;align-items:center;gap:8px;width:100%;background:var(--surface-l2);
+  border:1px solid var(--border-tertiary);border-left:3px solid var(--content-secondary);
+  border-radius:var(--radius-s);padding:8px 10px;margin-bottom:8px;text-align:left}
+.chead .cn{font:800 12px/16px var(--font-body);text-transform:uppercase;letter-spacing:.06em}
+.chead .cright{margin-left:auto;display:flex;align-items:center;gap:8px}
+.chead .flp{background:#f59e0b1a;color:var(--amber-text);border-radius:var(--radius-pill);padding:1px 7px;font:700 10px/16px var(--font-body)}
+.chead .tot{color:var(--content-secondary);font:700 13px/16px var(--font-body)}
+
+.kids{margin-left:12px;padding-left:12px;border-left:1px solid var(--border-tertiary);margin-top:3px}
+.kids>.branch{margin-top:3px;position:relative}
+.kids>.branch::before{content:'';position:absolute;left:-12px;top:22px;width:9px;height:1px;background:var(--border-tertiary)}
+.unitlabel{font:800 9px/14px var(--font-body);letter-spacing:.09em;text-transform:uppercase;color:#c4b5fd;margin:6px 0 2px}
+
+/* person card */
+.card{display:flex;align-items:flex-start;gap:9px;padding:6px 9px;border-radius:var(--radius-m);
+  background:var(--surface-l1);border:1px solid var(--border-tertiary);position:relative;overflow:hidden;width:100%;text-align:left}
+.card .av{width:30px;height:30px;border-radius:999px;flex:none;display:grid;place-items:center;
+  background:#3f3f46;color:var(--content-secondary);font:700 11px/1 var(--font-body)}
+.card .main{min-width:0;flex:1}
+.card .l1{display:flex;align-items:center;gap:6px;font:700 13px/17px var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .l1 .nm{overflow:hidden;text-overflow:ellipsis}
+.card .l2{font:400 11px/15px var(--font-body);color:var(--content-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.card .l3{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-pill);padding:2px 7px;font:600 10px/14px var(--font-body)}
+.chip.loc{background:#ffffff0d;color:var(--content-primary)}
+.chip.loc .cty{font-weight:700}
+.chip.free{background:#f59e0b1a;color:var(--amber-text)}
+.chip.lead{color:#fff}
+.tag{border-radius:var(--radius-s);padding:1px 6px;font:700 9px/14px var(--font-body);letter-spacing:.04em}
+.tag.you{background:var(--bg-brand);color:#fff}
+.tag.incoming{background:#f59e0b1a;color:var(--amber-text)}
+.tag.open{border:1px dashed var(--border-strong);color:var(--content-secondary)}
+
+.card.lead{box-shadow:inset 3px 0 0 var(--sq)}
+.card.lead .l1 .nm{color:#fff}
+.card.free::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent 70%,#f59e0b0f)}
+.card.free .av{box-shadow:0 0 0 2px #09090b,0 0 0 4px var(--amber)}
+.card.openrole .av{background:transparent;border:1px dashed var(--border-strong);color:var(--content-secondary)}
+
+/* isolated density */
+.tree.iso .cols{grid-template-columns:1fr!important;max-width:980px;margin:0 auto}
+.tree.iso .card{padding:11px 12px}
+.tree.iso .card .l1{font-size:14px}
+.tree.iso .card .l2{font-size:12px;white-space:normal}
+.tree.iso .card .av{width:34px;height:34px;font-size:12px}
+.tree.iso .spine{max-width:980px;margin:0 auto}
+
+.dim{opacity:.24;filter:saturate(.2)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:#000000a6;z-index:60;display:none}
+.scrim.open{display:block}
+.drawer{position:fixed;top:0;right:0;height:100%;width:370px;max-width:92vw;background:var(--surface-l1);
+  border-left:1px solid var(--border-strong);box-shadow:-18px 0 40px #000000a8;z-index:61;
+  transform:translateX(100%);transition:transform .18s ease;overflow-y:auto;padding:22px}
+.drawer.open{transform:translateX(0)}
+.dclose{position:absolute;top:16px;right:16px;background:var(--surface-l2);border:1px solid var(--border-tertiary);
+  border-radius:999px;width:30px;height:30px;display:grid;place-items:center}
+.dhead{display:flex;align-items:center;gap:12px;margin-right:40px}
+.dhead .av{width:46px;height:46px;border-radius:999px;display:grid;place-items:center;font:700 15px/1 var(--font-body);flex:none}
+.drawer h2{font:700 18px/22px var(--font-display);margin:0}
+.drole{color:var(--content-secondary);font:400 13px/18px var(--font-body);margin-top:2px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.dgrid .k{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--content-secondary)}
+.dgrid .v{font:500 13px/18px var(--font-body);margin-top:2px}
+.dsec{margin-top:16px}
+.dsec h3{font:800 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.07em;color:var(--content-secondary);margin:0 0 8px}
+.crumbs{display:flex;flex-wrap:wrap;gap:6px;font:400 12px/16px var(--font-body);color:var(--content-secondary)}
+.crumbs b{color:var(--content-primary)}
+.dreport{display:flex;align-items:center;gap:8px;width:100%;background:var(--surface-l2);border:1px solid var(--border-tertiary);
+  border-radius:var(--radius-s);padding:7px 9px;margin-top:6px;font:600 12px/16px var(--font-body);text-align:left}
+.dreport .av{width:24px;height:24px;border-radius:999px;display:grid;place-items:center;font:700 9px/1 var(--font-body);background:#3f3f46;color:var(--content-secondary);flex:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <span class="sample">⚠ Sample data</span>
+      <h1>Organisation Tree</h1>
+      <p class="subline">Event Operations · click a squad to open it on its own · indented = reports to the card above</p>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="bar">
+    <div class="barrow">
+      <label class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="Search name or role…" aria-label="Search name or role">
+      </label>
+      <div class="dd" id="dd">
+        <button class="ddbtn" id="ddbtn" aria-haspopup="listbox" aria-expanded="false"></button>
+        <div class="ddmenu" id="ddmenu" role="listbox"></div>
+      </div>
+      <div class="pop" id="displaypop" style="margin-left:auto">
+        <button class="fbtn" id="dbtn" aria-expanded="false" aria-haspopup="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          Display <span class="badge" id="dbadge" hidden>0</span>
+        </button>
+        <div class="popmenu" id="dmenu" role="menu"></div>
+      </div>
+      <div class="pop" id="filterpop">
+        <button class="fbtn" id="fbtn" aria-expanded="false" aria-haspopup="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+          Filters <span class="badge" id="fbadge" hidden>0</span>
+        </button>
+        <div class="popmenu" id="fpanel"></div>
+      </div>
+    </div>
+    <div class="resultline" id="resultline" hidden></div>
+  </div>
+
+  <div id="infohost"></div>
+  <div class="tree" id="tree"></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Person detail"></aside>
+
+<script>
+/* ============================================================
+ * THE ONLY THING TO REPLACE — the roster.
+ * Every count, dropdown entry, city filter and stat derives from this array.
+ * country = WHERE THEY WORK (not nationality). status 'open' = vacancy/TBC.
+ * ========================================================== */
+const PEOPLE = [
+  // ── Leadership (the spine — not a squad column) ──
+  { id:'hamdi', name:'Hamdi Missaoui', role:'Chief Operations Officer', squad:'Leadership', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Tunisia', contract:'Full-time', level:'Exec', manager:null, status:'active', lead:true, start:'2019-02' },
+  { id:'ahmed', name:'Ahmed Othman', role:'Event Operations Director', squad:'Leadership', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Egypt', contract:'Full-time', level:'Director', manager:'hamdi', status:'active', lead:true, start:'2019-09' },
+
+  // ── Automation & Execution (5) · sub-team: Anti-Fraud ──
+  { id:'ayman', name:'Ayman Idris', role:'Event Operations Sr. Manager', squad:'Automation & Execution', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Sr. Manager', manager:'ahmed', status:'active', lead:true, start:'2020-05' },
+  { id:'batool', name:'Batool Hariri', role:'Event Operations Manager — Anti-Fraud', squad:'Automation & Execution', unit:'Anti-Fraud', country:'Saudi Arabia', city:'Jeddah', nationality:'Saudi Arabia', contract:'Full-time', level:'Manager', manager:'ayman', status:'active', lead:true, start:'2022-01' },
+  { id:'alhanouf', name:'Alhanouf Alkhalaf', role:'Event Operations Specialist — Anti-Fraud', squad:'Automation & Execution', unit:'Anti-Fraud', country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Specialist', manager:'batool', status:'active', lead:false, start:'2023-06' },
+  { id:'af_open', name:'TBC', role:'Event Operations Coordinator — Anti-Fraud', squad:'Automation & Execution', unit:'Anti-Fraud', country:'Saudi Arabia', city:'Riyadh', nationality:'—', contract:'Full-time', level:'Coordinator', manager:'batool', status:'open', lead:false, start:null },
+  { id:'shahad', name:'Shahad Joudah', role:'Event Operations Specialist', squad:'Automation & Execution', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Specialist', manager:'ayman', status:'active', lead:false, start:'2023-02' },
+
+  // ── Sports (7) · sub-team: Akram’s Pod ──
+  { id:'motaa', name:'Motaa Alharbi', role:'Event Operations Sr. Manager', squad:'Sports', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Sr. Manager', manager:'ahmed', status:'active', lead:true, start:'2020-06' },
+  { id:'akram', name:'Mohammed Akram', role:'Event Operations Manager', squad:'Sports', unit:'Akram’s Pod', country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Manager', manager:'motaa', status:'active', lead:true, start:'2022-09', you:true },
+  { id:'idris', name:'Idris Kamal', role:'Event Operations Specialist', squad:'Sports', unit:'Akram’s Pod', country:'Saudi Arabia', city:'Riyadh', nationality:'Sudan', contract:'Full-time', level:'Specialist', manager:'akram', status:'active', lead:false, start:'2024-05' },
+  { id:'osama', name:'Osama Zayd', role:'Event Operations Specialist', squad:'Sports', unit:'Akram’s Pod', country:'Saudi Arabia', city:'Riyadh', nationality:'Egypt', contract:'Freelance', level:'Specialist', manager:'akram', status:'active', lead:false, start:'2024-09' },
+  { id:'gamal', name:'Muhammad Gamal', role:'Event Operations Specialist', squad:'Sports', unit:'Akram’s Pod', country:'UAE', city:'Abu Dhabi', nationality:'Egypt', contract:'Full-time', level:'Specialist', manager:'akram', status:'active', lead:false, start:'2024-03' },
+  { id:'khaled', name:'Khaled Jeneina', role:'Event Operations Sr. Specialist', squad:'Sports', unit:null, country:'Saudi Arabia', city:'Dammam', nationality:'Saudi Arabia', contract:'Full-time', level:'Sr. Specialist', manager:'motaa', status:'active', lead:false, start:'2021-03' },
+  { id:'maksousa', name:'Abdulrahman Maksousa', role:'Event Operations Sr. Specialist', squad:'Sports', unit:null, country:'Saudi Arabia', city:'Jeddah', nationality:'Saudi Arabia', contract:'Full-time', level:'Sr. Specialist', manager:'motaa', status:'active', lead:false, start:'2021-11' },
+
+  // ── Entertainment (6) · sub-team: Live Shows ──
+  { id:'ayah', name:'Ayah Nasif', role:'Event Operations Sr. Manager', squad:'Entertainment', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Sr. Manager', manager:'ahmed', status:'active', lead:true, start:'2021-02' },
+  { id:'farah', name:'Farah Sommers', role:'Event Operations Manager', squad:'Entertainment', unit:'Live Shows', country:'Saudi Arabia', city:'Riyadh', nationality:'Jordan', contract:'Full-time', level:'Manager', manager:'ayah', status:'active', lead:true, start:'2022-08' },
+  { id:'aiden', name:'Aiden Sherwood', role:'Event Operations Sr. Specialist', squad:'Entertainment', unit:null, country:'UAE', city:'Dubai', nationality:'UAE', contract:'Freelance', level:'Sr. Specialist', manager:'ayah', status:'active', lead:false, start:'2023-04' },
+  { id:'ent_open', name:'TBC', role:'Event Operations Specialist', squad:'Entertainment', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'—', contract:'Full-time', level:'Specialist', manager:'ayah', status:'open', lead:false, start:null },
+  { id:'lina', name:'Lina Barzani', role:'Event Operations Specialist', squad:'Entertainment', unit:'Live Shows', country:'Saudi Arabia', city:'Jeddah', nationality:'Saudi Arabia', contract:'Full-time', level:'Specialist', manager:'farah', status:'active', lead:false, start:'2023-09' },
+  { id:'reem', name:'Reem Adel', role:'Event Operations Coordinator', squad:'Entertainment', unit:'Live Shows', country:'UAE', city:'Abu Dhabi', nationality:'Egypt', contract:'Freelance', level:'Coordinator', manager:'farah', status:'active', lead:false, start:'2024-06' },
+
+  // ── On Ground (4) · sub-team: Execution ──
+  { id:'hani', name:'Hani Adams', role:'Event Operations Sr. Manager', squad:'On Ground', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Sr. Manager', manager:'ahmed', status:'active', lead:true, start:'2019-10' },
+  { id:'zaidan', name:'Zaidan Dean', role:'Event Operations Manager — Execution', squad:'On Ground', unit:'Execution', country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Manager', manager:'hani', status:'active', lead:true, start:'2024-06' },
+  { id:'felix', name:'Felix Ford', role:'Event Operations Specialist', squad:'On Ground', unit:'Execution', country:'Saudi Arabia', city:'Jeddah', nationality:'Saudi Arabia', contract:'Full-time', level:'Specialist', manager:'zaidan', status:'active', lead:false, start:'2023-01' },
+  { id:'blake', name:'Blake Turner', role:'Event Operations Coordinator', squad:'On Ground', unit:'Execution', country:'Saudi Arabia', city:'Dammam', nationality:'Saudi Arabia', contract:'Freelance', level:'Coordinator', manager:'zaidan', status:'active', lead:false, start:'2024-02' },
+
+  // ── Cashless (5) ──
+  { id:'zarea', name:'Zarea Reyes', role:'Event Operations Manager', squad:'Cashless', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Full-time', level:'Manager', manager:'ahmed', status:'active', lead:true, start:'2024-09' },
+  { id:'rafah', name:'Rafah Anderson', role:'Event Operations Sr. Specialist', squad:'Cashless', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'Saudi Arabia', contract:'Freelance', level:'Sr. Specialist', manager:'zarea', status:'active', lead:false, start:'2024-12' },
+  { id:'rosa', name:'Rosa Anders', role:'Event Operations Specialist', squad:'Cashless', unit:null, country:'Saudi Arabia', city:'Jeddah', nationality:'Spain', contract:'Full-time', level:'Specialist', manager:'zarea', status:'incoming', lead:false, start:'2026-09' },
+  { id:'cash_open', name:'TBC', role:'Event Operations Specialist', squad:'Cashless', unit:null, country:'Saudi Arabia', city:'Riyadh', nationality:'—', contract:'Full-time', level:'Specialist', manager:'zarea', status:'open', lead:false, start:null },
+  { id:'altahini', name:'Martin Altahini', role:'Event Operations Specialist', squad:'Cashless', unit:null, country:'Saudi Arabia', city:'Dammam', nationality:'Saudi Arabia', contract:'Freelance', level:'Specialist', manager:'zarea', status:'active', lead:false, start:'2025-05' },
+];
+const SQUADS = [
+  { name:'Automation & Execution', color:'#8b5cf6' },
+  { name:'Sports',                 color:'#2563eb' },
+  { name:'Entertainment',          color:'#ff2c79' },
+  { name:'On Ground',              color:'#f97316' },
+  { name:'Cashless',               color:'#22e3b0' },
+];
+const COUNTRY_FLAG = { 'Saudi Arabia':'🇸🇦', 'UAE':'🇦🇪' };
+
+/* ── helpers ── */
+const byId       = id => PEOPLE.find(p=>p.id===id);
+const squadOf    = n  => SQUADS.find(s=>s.name===n) || {color:'#a1a1aa'};
+const initials   = n  => n==='TBC' ? '?' : n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const reportsOf  = id => PEOPLE.filter(p=>p.manager===id);
+const chain      = p  => { const out=[]; let c=p; while(c&&c.manager){c=byId(c.manager); if(c) out.unshift(c);} return out; };
+const LEVEL_RANK = {'Exec':0,'Director':1,'Sr. Manager':2,'Manager':3,'Sr. Specialist':4,'Specialist':5,'Coordinator':6};
+const bySeniority = (a,b) =>
+    (LEVEL_RANK[a.level]??9)-(LEVEL_RANK[b.level]??9)
+ || (b.lead?1:0)-(a.lead?1:0)
+ || (a.status==='open')-(b.status==='open')
+ || a.name.localeCompare(b.name);
+
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const isPerson = p => p.status!=='open';          // headcount excludes open
+const shortRole = r => r.replace(/^Event Operations /,'');
+const flag = c => COUNTRY_FLAG[c] || '';
+
+/* ── state ── */
+const S = { q:'', squad:null, country:'all', city:'all', contract:'all', level:'all',
+            show:{ names:true, location:true, contract:true } };   // display toggles (hide points/names)
+
+/* Riyadh is HQ — show it as "Riyadh Office"; other cities unchanged. */
+const cityLabel = c => c==='Riyadh' ? 'Riyadh Office' : c;
+
+/* ── derived (all counts come from PEOPLE) ── */
+const people     = PEOPLE.filter(isPerson);
+const positions  = PEOPLE.length;
+const nPeople    = people.length;
+const nSA        = people.filter(p=>p.country==='Saudi Arabia').length;
+const nUAE       = people.filter(p=>p.country==='UAE').length;
+const nFree      = people.filter(p=>p.contract==='Freelance').length;
+const nOpen      = PEOPLE.filter(p=>p.status==='open').length;
+const squadPos   = n => PEOPLE.filter(p=>p.squad===n).length;                 // positions (incl open)
+const squadFree  = n => people.filter(p=>p.squad===n && p.contract==='Freelance').length;
+const LEVELS_ORDER = ['Sr. Manager','Manager','Sr. Specialist','Specialist','Coordinator'];
+
+/* ── SVG bits ── */
+const locPin = `<svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.6" fill="#7f1d1d"/></svg>`;
+
+/* ── filter predicate (for dimming) ── */
+function matches(p){
+  if(S.squad && p.squad!==S.squad) return false;
+  if(S.q){
+    const q=S.q.toLowerCase();
+    const hay=[p.name,p.role,p.squad,p.unit,p.city].filter(Boolean).join(' ').toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
+  if(S.country!=='all' && p.country!==S.country) return false;
+  if(S.city!=='all' && p.city!==S.city) return false;
+  if(S.contract!=='all' && p.contract!==S.contract) return false;
+  if(S.level!=='all' && p.level!==S.level) return false;
+  return true;
+}
+const secondaryActive = () => S.country!=='all'||S.city!=='all'||S.contract!=='all'||S.level!=='all';
+const filtering = () => !!S.q || secondaryActive();          // squad-open handled separately
+const anyActive = () => filtering() || !!S.squad;
+
+/* ============================================================
+ * RENDER
+ * ========================================================== */
+function renderStats(){
+  const el=document.getElementById('stats');
+  el.innerHTML =
+    stat(nPeople,'People') +
+    pinStat('Saudi Arabia', nSA) +
+    pinStat('UAE', nUAE) +
+    stat(nFree,'Freelance','fl') +
+    stat(nOpen,'Open roles','op');
+  el.querySelectorAll('[data-pin]').forEach(b=>b.onclick=()=>{
+    S.country = S.country===b.dataset.pin ? 'all' : b.dataset.pin;
+    if(S.country!=='all') S.city='all';
+    render();
+  });
+}
+function stat(v,l,cls=''){ return `<div class="stat"><div class="v ${cls}">${v}</div><div class="l">${l}</div></div>`; }
+function pinStat(country,v){
+  const on = S.country===country ? ' on':'';
+  return `<div class="stat"><button class="pinst${on}" data-pin="${esc(country)}" aria-pressed="${!!on}" aria-label="Filter ${esc(country)}">
+    <span class="pinmark"><span class="fgl">${flag(country)}</span></span><span class="pinshadow"></span>
+  </button><div class="pincol"><div class="v">${v}</div><div class="l">${esc(country).toUpperCase()}</div></div></div>`;
+}
+
+function renderBar(){
+  document.getElementById('q').value=S.q;
+  // dropdown button
+  const btn=document.getElementById('ddbtn');
+  if(S.squad){ const c=squadOf(S.squad);
+    btn.innerHTML=`<span class="dot" style="background:${c.color}"></span>${esc(S.squad)}<span class="cnt">${squadPos(S.squad)}</span><span class="car">▾</span>`;
+  } else {
+    btn.innerHTML=`<span class="dot"></span>All squads<span class="cnt">${positions}</span><span class="car">▾</span>`;
+  }
+  // menu
+  const menu=document.getElementById('ddmenu');
+  let rows=`<button class="ddrow" data-sq="__all"><span class="dot" style="background:var(--content-secondary)"></span>All squads<span class="rc">${positions}</span></button><div class="ddsep"></div>`;
+  rows+=SQUADS.map(s=>{
+    const fl=squadFree(s.name);
+    return `<button class="ddrow" data-sq="${esc(s.name)}"><span class="dot" style="background:${s.color}"></span>${esc(s.name)}${fl?`<span class="fl">${fl} FL</span>`:''}<span class="rc">${squadPos(s.name)}</span></button>`;
+  }).join('');
+  menu.innerHTML=rows;
+  menu.querySelectorAll('[data-sq]').forEach(b=>b.onclick=()=>{
+    S.squad = b.dataset.sq==='__all' ? null : b.dataset.sq;
+    document.getElementById('dd').classList.remove('open'); render();
+  });
+
+  // filters badge
+  const badge=document.getElementById('fbadge');
+  const n=[S.country!=='all',S.city!=='all',S.contract!=='all',S.level!=='all'].filter(Boolean).length;
+  badge.hidden = n===0; badge.textContent=n;
+
+  renderFilterPanel();
+  renderDisplayMenu();
+  renderResultLine();
+}
+
+function seg(group, current, opts){
+  return `<div class="seg" role="group">`+opts.map(o=>
+    `<button class="${o.val===current?'on':''}" data-seg="${group}" data-val="${esc(o.val)}">${o.label}</button>`).join('')+`</div>`;
+}
+function renderFilterPanel(){
+  const host=document.getElementById('fpanel');
+  const saCities=[...new Set(people.filter(p=>p.country==='Saudi Arabia').map(p=>p.city))];
+  const uaeCities=[...new Set(people.filter(p=>p.country==='UAE').map(p=>p.city))];
+  const cityPool = S.country==='UAE'?uaeCities : S.country==='Saudi Arabia'?saCities : [...new Set(people.map(p=>p.city))];
+  const cityCount = c => people.filter(p=>p.city===c && (S.country==='all'||p.country===S.country)).length;
+
+  const countryOpts=[{val:'all',label:'Both'},
+    {val:'Saudi Arabia',label:`🇸🇦 Saudi Arabia ${nSA}`},{val:'UAE',label:`🇦🇪 UAE ${nUAE}`}];
+  const cityOpts=[{val:'all',label:'All cities'}].concat(cityPool.map(c=>({val:c,label:`${esc(cityLabel(c))} ${cityCount(c)}`})));
+  const contractOpts=[{val:'all',label:'Both'},{val:'Full-time',label:'Full-time staff'},{val:'Freelance',label:'Freelance'}];
+  const posOpts=[{val:'all',label:'All'}].concat(LEVELS_ORDER.map(l=>({val:l,label:l})));
+
+  host.innerHTML =
+    `<p class="popttl">Filters</p>`+
+    `<div class="fgroup"><span class="gl">Country</span>${seg('country',S.country,countryOpts)}</div>`+
+    `<div class="fgroup"><span class="gl">City</span>${seg('city',S.city,cityOpts)}</div>`+
+    `<div class="fgroup"><span class="gl">Contract</span>${seg('contract',S.contract,contractOpts)}</div>`+
+    `<div class="fgroup"><span class="gl">Position</span>${seg('level',S.level,posOpts)}</div>`;
+  host.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>{
+    const g=b.dataset.seg; S[g]=b.dataset.val;
+    if(g==='country') S.city='all';                 // country change resets city
+    render();
+  });
+}
+
+/* display menu — hide points / names (privacy-friendly sharing) */
+function renderDisplayMenu(){
+  const host=document.getElementById('dmenu');
+  const rows=[
+    { k:'names',    label:'Names' },
+    { k:'location', label:'Location' },
+    { k:'contract', label:'Contract tag' },
+  ];
+  host.innerHTML = `<p class="popttl">Show on cards</p>` + rows.map(r=>
+    `<button class="drow${S.show[r.k]?' on':''}" role="menuitemcheckbox" aria-checked="${S.show[r.k]}" data-show="${r.k}">
+       <span class="dlabel">${r.label}</span><span class="sw"></span></button>`).join('');
+  host.querySelectorAll('[data-show]').forEach(b=>b.onclick=()=>{ S.show[b.dataset.show]=!S.show[b.dataset.show]; render(); });
+  const hidden=Object.values(S.show).filter(v=>!v).length;
+  const badge=document.getElementById('dbadge'); badge.hidden=hidden===0; badge.textContent=hidden;
+}
+function renderResultLine(){
+  const line=document.getElementById('resultline');
+  if(!anyActive()){ line.hidden=true; line.innerHTML=''; return; }
+  const shown = PEOPLE.filter(matches).length;
+  line.hidden=false;
+  line.innerHTML=`Showing <b style="color:var(--content-primary)">&nbsp;${shown}&nbsp;</b> of ${positions} positions <button class="rst" id="rstbtn">Reset</button>`;
+  document.getElementById('rstbtn').onclick=resetAll;
+}
+function resetAll(){ Object.assign(S,{q:'',squad:null,country:'all',city:'all',contract:'all',level:'all'}); render(); }
+
+/* squad info line */
+function renderInfo(){
+  const host=document.getElementById('infohost');
+  if(!S.squad){ host.innerHTML=''; return; }
+  const c=squadOf(S.squad);
+  const mem=people.filter(p=>p.squad===S.squad);
+  const lead=PEOPLE.find(p=>p.squad===S.squad && p.lead && (!p.manager || byId(p.manager).squad!==S.squad));
+  const fl=squadFree(S.squad);
+  const cities={}; mem.forEach(p=>cities[p.city]=(cities[p.city]||0)+1);
+  const cityStr=Object.entries(cities).map(([c,n])=>`${esc(cityLabel(c))} ${n}`).join(' · ');
+  const units=[...new Set(PEOPLE.filter(p=>p.squad===S.squad&&p.unit).map(p=>p.unit))];
+  const parts=[];
+  parts.push(`<b style="color:${c.color}">${esc(S.squad)}</b>`);
+  if(lead) parts.push(`led by <b>${esc(lead.name)}</b>`);
+  parts.push(`${mem.length} people${fl?` <span class="fl">${fl} freelance</span>`:''}`);
+  parts.push(cityStr);
+  if(units.length) parts.push(`teams inside: ${units.map(esc).join(', ')}`);
+  host.innerHTML=`<div class="infoline" style="border-left-color:${c.color}">`+
+    parts.join('<span class="sep"></span>')+
+    `<button class="close" id="infoclose">✕ All squads</button></div>`;
+  document.getElementById('infoclose').onclick=()=>{ S.squad=null; render(); };
+}
+
+/* person card */
+function card(p){
+  const c=squadOf(p.squad);
+  const iso = !!S.squad;
+  const anon = !S.show.names;
+  const showContract = S.show.contract;
+  const cls=['card'];
+  if(p.lead) cls.push('lead');
+  if(p.contract==='Freelance' && showContract) cls.push('free');
+  if(p.status==='open') cls.push('openrole');
+  if(!matches(p)) cls.push('dim');
+  const avStyle = p.lead ? `background:${c.color};color:#fff` : '';
+  const tags=[];
+  if(!anon && p.you) tags.push('<span class="tag you">YOU</span>');
+  if(p.status==='incoming') tags.push('<span class="tag incoming">INCOMING</span>');
+  if(p.status==='open') tags.push('<span class="tag open">OPEN</span>');
+  const badges=[];
+  if(S.show.location) badges.push(`<span class="chip loc">${locPin}${flag(p.country)} <span class="cty">${esc(cityLabel(p.city))}</span></span>`);
+  if(p.contract==='Freelance' && showContract) badges.push('<span class="chip free">FREELANCE</span>');
+  const nrep=reportsOf(p.id).length;
+  if(p.lead && nrep) badges.push(`<span class="chip lead" style="background:${c.color}">LEAD · ${nrep}</span>`);
+  // Anonymised: hide the name (and YOU) — keep role + structure so the org shape still reads.
+  const line1 = anon ? `<span class="nm">${esc(shortRole(p.role))}</span>${tags.join('')}`
+                     : `<span class="nm">${esc(p.name)}</span>${tags.join('')}`;
+  const line2 = anon ? `${esc(p.level)}${p.unit?' · '+esc(p.unit):''}`
+                     : esc(iso?p.role:shortRole(p.role));
+  const avatar = anon ? `<span class="av anon" style="${avStyle}">•</span>`
+                      : `<span class="av" style="${avStyle}">${esc(initials(p.name))}</span>`;
+  return `<button class="${cls.join(' ')}" data-open="${p.id}" style="--sq:${c.color}">
+    ${avatar}
+    <span class="main">
+      <span class="l1">${line1}</span>
+      <span class="l2">${line2}</span>
+      <span class="l3">${badges.join('')}</span>
+    </span></button>`;
+}
+
+/* recursive children — no-unit reports first (by seniority), then each sub-team as a labelled group */
+function childrenHTML(p){
+  const kids=reportsOf(p.id);
+  if(!kids.length) return '';
+  const pu=p.unit||null;
+  const direct=kids.filter(k=>(k.unit||null)===pu).sort(bySeniority);
+  const groups={};
+  kids.filter(k=>(k.unit||null)!==pu).forEach(k=>{(groups[k.unit]=groups[k.unit]||[]).push(k);});
+  let html='<div class="kids">';
+  direct.forEach(k=>{ html+=`<div class="branch">${card(k)}${childrenHTML(k)}</div>`; });
+  Object.keys(groups).forEach(u=>{
+    html+=`<div class="unitlabel">▸ ${esc(u)}</div>`;
+    groups[u].sort(bySeniority).forEach(k=>{ html+=`<div class="branch">${card(k)}${childrenHTML(k)}</div>`; });
+  });
+  return html+'</div>';
+}
+
+/* a squad column */
+function squadColumn(sqName){
+  const c=squadOf(sqName);
+  const root=PEOPLE.find(p=>p.squad===sqName && (!p.manager || byId(p.manager).squad!==sqName));
+  const fl=squadFree(sqName);
+  const total=squadPos(sqName);
+  let matchStr='';
+  if(filtering()){ const m=PEOPLE.filter(p=>p.squad===sqName&&matches(p)).length; matchStr=`<span class="tot">${m}/${total}</span>`; }
+  const head=`<button class="chead" data-sq="${esc(sqName)}" style="border-left-color:${c.color}">
+    <span class="cn" style="color:${c.color}">${esc(sqName)}</span>
+    <span class="cright">${fl?`<span class="flp">${fl} freelance</span>`:''}${matchStr||`<span class="tot">${total}</span>`}</span></button>`;
+  return `<div class="col">${head}${root?card(root)+childrenHTML(root):''}</div>`;
+}
+
+/* the tree */
+function renderTree(){
+  const tree=document.getElementById('tree');
+  const iso=!!S.squad;
+  tree.className='tree'+(iso?' iso':'');
+  const shownSquads = iso ? [S.squad] : SQUADS.map(s=>s.name);
+  const cols = shownSquads.length;
+  const gridCols = iso ? '1fr' : `repeat(${cols},1fr)`;
+
+  const hamdi=byId('hamdi'), ahmed=byId('ahmed');
+  const spine=`<div class="spine">
+    <div class="leadwrap">${card(hamdi)}</div><div class="stem"></div><div class="leadwrap">${card(ahmed)}</div><div class="stem"></div>
+    <div class="bus" style="grid-template-columns:${gridCols}">${shownSquads.map(()=> '<div><span></span></div>').join('')}</div>
+  </div>`;
+  const colsHTML=`<div class="cols" style="grid-template-columns:${gridCols}">${shownSquads.map(squadColumn).join('')}</div>`;
+  tree.innerHTML=spine+colsHTML;
+
+  tree.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openDrawer(b.dataset.open));
+  tree.querySelectorAll('.chead[data-sq]').forEach(b=>b.onclick=()=>{ S.squad=b.dataset.sq; render(); });
+}
+
+/* drawer */
+function openDrawer(id){
+  const p=byId(id); if(!p) return;
+  const c=squadOf(p.squad);
+  const anon=!S.show.names;
+  const nameOf=x=> anon ? x.level : x.name;                 // anonymise → show level instead of name
+  const dr=document.getElementById('drawer');
+  const mgr=p.manager?byId(p.manager):null;
+  const crumbs=chain(p).map(x=>`<span ${anon?'':`data-open="${x.id}"`}><b>${esc(anon?x.level:x.name.split(' ')[0])}</b></span>`).join(' <span>→</span> ');
+  const reps=reportsOf(p.id);
+  const avStyle=p.lead?`background:${c.color};color:#fff`:(p.status==='open'?'background:transparent;border:1px dashed var(--border-strong);color:var(--content-secondary)':'background:#3f3f46;color:var(--content-secondary)');
+  const av = anon ? `<span class="av anon" style="${avStyle}">•</span>` : `<span class="av" style="${avStyle}">${esc(initials(p.name))}</span>`;
+  const kv=(k,v)=>`<div><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  dr.innerHTML=`
+    <button class="dclose" id="dclose" aria-label="Close">✕</button>
+    <div class="dhead">${av}
+      <div><h2>${esc(anon?shortRole(p.role):p.name)}</h2><div class="drole">${esc(p.role)}</div></div></div>
+    <div class="dgrid">
+      ${kv('Squad', esc(p.squad))}
+      ${kv('Sub-team', esc(p.unit||'—'))}
+      ${kv('Position', esc(p.level))}
+      ${S.show.location?kv('Working in', `${flag(p.country)} ${esc(cityLabel(p.city))}, ${esc(p.country)}`):''}
+      ${S.show.contract?kv('Contract', p.contract==='Freelance'?'<span style="color:var(--amber-text)">Freelance</span>':'Full-time'):''}
+      ${anon?'':kv('Nationality', esc(p.nationality))}
+      ${kv('Status', esc(p.status))}
+      ${kv('Started', esc(p.start||'—'))}
+      ${kv('Reports to', esc(mgr?nameOf(mgr):'—'))}
+    </div>
+    <div class="dsec"><h3>Reporting line</h3><div class="crumbs">${crumbs||'—'}</div></div>
+    ${reps.length?`<div class="dsec"><h3>Direct reports · ${reps.length}</h3>${reps.sort(bySeniority).map(r=>`<button class="dreport" data-open="${r.id}"><span class="av${anon?' anon':''}">${anon?'•':esc(initials(r.name))}</span>${esc(nameOf(r))} <span style="color:var(--content-secondary);font-weight:400">· ${esc(r.level)}</span></button>`).join('')}</div>`:''}
+  `;
+  dr.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openDrawer(b.dataset.open));
+  document.getElementById('dclose').onclick=closeDrawer;
+  document.getElementById('scrim').classList.add('open');
+  dr.classList.add('open');
+}
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('scrim').classList.remove('open'); }
+
+/* ── master render ── */
+function render(){ renderStats(); renderBar(); renderInfo(); renderTree(); }
+
+/* ── events ── */
+document.getElementById('q').addEventListener('input', e=>{ S.q=e.target.value; renderStats(); renderInfo(); renderTree(); renderResultLine(); document.getElementById('ddbtn'); });
+const dd=document.getElementById('dd');
+const filterpop=document.getElementById('filterpop'), displaypop=document.getElementById('displaypop');
+function togglePop(pop,btn){ const others=[dd,filterpop,displaypop].filter(x=>x!==pop); others.forEach(x=>x.classList.remove('open'));
+  const o=pop.classList.toggle('open'); if(btn) btn.setAttribute('aria-expanded',o); }
+document.getElementById('ddbtn').onclick=()=>togglePop(dd,document.getElementById('ddbtn'));
+document.getElementById('fbtn').onclick=()=>togglePop(filterpop,document.getElementById('fbtn'));
+document.getElementById('dbtn').onclick=()=>togglePop(displaypop,document.getElementById('dbtn'));
+document.getElementById('scrim').onclick=closeDrawer;
+document.addEventListener('click', e=>{ [dd,filterpop,displaypop].forEach(pop=>{ if(!pop.contains(e.target)) pop.classList.remove('open'); }); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ [dd,filterpop,displaypop].forEach(p=>p.classList.remove('open')); closeDrawer(); } });
+
+render();
+</script>
+</body>
+</html>
