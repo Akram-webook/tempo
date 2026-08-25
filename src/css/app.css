@@ -2868,6 +2868,28 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .ot-dreport{display:flex;align-items:center;gap:8px;width:100%;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:4px;padding:7px 9px;margin-top:6px;font-size:12px;font-weight:600;text-align:start}
 .ot-dclose{position:absolute;top:16px;inset-inline-end:16px;background:var(--ot-l2);border:1px solid var(--ot-border);border-radius:999px;width:30px;height:30px;display:grid;place-items:center}
 .ot-foot{margin-top:16px;font-size:11px;color:var(--ot-secondary)}
+/* ── Responsive Org Tree ──────────────────────────────────────────────
+ * The column count is set inline by orgTree.js (repeat(N,1fr)); author
+ * !important here overrides that inline value at each breakpoint. The
+ * horizontal bus only aligns when every squad is in ONE row, so it (and its
+ * trailing stem) is hidden once the columns wrap — the squad headers keep the
+ * grouping legible. Overview stacks 5→3→2→1; the drawer goes full-width. */
+@media (max-width:1200px){
+  .ot-view{padding:12px 12px 20px}
+  .ot-cols{grid-template-columns:repeat(3,1fr)!important}
+  .ot-tree>.ot-bus,.ot-tree>.ot-stem{display:none!important}
+  .ot-tree>.ot-cols{margin-top:10px}
+}
+@media (max-width:860px){
+  .ot-cols{grid-template-columns:repeat(2,1fr)!important;gap:10px}
+}
+@media (max-width:560px){
+  .ot-view{padding:10px 10px 18px}
+  .ot-cols{grid-template-columns:1fr!important}
+  .ot-spine .ot-card{width:100%}
+  .ot-drawer{width:100%;max-width:100%}
+  .ot-kids{margin-inline-start:8px;padding-inline-start:8px}
+}
 @media (prefers-reduced-motion:reduce){.ot-view *{transition:none!important}}
 
 /* ============================================================
