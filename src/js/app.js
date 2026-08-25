@@ -87,6 +87,10 @@
       // vs entertainment, cashless + on-ground revenue, anti-fraud). The view
       // re-checks WP.sales.canView (defence in depth).
       nav.push({ id: 'sales', routes: ['sales'], icon: 'chart', label: t('navSales'), group: 'business' });
+      // Events Sales — the event-level EXECUTIVE dashboard (top event, leaders,
+      // by-organisation, comparison, cashless/on-ground, anti-fraud; EN+AR/RTL).
+      // Embedded from the self-contained sales.html so the shell stays around it.
+      nav.push({ id: 'salesx', routes: ['salesx'], icon: 'chart', label: t('navSales'), group: 'business' });
       nav.push({ id: 'permissions', routes: ['permissions'], icon: 'key',      label: t('permsTitle'), group: 'admin' });
       // Admins — create + invite admin accounts. Super Admin only (manageAdmins cap).
       if (WP.can('manageAdmins')) nav.push({ id: 'admins', routes: ['admins'], icon: 'users', label: t('navAdmins'), group: 'admin' });
@@ -301,7 +305,8 @@
     // RBAC-denied route falls back to its safe home here.
     const route = effectiveRoute(WP.state.route);
     topbar();
-    if (route === 'workload') WP.ui.cockpit.render(root);
+    if (route === 'salesx') root.innerHTML = '<iframe src="sales.html" title="' + WP.i18n.t('navSales') + '" style="width:100%;height:calc(100vh - 88px);border:0;border-radius:12px;background:var(--surface-l1)"></iframe>';
+    else if (route === 'workload') WP.ui.cockpit.render(root);
     else if (route === 'dashboard') WP.ui.dashboard.render(root);
     else if (route === 'profile') WP.ui.profile.render(root);
     else if (route === 'settings') WP.ui.settings.render(root);

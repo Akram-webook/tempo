@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Events Sales · Event Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-brand:#ff2c79; --surface-base:#09090b; --surface-l1:#18181b; --surface-l2:#27272a; --surface-l3:#3f3f46;
+  --content-primary:#e4e4e7; --content-secondary:#a1a1aa;
+  --border-tertiary:#ffffff1a; --border-strong:#ffffff2e;
+  --sports:#2563eb; --ent:#ff2c79; --cashless:#22e3b0; --onground:#f97316;
+  --amber:#f59e0b; --amber-text:#fbbf24; --danger:#f8285a; --gold:#f5c518; --good:#17c653;
+  --radius-m:8px; --radius-s:4px; --radius-pill:999px;
+  --font-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-display:"Gellix","Figtree",system-ui,sans-serif;
+}
+[dir=rtl]{--font-body:"Noto Sans Arabic","Figtree",system-ui,sans-serif;--font-display:"Noto Sans Arabic","Gellix",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{background:var(--surface-base);color:var(--content-primary);
+  font:400 16px/24px var(--font-body);font-variant-numeric:tabular-nums;margin:0}
+button{font-family:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--bg-brand);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.wrap{max-width:1560px;margin:0 auto;padding:16px 24px 40px}
+
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.sample{display:inline-flex;align-items:center;gap:6px;background:#f59e0b1a;border:1px solid #f59e0b40;
+  color:var(--amber-text);border-radius:var(--radius-pill);padding:4px 10px;font:600 11px/14px var(--font-body)}
+h1{font:800 30px/34px var(--font-display);margin:10px 0 3px}
+.subline{color:var(--content-secondary);font:400 13px/18px var(--font-body);margin:0}
+.controls{display:flex;flex-direction:column;gap:8px;align-items:flex-end;margin-top:2px}
+[dir=rtl] .controls{align-items:flex-start}
+.cline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+[dir=rtl] .cline{justify-content:flex-start}
+.seglabel{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--content-secondary)}
+.seg{display:inline-flex;background:var(--surface-l2);border:1px solid var(--border-tertiary);
+  border-radius:var(--radius-pill);padding:3px;gap:2px;flex-wrap:wrap;max-width:680px;justify-content:flex-end}
+.seg button{background:none;border:0;border-radius:var(--radius-pill);padding:5px 11px;font:600 12px/16px var(--font-body);color:var(--content-secondary)}
+.seg button.on{background:var(--bg-brand);color:#fff}
+select{background:var(--surface-l2);border:1px solid var(--border-tertiary);color:inherit;border-radius:var(--radius-pill);
+  padding:6px 12px;font:600 12px/16px var(--font-body)}
+.langbtn{background:var(--surface-l2);border:1px solid var(--border-strong);color:inherit;border-radius:var(--radius-pill);padding:6px 14px;font:700 12px/16px var(--font-body)}
+
+.hero{margin:20px 0 14px;background:
+    radial-gradient(120% 140% at 100% 0%, #ff2c7926 0%, transparent 55%),
+    linear-gradient(180deg,var(--surface-l1),#141416);
+  border:1px solid var(--border-strong);border-radius:14px;padding:22px 24px;position:relative;overflow:hidden}
+.hero .crown{position:absolute;inset-inline-end:22px;top:18px;font-size:60px;opacity:.10;line-height:1}
+.hero .eyebrow{display:flex;align-items:center;gap:10px;font:800 11px/14px var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);flex-wrap:wrap}
+.hero .metricpill{background:#f5c5181a;color:var(--gold);border-radius:var(--radius-pill);padding:2px 9px;font:700 10px/14px var(--font-body);letter-spacing:.04em}
+.hero .ename{font:800 30px/34px var(--font-display);margin:10px 0 4px;max-width:72%}
+.hero .emeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--content-secondary);font:500 13px/18px var(--font-body)}
+.hero .catdot{width:9px;height:9px;border-radius:999px;display:inline-block;vertical-align:-1px;margin-inline-end:5px}
+.hero .stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:18px}
+.hero .st .v{font:800 24px/28px var(--font-display)}
+.hero .st .l{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--content-secondary)}
+.hero .rankbadge{display:inline-flex;align-items:center;gap:6px;background:var(--surface-l2);border:1px solid var(--border-strong);
+  border-radius:var(--radius-pill);padding:5px 12px;font:700 12px/16px var(--font-body)}
+.hero .delta{font:700 13px/18px var(--font-body)}
+.hero .delta.up{color:var(--good)} .hero .delta.down{color:var(--danger)}
+.hero .cta{position:absolute;inset-inline-end:22px;bottom:18px;background:var(--bg-brand);border:0;color:#fff;
+  border-radius:var(--radius-pill);padding:8px 16px;font:700 12px/16px var(--font-body)}
+.insight{background:var(--surface-l1);border:1px solid var(--border-tertiary);border-inline-start:3px solid var(--gold);
+  border-radius:var(--radius-s);padding:11px 14px;margin-bottom:16px;font:500 13px/19px var(--font-body)}
+
+.card{background:var(--surface-l1);border:1px solid var(--border-tertiary);border-radius:var(--radius-m);padding:16px;margin-bottom:14px}
+.card h3{margin:0 0 4px;font:700 15px/20px var(--font-display);display:flex;align-items:center;gap:8px}
+.card .hint{color:var(--content-secondary);font:400 12px/16px var(--font-body);margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start}
+@media(max-width:960px){.grid2,.grid3{grid-template-columns:1fr}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font:500 11px/14px var(--font-body);color:var(--content-secondary);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:5px;vertical-align:-1px}
+
+.leader{background:var(--surface-l1);border:1px solid var(--border-tertiary);border-radius:var(--radius-m);padding:16px;position:relative;overflow:hidden;cursor:pointer}
+.leader::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.leader .lk{font:700 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.07em;color:var(--accent)}
+.leader .ln{font:700 17px/22px var(--font-display);margin:6px 0 3px}
+.leader .lo{color:var(--content-secondary);font:500 12px/16px var(--font-body)}
+.leader .lstats{display:flex;gap:18px;margin-top:12px}
+.leader .lstats .v{font:800 17px/20px var(--font-display)} .leader .lstats .l{font:600 9px/13px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--content-secondary)}
+
+table{width:100%;border-collapse:collapse;font:400 13px/18px var(--font-body)}
+th,td{text-align:start;padding:9px 10px;border-bottom:1px solid var(--border-tertiary);white-space:nowrap}
+th{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--content-secondary);cursor:pointer;user-select:none}
+th.num,td.num{text-align:end;font-variant-numeric:tabular-nums}
+th.on{color:var(--bg-brand)}
+tr[data-ev]{cursor:pointer} tr[data-ev]:hover td{background:var(--surface-l2)}
+.rank{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:var(--surface-l2);font:700 11px/1 var(--font-body)}
+.rank.r1{background:var(--gold);color:#000} .rank.r2{background:#c9ccd1;color:#000} .rank.r3{background:#cd7f32;color:#000}
+.catcell{display:inline-flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:999px;display:inline-block}
+.na{color:var(--content-secondary);font-style:italic}
+.stbar{display:inline-block;width:54px;height:6px;border-radius:999px;background:var(--surface-l2);overflow:hidden;vertical-align:middle;margin-inline-start:7px}
+.stbar>i{display:block;height:100%;background:var(--good)}
+
+.orow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-tertiary);cursor:pointer}
+.orow:last-child{border-bottom:0} .orow:hover{background:var(--surface-l2)}
+.oname{width:180px;flex:none;font:700 13px/17px var(--font-body)}
+.oev{flex:1;min-width:0;font:500 13px/17px var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oev .sub{color:var(--content-secondary);font-weight:400}
+.orev{width:110px;flex:none;text-align:end;font:700 13px/17px var(--font-body)}
+
+.watch{display:flex;flex-direction:column;gap:6px;background:var(--surface-l1);border:1px solid var(--border-tertiary);
+  border-inline-start:3px solid var(--accent);border-radius:var(--radius-s);padding:12px 14px;cursor:pointer}
+.watch .wtag{font:700 9px/13px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.watch .wn{font:700 14px/18px var(--font-body)}
+.watch .wr{color:var(--content-secondary);font:400 12px/16px var(--font-body)}
+
+/* comparison */
+.cmp-slots{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.cmp-chip{display:inline-flex;align-items:center;gap:8px;background:var(--surface-l2);border:1px solid var(--border-tertiary);border-radius:var(--radius-pill);padding:5px 6px 5px 12px;font:600 12px/16px var(--font-body)}
+.cmp-chip button{background:none;border:0;color:var(--content-secondary);font-size:14px;line-height:1}
+.cmp-grid{display:grid;gap:1px;background:var(--border-tertiary);border:1px solid var(--border-tertiary);border-radius:var(--radius-s);overflow:hidden}
+.cmp-grid>div{background:var(--surface-l1);padding:10px 12px}
+.cmp-grid .h{background:var(--surface-l2);font:700 12px/16px var(--font-body)}
+.cmp-grid .k{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.05em;color:var(--content-secondary)}
+.cmp-grid .v{font:700 14px/18px var(--font-body);margin-top:2px}
+.best{color:var(--good)}
+
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:0 0 14px}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface-l1);border:1px solid var(--border-tertiary);border-radius:var(--radius-m);padding:11px 13px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:3px;background:var(--accent,var(--surface-l3))}
+.kpi .l{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--content-secondary)}
+.kpi .v{font:700 20px/24px var(--font-display);margin-top:4px}
+.kpi .s{font:400 11px/15px var(--font-body);color:var(--content-secondary);margin-top:2px}
+
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart .grid{stroke:var(--border-tertiary);stroke-width:1}
+.chart .lbl{fill:var(--content-secondary);font:500 10px var(--font-body)}
+.chart .val{fill:var(--content-primary);font:700 10px var(--font-body)}
+.crow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-tertiary)}
+.crow:last-child{border-bottom:0}
+.cname{width:170px;flex:none;font:600 13px/17px var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbar{flex:1;height:20px;border-radius:var(--radius-s);background:var(--surface-l2);overflow:hidden;display:flex}
+.cbar .seg-s{background:var(--sports)} .cbar .seg-e{background:var(--ent)}
+.cval{width:100px;flex:none;text-align:end;font:700 12px/17px var(--font-body)}
+
+.scrim{position:fixed;inset:0;background:#000000a6;z-index:60;display:none}
+.scrim.open{display:block}
+.drawer{position:fixed;top:0;inset-inline-end:0;height:100%;width:420px;max-width:94vw;background:var(--surface-l1);
+  border-inline-start:1px solid var(--border-strong);box-shadow:-18px 0 40px #000000a8;z-index:61;
+  transform:translateX(100%);transition:transform .18s ease;overflow-y:auto;padding:22px}
+[dir=rtl] .drawer{transform:translateX(-100%)}
+.drawer.open{transform:translateX(0)!important}
+.dclose{position:absolute;top:16px;inset-inline-end:16px;background:var(--surface-l2);border:1px solid var(--border-tertiary);
+  border-radius:999px;width:30px;height:30px;display:grid;place-items:center}
+.drawer h2{font:800 20px/24px var(--font-display);margin:0 40px 2px 0}
+[dir=rtl] .drawer h2{margin:0 0 2px 40px}
+.drawer .dsub{color:var(--content-secondary);font:500 13px/18px var(--font-body)}
+.dsec{margin-top:18px} .dsec h4{font:800 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.07em;color:var(--content-secondary);margin:0 0 8px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dgrid .k{font:600 10px/13px var(--font-body);color:var(--content-secondary)}
+.dgrid .v{font:700 15px/20px var(--font-display);margin-top:1px}
+.dbar{height:10px;border-radius:999px;background:var(--surface-l2);overflow:hidden;margin-top:8px}
+.dbar>i{display:block;height:100%;background:var(--good)}
+.defs{color:var(--content-secondary);font:400 12px/18px var(--font-body)}
+.defs summary{cursor:pointer;font-weight:600;color:var(--content-primary)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <span class="sample" id="sampleBadge"></span>
+      <h1 id="pageTitle"></h1>
+      <p class="subline" id="subline"></p>
+    </div>
+    <div class="controls">
+      <div class="cline"><button class="langbtn" id="langBtn"></button></div>
+      <div class="cline"><span class="seglabel" id="lblPeriod"></span><span class="seg" id="monthSeg"></span></div>
+      <div class="cline"><span class="seglabel" id="lblCat"></span><span class="seg" id="catSeg"></span>
+        <span class="seglabel" id="lblOrg" style="margin-inline-start:10px"></span><select id="orgSel"></select></div>
+      <div class="cline"><span class="seglabel" id="lblMetric"></span><span class="seg" id="metricSeg"></span></div>
+    </div>
+  </div>
+
+  <div id="hero"></div>
+  <div id="insight"></div>
+
+  <div class="card"><h3>🏅 <span id="top5title"></span></h3><p class="hint" id="top5hint"></p><div id="top5"></div></div>
+
+  <div class="grid2" id="leaders"></div>
+
+  <div class="grid2" style="align-items:start">
+    <div class="card"><h3>🏢 <span id="orgTitle"></span></h3><p class="hint" id="orgHint"></p><div id="byorg"></div>
+      <button id="orgToggle" style="margin-top:10px;background:none;border:0;color:var(--bg-brand);font:600 12px/16px var(--font-body)"></button></div>
+    <div class="card"><h3>👀 <span id="watchTitle"></span></h3><p class="hint" id="watchHint"></p><div id="watch"></div></div>
+  </div>
+
+  <div class="card"><h3>⚖️ <span id="cmpTitle"></span></h3><p class="hint" id="cmpHint"></p>
+    <div class="cmp-slots" id="cmpSlots"></div><div id="cmpBody"></div></div>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="card"><h3 id="trendTitle"></h3><p class="hint" id="trendHint"></p><div id="trend"></div></div>
+  <div class="grid2">
+    <div class="card"><h3 id="splitTitle"></h3><p class="hint" id="splitHint"></p><div id="clients"></div>
+      <div class="legend"><span><i style="background:var(--sports)"></i><span id="lgSports"></span></span><span><i style="background:var(--ent)"></i><span id="lgEnt"></span></span></div></div>
+    <div class="card"><h3 id="cashTitle"></h3><p class="hint" id="cashHint"></p><div id="cashless"></div>
+      <div class="legend"><span><i style="background:var(--cashless)"></i><span id="lgCash"></span></span><span><i style="background:var(--onground)"></i><span id="lgOg"></span></span></div></div>
+  </div>
+  <div class="card"><h3 id="fraudTitle"></h3><p class="hint" id="fraudHint"></p>
+    <div class="kpis" id="fraudKpis" style="grid-template-columns:repeat(3,1fr);margin:0 0 14px"></div><div id="fraudTable"></div></div>
+
+  <details class="defs card"><summary id="defTitle"></summary><p id="defBody"></p></details>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true"></aside>
+
+<script>
+/* ============================================================
+ * THE ONLY THING TO REPLACE — the events (see fields below).
+ * Rankings/leaders/KPIs/charts all derive from EVENTS. Numbers are STABLE.
+ * Sales are attributed to the months they occur (window ending at the event
+ * month), so "top event this month" ranks by sales that month, not event date.
+ * EN + AR (RTL). Money = SAR.
+ * ========================================================== */
+const YEAR = 2026;
+const TODAY = '2026-08-20';
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const EVENTS = [
+  { name:'Formula 1 Saudi Arabian Grand Prix', org:'STC', cat:'Sports', date:'2026-03-08', venue:'Jeddah Corniche Circuit', ticketsSold:36540, inventory:42000, avgPrice:520 },
+  { name:'Diriyah E-Prix · Round 1', org:'Saudi Motorsport Company', cat:'Sports', date:'2026-02-14', venue:'Diriyah', ticketsSold:14220, inventory:18000, avgPrice:240 },
+  { name:'Diriyah E-Prix · Round 2', org:'Saudi Motorsport Company', cat:'Sports', date:'2026-12-06', venue:'Diriyah', ticketsSold:5400, inventory:18000, avgPrice:240 },
+  { name:'Riyadh Derby · Al-Hilal vs Al-Nassr', org:'Saudi Pro League', cat:'Sports', date:'2026-09-12', venue:'Kingdom Arena', ticketsSold:21580, inventory:26000, avgPrice:300 },
+  { name:'Saudi Super Cup Final', org:'Saudi Pro League', cat:'Sports', date:'2026-08-28', venue:'Al-Awwal Park', ticketsSold:15840, inventory:22000, avgPrice:260 },
+  { name:'AFC Champions Night', org:'Saudi Pro League', cat:'Sports', date:'2026-10-03', venue:'Kingdom Arena', ticketsSold:13200, inventory:24000, avgPrice:220 },
+  { name:'Riyadh Marathon', org:'Saudi Sports for All', cat:'Sports', date:'2026-02-28', venue:'Riyadh', ticketsSold:13500, inventory:15000, avgPrice:120 },
+  { name:'Community Fun Run', org:null, cat:'Sports', date:'2026-07-10', venue:'Riyadh', ticketsSold:4000, inventory:8000, avgPrice:60 },
+  { name:'MDLBEAST SOUNDSTORM', org:'MDLBEAST', cat:'Entertainment', date:'2026-12-11', venue:'Banban', ticketsSold:111600, inventory:180000, avgPrice:350 },
+  { name:'MDLBEAST XP', org:'MDLBEAST', cat:'Entertainment', date:'2026-05-20', venue:'Riyadh', ticketsSold:15000, inventory:20000, avgPrice:180 },
+  { name:'Riyadh Season · Opening', org:'Riyadh Season', cat:'Entertainment', date:'2026-10-15', venue:'Boulevard', ticketsSold:42000, inventory:60000, avgPrice:150 },
+  { name:'Boulevard City Nights', org:'Riyadh Season', cat:'Entertainment', date:'2026-08-22', venue:'Boulevard World', ticketsSold:12600, inventory:30000, avgPrice:130 },
+  { name:'Wynn Live · Symphony Night', org:'Wynn Live', cat:'Entertainment', date:'2026-08-30', venue:'Wynn Al-Marjan', ticketsSold:4640, inventory:8000, avgPrice:600 },
+  { name:'SEVEN Family Fest', org:'SEVEN', cat:'Entertainment', date:'2026-09-05', venue:'SEVEN Riyadh', ticketsSold:5760, inventory:12000, avgPrice:90 },
+  { name:'Comedy Arabia', org:'SEVEN', cat:'Entertainment', date:'2026-04-18', venue:'Riyadh', ticketsSold:5640, inventory:6000, avgPrice:160 },
+  { name:'Winter Wonderland', org:'Riyadh Season', cat:'Entertainment', date:'2026-01-20', venue:'Riyadh', ticketsSold:34000, inventory:40000, avgPrice:110 },
+  { name:'Jazz Nights', org:'Wynn Live', cat:'Entertainment', date:'2026-06-12', venue:'Wynn Al-Marjan', ticketsSold:3300, inventory:5000, avgPrice:400 },
+  { name:'Pop-up Concert', org:'SEVEN', cat:'Entertainment', date:'2026-08-15', venue:'Riyadh', ticketsSold:4200, inventory:null, avgPrice:140 },
+];
+EVENTS.forEach((e,i)=>{ e.id='e'+i; });
+
+/* ── i18n ── */
+const I18N = {
+  en:{ title:'Events Sales', sub:'Event Operations · monthly performance · event-level executive view', sample:'⚠ Sample data',
+    period:'Sales period', cat:'Category', org:'Organisation', metric:'Top event by', fullYear:'Full year', all:'All',
+    Sports:'Sports', Entertainment:'Entertainment', allOrgs:'All organisations',
+    revenue:'Revenue', tickets:'Tickets sold', sell:'Sell-through', avgTicket:'Avg ticket',
+    topEvent:'Top event', leaderSuffix:'leader', ofEvents:'of {n} events', vs:'vs {m}', viewDetails:'View details →',
+    eventDate:'Event date', top5:'Top events', top5hint:'Ranked by {metric} · {cat} · {org}. Click a column to re-rank.',
+    rankUnavail:'Ranking unavailable — inventory data incomplete.', noSales:'No events with sales in this period.',
+    sportsLeader:'Sports leader', entLeader:'Entertainment leader', noCatSales:'No {cat} sales in this period',
+    byOrg:'Top events by organisation', byOrgHint:'{n} organisations with sales in {p} · ranked by revenue.',
+    viewAll:'View all organisations', showTop:'Show top organisations', unassigned:'Unassigned', tix:'tix', st:'ST',
+    watch:'Events to watch', watchHint:'Objective signals only — each shows its reason.', noSignals:'No signals in this scope.',
+    highPerf:'High performer', fastSeller:'Fast seller', upcomingLow:'Upcoming · low sell-through',
+    highReason:'Top revenue in scope — {rev} from {t} tickets.', fastReason:'+{n} tickets vs {m} — accelerating.',
+    upReason:'Event is {d} days away with {r}% inventory remaining ({s} sold).',
+    compare:'Compare events', compareHint:'Compare up to 3 events side by side — revenue, tickets, sell-through, avg ticket.',
+    addEvent:'+ Add event', pickEvent:'Add an event…', cmpEmpty:'Add events to compare them side by side.',
+    eventsInScope:'Events in scope', ticketSales:'Ticket sales', ticketsSold:'Tickets sold', validNet:'valid, net of refunds',
+    cashlessRev:'Cashless revenue', ongroundRev:'On-Ground revenue', afBlocked:'Anti-fraud blocked', stopped:'stopped pre-settlement',
+    trend:'Ticket sales · by sales month', trendHint:'Ticket revenue by the month it was sold · {cat} · {g} in {p}.',
+    split:'Sales by organisation · Sports vs Entertainment', splitHint:'Revenue in {p} · bar split shows Sports vs Entertainment.',
+    cash:'Cashless & On-Ground revenue · by event month', cashHint:'On-site payment volume and on-ground operations, attributed to the event month.',
+    fraud:'Anti-fraud reporting', fraudHint:'Suspicious ticketing activity caught before settlement · {p}.',
+    flagged:'Flagged transactions', reviewed:'reviewed by ops', blocked:'Blocked / recovered', blockedVs:'Blocked vs sales', shareStopped:'share of ticket sales stopped',
+    noFraud:'No flagged activity in this scope.', event:'Event', organisation:'Organisation', category:'Category',
+    sales:'Sales', grossRevenue:'Gross revenue', rank:'Rank', inventory:'Inventory', sellable:'Sellable inventory', sold:'Sold', remaining:'Remaining',
+    invUnavail:'Sellable inventory unavailable — sell-through cannot be calculated.', orgUnavail:'Organisation unavailable',
+    timeline:'Sales timeline (by sales month)', velocity:'Sales velocity', velocityNote:'(monthly — no daily data)',
+    velLine:'This period: +{a} · previous month: +{b} · avg/active month: {c}', upcoming:'Upcoming', upLine:'Event is {d} days away{r}.', withRem:' with {r}% inventory remaining',
+    notInScope:'not in scope', defTitle:'How these metrics are defined',
+    defBody:'Sales period vs event date: events are ranked by ticket sales generated during the selected sales period, not by when the event happens — an event in September can lead in August because its tickets sell in August. Revenue = valid tickets sold × average ticket value (excludes cancelled, refunded and complimentary tickets). Tickets sold = net valid tickets. Sell-through = tickets sold ÷ sellable inventory × 100 (only when inventory is known). Average ticket value = revenue ÷ tickets sold. Rankings recalculate for the selected period, category, organisation and metric. Missing data shows “—” and is excluded from that ranking rather than fabricated.',
+    insight:'💡 {name} is the top {metric} event {when}, generating {rev}{org} — {share}% of {ofwhat} event revenue in scope.',
+    thisYear:'this year', inMonth:'in {m}', theYears:'the year’s', monthsPoss:'{m}’s', dir:'ltr', lang:'العربية' },
+  ar:{ title:'مبيعات الفعاليات', sub:'عمليات الفعاليات · الأداء الشهري · عرض تنفيذي على مستوى الفعالية', sample:'⚠ بيانات تجريبية',
+    period:'فترة المبيعات', cat:'الفئة', org:'المنظّمة', metric:'أفضل فعالية حسب', fullYear:'السنة كاملة', all:'الكل',
+    Sports:'رياضة', Entertainment:'ترفيه', allOrgs:'كل المنظّمات',
+    revenue:'الإيراد', tickets:'التذاكر المباعة', sell:'نسبة البيع', avgTicket:'متوسط التذكرة',
+    topEvent:'أفضل فعالية', leaderSuffix:'الأعلى', ofEvents:'من {n} فعالية', vs:'مقارنة بـ {m}', viewDetails:'عرض التفاصيل →',
+    eventDate:'تاريخ الفعالية', top5:'أفضل الفعاليات', top5hint:'مرتّبة حسب {metric} · {cat} · {org}. اضغط عمودًا لإعادة الترتيب.',
+    rankUnavail:'الترتيب غير متاح — بيانات المخزون ناقصة.', noSales:'لا فعاليات لها مبيعات في هذه الفترة.',
+    sportsLeader:'الأعلى في الرياضة', entLeader:'الأعلى في الترفيه', noCatSales:'لا مبيعات {cat} في هذه الفترة',
+    byOrg:'أفضل الفعاليات حسب المنظّمة', byOrgHint:'{n} منظّمات لها مبيعات في {p} · مرتّبة حسب الإيراد.',
+    viewAll:'عرض كل المنظّمات', showTop:'عرض الأعلى فقط', unassigned:'غير مُسندة', tix:'تذكرة', st:'بيع',
+    watch:'فعاليات للمتابعة', watchHint:'إشارات موضوعية فقط — لكلٍّ سببها.', noSignals:'لا إشارات في هذا النطاق.',
+    highPerf:'أداء مرتفع', fastSeller:'بيع سريع', upcomingLow:'قادمة · نسبة بيع منخفضة',
+    highReason:'الأعلى إيرادًا في النطاق — {rev} من {t} تذكرة.', fastReason:'+{n} تذكرة مقارنة بـ {m} — في تسارع.',
+    upReason:'الفعالية بعد {d} يومًا ويتبقّى {r}% من المخزون ({s} مباع).',
+    compare:'مقارنة الفعاليات', compareHint:'قارن حتى 3 فعاليات جنبًا إلى جنب — الإيراد، التذاكر، نسبة البيع، متوسط التذكرة.',
+    addEvent:'+ إضافة فعالية', pickEvent:'أضف فعالية…', cmpEmpty:'أضف فعاليات لمقارنتها جنبًا إلى جنب.',
+    eventsInScope:'فعاليات في النطاق', ticketSales:'مبيعات التذاكر', ticketsSold:'التذاكر المباعة', validNet:'صافية بعد الاسترجاع',
+    cashlessRev:'إيراد الدفع الإلكتروني', ongroundRev:'إيراد الميدان', afBlocked:'محظور (مكافحة الاحتيال)', stopped:'أُوقف قبل التسوية',
+    trend:'مبيعات التذاكر · حسب شهر البيع', trendHint:'إيراد التذاكر حسب شهر البيع · {cat} · {g} في {p}.',
+    split:'المبيعات حسب المنظّمة · رياضة مقابل ترفيه', splitHint:'الإيراد في {p} · الشريط يوضّح نسبة الرياضة إلى الترفيه.',
+    cash:'إيراد الدفع الإلكتروني والميدان · حسب شهر الفعالية', cashHint:'حجم المدفوعات في الموقع وعمليات الميدان، منسوبة إلى شهر الفعالية.',
+    fraud:'تقرير مكافحة الاحتيال', fraudHint:'نشاط تذاكر مشبوه أُوقف قبل التسوية · {p}.',
+    flagged:'معاملات مُعلَّمة', reviewed:'روجعت من العمليات', blocked:'محظور / مُسترد', blockedVs:'المحظور مقابل المبيعات', shareStopped:'نسبة المبيعات الموقوفة',
+    noFraud:'لا نشاط مُعلَّم في هذا النطاق.', event:'الفعالية', organisation:'المنظّمة', category:'الفئة',
+    sales:'المبيعات', grossRevenue:'إجمالي الإيراد', rank:'الترتيب', inventory:'المخزون', sellable:'المخزون القابل للبيع', sold:'المباع', remaining:'المتبقّي',
+    invUnavail:'المخزون القابل للبيع غير متاح — لا يمكن حساب نسبة البيع.', orgUnavail:'المنظّمة غير متاحة',
+    timeline:'الجدول الزمني للمبيعات (حسب شهر البيع)', velocity:'سرعة البيع', velocityNote:'(شهريًا — لا بيانات يومية)',
+    velLine:'هذه الفترة: +{a} · الشهر السابق: +{b} · متوسط الشهر النشط: {c}', upcoming:'قادمة', upLine:'الفعالية بعد {d} يومًا{r}.', withRem:' ويتبقّى {r}% من المخزون',
+    notInScope:'خارج النطاق', defTitle:'كيف تُحتسب هذه المؤشرات',
+    defBody:'فترة المبيعات مقابل تاريخ الفعالية: تُرتَّب الفعاليات حسب مبيعات التذاكر خلال فترة المبيعات المختارة، لا حسب موعد الفعالية — فعالية في سبتمبر قد تتصدّر أغسطس لأن تذاكرها تُباع في أغسطس. الإيراد = التذاكر الصحيحة × متوسط سعر التذكرة (باستثناء الملغاة والمستردة والمجانية). التذاكر المباعة = صافي التذاكر الصحيحة. نسبة البيع = التذاكر المباعة ÷ المخزون القابل للبيع × 100 (عند توفّر المخزون). متوسط التذكرة = الإيراد ÷ التذاكر المباعة. تُعاد المؤشرات حسب الفترة والفئة والمنظّمة والمقياس المختار. البيانات الناقصة تظهر «—» وتُستثنى بدل اختلاقها.',
+    insight:'💡 {name} هي الأعلى في {metric} {when}، بإيراد {rev}{org} — {share}% من إيراد الفعاليات في النطاق.',
+    thisYear:'هذه السنة', inMonth:'في {m}', theYears:'إيراد السنة', monthsPoss:'إيراد {m}', dir:'rtl', lang:'English' },
+};
+let LANG='en';
+const t = (k,vars) => { let s=(I18N[LANG][k]!=null?I18N[LANG][k]:k); if(vars) for(const p in vars) s=s.split('{'+p+'}').join(vars[p]); return s; };
+const MONTHS = () => LANG==='ar'?MONTHS_AR:MONTHS_EN;
+const catT = c => t(c);
+
+/* ── derived ── */
+const monthIdx = d => parseInt(d.slice(5,7),10)-1;
+const revenueTotal = e => e.avgPrice==null ? null : e.ticketsSold*e.avgPrice;
+const sellThrough  = e => e.inventory==null||!e.inventory ? null : e.ticketsSold/e.inventory*100;
+const avgTicketV   = e => (e.avgPrice==null||!e.ticketsSold) ? null : revenueTotal(e)/e.ticketsSold;
+const daysUntil    = d => Math.round((new Date(d+'T00:00:00Z') - new Date(TODAY+'T00:00:00Z'))/86400000);
+function salesWindow(e){ const em=monthIdx(e.date), start=Math.max(0,em-2), span=em-start;
+  const w=span===0?[1]:span===1?[0.4,0.6]:[0.25,0.35,0.4]; const map={}; w.forEach((x,i)=>{map[start+i]=Math.round(e.ticketsSold*x);}); return map; }
+EVENTS.forEach(e=>{ e.win=salesWindow(e); });
+const ticketsIn=(e,m)=> m==='all'?e.ticketsSold:(e.win[m]||0);
+const revenueIn=(e,m)=> e.avgPrice==null?null:ticketsIn(e,m)*e.avgPrice;
+
+const S={ month:monthIdx(TODAY), cat:'all', org:'all', metric:'revenue', compare:[] };
+const METRIC_KEYS=['revenue','tickets','sell'];
+
+function inScope(e){ if(S.month!=='all'&&!(e.win[S.month]>0))return false;
+  if(S.cat!=='all'&&e.cat!==S.cat)return false; if(S.org!=='all'&&(e.org||'—')!==S.org)return false; return true; }
+function metricVal(e){ if(S.metric==='tickets')return ticketsIn(e,S.month); if(S.metric==='sell')return sellThrough(e); return revenueIn(e,S.month); }
+function ranked(){ return EVENTS.filter(inScope).filter(e=>metricVal(e)!=null).sort((a,b)=>metricVal(b)-metricVal(a)); }
+const periodLabel = () => S.month==='all'?(t('fullYear')+' '+YEAR):(MONTHS()[S.month]+' '+YEAR);
+
+const fmt = n => 'SAR '+Math.round(n).toLocaleString('en-US');
+function fmtC(n){ if(n==null)return '—'; const a=Math.abs(n);
+  if(a>=1e9)return 'SAR '+(n/1e9).toFixed(1)+'B'; if(a>=1e6)return 'SAR '+(n/1e6).toFixed(1)+'M';
+  if(a>=1e3)return 'SAR '+(n/1e3).toFixed(0)+'K'; return 'SAR '+Math.round(n); }
+const num = n => n==null?'—':Math.round(n).toLocaleString('en-US');
+const pct = n => n==null?'—':n.toFixed(0)+'%';
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const catColor = c => c==='Sports'?'var(--sports)':'var(--ent)';
+const orgName = e => e.org || '<span class="na">'+t('orgUnavail')+'</span>';
+const fdate = d => MONTHS()[monthIdx(d)]+' '+parseInt(d.slice(8,10),10);
+const metricName = () => t(S.metric);
+
+/* ── controls ── */
+function renderControls(){
+  document.getElementById('sampleBadge').textContent=t('sample');
+  document.getElementById('pageTitle').textContent=t('title');
+  document.getElementById('subline').textContent=t('sub');
+  document.getElementById('langBtn').textContent=t('lang');
+  document.getElementById('lblPeriod').textContent=t('period');
+  document.getElementById('lblCat').textContent=t('cat');
+  document.getElementById('lblOrg').textContent=t('org');
+  document.getElementById('lblMetric').textContent=t('metric');
+  const ms=document.getElementById('monthSeg');
+  ms.innerHTML=[{v:'all',l:t('fullYear')}].concat(MONTHS().map((m,i)=>({v:i,l:m})))
+    .map(o=>`<button class="${String(S.month)===String(o.v)?'on':''}" data-month="${o.v}">${o.l}</button>`).join('');
+  ms.querySelectorAll('[data-month]').forEach(b=>b.onclick=()=>{ S.month=b.dataset.month==='all'?'all':+b.dataset.month; render(); });
+  const cs=document.getElementById('catSeg');
+  cs.innerHTML=[{v:'all',l:t('all')},{v:'Sports',l:t('Sports')},{v:'Entertainment',l:t('Entertainment')}]
+    .map(o=>`<button class="${S.cat===o.v?'on':''}" data-cat="${o.v}">${o.l}</button>`).join('');
+  cs.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ S.cat=b.dataset.cat; render(); });
+  const orgs=[...new Set(EVENTS.map(e=>e.org).filter(Boolean))].sort();
+  const os=document.getElementById('orgSel');
+  os.innerHTML=`<option value="all">${t('allOrgs')}</option>`+orgs.map(o=>`<option value="${esc(o)}" ${S.org===o?'selected':''}>${esc(o)}</option>`).join('');
+  os.onchange=()=>{ S.org=os.value; render(); };
+  const mt=document.getElementById('metricSeg');
+  mt.innerHTML=METRIC_KEYS.map(v=>`<button class="${S.metric===v?'on':''}" data-metric="${v}">${t(v)}</button>`).join('');
+  mt.querySelectorAll('[data-metric]').forEach(b=>b.onclick=()=>{ S.metric=b.dataset.metric; render(); });
+}
+
+function renderHero(){
+  const list=ranked(), host=document.getElementById('hero'), ins=document.getElementById('insight');
+  if(!list.length){ host.innerHTML=`<div class="hero"><div class="eyebrow">${t('topEvent')} · ${esc(periodLabel())}</div>
+    <div class="ename na" style="font-size:20px">${S.metric==='sell'?t('rankUnavail'):t('noSales')}</div></div>`; ins.innerHTML=''; return; }
+  const e=list[0], total=list.length, st=sellThrough(e), rev=revenueIn(e,S.month), tix=ticketsIn(e,S.month);
+  let delta='';
+  if(S.month!=='all'&&S.month>0){
+    const prev=S.metric==='tickets'?ticketsIn(e,S.month-1):S.metric==='sell'?null:revenueIn(e,S.month-1);
+    const cur =S.metric==='tickets'?tix:S.metric==='sell'?null:rev;
+    if(prev!=null&&cur!=null&&prev>0){ const d=(cur-prev)/prev*100; delta=`<span class="delta ${d>=0?'up':'down'}">${d>=0?'+':''}${d.toFixed(0)}% ${t('vs',{m:MONTHS()[S.month-1]})}</span>`; }
+  }
+  host.innerHTML=`<div class="hero"><div class="crown">🏆</div>
+    <div class="eyebrow">${t('topEvent')} · ${esc(periodLabel())} <span class="metricpill">${metricName()} ${t('leaderSuffix')}</span></div>
+    <div class="ename">${esc(e.name)}</div>
+    <div class="emeta"><span>${orgName(e)}</span><span>·</span><span><span class="catdot" style="background:${catColor(e.cat)}"></span>${catT(e.cat)}</span>
+      <span>·</span><span>${t('eventDate')} ${esc(fdate(e.date))}</span>${e.venue?`<span>·</span><span>${esc(e.venue)}</span>`:''}</div>
+    <div class="stats">
+      <div class="st"><div class="v">${fmtC(rev)}</div><div class="l">${t('revenue')}${S.month==='all'?'':' · '+MONTHS()[S.month]}</div></div>
+      <div class="st"><div class="v">${num(tix)}</div><div class="l">${t('tickets')}</div></div>
+      <div class="st"><div class="v">${pct(st)}</div><div class="l">${t('sell')}</div></div>
+      <div class="st"><div class="v">${avgTicketV(e)==null?'—':fmt(avgTicketV(e))}</div><div class="l">${t('avgTicket')}</div></div>
+      <div class="st"><div class="rankbadge">🥇 #1 ${t('ofEvents',{n:total})}</div>${delta?'<div style="margin-top:6px">'+delta+'</div>':''}</div>
+    </div>
+    <button class="cta" data-ev="${e.id}">${t('viewDetails')}</button></div>`;
+  host.querySelector('[data-ev]').onclick=()=>openDrawer(e.id);
+  const totalRev=list.reduce((a,x)=>a+(revenueIn(x,S.month)||0),0);
+  if(rev!=null&&totalRev>0){ const share=(rev/totalRev*100).toFixed(0);
+    const when=S.month==='all'?t('thisYear'):t('inMonth',{m:MONTHS()[S.month]});
+    const ofwhat=S.month==='all'?t('theYears'):t('monthsPoss',{m:MONTHS()[S.month]});
+    ins.innerHTML=`<div class="insight">${t('insight',{name:esc(e.name),metric:metricName().toLowerCase(),when:when,rev:fmt(rev),org:e.org?' — '+esc(e.org):'',share:share,ofwhat:ofwhat})}</div>`;
+  } else ins.innerHTML='';
+}
+
+function renderTop5(){
+  document.getElementById('top5title').textContent=t('top5')+' · '+periodLabel();
+  const list=ranked().slice(0,5);
+  document.getElementById('top5hint').textContent=t('top5hint',{metric:metricName().toLowerCase(),cat:S.cat==='all'?t('all').toLowerCase():catT(S.cat),org:S.org==='all'?t('allOrgs').toLowerCase():S.org});
+  if(!list.length){ document.getElementById('top5').innerHTML=`<p class="na">${S.metric==='sell'?t('rankUnavail'):t('noSales')}</p>`; return; }
+  const th=(k,l,n)=>`<th class="${n?'num':''} ${S.metric===k?'on':''}" data-sort="${k}">${l}</th>`;
+  const rows=list.map((e,i)=>{ const st=sellThrough(e);
+    return `<tr data-ev="${e.id}"><td><span class="rank r${i+1}">${i+1}</span></td><td>${esc(e.name)}</td><td>${orgName(e)}</td>
+      <td><span class="catcell"><span class="dot" style="background:${catColor(e.cat)}"></span>${catT(e.cat)}</span></td>
+      <td class="num">${num(ticketsIn(e,S.month))}</td><td class="num">${fmtC(revenueIn(e,S.month))}</td>
+      <td class="num">${st==null?'<span class="na">—</span>':pct(st)+`<span class="stbar"><i style="width:${Math.min(100,st)}%"></i></span>`}</td>
+      <td>${esc(fdate(e.date))}</td></tr>`; }).join('');
+  document.getElementById('top5').innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>${t('event')}</th><th>${t('organisation')}</th><th>${t('category')}</th>
+    ${th('tickets',t('tickets'),1)}${th('revenue',t('revenue'),1)}${th('sell',t('sell'),1)}<th>${t('eventDate')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  document.querySelectorAll('#top5 [data-sort]').forEach(x=>x.onclick=()=>{ S.metric=x.dataset.sort; render(); });
+  document.querySelectorAll('#top5 tr[data-ev]').forEach(r=>r.onclick=()=>openDrawer(r.dataset.ev));
+}
+
+function leaderCard(cat,titleKey){
+  const pool=EVENTS.filter(e=>e.cat===cat&&(S.month==='all'||e.win[S.month]>0)&&metricVal(e)!=null).sort((a,b)=>metricVal(b)-metricVal(a));
+  const accent=catColor(cat);
+  if(!pool.length)return `<div class="leader" style="--accent:${accent}"><div class="lk">${t(titleKey)}</div><div class="ln na" style="font-size:14px">${t('noCatSales',{cat:catT(cat)})}</div></div>`;
+  const e=pool[0];
+  return `<div class="leader" data-ev="${e.id}" style="--accent:${accent}"><div class="lk">${t(titleKey)}</div>
+    <div class="ln">${esc(e.name)}</div><div class="lo">${orgName(e)} · ${esc(fdate(e.date))}</div>
+    <div class="lstats"><div><div class="v">${fmtC(revenueIn(e,S.month))}</div><div class="l">${t('revenue')}</div></div>
+      <div><div class="v">${num(ticketsIn(e,S.month))}</div><div class="l">${t('tickets')}</div></div>
+      <div><div class="v">${pct(sellThrough(e))}</div><div class="l">${t('sell')}</div></div></div></div>`;
+}
+function renderLeaders(){ document.getElementById('leaders').innerHTML=leaderCard('Sports','sportsLeader')+leaderCard('Entertainment','entLeader');
+  document.querySelectorAll('#leaders [data-ev]').forEach(c=>c.onclick=()=>openDrawer(c.dataset.ev)); }
+
+let orgShowAll=false;
+function renderByOrg(){
+  document.getElementById('orgTitle').textContent=t('byOrg');
+  const scoped=EVENTS.filter(inScope), byOrg={};
+  scoped.forEach(e=>{ const k=e.org||'—'; (byOrg[k]=byOrg[k]||[]).push(e); });
+  let rows=Object.entries(byOrg).map(([org,evs])=>{
+    const top=evs.slice().filter(e=>revenueIn(e,S.month)!=null).sort((a,b)=>revenueIn(b,S.month)-revenueIn(a,S.month))[0]||evs[0];
+    return {org,top,orgRev:evs.reduce((a,e)=>a+(revenueIn(e,S.month)||0),0)};
+  }).sort((a,b)=>b.orgRev-a.orgRev);
+  const shown=orgShowAll?rows:rows.slice(0,5);
+  document.getElementById('orgHint').textContent=t('byOrgHint',{n:rows.length,p:periodLabel().toLowerCase()});
+  document.getElementById('byorg').innerHTML=shown.map(r=>`<div class="orow" data-ev="${r.top.id}">
+    <div class="oname">${r.org==='—'?'<span class="na">'+t('unassigned')+'</span>':esc(r.org)}</div>
+    <div class="oev">${esc(r.top.name)} <span class="sub">· <span class="catcell"><span class="dot" style="background:${catColor(r.top.cat)}"></span>${catT(r.top.cat)}</span> · ${num(ticketsIn(r.top,S.month))} ${t('tix')} · ${pct(sellThrough(r.top))} ${t('st')}</span></div>
+    <div class="orev">${fmtC(r.orgRev)}</div></div>`).join('');
+  document.querySelectorAll('#byorg [data-ev]').forEach(c=>c.onclick=()=>openDrawer(c.dataset.ev));
+  const tog=document.getElementById('orgToggle'); tog.style.display=rows.length>5?'':'none';
+  tog.textContent=orgShowAll?t('showTop'):t('viewAll'); tog.onclick=()=>{ orgShowAll=!orgShowAll; renderByOrg(); };
+}
+
+function renderWatch(){
+  document.getElementById('watchTitle').textContent=t('watch');
+  document.getElementById('watchHint').textContent=t('watchHint');
+  const scoped=EVENTS.filter(inScope), signals=[];
+  const revRank=scoped.filter(e=>revenueIn(e,S.month)!=null).sort((a,b)=>revenueIn(b,S.month)-revenueIn(a,S.month));
+  if(revRank[0])signals.push({e:revRank[0],tag:t('highPerf'),accent:'var(--good)',reason:t('highReason',{rev:fmtC(revenueIn(revRank[0],S.month)),t:num(ticketsIn(revRank[0],S.month))})});
+  const fast=scoped.filter(e=>daysUntil(e.date)>0&&S.month!=='all'&&S.month>0).map(e=>({e,jump:ticketsIn(e,S.month)-ticketsIn(e,S.month-1)})).filter(x=>x.jump>0).sort((a,b)=>b.jump-a.jump)[0];
+  if(fast)signals.push({e:fast.e,tag:t('fastSeller'),accent:'var(--bg-brand)',reason:t('fastReason',{n:num(fast.jump),m:MONTHS()[S.month-1]})});
+  const upc=scoped.filter(e=>{const d=daysUntil(e.date),st=sellThrough(e);return d>0&&d<=45&&st!=null&&st<70;}).sort((a,b)=>daysUntil(a.date)-daysUntil(b.date))[0];
+  if(upc){const st=sellThrough(upc),d=daysUntil(upc.date);signals.push({e:upc,tag:t('upcomingLow'),accent:'var(--amber)',reason:t('upReason',{d:d,r:(100-st).toFixed(0),s:pct(st)})});}
+  const seen={}, out=signals.filter(s=>{ if(seen[s.e.id])return false; seen[s.e.id]=1; return true; });
+  document.getElementById('watch').innerHTML=out.length?out.map(s=>`<div class="watch" data-ev="${s.e.id}" style="--accent:${s.accent}">
+    <div class="wtag">${s.tag}</div><div class="wn">${esc(s.e.name)} <span style="color:var(--content-secondary);font-weight:400">· ${catT(s.e.cat)}</span></div>
+    <div class="wr">${s.reason}</div></div>`).join(''):`<p class="na">${t('noSignals')}</p>`;
+  document.querySelectorAll('#watch [data-ev]').forEach(c=>c.onclick=()=>openDrawer(c.dataset.ev));
+}
+
+/* ── COMPARISON (§10) ── */
+function renderCompare(){
+  document.getElementById('cmpTitle').textContent=t('compare');
+  document.getElementById('cmpHint').textContent=t('compareHint');
+  const slots=document.getElementById('cmpSlots');
+  const chips=S.compare.map(id=>{ const e=EVENTS.find(x=>x.id===id); return `<span class="cmp-chip">${esc(e.name)} <button data-rm="${id}" aria-label="remove">✕</button></span>`; }).join('');
+  const options=EVENTS.filter(e=>S.compare.indexOf(e.id)<0).map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');
+  const adder=S.compare.length<3?`<select id="cmpAdd" style="max-width:220px"><option value="">${t('pickEvent')}</option>${options}</select>`:'';
+  slots.innerHTML=chips+adder;
+  const add=document.getElementById('cmpAdd'); if(add)add.onchange=()=>{ if(add.value){ S.compare.push(add.value); renderCompare(); } };
+  slots.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ S.compare=S.compare.filter(x=>x!==b.dataset.rm); renderCompare(); });
+  const body=document.getElementById('cmpBody');
+  if(!S.compare.length){ body.innerHTML=`<p class="na">${t('cmpEmpty')}</p>`; return; }
+  const evs=S.compare.map(id=>EVENTS.find(x=>x.id===id));
+  const rowsDef=[
+    {k:'category',get:e=>`<span class="catcell"><span class="dot" style="background:${catColor(e.cat)}"></span>${catT(e.cat)}</span>`,raw:null},
+    {k:'organisation',get:e=>orgName(e),raw:null},
+    {k:'revenue',get:e=>fmtC(revenueTotal(e)),raw:e=>revenueTotal(e)},
+    {k:'tickets',get:e=>num(e.ticketsSold),raw:e=>e.ticketsSold},
+    {k:'sell',get:e=>pct(sellThrough(e)),raw:e=>sellThrough(e)},
+    {k:'avgTicket',get:e=>avgTicketV(e)==null?'—':fmt(avgTicketV(e)),raw:e=>avgTicketV(e)},
+  ];
+  const cols=evs.length+1;
+  let html=`<div class="cmp-grid" style="grid-template-columns:140px repeat(${evs.length},1fr)">`;
+  html+=`<div class="h"></div>`+evs.map(e=>`<div class="h">${esc(e.name)}</div>`).join('');
+  rowsDef.forEach(rd=>{ html+=`<div class="k">${t(rd.k)}</div>`;
+    let best=null; if(rd.raw){ const vals=evs.map(rd.raw).filter(v=>v!=null); if(vals.length)best=Math.max(...vals); }
+    evs.forEach(e=>{ const isBest=rd.raw&&best!=null&&rd.raw(e)===best&&best>0; html+=`<div class="v ${isBest?'best':''}">${rd.get(e)}</div>`; });
+  });
+  html+='</div>';
+  body.innerHTML=html;
+}
+
+/* ── supporting KPIs + charts ── */
+function renderKpis(){
+  const scoped=EVENTS.filter(inScope);
+  const gross=scoped.reduce((a,e)=>a+(revenueIn(e,S.month)||0),0);
+  const tix=scoped.reduce((a,e)=>a+ticketsIn(e,S.month),0);
+  const cashless=scoped.reduce((a,e)=>a+(revenueTotal(e)||0)*0.22*(S.month==='all'||monthIdx(e.date)===S.month?1:0),0);
+  const onground=scoped.reduce((a,e)=>a+(revenueTotal(e)||0)*0.08*(S.month==='all'||monthIdx(e.date)===S.month?1:0),0);
+  const blocked=scoped.reduce((a,e)=>a+ticketsIn(e,S.month)*0.9,0);
+  const k=(l,v,s,a)=>`<div class="kpi" style="--accent:${a}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  document.getElementById('kpis').innerHTML=
+    k(t('eventsInScope'),scoped.length,periodLabel(),'var(--content-secondary)')+
+    k(t('ticketSales'),fmtC(gross),fmt(gross),'var(--bg-brand)')+
+    k(t('ticketsSold'),num(tix),t('validNet'),'var(--sports)')+
+    k(t('cashlessRev'),fmtC(cashless),'22%','var(--cashless)')+
+    k(t('ongroundRev'),fmtC(onground),'8%','var(--onground)')+
+    k(t('afBlocked'),fmtC(blocked),t('stopped'),'var(--danger)');
+}
+function renderTrend(){
+  document.getElementById('trendTitle').textContent=t('trend');
+  const cat=S.cat;
+  const perMonth=MONTHS().map((_,m)=>({v:EVENTS.filter(e=>cat==='all'||e.cat===cat).reduce((a,e)=>a+(revenueIn(e,m)||0),0)}));
+  const max=Math.max(1,...perMonth.map(d=>d.v)),W=1000,H=210,padB=30,padT=16,barW=W/12*0.56,gap=W/12;
+  const bars=perMonth.map((d,m)=>{ const h=(d.v/max)*(H-padB-padT),x=m*gap+(gap-barW)/2,y=H-padB-h,on=S.month==='all'||S.month===m;
+    return `<g opacity="${on?1:.32}"><rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="var(--bg-brand)"></rect>
+      <text class="val" x="${(x+barW/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle">${d.v?fmtC(d.v).replace('SAR ',''):''}</text>
+      <text class="lbl" x="${(x+barW/2).toFixed(1)}" y="${H-padB+14}" text-anchor="middle">${MONTHS()[m]}</text></g>`; }).join('');
+  document.getElementById('trend').innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><line class="grid" x1="0" y1="${H-padB}" x2="${W}" y2="${H-padB}"></line>${bars}</svg>`;
+  const g=EVENTS.filter(inScope).reduce((a,e)=>a+(revenueIn(e,S.month)||0),0);
+  document.getElementById('trendHint').textContent=t('trendHint',{cat:cat==='all'?t('all').toLowerCase():catT(cat),g:fmt(g),p:periodLabel().toLowerCase()});
+}
+function renderCashless(){
+  document.getElementById('cashTitle').textContent=t('cash'); document.getElementById('cashHint').textContent=t('cashHint');
+  document.getElementById('lgCash').textContent=t('cashlessRev'); document.getElementById('lgOg').textContent=t('ongroundRev');
+  const perMonth=MONTHS().map((_,m)=>{ const evs=EVENTS.filter(e=>monthIdx(e.date)===m&&(S.cat==='all'||e.cat===S.cat));
+    return {c:evs.reduce((a,e)=>a+(revenueTotal(e)||0)*0.22,0),o:evs.reduce((a,e)=>a+(revenueTotal(e)||0)*0.08,0)}; });
+  const max=Math.max(1,...perMonth.map(d=>d.c+d.o)),W=1000,H=210,padB=22,padT=10,barW=W/12*0.56,gap=W/12;
+  const bars=perMonth.map((d,m)=>{ const sc=(H-padB-padT)/max,hc=d.c*sc,ho=d.o*sc,x=m*gap+(gap-barW)/2,yo=H-padB-ho,yc=yo-hc,on=S.month==='all'||S.month===m;
+    return `<g opacity="${on?1:.32}"><rect x="${x.toFixed(1)}" y="${yc.toFixed(1)}" width="${barW.toFixed(1)}" height="${hc.toFixed(1)}" rx="2" fill="var(--cashless)"></rect>
+      <rect x="${x.toFixed(1)}" y="${yo.toFixed(1)}" width="${barW.toFixed(1)}" height="${ho.toFixed(1)}" rx="2" fill="var(--onground)"></rect>
+      <text class="lbl" x="${(x+barW/2).toFixed(1)}" y="${H-padB+14}" text-anchor="middle">${MONTHS()[m]}</text></g>`; }).join('');
+  document.getElementById('cashless').innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><line class="grid" x1="0" y1="${H-padB}" x2="${W}" y2="${H-padB}"></line>${bars}</svg>`;
+}
+function renderSplit(){
+  document.getElementById('splitTitle').textContent=t('split'); document.getElementById('lgSports').textContent=t('Sports'); document.getElementById('lgEnt').textContent=t('Entertainment');
+  const scoped=EVENTS.filter(e=>S.month==='all'||e.win[S.month]>0), map={};
+  scoped.forEach(e=>{ const k=e.org||t('unassigned'); (map[k]=map[k]||{s:0,e:0}); map[k][e.cat==='Sports'?'s':'e']+=(revenueIn(e,S.month)||0); });
+  const rows=Object.entries(map).map(([name,d])=>({name,...d,total:d.s+d.e})).filter(r=>r.total>0).sort((a,b)=>b.total-a.total);
+  const max=Math.max(1,...rows.map(r=>r.total));
+  document.getElementById('clients').innerHTML=rows.map(r=>{ const w=r.total/max*100,sp=r.total?r.s/r.total*100:0;
+    return `<div class="crow"><div class="cname" title="${esc(r.name)}">${esc(r.name)}</div>
+      <div class="cbar" style="width:${w.toFixed(1)}%;min-width:60px"><span class="seg-s" style="width:${sp.toFixed(1)}%"></span><span class="seg-e" style="width:${(100-sp).toFixed(1)}%"></span></div>
+      <div class="cval">${fmtC(r.total)}</div></div>`; }).join('')||`<p class="na">${t('noSales')}</p>`;
+  document.getElementById('splitHint').textContent=t('splitHint',{p:periodLabel().toLowerCase()});
+}
+function renderFraud(){
+  document.getElementById('fraudTitle').textContent=t('fraud');
+  const scoped=EVENTS.filter(inScope);
+  const flagged=scoped.reduce((a,e)=>a+Math.round(ticketsIn(e,S.month)*0.003),0);
+  const blocked=scoped.reduce((a,e)=>a+Math.round(ticketsIn(e,S.month)*0.9),0);
+  const gross=scoped.reduce((a,e)=>a+(revenueIn(e,S.month)||0),0)||1;
+  const k=(l,v,s,a)=>`<div class="kpi" style="--accent:${a}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  document.getElementById('fraudKpis').innerHTML=
+    k(t('flagged'),num(flagged),t('reviewed'),'var(--amber)')+
+    k(t('blocked'),fmtC(blocked),fmt(blocked),'var(--danger)')+
+    k(t('blockedVs'),(blocked/gross*100).toFixed(2)+'%',t('shareStopped'),'var(--danger)');
+  const rows=scoped.map(e=>({e,f:Math.round(ticketsIn(e,S.month)*0.003),b:Math.round(ticketsIn(e,S.month)*0.9)})).filter(x=>x.b>0).sort((a,b)=>b.b-a.b).slice(0,6);
+  document.getElementById('fraudTable').innerHTML=rows.length?`<div style="overflow-x:auto"><table><thead><tr><th>${t('event')}</th><th>${t('organisation')}</th><th>${t('category')}</th><th class="num">${t('flagged')}</th><th class="num">${t('blocked')} (SAR)</th></tr></thead>
+    <tbody>${rows.map(x=>`<tr data-ev="${x.e.id}"><td>${esc(x.e.name)}</td><td>${orgName(x.e)}</td><td><span class="catcell"><span class="dot" style="background:${catColor(x.e.cat)}"></span>${catT(x.e.cat)}</span></td><td class="num">${num(x.f)}</td><td class="num">${num(x.b)}</td></tr>`).join('')}</tbody></table></div>`:`<p class="na">${t('noFraud')}</p>`;
+  document.querySelectorAll('#fraudTable [data-ev]').forEach(r=>r.onclick=()=>openDrawer(r.dataset.ev));
+  document.getElementById('fraudHint').textContent=t('fraudHint',{p:periodLabel().toLowerCase()});
+}
+
+function openDrawer(id){
+  const e=EVENTS.find(x=>x.id===id); if(!e)return;
+  const st=sellThrough(e),rev=revenueTotal(e),atv=avgTicketV(e),rk=ranked(),rank=rk.findIndex(x=>x.id===e.id);
+  const em=monthIdx(e.date),thisM=S.month==='all'?em:S.month;
+  const vel=t('velLine',{a:num(ticketsIn(e,thisM)),b:num(thisM>0?ticketsIn(e,thisM-1):0),c:num(Math.round(e.ticketsSold/Object.keys(e.win).length))});
+  const d=daysUntil(e.date), timeline=Object.keys(e.win).map(m=>({m:+m,t:e.win[m]})), maxT=Math.max(1,...timeline.map(x=>x.t));
+  const spark=timeline.map(x=>`<div style="text-align:center"><div style="width:26px;height:${Math.round(x.t/maxT*60)+4}px;background:var(--bg-brand);border-radius:3px;margin:0 auto"></div><div style="font:500 9px var(--font-body);color:var(--content-secondary);margin-top:3px">${MONTHS()[x.m]}</div><div style="font:700 9px var(--font-body)">${(x.t/1000).toFixed(1)}k</div></div>`).join('');
+  const kv=(k,v)=>`<div><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  document.getElementById('drawer').innerHTML=`
+    <button class="dclose" id="dclose" aria-label="close">✕</button>
+    <h2>${esc(e.name)}</h2>
+    <div class="dsub"><span class="catcell"><span class="dot" style="background:${catColor(e.cat)}"></span>${catT(e.cat)}</span> · ${orgName(e)} · ${esc(fdate(e.date))} ${YEAR}${e.venue?' · '+esc(e.venue):''}</div>
+    <div class="dsec"><h4>${t('sales')}</h4><div class="dgrid">${kv(t('tickets'),num(e.ticketsSold))}${kv(t('grossRevenue'),rev==null?'<span class="na">—</span>':fmt(rev))}${kv(t('avgTicket'),atv==null?'<span class="na">—</span>':fmt(atv))}${kv(t('rank')+' ('+esc(periodLabel())+')',rank>=0?('#'+(rank+1)+' '+t('ofEvents',{n:rk.length})):'<span class="na">'+t('notInScope')+'</span>')}</div></div>
+    <div class="dsec"><h4>${t('inventory')}</h4>${e.inventory==null?'<p class="na">'+t('invUnavail')+'</p>':`<div class="dgrid">${kv(t('sellable'),num(e.inventory))}${kv(t('sold'),num(e.ticketsSold))}${kv(t('remaining'),num(e.inventory-e.ticketsSold))}${kv(t('sell'),pct(st))}</div><div class="dbar"><i style="width:${Math.min(100,st)}%"></i></div>`}</div>
+    <div class="dsec"><h4>${t('timeline')}</h4><div style="display:flex;gap:12px;align-items:flex-end;padding:6px 0">${spark}</div></div>
+    <div class="dsec"><h4>${t('velocity')} <span style="font-weight:400;text-transform:none;color:var(--content-secondary)">${t('velocityNote')}</span></h4><p class="defs" style="margin:0">${vel}</p></div>
+    ${d>0?`<div class="dsec"><h4>${t('upcoming')}</h4><p class="defs" style="margin:0">${t('upLine',{d:d,r:st!=null?t('withRem',{r:(100-st).toFixed(0)}):''})}</p></div>`:''}`;
+  document.getElementById('dclose').onclick=closeDrawer;
+  document.getElementById('scrim').classList.add('open'); document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('scrim').classList.remove('open'); }
+document.getElementById('scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeDrawer(); });
+document.getElementById('langBtn').onclick=()=>{ LANG=LANG==='en'?'ar':'en';
+  document.documentElement.lang=LANG; document.documentElement.dir=I18N[LANG].dir; render(); };
+
+function render(){
+  document.documentElement.dir=I18N[LANG].dir; document.documentElement.lang=LANG;
+  document.getElementById('defTitle').textContent=t('defTitle'); document.getElementById('defBody').textContent=t('defBody');
+  renderControls(); renderHero(); renderTop5(); renderLeaders(); renderByOrg(); renderWatch(); renderCompare();
+  renderKpis(); renderTrend(); renderSplit(); renderCashless(); renderFraud();
+}
+render();
+</script>
+</body>
+</html>

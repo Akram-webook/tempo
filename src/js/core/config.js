@@ -93,7 +93,7 @@
   // (which stays the advanced-layer gate). See docs/SPEC-workload-mvp.md.
   if (WP.config.cockpitOnly === undefined) WP.config.cockpitOnly = true;
   // Routes/nav-ids kept when cockpitOnly. Everything else is hidden + redirects home.
-  WP.COCKPIT_KEEP = ['workload', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
+  WP.COCKPIT_KEEP = ['workload', 'salesx', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
   WP.cockpitHidden = function (id) {
     return !!(WP.config && WP.config.cockpitOnly) && WP.COCKPIT_KEEP.indexOf(id) < 0;
   };
