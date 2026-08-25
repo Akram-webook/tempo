@@ -142,6 +142,11 @@ tr[data-ev]{cursor:pointer} tr[data-ev]:hover td{background:var(--surface-l2)}
 .chart .grid{stroke:var(--border-tertiary);stroke-width:1}
 .chart .lbl{fill:var(--content-secondary);font:500 10px var(--font-body)}
 .chart .val{fill:var(--content-primary);font:700 10px var(--font-body)}
+.chart .mcol{cursor:pointer;transition:opacity .12s}
+.chart .mcol:hover{opacity:1!important}
+.crow.clickable{cursor:pointer;border-radius:6px;padding-inline:6px;margin-inline:-6px}
+.crow.clickable:hover{background:var(--surface-l2)}
+.crow.active{background:var(--surface-l2);box-shadow:inset 2px 0 0 var(--bg-brand)}
 .crow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-tertiary)}
 .crow:last-child{border-bottom:0}
 .cname{width:170px;flex:none;font:600 13px/17px var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -179,7 +184,6 @@ tr[data-ev]{cursor:pointer} tr[data-ev]:hover td{background:var(--surface-l2)}
       <h1 id="pageTitle"></h1>
       <p class="subline" id="subline"></p>
     </div>
-    <button class="langbtn" id="langBtn"></button>
   </div>
 
   <div class="filterbar">
@@ -191,6 +195,7 @@ tr[data-ev]{cursor:pointer} tr[data-ev]:hover td{background:var(--surface-l2)}
       <div class="fbar-group"><span class="seglabel" id="lblCat"></span><span class="seg" id="catSeg"></span></div>
       <div class="fbar-group"><span class="seglabel" id="lblOrg"></span><select id="orgSel"></select></div>
       <div class="fbar-group fbar-metric"><span class="seglabel" id="lblMetric"></span><span class="seg" id="metricSeg"></span></div>
+      <button class="langbtn" id="langBtn"></button>
     </div>
   </div>
 
@@ -282,6 +287,7 @@ const I18N = {
     eventsInScope:'Events in scope', ticketSales:'Ticket sales', ticketsSold:'Tickets sold', validNet:'valid, net of refunds',
     cashlessRev:'Cashless revenue', ongroundRev:'On-Ground revenue', afBlocked:'Anti-fraud blocked', stopped:'stopped pre-settlement',
     trend:'Ticket sales · by sales month', trendHint:'Ticket revenue by the month it was sold · {cat} · {g} in {p}.',
+    clickMonth:'Click a month to filter', clickOrg:'Click an organisation to filter',
     split:'Sales by organisation · Sports vs Entertainment', splitHint:'Revenue in {p} · bar split shows Sports vs Entertainment.',
     cash:'Cashless & On-Ground revenue · by event month', cashHint:'On-site payment volume and on-ground operations, attributed to the event month.',
     fraud:'Anti-fraud reporting', fraudHint:'Suspicious ticketing activity caught before settlement · {p}.',
@@ -314,6 +320,7 @@ const I18N = {
     eventsInScope:'فعاليات في النطاق', ticketSales:'مبيعات التذاكر', ticketsSold:'التذاكر المباعة', validNet:'صافية بعد الاسترجاع',
     cashlessRev:'إيراد الدفع الإلكتروني', ongroundRev:'إيراد الميدان', afBlocked:'محظور (مكافحة الاحتيال)', stopped:'أُوقف قبل التسوية',
     trend:'مبيعات التذاكر · حسب شهر البيع', trendHint:'إيراد التذاكر حسب شهر البيع · {cat} · {g} في {p}.',
+    clickMonth:'اضغط شهرًا للتصفية', clickOrg:'اضغط منظّمة للتصفية',
     split:'المبيعات حسب المنظّمة · رياضة مقابل ترفيه', splitHint:'الإيراد في {p} · الشريط يوضّح نسبة الرياضة إلى الترفيه.',
     cash:'إيراد الدفع الإلكتروني والميدان · حسب شهر الفعالية', cashHint:'حجم المدفوعات في الموقع وعمليات الميدان، منسوبة إلى شهر الفعالية.',
     fraud:'تقرير مكافحة الاحتيال', fraudHint:'نشاط تذاكر مشبوه أُوقف قبل التسوية · {p}.',
@@ -551,12 +558,21 @@ function renderTrend(){
   const perMonth=MONTHS().map((_,m)=>({v:EVENTS.filter(e=>cat==='all'||e.cat===cat).reduce((a,e)=>a+(revenueIn(e,m)||0),0)}));
   const max=Math.max(1,...perMonth.map(d=>d.v)),W=1000,H=210,padB=30,padT=16,barW=W/12*0.56,gap=W/12;
   const bars=perMonth.map((d,m)=>{ const h=(d.v/max)*(H-padB-padT),x=m*gap+(gap-barW)/2,y=H-padB-h,on=S.month==='all'||S.month===m;
-    return `<g opacity="${on?1:.32}"><rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="var(--bg-brand)"></rect>
+    return `<g class="mcol" data-m="${m}" opacity="${on?1:.34}"><title>${MONTHS()[m]} — ${fmtC(d.v)}</title>
+      <rect class="hit" x="${(m*gap).toFixed(1)}" y="0" width="${gap.toFixed(1)}" height="${H}" fill="transparent"></rect>
+      <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="var(--bg-brand)"></rect>
       <text class="val" x="${(x+barW/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle">${d.v?fmtC(d.v).replace('SAR ',''):''}</text>
       <text class="lbl" x="${(x+barW/2).toFixed(1)}" y="${H-padB+14}" text-anchor="middle">${MONTHS()[m]}</text></g>`; }).join('');
   document.getElementById('trend').innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><line class="grid" x1="0" y1="${H-padB}" x2="${W}" y2="${H-padB}"></line>${bars}</svg>`;
+  wireMonthClicks('trend');
   const g=EVENTS.filter(inScope).reduce((a,e)=>a+(revenueIn(e,S.month)||0),0);
-  document.getElementById('trendHint').textContent=t('trendHint',{cat:cat==='all'?t('all').toLowerCase():catT(cat),g:fmt(g),p:periodLabel().toLowerCase()});
+  document.getElementById('trendHint').textContent=t('trendHint',{cat:cat==='all'?t('all').toLowerCase():catT(cat),g:fmt(g),p:periodLabel().toLowerCase()})+' · '+t('clickMonth');
+}
+/* click a month column → filter the whole page to that month (click again to reset). */
+function wireMonthClicks(hostId){
+  document.querySelectorAll('#'+hostId+' .mcol').forEach(function(gEl){
+    gEl.onclick=function(){ var m=+gEl.dataset.m; S.month=(S.month===m?'all':m); render(); };
+  });
 }
 function renderCashless(){
   document.getElementById('cashTitle').textContent=t('cash'); document.getElementById('cashHint').textContent=t('cashHint');
@@ -565,10 +581,13 @@ function renderCashless(){
     return {c:evs.reduce((a,e)=>a+(revenueTotal(e)||0)*0.22,0),o:evs.reduce((a,e)=>a+(revenueTotal(e)||0)*0.08,0)}; });
   const max=Math.max(1,...perMonth.map(d=>d.c+d.o)),W=1000,H=210,padB=22,padT=10,barW=W/12*0.56,gap=W/12;
   const bars=perMonth.map((d,m)=>{ const sc=(H-padB-padT)/max,hc=d.c*sc,ho=d.o*sc,x=m*gap+(gap-barW)/2,yo=H-padB-ho,yc=yo-hc,on=S.month==='all'||S.month===m;
-    return `<g opacity="${on?1:.32}"><rect x="${x.toFixed(1)}" y="${yc.toFixed(1)}" width="${barW.toFixed(1)}" height="${hc.toFixed(1)}" rx="2" fill="var(--cashless)"></rect>
+    return `<g class="mcol" data-m="${m}" opacity="${on?1:.34}"><title>${MONTHS()[m]} — ${t('cashlessRev')} ${fmtC(d.c)} · ${t('ongroundRev')} ${fmtC(d.o)}</title>
+      <rect class="hit" x="${(m*gap).toFixed(1)}" y="0" width="${gap.toFixed(1)}" height="${H}" fill="transparent"></rect>
+      <rect x="${x.toFixed(1)}" y="${yc.toFixed(1)}" width="${barW.toFixed(1)}" height="${hc.toFixed(1)}" rx="2" fill="var(--cashless)"></rect>
       <rect x="${x.toFixed(1)}" y="${yo.toFixed(1)}" width="${barW.toFixed(1)}" height="${ho.toFixed(1)}" rx="2" fill="var(--onground)"></rect>
       <text class="lbl" x="${(x+barW/2).toFixed(1)}" y="${H-padB+14}" text-anchor="middle">${MONTHS()[m]}</text></g>`; }).join('');
   document.getElementById('cashless').innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><line class="grid" x1="0" y1="${H-padB}" x2="${W}" y2="${H-padB}"></line>${bars}</svg>`;
+  wireMonthClicks('cashless');
 }
 function renderSplit(){
   document.getElementById('splitTitle').textContent=t('split'); document.getElementById('lgSports').textContent=t('Sports'); document.getElementById('lgEnt').textContent=t('Entertainment');
@@ -577,10 +596,12 @@ function renderSplit(){
   const rows=Object.entries(map).map(([name,d])=>({name,...d,total:d.s+d.e})).filter(r=>r.total>0).sort((a,b)=>b.total-a.total);
   const max=Math.max(1,...rows.map(r=>r.total));
   document.getElementById('clients').innerHTML=rows.map(r=>{ const w=r.total/max*100,sp=r.total?r.s/r.total*100:0;
-    return `<div class="crow"><div class="cname" title="${esc(r.name)}">${esc(r.name)}</div>
+    const real=r.name!=='—'; const active=S.org===r.name;
+    return `<div class="crow${real?' clickable':''}${active?' active':''}"${real?` data-org="${esc(r.name)}"`:''}><div class="cname" title="${esc(r.name)}">${r.name==='—'?'<span class="na">'+t('unassigned')+'</span>':esc(r.name)}</div>
       <div class="cbar" style="width:${w.toFixed(1)}%;min-width:60px"><span class="seg-s" style="width:${sp.toFixed(1)}%"></span><span class="seg-e" style="width:${(100-sp).toFixed(1)}%"></span></div>
       <div class="cval">${fmtC(r.total)}</div></div>`; }).join('')||`<p class="na">${t('noSales')}</p>`;
-  document.getElementById('splitHint').textContent=t('splitHint',{p:periodLabel().toLowerCase()});
+  document.querySelectorAll('#clients [data-org]').forEach(function(row){ row.onclick=function(){ var o=row.dataset.org; S.org=(S.org===o?'all':o); render(); }; });
+  document.getElementById('splitHint').textContent=t('splitHint',{p:periodLabel().toLowerCase()})+' · '+t('clickOrg');
 }
 function renderFraud(){
   document.getElementById('fraudTitle').textContent=t('fraud');
