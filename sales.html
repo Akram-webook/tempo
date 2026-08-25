@@ -32,13 +32,20 @@ button{font-family:inherit;color:inherit;cursor:pointer}
   color:var(--amber-text);border-radius:var(--radius-pill);padding:4px 10px;font:600 11px/14px var(--font-body)}
 h1{font:800 30px/34px var(--font-display);margin:10px 0 3px}
 .subline{color:var(--content-secondary);font:400 13px/18px var(--font-body);margin:0}
-.controls{display:flex;flex-direction:column;gap:8px;align-items:flex-end;margin-top:2px}
-[dir=rtl] .controls{align-items:flex-start}
-.cline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-[dir=rtl] .cline{justify-content:flex-start}
-.seglabel{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--content-secondary)}
+/* filter toolbar — one grouped surface below the title (chunked, left-aligned, responsive) */
+.filterbar{background:var(--surface-l1);border:1px solid var(--border-tertiary);border-radius:12px;
+  padding:12px 14px;margin:16px 0 4px;display:flex;flex-direction:column;gap:12px}
+.fbar-row{display:flex;align-items:center;gap:10px 22px;flex-wrap:wrap}
+.fbar-period{padding-bottom:12px;border-bottom:1px solid var(--border-tertiary)}
+.fbar-group{display:flex;align-items:center;gap:8px}
+.fbar-metric{margin-inline-start:auto}          /* push the sort control to the far end */
+@media(max-width:760px){ .fbar-metric{margin-inline-start:0} }
+.fbar-period .seg{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;max-width:100%}
+.fbar-period .seg::-webkit-scrollbar{height:0}
+.seglabel{font:600 10px/14px var(--font-body);text-transform:uppercase;letter-spacing:.06em;color:var(--content-secondary);white-space:nowrap;flex:none}
 .seg{display:inline-flex;background:var(--surface-l2);border:1px solid var(--border-tertiary);
-  border-radius:var(--radius-pill);padding:3px;gap:2px;flex-wrap:wrap;max-width:680px;justify-content:flex-end}
+  border-radius:var(--radius-pill);padding:3px;gap:2px;flex-wrap:wrap;justify-content:flex-start}
+.seg button{white-space:nowrap}
 .seg button{background:none;border:0;border-radius:var(--radius-pill);padding:5px 11px;font:600 12px/16px var(--font-body);color:var(--content-secondary)}
 .seg button.on{background:var(--bg-brand);color:#fff}
 select{background:var(--surface-l2);border:1px solid var(--border-tertiary);color:inherit;border-radius:var(--radius-pill);
@@ -172,12 +179,18 @@ tr[data-ev]{cursor:pointer} tr[data-ev]:hover td{background:var(--surface-l2)}
       <h1 id="pageTitle"></h1>
       <p class="subline" id="subline"></p>
     </div>
-    <div class="controls">
-      <div class="cline"><button class="langbtn" id="langBtn"></button></div>
-      <div class="cline"><span class="seglabel" id="lblPeriod"></span><span class="seg" id="monthSeg"></span></div>
-      <div class="cline"><span class="seglabel" id="lblCat"></span><span class="seg" id="catSeg"></span>
-        <span class="seglabel" id="lblOrg" style="margin-inline-start:10px"></span><select id="orgSel"></select></div>
-      <div class="cline"><span class="seglabel" id="lblMetric"></span><span class="seg" id="metricSeg"></span></div>
+    <button class="langbtn" id="langBtn"></button>
+  </div>
+
+  <div class="filterbar">
+    <div class="fbar-row fbar-period">
+      <span class="seglabel" id="lblPeriod"></span>
+      <span class="seg" id="monthSeg"></span>
+    </div>
+    <div class="fbar-row">
+      <div class="fbar-group"><span class="seglabel" id="lblCat"></span><span class="seg" id="catSeg"></span></div>
+      <div class="fbar-group"><span class="seglabel" id="lblOrg"></span><select id="orgSel"></select></div>
+      <div class="fbar-group fbar-metric"><span class="seglabel" id="lblMetric"></span><span class="seg" id="metricSeg"></span></div>
     </div>
   </div>
 
