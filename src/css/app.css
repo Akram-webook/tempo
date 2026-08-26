@@ -536,7 +536,9 @@ main.full-bleed { max-width: none; }
 /* content column is a flex column so the signature footer is PINNED to the bottom:
    #view grows to fill, the footer lands after it. On a short page (e.g. My progress)
    this stops the bar floating mid-page — no dead space below it. */
-.view-main { display: flex; flex-direction: column; }
+.view-main { display: flex; flex-direction: column; padding-bottom: 0; }
+/* the signature footer is the last element and carries its own padding, so the
+   page's 24px bottom padding would just leave a dead gap beneath it — drop it. */
 .view-main > #view { flex: 1 0 auto; }
 /* Keep the reminder host at its natural height — never let a tall view (a 100vh
    min-height page) shrink this flex item down to just its border (a stray line). */
