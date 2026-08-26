@@ -377,12 +377,12 @@
         '<div class="sig-sep"></div>' +
         '<div class="sig-credit">' +
           '<div class="sig-role">' + t('sigManaged') + '</div>' +
-          '<div class="sig-name sig-name--accent">A. Foster</div>' +
+          '<div class="sig-name sig-name--accent">M. Akram</div>' +
         '</div>' +
         '<div class="sig-sep"></div>' +
         '<div class="sig-credit">' +
           '<div class="sig-role">' + t('sigDirected') + '</div>' +
-          '<div class="sig-name">Oliver Grant</div>' +
+          '<div class="sig-name">Ahmed Othman</div>' +
         '</div>' +
       '</div>';
   }

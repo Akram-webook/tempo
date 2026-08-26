@@ -97,9 +97,9 @@
 
   // Slack profile photos, snapshotted from the #event-operations-department
   // directory (id → avatar URL). Re-sync on demand: re-scrape + replace this map.
-  // Missing here = no uploaded Slack photo (Meshal Alsmari), not a channel member
-  // (Hamdi), or a newer hire not yet snapshotted (Alhanouf, Osama, Muhammad Gamal
-  // Ali, Saleh, Ibrahim, Tala) → the card + drawer fall back to initials.
+  // Every listed member now carries a Slack photo (refreshed live from the
+  // webook.com workspace). Only people with no Slack account (e.g. Hamdi) fall
+  // back to initials. Meshal Alsmari has no uploaded photo → Slack's default avatar.
   var E = 'https://ca.slack-edge.com/T06CF6Y0ETC-';
   var IMG = {
     ahmed: E + 'U099EREBS23-5eaec9a8cc3c-192',
@@ -126,6 +126,15 @@
     aljazi: E + 'U097HCNCAG3-e77f77e8c551-192',
     rosa: E + 'U09CC2R0H29-95f79433181c-192',
     altahini: E + 'U097HCRUYCB-16b4f569fed9-192',
+    // Pulled live from Slack (webook.com workspace) — real uploaded profile photos.
+    alhanouf: 'https://avatars.slack-edge.com/2026-07-12/11567052786709_3e036d2e87b4a54ca0b3_original.png',
+    osama:    'https://avatars.slack-edge.com/2026-05-23/11194956748178_adb8e58f17daeb908d03_original.png',
+    mgamal:   'https://avatars.slack-edge.com/2025-05-13/8871091980695_f4dc89fce41e5750938c_original.png',
+    saleh:    'https://avatars.slack-edge.com/2026-08-02/11732991304100_37ba3b0b45fbb91f51a4_original.png',
+    ibrahim:  'https://avatars.slack-edge.com/2025-09-08/9473444242659_54d3513cef976a556e43_original.png',
+    tala:     'https://avatars.slack-edge.com/2025-10-02/9621523706694_7e351c3e3a34a08ddd83_original.png',
+    // Meshal Alsmari has no uploaded photo — Slack serves its default avatar.
+    alsmari:  'https://secure.gravatar.com/avatar/81b8c11719892e344954d028cab0003a.jpg?s=512&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0003-512.png',
   };
 
   WP.orgTreeData = { PEOPLE: PEOPLE, SQUADS: SQUADS, COUNTRY_FLAG: COUNTRY_FLAG, SLACK_TITLES: SLACK_TITLES, IMG: IMG };
