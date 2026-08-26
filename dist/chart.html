@@ -3264,6 +3264,110 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .wl-wi-note{margin-top:14px;display:flex;gap:6px;align-items:flex-start;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.wl-drawer,.wl-row{transition:none!important}}
 
+/* ===================== Career Profile (Employee Intelligence) ===================== */
+/* Header */
+.cp-head{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.cp-head-main{display:flex;align-items:center;gap:14px}
+.cp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.cp-hgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.cp-hx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cp-hx-k{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+.cp-hx-v{font-size:14px;font-weight:600}
+/* Executive summary */
+.cp-summary .cp-sum-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cp-ready{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;margin-top:4px}
+.cp-ready--ready{color:var(--state-available)}
+.cp-ready--nearly{color:var(--state-balanced)}
+.cp-ready--dev{color:var(--brand)}
+.cp-ready--notready{color:var(--text-muted)}
+.cp-sum-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+/* status pills */
+.cp-st{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.cp-st--ready{color:var(--state-available);background:var(--state-available-bg)}
+.cp-st--dev{color:var(--brand);background:var(--brand-soft)}
+.cp-st--notyet{color:var(--text-muted);background:var(--surface-2)}
+.cp-src{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--text-muted);white-space:nowrap}
+/* skills */
+.cp-skill-group{margin-top:12px}
+.cp-skill{padding:8px 0;border-bottom:1px solid var(--border)}
+.cp-skill:last-child{border-bottom:0}
+.cp-skill-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.cp-skill-nm{font-size:13px;font-weight:600}
+.cp-skill-band{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+.cp-band--strong{color:var(--state-available);background:var(--state-available-bg)}
+.cp-band--ontrack{color:var(--state-balanced);background:var(--state-balanced-bg)}
+.cp-band--gap{color:var(--state-near);background:var(--state-near-bg)}
+.cp-skill-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:5px;font-size:12px;color:var(--text-muted)}
+.cp-skill-meta b{color:var(--text)}
+.cp-eq{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.cp-eq-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.cp-eq-row span:first-child{min-width:120px}
+/* gaps */
+.cp-gap{padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);margin-top:8px;background:var(--surface-1)}
+.cp-gap-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cp-gap-lvl{font-size:12px;color:var(--text-muted)}
+.cp-gap-lvl b{color:var(--state-near)}
+.cp-gap-act{display:flex;gap:6px;align-items:flex-start;margin-top:6px;font-size:13px;line-height:1.45}
+/* strengths / generic item */
+.cp-item{padding:8px 0;border-bottom:1px solid var(--border)}
+.cp-item:last-child{border-bottom:0}
+.cp-item-t{font-size:13px;font-weight:600}
+.cp-item-ev{font-size:12px;color:var(--text-muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+/* feedback timeline */
+.cp-timeline{display:flex;flex-direction:column;gap:10px}
+.cp-fb{border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;background:var(--surface-1);border-inline-start:3px solid var(--brand)}
+.cp-fb-top{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.cp-fb-type{font-size:12px;font-weight:700}
+.cp-fb-meta{font-size:11px;color:var(--text-muted);margin-inline-start:auto}
+.cp-fb-comment{font-size:13px;line-height:1.5;margin:6px 0}
+.cp-ul{margin:4px 0 0;padding-inline-start:18px;font-size:13px;line-height:1.5}
+/* promotion readiness caps */
+.cp-cap{padding:10px 0;border-bottom:1px solid var(--border)}
+.cp-cap:last-child{border-bottom:0}
+.cp-cap-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cp-cap-nm{font-size:13px;font-weight:600}
+.cp-cap-why{font-size:12px;color:var(--text-muted);margin-top:2px}
+.cp-cap-ev{font-size:12px;margin-top:5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cp-block{margin-top:12px;padding:10px;border-radius:var(--radius-md);background:var(--surface-1);border:1px solid var(--border)}
+.cp-block--clear{color:var(--state-available);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+/* dev plan */
+.cp-obj{border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;margin-top:8px;background:var(--surface-1)}
+.cp-obj-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cp-obj-act{font-size:13px;line-height:1.45;margin-top:5px}
+.cp-obj-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:var(--text-muted)}
+.cp-obj-meta span{display:inline-flex;align-items:center;gap:4px}
+.cp-plan-st{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+.cp-plan--inprogress{color:var(--brand);background:var(--brand-soft)}
+.cp-plan--planned{color:var(--state-balanced);background:var(--state-balanced-bg)}
+.cp-plan--done{color:var(--state-available);background:var(--state-available-bg)}
+.cp-plan--proposed{color:var(--text-muted);background:var(--surface-2)}
+.cp-prog{height:6px;margin-top:8px}
+/* career path */
+.cp-path{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.cp-node{display:flex;flex-direction:column;gap:3px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-1);min-width:120px}
+.cp-node--cur{border-color:var(--brand);background:var(--brand-soft)}
+.cp-node-lvl{font-size:13px;font-weight:700}
+.cp-node-tag{font-size:10px;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.cp-arrow{opacity:.5}
+/* training */
+.cp-tr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cp-tr{padding:8px 0;border-bottom:1px solid var(--border)}
+.cp-tr:last-child{border-bottom:0}
+.cp-tr-nm{font-size:13px;font-weight:600}
+.cp-tr-meta{font-size:11px;color:var(--text-muted);margin-top:2px}
+/* picker */
+.cp-search{margin-bottom:10px}
+.cp-picklist{display:flex;flex-direction:column;gap:6px}
+.cp-pick{display:flex;align-items:center;gap:12px;width:100%;text-align:start;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-1);cursor:pointer}
+.cp-pick:hover{border-color:var(--brand);background:var(--brand-soft)}
+.cp-pick-id{display:flex;flex-direction:column;min-width:0;flex:1}
+.cp-pick-nm{font-size:14px;font-weight:600}
+.cp-pick-ttl{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-pick-lvl{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.cp-sources .cp-ul{color:var(--text-muted)}
+.cp-sources .cp-ul b{color:var(--text)}
+@media (max-width:860px){.cp-hgrid{grid-template-columns:repeat(2,1fr)}.cp-sum-cols{grid-template-columns:1fr}.cp-tr-grid{grid-template-columns:1fr}.cp-eq{grid-template-columns:1fr}}
+
 </style>
   <style>
     /* Standalone export chrome — slim header, no sidebar. Tokens only. */
@@ -4367,7 +4471,7 @@ const EMAIL_ALIAS_HASHES = {};
   // (which stays the advanced-layer gate). See docs/SPEC-workload-mvp.md.
   if (WP.config.cockpitOnly === undefined) WP.config.cockpitOnly = true;
   // Routes/nav-ids kept when cockpitOnly. Everything else is hidden + redirects home.
-  WP.COCKPIT_KEEP = ['workload', 'salesx', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
+  WP.COCKPIT_KEEP = ['workload', 'career', 'salesx', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
   WP.cockpitHidden = function (id) {
     return !!(WP.config && WP.config.cockpitOnly) && WP.COCKPIT_KEEP.indexOf(id) < 0;
   };
@@ -4694,6 +4798,95 @@ const EMAIL_ALIAS_HASHES = {};
     sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
     sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
     sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
+    /* ─────────── Career Profile (Employee Intelligence) ─────────── */
+    navCareer:      { en: 'Career', ar: 'المسار المهني' },
+    cpOpen:         { en: 'Career profile', ar: 'الملف المهني' },
+    cpTitle:        { en: 'Career profile', ar: 'الملف المهني' },
+    cpSub:          { en: 'Strengths, gaps, feedback and what’s next — evidence for a development conversation, not a score.', ar: 'نقاط القوة والفجوات والملاحظات والخطوة القادمة — أدلة لحوار تطويري، لا درجة.' },
+    cpPickSub:      { en: 'Choose someone to see their capability & development profile.', ar: 'اختر شخصاً لعرض ملف قدراته وتطويره.' },
+    cpAllProfiles:  { en: 'All profiles', ar: 'كل الملفات' },
+    cpDenied:       { en: 'You don’t have access to this profile.', ar: 'لا تملك صلاحية لعرض هذا الملف.' },
+    cpDept:         { en: 'Department', ar: 'الإدارة' },
+    cpManager:      { en: 'Line manager', ar: 'المدير المباشر' },
+    cpJoined:       { en: 'Joined', ar: 'تاريخ الالتحاق' },
+    cpLevel:        { en: 'Current level', ar: 'المستوى الحالي' },
+    cpNextLevel:    { en: 'Next level', ar: 'المستوى التالي' },
+    cpTopLevel:     { en: 'Top of framework', ar: 'أعلى المسار' },
+    cpTopLevelNote: { en: 'At the top of this framework — further steps are configurable per org.', ar: 'في أعلى هذا المسار — الخطوات الأبعد تُضبط حسب المؤسسة.' },
+    cpLastReview:   { en: 'Last review', ar: 'آخر تقييم' },
+    cpNextReview:   { en: 'Next review', ar: 'التقييم القادم' },
+    cpViewWorkload: { en: 'View workload', ar: 'عرض الحِمل' },
+    cpViewDevPlan:  { en: 'Development plan', ar: 'خطة التطوير' },
+    cpViewFeedback: { en: 'Manager feedback', ar: 'ملاحظات المدير' },
+    cpNextLevelReadiness: { en: 'Next-level readiness', ar: 'الجاهزية للمستوى التالي' },
+    cpToward:       { en: 'Toward', ar: 'نحو' },
+    cpReadyReady:   { en: 'Ready', ar: 'جاهز' },
+    cpReadyNearly:  { en: 'Nearly ready', ar: 'شبه جاهز' },
+    cpReadyDeveloping: { en: 'Developing', ar: 'في طور النمو' },
+    cpReadyNotYet:  { en: 'Not yet ready', ar: 'ليس جاهزاً بعد' },
+    cpReadyDisc:    { en: 'A development stage from the evidence below — not a promotion decision. The manager decides.', ar: 'مرحلة تطوّر مستمدّة من الأدلة أدناه — وليست قرار ترقية. القرار للمدير.' },
+    cpStrong:       { en: 'Strong', ar: 'نقاط قوة' },
+    cpDevPriorities:{ en: 'Development priorities', ar: 'أولويات التطوير' },
+    cpSensHidden:   { en: 'Development detail is visible to the person, their direct manager and their director only.', ar: 'تفاصيل التطوير تظهر للشخص ومديره المباشر ومديره الأعلى فقط.' },
+    cpStReady:      { en: 'Ready', ar: 'جاهز' },
+    cpStDeveloping: { en: 'Developing', ar: 'قيد التطوير' },
+    cpStNotYet:     { en: 'Not yet demonstrated', ar: 'لم يظهر بعد' },
+    cpSrcManager:   { en: 'Manager assessment', ar: 'تقييم المدير' },
+    cpSrcSystem:    { en: 'System evidence', ar: 'أدلة النظام' },
+    cpSrcConfig:    { en: 'Configurable', ar: 'قابل للضبط' },
+    cpSrcManagerDesc:{ en: 'From the line manager’s ratings, notes and reviews.', ar: 'من تقييمات المدير المباشر وملاحظاته ومراجعاته.' },
+    cpSrcSystemDesc: { en: 'Derived from real work: tenure, delivered events, reporting lines.', ar: 'مستمدة من العمل الفعلي: المدة، الفعاليات المنفّذة، خطوط الإدارة.' },
+    cpSrcConfigDesc: { en: 'No reliable evidence yet — a placeholder the org configures.', ar: 'لا توجد أدلة موثوقة بعد — عنصر تضبطه المؤسسة.' },
+    cpSkills:       { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
+    cpSkillsNote:   { en: 'Levels on the independence ladder (not a percentage): Novice → Expert. The grey marker is the target for the role.', ar: 'مستويات على سُلّم الاستقلالية (لا نسبة مئوية): مبتدئ ← خبير. العلامة الرمادية هي المستهدف للدور.' },
+    cpNoCapability: { en: 'No capability data on record yet.', ar: 'لا توجد بيانات قدرات مسجّلة بعد.' },
+    cpGroupTechnical:{ en: 'Technical skills', ar: 'مهارات تقنية' },
+    cpGroupBehavioral:{ en: 'Soft / behavioral skills', ar: 'مهارات سلوكية' },
+    cpGroupLeadership:{ en: 'Leadership skills', ar: 'مهارات قيادية' },
+    cpCurrent:      { en: 'Current', ar: 'الحالي' },
+    cpBandStrong:   { en: 'Strong', ar: 'قوي' },
+    cpBandOnTrack:  { en: 'On track', ar: 'على المسار' },
+    cpBandGap:      { en: 'Gap', ar: 'فجوة' },
+    cpStrengths:    { en: 'Areas of strength', ar: 'مجالات التميّز' },
+    cpStrengthsNote:{ en: 'Strongest capabilities — each with the evidence behind it.', ar: 'أقوى القدرات — كلٌّ مع الدليل الداعم له.' },
+    cpGaps:         { en: 'Development gaps', ar: 'فجوات التطوير' },
+    cpGapsNote:     { en: 'Skills below the role target, worst first — each with a specific action.', ar: 'مهارات دون مستهدف الدور، الأكبر فجوة أولاً — كلٌّ مع إجراء محدد.' },
+    cpNoGaps:       { en: 'No skills below target — all meet or exceed the role target.', ar: 'لا مهارات دون المستهدف — جميعها تبلغ مستهدف الدور أو تتجاوزه.' },
+    cpFeedback:     { en: 'Manager feedback', ar: 'ملاحظات المدير' },
+    cpFeedbackNote: { en: 'Newest first. History is kept, never overwritten — so you can see if themes improve over time.', ar: 'الأحدث أولاً. يُحفظ السجل ولا يُستبدل — لترى إن كانت المواضيع تتحسّن مع الوقت.' },
+    cpNoFeedback:   { en: 'No feedback on record yet.', ar: 'لا توجد ملاحظات مسجّلة بعد.' },
+    cpTypeReview:   { en: 'Performance review', ar: 'مراجعة أداء' },
+    cpTypeCheckin:  { en: 'Manager check-in', ar: 'متابعة المدير' },
+    cpTypeNote:     { en: 'Note', ar: 'ملاحظة' },
+    cpAgreedActions:{ en: 'Agreed actions', ar: 'إجراءات متفق عليها' },
+    cpPromotionReadiness: { en: 'Promotion readiness', ar: 'الجاهزية للترقية' },
+    cpReadinessNote:{ en: 'Required capabilities for the next level, each against the evidence on record.', ar: 'القدرات المطلوبة للمستوى التالي، كلٌّ مقابل الأدلة المسجّلة.' },
+    cpEvidenceNone: { en: 'Evidence unavailable', ar: 'لا يوجد دليل' },
+    cpBlocking:     { en: 'What’s currently blocking readiness', ar: 'ما الذي يعيق الجاهزية حالياً' },
+    cpBlockingClear:{ en: 'Nothing outstanding — required capabilities are demonstrated.', ar: 'لا عوائق — القدرات المطلوبة مُثبتة.' },
+    cpManagerDecides:{ en: 'This is evidence and readiness information. The manager makes the final decision.', ar: 'هذه معلومات أدلة وجاهزية. القرار النهائي للمدير.' },
+    cpDevPlan:      { en: 'Development plan', ar: 'خطة التطوير' },
+    cpDevPlanNote:  { en: 'Concrete objectives — skill, action, owner, due date and progress.', ar: 'أهداف ملموسة — المهارة والإجراء والمسؤول والموعد والتقدّم.' },
+    cpNoPlan:       { en: 'No development objectives yet.', ar: 'لا أهداف تطوير بعد.' },
+    cpProposedNote: { en: 'Proposed objectives are drawn from open gaps — agree and adopt them with the employee.', ar: 'الأهداف المقترحة مستمدّة من الفجوات المفتوحة — اتفق عليها واعتمدها مع الموظف.' },
+    cpOwnerEmployee:{ en: 'Employee', ar: 'الموظف' },
+    cpOwnerManager: { en: 'Manager', ar: 'المدير' },
+    cpOwnerBoth:    { en: 'Employee & manager', ar: 'الموظف والمدير' },
+    cpPlanInProgress:{ en: 'In progress', ar: 'قيد التنفيذ' },
+    cpPlanPlanned:  { en: 'Planned', ar: 'مُخطّط' },
+    cpPlanDone:     { en: 'Done', ar: 'مكتمل' },
+    cpPlanProposed: { en: 'Proposed', ar: 'مقترح' },
+    cpCareerPath:   { en: 'Career path', ar: 'المسار المهني' },
+    cpReqFor:       { en: 'Required for', ar: 'المطلوب لـ' },
+    cpConfigurable: { en: 'This ladder is a configurable framework, not a promise — the org sets the real requirements.', ar: 'هذا السُّلّم إطار قابل للضبط لا وعد — المؤسسة تحدّد المتطلبات الفعلية.' },
+    cpTraining:     { en: 'Training & certifications', ar: 'التدريب والشهادات' },
+    cpTrDone:       { en: 'Completed', ar: 'مكتمل' },
+    cpTrInProgress: { en: 'In progress', ar: 'قيد التنفيذ' },
+    cpTrRecommended:{ en: 'Recommended', ar: 'موصى به' },
+    cpTrNone:       { en: 'Nothing on record.', ar: 'لا شيء مسجّل.' },
+    cpTrainingNote: { en: 'Training is evidence, not proof of mastery — completing a course doesn’t auto-raise a competency.', ar: 'التدريب دليل لا برهان إتقان — إكمال دورة لا يرفع الكفاءة تلقائياً.' },
+    cpSources:      { en: 'Data & sources', ar: 'البيانات والمصادر' },
+    cpEthos:        { en: 'A capability & development profile — not surveillance, not a ranking, and never an opaque score. Sources are labelled; where they’d disagree, both are shown, not averaged away.', ar: 'ملف قدرات وتطوير — ليس مراقبة ولا ترتيباً ولا درجة غامضة. المصادر موسومة، وحيث تختلف تُعرض كلها لا تُدمج.' },
     // ─────────── Wave 3.002 Eval-Prep keys (Builder A) — keep fenced together for clean rebase ───────────
     epTitle:        { en: 'Evaluation prep · evidence', ar: 'تحضير التقييم · الأدلة' },
     epIntro:        { en: 'The evidence already on record — sourced, not invented. Prep only: no score, no verdict. You decide.', ar: 'الأدلة المسجّلة فعلاً — بمصادرها، لا مُختلقة. تحضير فقط: بلا درجة ولا حكم. القرار لك.' },
@@ -9227,6 +9420,7 @@ const EMAIL_ALIAS_HASHES = {};
         '<div class="sub">' + ui.esc(WP.i18n.stateLabel(snap.state)) + '</div></div></div>' +
 
       provenance +
+      '<button class="btn" id="open-career" style="margin-bottom:14px">' + ui.icon('sparkles', 15) + ' ' + t('cpOpen') + '</button> ' +
       ((rel === 'manager' || rel === 'director') ? '<button class="btn primary" id="open-eval" style="margin-bottom:14px">' + ui.icon('clipboard', 15) + ' ' + t('openEvaluation') + '</button>' : '') +
       (selfView ? '<button class="btn primary" id="self-eval" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('mySelfAssessment') + '</button> ' : '') +
       (selfView && p.managerId && !WP.deferred('upward') ? '<button class="btn" id="eval-mgr" style="margin-bottom:14px"><span class="ar ar-up"></span> ' + t('evaluateMyManager') + '</button>' : '') +
@@ -9258,6 +9452,8 @@ const EMAIL_ALIAS_HASHES = {};
     root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._devCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
     root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
     root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
+    const oc = root.querySelector('#open-career');
+    if (oc) oc.onclick = function () { WP._tlCache = null; WP._devCache = null; WP.setState({ route: 'career', selectedId: p.id }); };
     const oe = root.querySelector('#open-eval');
     // S4-1 — opened from a profile → evaluation's back button returns to the profile.
     if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation', evalOrigin: 'profile' }); };

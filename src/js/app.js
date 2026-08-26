@@ -45,6 +45,7 @@
       { id: 'workload',    routes: ['workload'],       icon: 'gauge',     label: t('navWorkload'),   group: 'overview' },
       { id: 'dashboard',   routes: ['dashboard'],      icon: 'gauge',     label: t('navDashboard'),  group: 'overview' },
       { id: 'map',         routes: ['map', 'profile'], icon: 'users',     label: t('navHome'),       group: 'work' },
+      { id: 'career',      routes: ['career'],         icon: 'sparkles',  label: t('navCareer'),     group: 'people' },
       { id: 'me',          routes: ['me'],             icon: 'target',    label: t('myProgress'),    group: 'work' },
       { id: 'evaluations', routes: ['evaluations', 'evaluation', 'upward'], icon: 'chart', label: t('evaluationsHub'), group: 'people' },
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks'),    group: 'work' },
@@ -309,6 +310,7 @@
     else if (route === 'workload') WP.ui.cockpit.render(root);
     else if (route === 'dashboard') WP.ui.dashboard.render(root);
     else if (route === 'profile') WP.ui.profile.render(root);
+    else if (route === 'career') WP.ui.career.render(root);
     else if (route === 'settings') WP.ui.settings.render(root);
     else if (route === 'activity') WP.ui.activity.render(root);
     else if (route === 'exec') WP.ui.exec.render(root);

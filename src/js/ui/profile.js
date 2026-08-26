@@ -284,6 +284,7 @@
         '<div class="sub">' + ui.esc(WP.i18n.stateLabel(snap.state)) + '</div></div></div>' +
 
       provenance +
+      '<button class="btn" id="open-career" style="margin-bottom:14px">' + ui.icon('sparkles', 15) + ' ' + t('cpOpen') + '</button> ' +
       ((rel === 'manager' || rel === 'director') ? '<button class="btn primary" id="open-eval" style="margin-bottom:14px">' + ui.icon('clipboard', 15) + ' ' + t('openEvaluation') + '</button>' : '') +
       (selfView ? '<button class="btn primary" id="self-eval" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('mySelfAssessment') + '</button> ' : '') +
       (selfView && p.managerId && !WP.deferred('upward') ? '<button class="btn" id="eval-mgr" style="margin-bottom:14px"><span class="ar ar-up"></span> ' + t('evaluateMyManager') + '</button>' : '') +
@@ -315,6 +316,8 @@
     root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._devCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
     root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
     root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
+    const oc = root.querySelector('#open-career');
+    if (oc) oc.onclick = function () { WP._tlCache = null; WP._devCache = null; WP.setState({ route: 'career', selectedId: p.id }); };
     const oe = root.querySelector('#open-eval');
     // S4-1 — opened from a profile → evaluation's back button returns to the profile.
     if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation', evalOrigin: 'profile' }); };

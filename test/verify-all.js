@@ -21,11 +21,13 @@ for (const s of srcs) { try { new window.Function(fs.readFileSync(path.join(root
 const WP = window.WP; WP.config.cockpitOnly=false;
 
 WP.state.authed = true; WP.state.lang = 'en';
-const routes = ['dashboard', 'map', 'me', 'evaluations', 'evaluation', 'upward', 'daily', 'library', 'permissions', 'settings', 'fairness', 'profile'];
+const routes = ['dashboard', 'map', 'me', 'career', 'evaluations', 'evaluation', 'upward', 'daily', 'library', 'permissions', 'settings', 'fairness', 'profile'];
 routes.forEach(function (r) {
-  try { WP.state.route = r; if (r === 'profile') WP.state.selectedId = WP.data.PEOPLE[0].id; WP.render(); }
+  try { WP.state.route = r; if (r === 'profile' || r === 'career') WP.state.selectedId = WP.data.PEOPLE[0].id; WP.render(); }
   catch (e) { errors.push('[route ' + r + '] ' + e.message); }
 });
+// Career profile with NO selection (manager landing → person picker) must also render.
+try { WP.state.route = 'career'; WP.state.selectedId = null; WP.render(); } catch (e) { errors.push('[route career-picker] ' + e.message); }
 
 // Exercise the fixed flows.
 try { WP.state.route = 'map'; WP.render(); WP.ui.peek && WP.ui.peek(WP.data.PEOPLE[0].id); } catch (e) { errors.push('[peek] ' + e.message); }

@@ -3268,6 +3268,110 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
 .wl-wi-note{margin-top:14px;display:flex;gap:6px;align-items:flex-start;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.wl-drawer,.wl-row{transition:none!important}}
 
+/* ===================== Career Profile (Employee Intelligence) ===================== */
+/* Header */
+.cp-head{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.cp-head-main{display:flex;align-items:center;gap:14px}
+.cp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.cp-hgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.cp-hx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cp-hx-k{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+.cp-hx-v{font-size:14px;font-weight:600}
+/* Executive summary */
+.cp-summary .cp-sum-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cp-ready{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:700;margin-top:4px}
+.cp-ready--ready{color:var(--state-available)}
+.cp-ready--nearly{color:var(--state-balanced)}
+.cp-ready--dev{color:var(--brand)}
+.cp-ready--notready{color:var(--text-muted)}
+.cp-sum-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+/* status pills */
+.cp-st{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.cp-st--ready{color:var(--state-available);background:var(--state-available-bg)}
+.cp-st--dev{color:var(--brand);background:var(--brand-soft)}
+.cp-st--notyet{color:var(--text-muted);background:var(--surface-2)}
+.cp-src{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--text-muted);white-space:nowrap}
+/* skills */
+.cp-skill-group{margin-top:12px}
+.cp-skill{padding:8px 0;border-bottom:1px solid var(--border)}
+.cp-skill:last-child{border-bottom:0}
+.cp-skill-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.cp-skill-nm{font-size:13px;font-weight:600}
+.cp-skill-band{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+.cp-band--strong{color:var(--state-available);background:var(--state-available-bg)}
+.cp-band--ontrack{color:var(--state-balanced);background:var(--state-balanced-bg)}
+.cp-band--gap{color:var(--state-near);background:var(--state-near-bg)}
+.cp-skill-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:5px;font-size:12px;color:var(--text-muted)}
+.cp-skill-meta b{color:var(--text)}
+.cp-eq{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+.cp-eq-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.cp-eq-row span:first-child{min-width:120px}
+/* gaps */
+.cp-gap{padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);margin-top:8px;background:var(--surface-1)}
+.cp-gap-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cp-gap-lvl{font-size:12px;color:var(--text-muted)}
+.cp-gap-lvl b{color:var(--state-near)}
+.cp-gap-act{display:flex;gap:6px;align-items:flex-start;margin-top:6px;font-size:13px;line-height:1.45}
+/* strengths / generic item */
+.cp-item{padding:8px 0;border-bottom:1px solid var(--border)}
+.cp-item:last-child{border-bottom:0}
+.cp-item-t{font-size:13px;font-weight:600}
+.cp-item-ev{font-size:12px;color:var(--text-muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+/* feedback timeline */
+.cp-timeline{display:flex;flex-direction:column;gap:10px}
+.cp-fb{border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;background:var(--surface-1);border-inline-start:3px solid var(--brand)}
+.cp-fb-top{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.cp-fb-type{font-size:12px;font-weight:700}
+.cp-fb-meta{font-size:11px;color:var(--text-muted);margin-inline-start:auto}
+.cp-fb-comment{font-size:13px;line-height:1.5;margin:6px 0}
+.cp-ul{margin:4px 0 0;padding-inline-start:18px;font-size:13px;line-height:1.5}
+/* promotion readiness caps */
+.cp-cap{padding:10px 0;border-bottom:1px solid var(--border)}
+.cp-cap:last-child{border-bottom:0}
+.cp-cap-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cp-cap-nm{font-size:13px;font-weight:600}
+.cp-cap-why{font-size:12px;color:var(--text-muted);margin-top:2px}
+.cp-cap-ev{font-size:12px;margin-top:5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cp-block{margin-top:12px;padding:10px;border-radius:var(--radius-md);background:var(--surface-1);border:1px solid var(--border)}
+.cp-block--clear{color:var(--state-available);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+/* dev plan */
+.cp-obj{border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;margin-top:8px;background:var(--surface-1)}
+.cp-obj-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cp-obj-act{font-size:13px;line-height:1.45;margin-top:5px}
+.cp-obj-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:var(--text-muted)}
+.cp-obj-meta span{display:inline-flex;align-items:center;gap:4px}
+.cp-plan-st{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+.cp-plan--inprogress{color:var(--brand);background:var(--brand-soft)}
+.cp-plan--planned{color:var(--state-balanced);background:var(--state-balanced-bg)}
+.cp-plan--done{color:var(--state-available);background:var(--state-available-bg)}
+.cp-plan--proposed{color:var(--text-muted);background:var(--surface-2)}
+.cp-prog{height:6px;margin-top:8px}
+/* career path */
+.cp-path{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.cp-node{display:flex;flex-direction:column;gap:3px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-1);min-width:120px}
+.cp-node--cur{border-color:var(--brand);background:var(--brand-soft)}
+.cp-node-lvl{font-size:13px;font-weight:700}
+.cp-node-tag{font-size:10px;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.cp-arrow{opacity:.5}
+/* training */
+.cp-tr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cp-tr{padding:8px 0;border-bottom:1px solid var(--border)}
+.cp-tr:last-child{border-bottom:0}
+.cp-tr-nm{font-size:13px;font-weight:600}
+.cp-tr-meta{font-size:11px;color:var(--text-muted);margin-top:2px}
+/* picker */
+.cp-search{margin-bottom:10px}
+.cp-picklist{display:flex;flex-direction:column;gap:6px}
+.cp-pick{display:flex;align-items:center;gap:12px;width:100%;text-align:start;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface-1);cursor:pointer}
+.cp-pick:hover{border-color:var(--brand);background:var(--brand-soft)}
+.cp-pick-id{display:flex;flex-direction:column;min-width:0;flex:1}
+.cp-pick-nm{font-size:14px;font-weight:600}
+.cp-pick-ttl{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp-pick-lvl{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.cp-sources .cp-ul{color:var(--text-muted)}
+.cp-sources .cp-ul b{color:var(--text)}
+@media (max-width:860px){.cp-hgrid{grid-template-columns:repeat(2,1fr)}.cp-sum-cols{grid-template-columns:1fr}.cp-tr-grid{grid-template-columns:1fr}.cp-eq{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -3998,6 +4102,200 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 </script>
   <script>
 /* ============================================================
+ * Tempo — CAREER FRAMEWORK + DEVELOPMENT DATA (Career Profile layer)
+ * ------------------------------------------------------------
+ * Feeds the Employee Intelligence / Career Profile view (WP.ui.career) via the
+ * WP.career engine. It NEVER duplicates growth-data.js (skills / EQ / manager
+ * lens / quarterly) — the engine composes from BOTH. This file adds only what
+ * isn't already on record:
+ *   LEVELS      — the career ladder (spec §10) with the "next level" edge. This is
+ *                 a CONFIGURABLE org framework, not scraped from real HR data —
+ *                 the view labels it as such. Do not treat as ground truth.
+ *   NEXT_CAPS   — per CURRENT level, the capabilities required to reach the NEXT
+ *                 level (spec §9/§10). Each cap resolves to real evidence at render
+ *                 time (a skill in growth-data, or a signal from tenure/scope/reports);
+ *                 an unmapped cap is honestly surfaced as "configurable · no evidence".
+ *   REVIEW      — last/next review dates (spec §1). Global default + per-person.
+ *   FEEDBACK    — DATED manager-feedback history (spec §7/§8). Additive to the
+ *                 growth-data quarterly[] the engine also folds in. Never overwritten.
+ *   DEV_PLAN    — development objectives with owner/due/status (spec §11). Explicit
+ *                 for the story people; the engine PROPOSES the rest from live gaps
+ *                 (marked "Proposed", never invented as done).
+ *   TRAINING    — completed / in-progress / recommended (spec §13). Training is
+ *                 EVIDENCE, never auto-converted to competency.
+ *
+ * All strings carry ar. Names of real reviewers are proper nouns from mock-data.
+ * Constitution/INTELLIGENCE-ETHICS still bind: no per-person score/rank anywhere.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  // Career ladder (bottom → top). `next` is the immediate promotion edge; `future`
+  // is one further (for the 3-step career-path view). Configurable org framework.
+  var LEVELS = {
+    spec:       { order: 0, en: 'Specialist',        ar: 'أخصائي',        next: 'sr_spec' },
+    sr_spec:    { order: 1, en: 'Senior Specialist', ar: 'أخصائي أول',    next: 'manager' },
+    manager:    { order: 2, en: 'Manager',           ar: 'مدير',          next: 'sr_manager' },
+    sr_manager: { order: 3, en: 'Senior Manager',    ar: 'مدير أول',      next: 'director' },
+    director:   { order: 4, en: 'Director',          ar: 'مدير تنفيذي',   next: null }
+  };
+
+  // Required capabilities to move UP from each current level. `skill` = case-insensitive
+  // alternation matched against a growth-data skill name; `signal` = a derived evidence
+  // signal (ownership | delivery | mentoring | tenure | strategy). `why` explains why it
+  // matters for the next level (spec §4). A cap with neither a matched skill nor a signal
+  // renders as "configurable — evidence unavailable" (spec §14), never invented.
+  var NEXT_CAPS = {
+    spec: [
+      { key: 'exec',        en: 'Event execution',        ar: 'تنفيذ الفعاليات',      skill: 'operation|execution|setup|coordination|ground|ticketing|av', why: { en: 'Core of the senior-specialist role.', ar: 'جوهر دور الأخصائي الأول.' } },
+      { key: 'ownership',   en: 'Independent ownership',   ar: 'الملكية المستقلة',     signal: 'ownership', why: { en: 'Owning work end-to-end without hand-holding.', ar: 'تملّك العمل من البداية للنهاية دون إشراف مستمر.' } },
+      { key: 'reporting',   en: 'Reporting',               ar: 'إعداد التقارير',       skill: 'reporting|documentation', why: { en: 'Senior specialists own their event reporting.', ar: 'الأخصائي الأول مسؤول عن تقارير فعالياته.' } },
+      { key: 'comm',        en: 'Communication',           ar: 'التواصل',              skill: 'communication|english|comms|stakeholder', why: { en: 'Clear updates to leads and vendors.', ar: 'تحديثات واضحة للقادة والموردين.' } },
+      { key: 'reliability', en: 'Reliability',             ar: 'الالتزام',             signal: 'tenure', why: { en: 'A sustained track record at level.', ar: 'سجل مستقر ومستمر في الدور.' } }
+    ],
+    sr_spec: [
+      { key: 'independent', en: 'Independent ownership',   ar: 'الملكية المستقلة',     signal: 'ownership', why: { en: 'Managers carry scope without being carried.', ar: 'المدير يحمل النطاق دون أن يُحمَل.' } },
+      { key: 'stakeholder', en: 'Stakeholder management',  ar: 'إدارة أصحاب المصلحة',  skill: 'stakeholder|client|relations|negotiation', why: { en: 'Managing clients and partners directly.', ar: 'إدارة العملاء والشركاء مباشرة.' } },
+      { key: 'mentoring',   en: 'Mentoring / coaching',    ar: 'الإرشاد والتدريب',     signal: 'mentoring', why: { en: 'Growing juniors is a manager duty.', ar: 'تنمية المبتدئين من مهام المدير.' } },
+      { key: 'workstream',  en: 'Leading a workstream',    ar: 'قيادة مسار عمل',       signal: 'delivery', why: { en: 'Leading a Tier-1/Tier-2 workstream solo.', ar: 'قيادة مسار عمل من الفئة ١/٢ منفرداً.' } },
+      { key: 'planning',    en: 'Planning',                ar: 'التخطيط',              skill: 'planning|plan|logistics|budget', why: { en: 'Owning the plan, not just the tasks.', ar: 'تملّك الخطة لا المهام فقط.' } }
+    ],
+    manager: [
+      { key: 'leadership',  en: 'Leadership',              ar: 'القيادة',              skill: 'leadership|team leadership', why: { en: 'Leading a team, not just a project.', ar: 'قيادة فريق لا مشروع فقط.' } },
+      { key: 'delegation',  en: 'Delegation',              ar: 'التفويض',              skill: 'delegation', why: { en: 'Scaling through others, not doing it all.', ar: 'التوسّع عبر الآخرين لا بالعمل كله ذاتياً.' } },
+      { key: 'strategy',    en: 'Strategic planning',      ar: 'التخطيط الاستراتيجي',  signal: 'strategy', why: { en: 'Planning a quarter ahead, not an event ahead.', ar: 'التخطيط لربع قادم لا لفعالية قادمة.' } },
+      { key: 'crossteam',   en: 'Cross-team coordination', ar: 'التنسيق بين الفرق',    skill: 'cross-team|coordination|coord|crisis', why: { en: 'Aligning multiple teams to one plan.', ar: 'مواءمة عدة فرق على خطة واحدة.' } },
+      { key: 'develop',     en: 'Developing people',       ar: 'تطوير الأفراد',        signal: 'mentoring', why: { en: 'Building the bench beneath you.', ar: 'بناء الصف الثاني تحتك.' } }
+    ],
+    sr_manager: [
+      { key: 'deptstrategy', en: 'Department strategy',    ar: 'استراتيجية الإدارة',   signal: 'strategy', why: { en: 'Setting direction for the whole function.', ar: 'رسم اتجاه الوظيفة بأكملها.' } },
+      { key: 'orglead',      en: 'Organisational leadership', ar: 'القيادة المؤسسية',  signal: 'mentoring', why: { en: 'Leading leaders, not individuals.', ar: 'قيادة القادة لا الأفراد.' } },
+      { key: 'budget',       en: 'Budget ownership',       ar: 'ملكية الميزانية',      skill: 'budget|budgeting', why: { en: 'Owning a department budget line.', ar: 'تملّك بند ميزانية الإدارة.' } },
+      { key: 'succession',   en: 'Building successors',    ar: 'إعداد الخلفاء',        signal: 'mentoring', why: { en: 'A director makes themselves replaceable.', ar: 'المدير التنفيذي يجعل نفسه قابلاً للاستبدال.' } }
+    ],
+    director: [] // top of this framework — further caps are configurable per org
+  };
+
+  // Review cadence (spec §1). Global default; per-person override where a real date exists.
+  var REVIEW_DEFAULT = { last: '2026-06-30', next: '2026-09-30' };
+  var REVIEW = {
+    p_osama: { last: '2026-06-28', next: '2026-09-28' },
+    p_akram: { last: '2026-06-30', next: '2026-09-30' },
+    p_talal: { last: '2026-06-25', next: '2026-09-25' },
+    p_idris: { last: '2026-07-15', next: '2026-10-15' } // new hire — first review later
+  };
+
+  // Dated manager-feedback history (spec §7/§8). ADDITIVE to growth-data quarterly[].
+  // `by` is a person id (reviewer). type: 'review' | 'checkin' | 'note'. Never overwritten.
+  function f(date, type, by, strengths, improvements, comment, actions) {
+    return { date: date, type: type, by: by, strengths: strengths, improvements: improvements, comment: comment, actions: actions };
+  }
+  var FEEDBACK = {
+    p_osama: [
+      f('2026-06-28', 'review', 'p_akram',
+        ['Calm under pressure on the biggest events', 'Highest-trust operator on the team'],
+        ['Protecting his own capacity', 'Delegating to juniors instead of absorbing everything'],
+        'Owen carried MDLBEAST and the summit in parallel without a quality drop. The risk is over-reliance — he is a single point of failure and needs to hand work down.',
+        ['Pull one event off his plate this month', 'Pair a junior with him to mentor']),
+      f('2026-04-10', 'checkin', 'p_akram',
+        ['Reporting is visibly improving (3→4)'],
+        ['Still says yes to everything'],
+        'Good progress on reporting. We talked about boundaries — he agreed to flag when a third event lands on him.',
+        ['Flag capacity before accepting a third overlapping event'])
+    ],
+    p_talal: [
+      f('2026-06-25', 'review', 'p_abdulrahman',
+        ['Learns fast', 'Volunteers for anything', 'Never a no-show'],
+        ['Untested on larger scope — needs a real stage to prove ownership'],
+        'Tyler is hungry and underused. He has asked twice for more responsibility. Fairness check: he has never been handed a Tier-1 — give him a shot before judging readiness.',
+        ['Assign him the next Tier-2/Tier-3 solo end-to-end', 'Review ownership after one solo delivery'])
+    ],
+    p_akram: [
+      f('2026-06-30', 'review', 'p_motaa',
+        ['Runs a tight operation', 'Builds systems that outlast the event'],
+        ['Delegating more to the team instead of building it himself'],
+        'Adam ran festival staffing and the expo cleanly while building the workload view. Successor-track for the senior role — the one gap is people-leadership breadth.',
+        ['Take a stretch project that forces delegation', 'Co-lead a Tier-1 with a junior shadowing'])
+    ],
+    p_khaled: [
+      f('2026-06-30', 'review', 'p_motaa',
+        ['Clients trust him', 'Flawless corporate gala'],
+        ['Scaling a team — still operates as an individual with one report'],
+        'Kevin is a dependable lead. To move up he needs to grow a small team rather than do it all himself.',
+        ['Take a second report and delegate a full workstream to them'])
+    ],
+    p_gamal: [
+      f('2026-06-30', 'review', 'p_akram',
+        ['Strong on the ground', 'Owns his lane end-to-end'],
+        ['Ready for a Tier-1 lead role — hasn\'t led one yet'],
+        'Julian is a dependable festival operator. Next step is co-leading a bigger event to build a Tier-1 track record.',
+        ['Co-lead a Tier-1 event next quarter'])
+    ]
+  };
+
+  // Explicit development plan objectives (spec §11) for the story people. The engine
+  // PROPOSES objectives for everyone else from their live gaps (status 'Proposed').
+  // status: 'inprogress' | 'planned' | 'done' | 'proposed'. owner: 'employee' | 'manager' | 'both'.
+  function d(skillKey, title, titleAr, action, actionAr, owner, due, status, progress) {
+    return { skillKey: skillKey, title: title, titleAr: titleAr, action: action, actionAr: actionAr, owner: owner, due: due, status: status, progress: progress };
+  }
+  var DEV_PLAN = {
+    p_osama: [
+      d('boundaries', 'Boundaries / capacity', 'الحدود والطاقة', 'Flag capacity before a third overlapping event; hand one event to a junior.', 'أبلغ عن طاقتك قبل الفعالية الثالثة المتداخلة، وسلّم فعالية لمبتدئ.', 'both', '2026-10-31', 'inprogress', 40),
+      d('mentoring', 'Mentoring', 'الإرشاد', 'Mentor one junior on a live event this quarter.', 'أرشد مبتدئاً واحداً في فعالية مباشرة هذا الربع.', 'employee', '2026-11-30', 'planned', 0)
+    ],
+    p_akram: [
+      d('delegation', 'Delegation', 'التفويض', 'Co-lead a Tier-1 with a junior owning a full workstream.', 'شارك في قيادة فعالية من الفئة ١ مع تولّي مبتدئ لمسار عمل كامل.', 'both', '2026-10-31', 'inprogress', 55)
+    ],
+    p_talal: [
+      d('ownership', 'Independent ownership', 'الملكية المستقلة', 'Own the next Tier-2 event solo, end-to-end.', 'تولَّ الفعالية القادمة من الفئة ٢ منفرداً من البداية للنهاية.', 'both', '2026-11-15', 'planned', 0),
+      d('reporting', 'Reporting', 'إعداد التقارير', 'Produce the post-event report for that event unaided.', 'أنتج تقرير ما بعد الفعالية لتلك الفعالية دون مساعدة.', 'employee', '2026-11-30', 'planned', 0)
+    ],
+    p_khaled: [
+      d('scaling', 'Scaling a team', 'قيادة فريق', 'Take a second report and delegate a workstream to them.', 'استلم تقريراً ثانياً وفوّض إليه مسار عمل.', 'both', '2026-12-15', 'planned', 0)
+    ],
+    p_gamal: [
+      d('workstream', 'Lead a Tier-1', 'قيادة فعالية كبرى', 'Co-lead a Tier-1 event next quarter.', 'شارك في قيادة فعالية من الفئة ١ الربع القادم.', 'both', '2026-12-31', 'planned', 0)
+    ]
+  };
+
+  // Training / certifications (spec §13). status: 'done' | 'inprogress'. Recommended
+  // items are DERIVED by the engine from open gaps (so they can't go stale). Training
+  // is evidence, never proof of mastery — the view says so.
+  function tr(name, nameAr, date, provider, status, skill) {
+    return { name: name, nameAr: nameAr, date: date, provider: provider, status: status, skill: skill };
+  }
+  var TRAINING = {
+    p_osama: [
+      tr('Incident command basics', 'أساسيات إدارة الحوادث', '2026-03-12', 'webook Academy', 'done', 'On-site operations'),
+      tr('Coaching for team leads', 'التدريب لقادة الفرق', '2026-08-01', 'webook Academy', 'inprogress', 'Mentoring')
+    ],
+    p_akram: [
+      tr('Budgeting for operations', 'الميزانية للعمليات', '2026-02-20', 'webook Academy', 'done', 'Budgeting'),
+      tr('People leadership I', 'قيادة الأفراد ١', '2026-07-10', 'webook Academy', 'inprogress', 'Team leadership')
+    ],
+    p_talal: [
+      tr('Event operations fundamentals', 'أساسيات عمليات الفعاليات', '2026-01-15', 'webook Academy', 'done', 'AV setup')
+    ],
+    p_idris: [
+      tr('Onboarding — tools & process', 'التهيئة — الأدوات والعملية', '2026-05-20', 'webook Academy', 'done', 'Vendor coordination')
+    ]
+  };
+
+  WP.data.CAREER = {
+    LEVELS: LEVELS,
+    NEXT_CAPS: NEXT_CAPS,
+    REVIEW_DEFAULT: REVIEW_DEFAULT,
+    REVIEW: REVIEW,
+    FEEDBACK: FEEDBACK,
+    DEV_PLAN: DEV_PLAN,
+    TRAINING: TRAINING
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * Webook Workload — Performance Evaluation (downward feedback)
  * ------------------------------------------------------------
  * Mirrors the real Webook evaluation: 16 weighted competency
@@ -4625,7 +4923,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
   // (which stays the advanced-layer gate). See docs/SPEC-workload-mvp.md.
   if (WP.config.cockpitOnly === undefined) WP.config.cockpitOnly = true;
   // Routes/nav-ids kept when cockpitOnly. Everything else is hidden + redirects home.
-  WP.COCKPIT_KEEP = ['workload', 'salesx', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
+  WP.COCKPIT_KEEP = ['workload', 'career', 'salesx', 'orgtree', 'permissions', 'settings', 'admins', 'activity'];
   WP.cockpitHidden = function (id) {
     return !!(WP.config && WP.config.cockpitOnly) && WP.COCKPIT_KEEP.indexOf(id) < 0;
   };
@@ -4952,6 +5250,95 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     sigDept:        { en: 'Events Operations Department', ar: 'إدارة عمليات الفعاليات' },
     sigManaged:     { en: 'Managed & Executed by', ar: 'إدارة وتنفيذ' },
     sigDirected:    { en: 'Directed by', ar: 'بإشراف' },
+    /* ─────────── Career Profile (Employee Intelligence) ─────────── */
+    navCareer:      { en: 'Career', ar: 'المسار المهني' },
+    cpOpen:         { en: 'Career profile', ar: 'الملف المهني' },
+    cpTitle:        { en: 'Career profile', ar: 'الملف المهني' },
+    cpSub:          { en: 'Strengths, gaps, feedback and what’s next — evidence for a development conversation, not a score.', ar: 'نقاط القوة والفجوات والملاحظات والخطوة القادمة — أدلة لحوار تطويري، لا درجة.' },
+    cpPickSub:      { en: 'Choose someone to see their capability & development profile.', ar: 'اختر شخصاً لعرض ملف قدراته وتطويره.' },
+    cpAllProfiles:  { en: 'All profiles', ar: 'كل الملفات' },
+    cpDenied:       { en: 'You don’t have access to this profile.', ar: 'لا تملك صلاحية لعرض هذا الملف.' },
+    cpDept:         { en: 'Department', ar: 'الإدارة' },
+    cpManager:      { en: 'Line manager', ar: 'المدير المباشر' },
+    cpJoined:       { en: 'Joined', ar: 'تاريخ الالتحاق' },
+    cpLevel:        { en: 'Current level', ar: 'المستوى الحالي' },
+    cpNextLevel:    { en: 'Next level', ar: 'المستوى التالي' },
+    cpTopLevel:     { en: 'Top of framework', ar: 'أعلى المسار' },
+    cpTopLevelNote: { en: 'At the top of this framework — further steps are configurable per org.', ar: 'في أعلى هذا المسار — الخطوات الأبعد تُضبط حسب المؤسسة.' },
+    cpLastReview:   { en: 'Last review', ar: 'آخر تقييم' },
+    cpNextReview:   { en: 'Next review', ar: 'التقييم القادم' },
+    cpViewWorkload: { en: 'View workload', ar: 'عرض الحِمل' },
+    cpViewDevPlan:  { en: 'Development plan', ar: 'خطة التطوير' },
+    cpViewFeedback: { en: 'Manager feedback', ar: 'ملاحظات المدير' },
+    cpNextLevelReadiness: { en: 'Next-level readiness', ar: 'الجاهزية للمستوى التالي' },
+    cpToward:       { en: 'Toward', ar: 'نحو' },
+    cpReadyReady:   { en: 'Ready', ar: 'جاهز' },
+    cpReadyNearly:  { en: 'Nearly ready', ar: 'شبه جاهز' },
+    cpReadyDeveloping: { en: 'Developing', ar: 'في طور النمو' },
+    cpReadyNotYet:  { en: 'Not yet ready', ar: 'ليس جاهزاً بعد' },
+    cpReadyDisc:    { en: 'A development stage from the evidence below — not a promotion decision. The manager decides.', ar: 'مرحلة تطوّر مستمدّة من الأدلة أدناه — وليست قرار ترقية. القرار للمدير.' },
+    cpStrong:       { en: 'Strong', ar: 'نقاط قوة' },
+    cpDevPriorities:{ en: 'Development priorities', ar: 'أولويات التطوير' },
+    cpSensHidden:   { en: 'Development detail is visible to the person, their direct manager and their director only.', ar: 'تفاصيل التطوير تظهر للشخص ومديره المباشر ومديره الأعلى فقط.' },
+    cpStReady:      { en: 'Ready', ar: 'جاهز' },
+    cpStDeveloping: { en: 'Developing', ar: 'قيد التطوير' },
+    cpStNotYet:     { en: 'Not yet demonstrated', ar: 'لم يظهر بعد' },
+    cpSrcManager:   { en: 'Manager assessment', ar: 'تقييم المدير' },
+    cpSrcSystem:    { en: 'System evidence', ar: 'أدلة النظام' },
+    cpSrcConfig:    { en: 'Configurable', ar: 'قابل للضبط' },
+    cpSrcManagerDesc:{ en: 'From the line manager’s ratings, notes and reviews.', ar: 'من تقييمات المدير المباشر وملاحظاته ومراجعاته.' },
+    cpSrcSystemDesc: { en: 'Derived from real work: tenure, delivered events, reporting lines.', ar: 'مستمدة من العمل الفعلي: المدة، الفعاليات المنفّذة، خطوط الإدارة.' },
+    cpSrcConfigDesc: { en: 'No reliable evidence yet — a placeholder the org configures.', ar: 'لا توجد أدلة موثوقة بعد — عنصر تضبطه المؤسسة.' },
+    cpSkills:       { en: 'Skills & competencies', ar: 'المهارات والكفاءات' },
+    cpSkillsNote:   { en: 'Levels on the independence ladder (not a percentage): Novice → Expert. The grey marker is the target for the role.', ar: 'مستويات على سُلّم الاستقلالية (لا نسبة مئوية): مبتدئ ← خبير. العلامة الرمادية هي المستهدف للدور.' },
+    cpNoCapability: { en: 'No capability data on record yet.', ar: 'لا توجد بيانات قدرات مسجّلة بعد.' },
+    cpGroupTechnical:{ en: 'Technical skills', ar: 'مهارات تقنية' },
+    cpGroupBehavioral:{ en: 'Soft / behavioral skills', ar: 'مهارات سلوكية' },
+    cpGroupLeadership:{ en: 'Leadership skills', ar: 'مهارات قيادية' },
+    cpCurrent:      { en: 'Current', ar: 'الحالي' },
+    cpBandStrong:   { en: 'Strong', ar: 'قوي' },
+    cpBandOnTrack:  { en: 'On track', ar: 'على المسار' },
+    cpBandGap:      { en: 'Gap', ar: 'فجوة' },
+    cpStrengths:    { en: 'Areas of strength', ar: 'مجالات التميّز' },
+    cpStrengthsNote:{ en: 'Strongest capabilities — each with the evidence behind it.', ar: 'أقوى القدرات — كلٌّ مع الدليل الداعم له.' },
+    cpGaps:         { en: 'Development gaps', ar: 'فجوات التطوير' },
+    cpGapsNote:     { en: 'Skills below the role target, worst first — each with a specific action.', ar: 'مهارات دون مستهدف الدور، الأكبر فجوة أولاً — كلٌّ مع إجراء محدد.' },
+    cpNoGaps:       { en: 'No skills below target — all meet or exceed the role target.', ar: 'لا مهارات دون المستهدف — جميعها تبلغ مستهدف الدور أو تتجاوزه.' },
+    cpFeedback:     { en: 'Manager feedback', ar: 'ملاحظات المدير' },
+    cpFeedbackNote: { en: 'Newest first. History is kept, never overwritten — so you can see if themes improve over time.', ar: 'الأحدث أولاً. يُحفظ السجل ولا يُستبدل — لترى إن كانت المواضيع تتحسّن مع الوقت.' },
+    cpNoFeedback:   { en: 'No feedback on record yet.', ar: 'لا توجد ملاحظات مسجّلة بعد.' },
+    cpTypeReview:   { en: 'Performance review', ar: 'مراجعة أداء' },
+    cpTypeCheckin:  { en: 'Manager check-in', ar: 'متابعة المدير' },
+    cpTypeNote:     { en: 'Note', ar: 'ملاحظة' },
+    cpAgreedActions:{ en: 'Agreed actions', ar: 'إجراءات متفق عليها' },
+    cpPromotionReadiness: { en: 'Promotion readiness', ar: 'الجاهزية للترقية' },
+    cpReadinessNote:{ en: 'Required capabilities for the next level, each against the evidence on record.', ar: 'القدرات المطلوبة للمستوى التالي، كلٌّ مقابل الأدلة المسجّلة.' },
+    cpEvidenceNone: { en: 'Evidence unavailable', ar: 'لا يوجد دليل' },
+    cpBlocking:     { en: 'What’s currently blocking readiness', ar: 'ما الذي يعيق الجاهزية حالياً' },
+    cpBlockingClear:{ en: 'Nothing outstanding — required capabilities are demonstrated.', ar: 'لا عوائق — القدرات المطلوبة مُثبتة.' },
+    cpManagerDecides:{ en: 'This is evidence and readiness information. The manager makes the final decision.', ar: 'هذه معلومات أدلة وجاهزية. القرار النهائي للمدير.' },
+    cpDevPlan:      { en: 'Development plan', ar: 'خطة التطوير' },
+    cpDevPlanNote:  { en: 'Concrete objectives — skill, action, owner, due date and progress.', ar: 'أهداف ملموسة — المهارة والإجراء والمسؤول والموعد والتقدّم.' },
+    cpNoPlan:       { en: 'No development objectives yet.', ar: 'لا أهداف تطوير بعد.' },
+    cpProposedNote: { en: 'Proposed objectives are drawn from open gaps — agree and adopt them with the employee.', ar: 'الأهداف المقترحة مستمدّة من الفجوات المفتوحة — اتفق عليها واعتمدها مع الموظف.' },
+    cpOwnerEmployee:{ en: 'Employee', ar: 'الموظف' },
+    cpOwnerManager: { en: 'Manager', ar: 'المدير' },
+    cpOwnerBoth:    { en: 'Employee & manager', ar: 'الموظف والمدير' },
+    cpPlanInProgress:{ en: 'In progress', ar: 'قيد التنفيذ' },
+    cpPlanPlanned:  { en: 'Planned', ar: 'مُخطّط' },
+    cpPlanDone:     { en: 'Done', ar: 'مكتمل' },
+    cpPlanProposed: { en: 'Proposed', ar: 'مقترح' },
+    cpCareerPath:   { en: 'Career path', ar: 'المسار المهني' },
+    cpReqFor:       { en: 'Required for', ar: 'المطلوب لـ' },
+    cpConfigurable: { en: 'This ladder is a configurable framework, not a promise — the org sets the real requirements.', ar: 'هذا السُّلّم إطار قابل للضبط لا وعد — المؤسسة تحدّد المتطلبات الفعلية.' },
+    cpTraining:     { en: 'Training & certifications', ar: 'التدريب والشهادات' },
+    cpTrDone:       { en: 'Completed', ar: 'مكتمل' },
+    cpTrInProgress: { en: 'In progress', ar: 'قيد التنفيذ' },
+    cpTrRecommended:{ en: 'Recommended', ar: 'موصى به' },
+    cpTrNone:       { en: 'Nothing on record.', ar: 'لا شيء مسجّل.' },
+    cpTrainingNote: { en: 'Training is evidence, not proof of mastery — completing a course doesn’t auto-raise a competency.', ar: 'التدريب دليل لا برهان إتقان — إكمال دورة لا يرفع الكفاءة تلقائياً.' },
+    cpSources:      { en: 'Data & sources', ar: 'البيانات والمصادر' },
+    cpEthos:        { en: 'A capability & development profile — not surveillance, not a ranking, and never an opaque score. Sources are labelled; where they’d disagree, both are shown, not averaged away.', ar: 'ملف قدرات وتطوير — ليس مراقبة ولا ترتيباً ولا درجة غامضة. المصادر موسومة، وحيث تختلف تُعرض كلها لا تُدمج.' },
     // ─────────── Wave 3.002 Eval-Prep keys (Builder A) — keep fenced together for clean rebase ───────────
     epTitle:        { en: 'Evaluation prep · evidence', ar: 'تحضير التقييم · الأدلة' },
     epIntro:        { en: 'The evidence already on record — sourced, not invented. Prep only: no score, no verdict. You decide.', ar: 'الأدلة المسجّلة فعلاً — بمصادرها، لا مُختلقة. تحضير فقط: بلا درجة ولا حكم. القرار لك.' },
@@ -9637,6 +10024,366 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 </script>
   <script>
 /* ============================================================
+ * Tempo — Career Profile engine (Employee Intelligence · ENGINE ONLY, DOM-free)
+ * SPEC: the Career Profile brief (header → skills → gaps → strengths → feedback →
+ *       readiness → dev plan → career path → evidence → training).
+ * GATE: ai-os/00-governance/INTELLIGENCE-ETHICS.md + Constitution (TAOS).
+ * ------------------------------------------------------------
+ * COMPOSES existing engines — it invents nothing:
+ *   growth-data.js  → skills (0–5 ladder + target + history), EQ, manager/director
+ *                     lens, quarterly reviews.
+ *   mock-data.js    → tenure, role dates, tier-1 track record, reporting lines.
+ *   career-data.js  → the CONFIGURABLE ladder, next-level capabilities, dated
+ *                     feedback history, dev-plan objectives, training.
+ *   WP.growth       → tenure/ramp/overload/promotion SIGNAL helpers.
+ *   WP.access       → direct-reports (for leadership/mentoring evidence).
+ *
+ * Hard guardrails (mirrors readiness.js + asserted in test/verify-career.js):
+ *  - NO opaque employee score. Readiness is a CATEGORICAL development STAGE
+ *    (ready | nearly | developing | notready) with its REASONS always attached —
+ *    never a 0–100 number, never a rank, never a promote/hold decision.
+ *  - Evidence-first. Every capability/skill assessment carries its source + a
+ *    citable line, or an honest "Evidence unavailable". Nothing is fabricated.
+ *  - Human decides. Output INFORMS; the view repeats that the manager decides.
+ *  - No surveillance signals — capability & development only (never presence/hours).
+ *
+ * Pure-ish: reads WP.data + WP.growth + WP.state.refDate; returns plain objects.
+ * NO DOM, NO network. Renders in ui/career.js.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+
+  function C() { return (WP.data && WP.data.CAREER) || {}; }
+  function levelMeta(key) { return (C().LEVELS || {})[key] || null; }
+  function levelName(key, ar) { var m = levelMeta(key); return m ? (ar ? m.ar : m.en) : (key || '—'); }
+
+  function reviewDates(id) {
+    var c = C();
+    return (c.REVIEW && c.REVIEW[id]) || c.REVIEW_DEFAULT || { last: null, next: null };
+  }
+
+  // Ladder label for a 0–5 skill level (spec §3: use levels, not a bare %).
+  function ladderLabel(n, ar) {
+    var L = (WP.data && WP.data.SKILL_LADDER) || [];
+    var row = L[Math.max(0, Math.min(L.length - 1, n | 0))];
+    return row ? (ar ? row.ar : row.en) : String(n);
+  }
+
+  // Technical (hard) / Leadership (soft leadership-ish) / Behavioral (other soft).
+  // Uses the EXISTING hard|soft framework (spec §6 — don't invent a new one).
+  var LEADERSHIP_RX = /leader|deleg|mentor|coach|scal|manage/i;
+  function skillGroupKey(sk) {
+    if (sk.type === 'hard') return 'technical';
+    return LEADERSHIP_RX.test(sk.name) ? 'leadership' : 'behavioral';
+  }
+
+  // A skill's development band vs its target (spec §3/§4). Never a %.
+  function skillBand(sk) {
+    var gap = Math.max(0, (sk.required || 0) - (sk.level || 0));
+    if (gap <= 0) return 'strong';                 // meets or exceeds target
+    if (gap === 1) return 'ontrack';               // one rung below
+    return 'gap';                                  // material gap
+  }
+
+  function skillView(sk, ar) {
+    var trend = WP.growth.skillTrend(sk);
+    return {
+      name: sk.name, type: sk.type, group: skillGroupKey(sk),
+      level: sk.level, target: sk.required, gap: Math.max(0, (sk.required || 0) - (sk.level || 0)),
+      levelLabel: ladderLabel(sk.level, ar), targetLabel: ladderLabel(sk.required, ar),
+      band: skillBand(sk), trend: trend, history: (sk.history || []).slice()
+    };
+  }
+
+  function skillGroups(growth, ar) {
+    var out = { technical: [], behavioral: [], leadership: [] };
+    (growth && growth.skills || []).forEach(function (sk) {
+      out[skillGroupKey(sk)].push(skillView(sk, ar));
+    });
+    return out;
+  }
+
+  function findSkill(growth, altPattern) {
+    if (!growth || !growth.skills) return null;
+    var rx = new RegExp(altPattern, 'i');
+    for (var i = 0; i < growth.skills.length; i++) {
+      if (rx.test(growth.skills[i].name)) return growth.skills[i];
+    }
+    return null;
+  }
+
+  function directReportCount(id) {
+    return (WP.access.directReports(id) || []).filter(function (p) { return !p.tbc; }).length;
+  }
+
+  // Resolve ONE next-level capability to a status + evidence. source is one of
+  // 'manager' | 'system' | 'configurable' (spec §17 — always name the source).
+  function resolveCap(cap, person, growth, ar) {
+    var out = {
+      key: cap.key, label: ar ? cap.ar : cap.en, why: cap.why ? (ar ? cap.why.ar : cap.why.en) : '',
+      status: 'notyet', current: null, target: null, source: 'configurable', evidence: []
+    };
+
+    // 1) Skill-backed capability.
+    if (cap.skill) {
+      var sk = findSkill(growth, cap.skill);
+      if (sk) {
+        var band = skillBand(sk);
+        out.current = ladderLabel(sk.level, ar);
+        out.target = ladderLabel(sk.required, ar);
+        out.source = 'manager';
+        out.status = band === 'strong' ? 'ready' : (band === 'ontrack' || WP.growth.skillTrend(sk) > 0 ? 'developing' : 'notyet');
+        out.evidence.push({ text: sk.name + ': ' + ladderLabel(sk.level, ar) + ' / ' + ladderLabel(sk.required, ar) + (WP.growth.skillTrend(sk) > 0 ? ' ↑' : ''), source: 'manager' });
+        return out;
+      }
+    }
+
+    // 2) Signal-backed capability.
+    if (cap.signal === 'ownership' || cap.signal === 'delivery') {
+      var pr = WP.growth.promotionReadiness(person);
+      var t1 = pr.tier1Delivered || 0;
+      out.source = 'system';
+      out.status = t1 >= 3 ? 'ready' : (t1 >= 1 ? 'developing' : 'notyet');
+      out.current = t1 + (t1 === 1 ? ' Tier-1' : ' Tier-1s');
+      out.target = '3+ Tier-1s';
+      out.evidence.push({ text: t1 + ' Tier-1 event(s) delivered' + (pr.sustainable ? ' · sustainable load' : ' · under sustained pressure'), source: 'system' });
+      if (pr.fairnessGap) out.evidence.push({ text: 'Not given a Tier-1 in ' + pr.monthsSinceTier1 + ' months — org opportunity gap, not a deficiency', source: 'system' });
+      return out;
+    }
+    if (cap.signal === 'mentoring') {
+      var dr = directReportCount(person.id);
+      out.target = '2+ reports / active mentoring';
+      if (dr >= 2) { out.status = 'ready'; out.source = 'system'; out.current = dr + ' direct reports'; out.evidence.push({ text: 'Leads ' + dr + ' people', source: 'system' }); return out; }
+      if (dr === 1) { out.status = 'developing'; out.source = 'system'; out.current = '1 direct report'; out.evidence.push({ text: 'Leads 1 person — growing the span', source: 'system' }); return out; }
+      // no reports — look for a manager/director note about mentoring/delegation
+      var note = growth && (mentionOf(growth.managerNote) || mentionOf(growth.directorNote));
+      if (note) { out.status = 'developing'; out.source = 'manager'; out.current = 'no reports yet'; out.evidence.push({ text: note, source: 'manager' }); return out; }
+      out.status = 'notyet'; out.source = 'system'; out.current = 'no reports yet';
+      out.evidence.push({ text: 'Not yet demonstrated — no reports or mentoring on record', source: 'system' });
+      return out;
+    }
+    if (cap.signal === 'tenure') {
+      var m = WP.growth.monthsInRole(person) || 0;
+      out.source = 'system'; out.target = '12+ months at level'; out.current = m + ' months in role';
+      out.status = m >= 12 ? 'ready' : (m >= 6 ? 'developing' : 'notyet');
+      out.evidence.push({ text: m + ' months in current role', source: 'system' });
+      return out;
+    }
+    if (cap.signal === 'strategy') {
+      var pot = growth && growth.directorNote && growth.directorNote.potential;
+      if (pot === 'High' && levelMeta(person.level) && levelMeta(person.level).order >= 2) {
+        out.status = 'developing'; out.source = 'manager';
+        out.evidence.push({ text: 'Director view: ' + (growth.directorNote.impact || 'high potential'), source: 'manager' });
+      } else {
+        out.status = 'notyet'; out.source = 'configurable';
+        out.evidence.push({ text: 'Evidence unavailable — assessed by the line manager', source: 'configurable' });
+      }
+      out.target = 'Demonstrated at next level';
+      return out;
+    }
+
+    // 3) Unmapped — honest, never invented.
+    out.evidence.push({ text: 'Evidence unavailable — capability is configurable', source: 'configurable' });
+    return out;
+  }
+
+  function mentionOf(note) {
+    if (!note) return null;
+    var hay = [note.suggestion, note.impact, note.potential].concat(note.growth || [], note.strengths || []).filter(Boolean).join(' ');
+    return LEADERSHIP_RX.test(hay) ? (note.suggestion || (note.growth && note.growth[0]) || null) : null;
+  }
+
+  // Next-level capabilities, each resolved to evidence.
+  function nextCaps(person, growth, ar) {
+    var list = (C().NEXT_CAPS || {})[person.level] || [];
+    return list.map(function (cap) { return resolveCap(cap, person, growth, ar); });
+  }
+
+  // CATEGORICAL readiness stage from the resolved caps (spec §2/§9). NOT a score.
+  // Always returned WITH its reasons so the view can never show a bare label.
+  function readiness(caps, person) {
+    var ready = caps.filter(function (c) { return c.status === 'ready'; });
+    var dev = caps.filter(function (c) { return c.status === 'developing'; });
+    var notyet = caps.filter(function (c) { return c.status === 'notyet'; });
+    var total = caps.length;
+    var key;
+    if (!total) key = 'developing';
+    else {
+      var ratio = ready.length / total;
+      if (ratio >= 1) key = 'ready';
+      else if (ratio >= 0.6 && notyet.length === 0) key = 'nearly';
+      else if (ratio >= 0.4 || (dev.length >= Math.ceil(total / 2) && notyet.length <= 1)) key = 'developing';
+      else key = 'notready';
+    }
+    // New-hire ramp guard — a brand-new person is never "ready"/"nearly".
+    var m = WP.growth.monthsInRole(person) || 0;
+    if (WP.growth.isRamping(person) || m < 6) {
+      if (key === 'ready' || key === 'nearly') key = 'developing';
+      if (m < 4) key = 'notready';
+    }
+    return {
+      key: key,
+      configurable: !total,
+      strong: ready.map(function (c) { return c.label; }),
+      developing: dev.map(function (c) { return c.label; }),
+      blocking: notyet.map(function (c) { return c.label; }),
+      counts: { ready: ready.length, developing: dev.length, notyet: notyet.length, total: total }
+    };
+  }
+
+  // Strengths with evidence (spec §5) — from ready caps + skills that meet/beat target
+  // + the manager's noted strengths. Never praise without a source.
+  function strengths(growth, caps, ar) {
+    var out = [];
+    (growth && growth.skills || []).forEach(function (sk) {
+      if (skillBand(sk) === 'strong') out.push({ area: sk.name, evidence: 'Rated ' + ladderLabel(sk.level, ar) + ' vs target ' + ladderLabel(sk.required, ar), source: 'manager' });
+    });
+    if (growth && growth.managerNote && growth.managerNote.strengths) {
+      growth.managerNote.strengths.forEach(function (s) { out.push({ area: s, evidence: 'Noted by line manager', source: 'manager' }); });
+    }
+    return out;
+  }
+
+  // Skill gaps (spec §4) — skills below target, worst first, each with a recommended action.
+  function gaps(growth, ar) {
+    var out = [];
+    (growth && growth.skills || []).forEach(function (sk) {
+      var g = Math.max(0, (sk.required || 0) - (sk.level || 0));
+      if (g > 0) out.push({
+        name: sk.name, group: skillGroupKey(sk), gap: g,
+        current: ladderLabel(sk.level, ar), target: ladderLabel(sk.required, ar),
+        action: recommendedAction(sk, ar)
+      });
+    });
+    return out.sort(function (a, b) { return b.gap - a.gap; });
+  }
+
+  // Actionable "how" (spec §12) — specific, never "improve X".
+  function recommendedAction(sk, ar) {
+    var n = sk.name.toLowerCase();
+    var map = [
+      [/report|docum/, { en: 'Own the post-event report for your next event, unaided.', ar: 'تولَّ تقرير ما بعد الفعالية لفعاليتك القادمة دون مساعدة.' }],
+      [/deleg|scal|team/, { en: 'Delegate one full workstream to a colleague and coach them through it.', ar: 'فوّض مسار عمل كامل لزميل ودرّبه خلاله.' }],
+      [/leader|manage/, { en: 'Lead one operational workstream end-to-end this quarter.', ar: 'قُد مسار عمل تشغيلي كاملاً هذا الربع.' }],
+      [/mentor|coach/, { en: 'Mentor a junior on a live event and review it with your manager.', ar: 'أرشد مبتدئاً في فعالية مباشرة وراجعها مع مديرك.' }],
+      [/boundary|owner/, { en: 'Own the next Tier-2 event solo; flag capacity before a third overlap.', ar: 'تولَّ الفعالية القادمة من الفئة ٢ منفرداً، وأبلغ عن طاقتك قبل التداخل الثالث.' }],
+      [/stakeholder|client|relations/, { en: 'Run a stakeholder meeting for your next event without your lead.', ar: 'أدر اجتماع أصحاب المصلحة لفعاليتك القادمة دون قائدك.' }],
+      [/english|communication/, { en: 'Present your next event debrief in English to the team.', ar: 'قدّم ملخص فعاليتك القادمة بالإنجليزية للفريق.' }]
+    ];
+    for (var i = 0; i < map.length; i++) if (map[i][0].test(n)) return ar ? map[i][1].ar : map[i][1].en;
+    return ar ? ('اعمل على «' + sk.name + '» بمهمة محددة يتفق عليها مع مديرك.') : ('Take a specific stretch task on “' + sk.name + '”, agreed with your manager.');
+  }
+
+  // Feedback timeline (spec §7/§8) — dated career-data history + growth-data quarterly,
+  // newest first. Historical entries are additive, never overwritten.
+  var Q_DATE = { Q1: '-03-31', Q2: '-06-30', Q3: '-09-30', Q4: '-12-31' };
+  function quarterlyToEntry(q, byId) {
+    var mm = String(q.q || '').match(/Q([1-4])\s*(\d{4})/);
+    var date = mm ? (mm[2] + Q_DATE['Q' + mm[1]]) : null;
+    return {
+      date: date, type: 'review', by: byId,
+      strengths: q.improved && q.improved.length ? q.improved.slice() : [],
+      improvements: q.focus ? q.focus.slice() : [],
+      comment: q.summary || '', actions: q.focus ? q.focus.slice() : [], rating: q.rating || null
+    };
+  }
+  function feedbackTimeline(person, growth) {
+    var out = ((C().FEEDBACK || {})[person.id] || []).map(function (e) { var o = {}; for (var k in e) o[k] = e[k]; return o; });
+    if (growth && growth.quarterly) growth.quarterly.forEach(function (q) { out.push(quarterlyToEntry(q, person.managerId)); });
+    out.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+    return out;
+  }
+
+  // Development plan (spec §11) — explicit objectives, else PROPOSED from live gaps.
+  function devPlan(person, growth, ar) {
+    var explicit = (C().DEV_PLAN || {})[person.id];
+    if (explicit && explicit.length) {
+      return explicit.map(function (o) {
+        return { title: ar ? o.titleAr : o.title, action: ar ? o.actionAr : o.action, owner: o.owner, due: o.due, status: o.status, progress: o.progress || 0, proposed: o.status === 'proposed' };
+      });
+    }
+    // propose from the two worst gaps — honest ("Proposed"), never marked done
+    return gaps(growth, ar).slice(0, 2).map(function (g) {
+      return { title: g.name, action: g.action, owner: 'both', due: null, status: 'proposed', progress: 0, proposed: true };
+    });
+  }
+
+  // Training (spec §13) — recorded items + recommended (derived from open gaps, so it
+  // can't go stale). Training is evidence, never proof of mastery.
+  function training(person, growth, ar) {
+    var recs = (C().TRAINING || {})[person.id] || [];
+    var done = [], inprogress = [];
+    recs.forEach(function (r) {
+      var row = { name: ar ? (r.nameAr || r.name) : r.name, date: r.date, provider: r.provider, status: r.status, skill: r.skill };
+      (r.status === 'done' ? done : inprogress).push(row);
+    });
+    var covered = {};
+    recs.forEach(function (r) { if (r.skill) covered[r.skill.toLowerCase()] = true; });
+    var recommended = gaps(growth, ar).slice(0, 3).filter(function (g) { return !covered[g.name.toLowerCase()]; })
+      .map(function (g) { return { name: g.name, skill: g.name, action: g.action }; });
+    return { done: done, inprogress: inprogress, recommended: recommended };
+  }
+
+  // Career path (spec §10) — current → next → future, with next-level requirements.
+  function careerPath(person, ar) {
+    var cur = person.level;
+    var curM = levelMeta(cur);
+    var next = curM && curM.next;
+    var nextM = next && levelMeta(next);
+    var future = nextM && nextM.next;
+    return {
+      current: { key: cur, name: levelName(cur, ar) },
+      next: next ? { key: next, name: levelName(next, ar) } : null,
+      future: future ? { key: future, name: levelName(future, ar) } : null,
+      configurable: true // this ladder is a configurable org framework (spec §10)
+    };
+  }
+
+  // The whole bundle the view renders. Synchronous + pure-ish. `ar` picks the language
+  // for pre-localized labels; raw keys (status/source) stay language-neutral for the view.
+  function build(personId, opts) {
+    opts = opts || {};
+    var ar = !!opts.ar;
+    var person = WP.access.byId(personId);
+    if (!person) return null;
+    var growth = (WP.data.GROWTH || {})[personId] || null;
+    var caps = nextCaps(person, growth, ar);
+    var rd = reviewDates(personId);
+    return {
+      person: person,
+      hasGrowth: !!growth,
+      level: { key: person.level, name: levelName(person.level, ar) },
+      review: rd,
+      caps: caps,
+      readiness: readiness(caps, person),
+      skillGroups: skillGroups(growth, ar),
+      strengths: strengths(growth, caps, ar),
+      gaps: gaps(growth, ar),
+      eq: growth ? growth.eq : null,
+      managerNote: growth ? growth.managerNote : null,
+      feedback: feedbackTimeline(person, growth),
+      devPlan: devPlan(person, growth, ar),
+      training: training(person, growth, ar),
+      careerPath: careerPath(person, ar),
+      tenureMonths: WP.growth.tenureMonths(person),
+      roleMonths: WP.growth.monthsInRole(person),
+      ramping: WP.growth.isRamping(person)
+    };
+  }
+
+  WP.career = {
+    build: build,
+    levelName: levelName, levelMeta: levelMeta, ladderLabel: ladderLabel,
+    skillGroups: skillGroups, skillBand: skillBand, skillGroupKey: skillGroupKey,
+    resolveCap: resolveCap, nextCaps: nextCaps, readiness: readiness,
+    strengths: strengths, gaps: gaps, feedbackTimeline: feedbackTimeline,
+    devPlan: devPlan, training: training, careerPath: careerPath, reviewDates: reviewDates
+  };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
  * Tempo — Events Sales engine (pure aggregations)
  * ------------------------------------------------------------
  * CORE LAYER — DOM-free by rule (test/verify-architecture.js). Reads the sample
@@ -12548,6 +13295,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
         '<div class="sub">' + ui.esc(WP.i18n.stateLabel(snap.state)) + '</div></div></div>' +
 
       provenance +
+      '<button class="btn" id="open-career" style="margin-bottom:14px">' + ui.icon('sparkles', 15) + ' ' + t('cpOpen') + '</button> ' +
       ((rel === 'manager' || rel === 'director') ? '<button class="btn primary" id="open-eval" style="margin-bottom:14px">' + ui.icon('clipboard', 15) + ' ' + t('openEvaluation') + '</button>' : '') +
       (selfView ? '<button class="btn primary" id="self-eval" style="margin-bottom:14px">' + WP.ui.icon('pencil',15) + ' ' + t('mySelfAssessment') + '</button> ' : '') +
       (selfView && p.managerId && !WP.deferred('upward') ? '<button class="btn" id="eval-mgr" style="margin-bottom:14px"><span class="ar ar-up"></span> ' + t('evaluateMyManager') + '</button>' : '') +
@@ -12579,6 +13327,8 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     root.querySelector('#back').onclick = function () { WP._tlCache = null; WP._devCache = null; WP._tlQuarter = 'all'; WP._tlCategory = 'all'; WP.setState({ route: 'map', selectedId: null }); };
     root.querySelectorAll('[data-tlq]').forEach(function (b) { b.onclick = function () { WP._tlQuarter = b.dataset.tlq; WP.setState({}); }; });
     root.querySelectorAll('[data-tlc]').forEach(function (b) { b.onclick = function () { WP._tlCategory = b.dataset.tlc; WP.setState({}); }; });
+    const oc = root.querySelector('#open-career');
+    if (oc) oc.onclick = function () { WP._tlCache = null; WP._devCache = null; WP.setState({ route: 'career', selectedId: p.id }); };
     const oe = root.querySelector('#open-eval');
     // S4-1 — opened from a profile → evaluation's back button returns to the profile.
     if (oe) oe.onclick = function () { WP.setState({ route: 'evaluation', evalOrigin: 'profile' }); };
@@ -12592,6 +13342,410 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
 
   WP.ui.peek = peek;
   WP.ui.profile = { render: render };
+})(window.WP = window.WP || {});
+
+</script>
+  <script>
+/* ============================================================
+ * Tempo — Career Profile view (Employee Intelligence · VIEW)
+ * SPEC: the Career Profile brief. Engine: WP.career. Ethics gate: readiness is a
+ *       CATEGORICAL stage with reasons, never a score/rank; every assessment names
+ *       its source or says "Evidence unavailable"; the manager decides.
+ * ------------------------------------------------------------
+ * Surfaces WP.career.build() as a 60-second development picture:
+ *   header · executive summary (readiness + reasons) · skills · strengths · gaps ·
+ *   manager feedback + timeline · promotion readiness · development plan ·
+ *   career path · training · data & sources.
+ *
+ * Access (spec §18, fail-closed): must canSee() the person to open; sensitive
+ * sections (feedback, readiness reasons, dev plan) need canSeeSensitive() (self /
+ * direct manager / director). Self sees their development view but not the raw
+ * director note. No selection (or a manager landing here) → a person picker of
+ * exactly the people the viewer may see. EN+AR, LTR+RTL, both themes.
+ * ========================================================== */
+(function (WP) {
+  'use strict';
+  var ui = WP.ui;
+
+  function statusPill(key) {
+    var t = WP.i18n.t;
+    var map = {
+      ready:      { icon: 'check',  cls: 'ready',  lbl: t('cpStReady') },
+      developing: { icon: 'sprout', cls: 'dev',    lbl: t('cpStDeveloping') },
+      notyet:     { icon: 'clock',  cls: 'notyet', lbl: t('cpStNotYet') }
+    };
+    var m = map[key] || map.notyet;
+    return '<span class="cp-st cp-st--' + m.cls + '">' + WP.ui.icon(m.icon, 12) + ' ' + m.lbl + '</span>';
+  }
+  function srcLabel(s) {
+    var t = WP.i18n.t;
+    return { manager: t('cpSrcManager'), system: t('cpSrcSystem'), configurable: t('cpSrcConfig') }[s] || s;
+  }
+  function srcChip(s) { return '<span class="cp-src">' + WP.ui.icon('eye', 11) + ' ' + srcLabel(s) + '</span>'; }
+
+  /* ---- person picker (manager / director landing, or no selection) ---- */
+  function picker(root, viewer) {
+    var t = WP.i18n.t;
+    var people = WP.access.visiblePeople(viewer).filter(function (p) { return !p.tbc && p.id !== '__admin__'; });
+    var q = (WP._cpQuery || '').trim().toLowerCase();
+    var shown = q ? people.filter(function (p) { return (WP.i18n.name(p) + ' ' + WP.i18n.title(p)).toLowerCase().indexOf(q) >= 0; }) : people;
+    var rows = shown.map(function (p) {
+      return '<button type="button" class="cp-pick" data-open="' + p.id + '">' +
+        ui.avatar(p, 'var(--brand)') +
+        '<span class="cp-pick-id"><span class="cp-pick-nm">' + ui.esc(WP.i18n.name(p)) + '</span>' +
+          '<span class="cp-pick-ttl">' + ui.esc(WP.i18n.title(p)) + '</span></span>' +
+        '<span class="cp-pick-lvl">' + ui.esc(WP.career.levelName(p.level, WP.state.lang === 'ar')) + '</span>' +
+        '<span class="ar ' + (WP.i18n.isRTL() ? 'ar-left' : 'ar-right') + '"></span>' +
+      '</button>';
+    }).join('') || '<div class="sub" style="padding:16px 0">' + t('noResults') + '</div>';
+
+    root.innerHTML =
+      '<div class="wbk-pageheader"><div class="wbk-ph-main">' +
+        '<h2 class="wbk-ph-title">' + t('cpTitle') + '</h2>' +
+        '<div class="wbk-ph-sub">' + t('cpPickSub') + '</div>' +
+      '</div></div>' +
+      '<div class="section">' +
+        '<div class="cp-search"><input id="cp-q" class="input" type="search" placeholder="' + t('searchPerson') + '" value="' + ui.esc(WP._cpQuery || '') + '" aria-label="' + t('searchPerson') + '"></div>' +
+        '<div class="cp-picklist">' + rows + '</div>' +
+      '</div>';
+
+    var qi = root.querySelector('#cp-q');
+    if (qi) qi.oninput = function () { WP._cpQuery = qi.value; var l = root.querySelector('.cp-picklist'); if (!l) return;
+      var v = qi.value.trim().toLowerCase();
+      var sh = v ? people.filter(function (p) { return (WP.i18n.name(p) + ' ' + WP.i18n.title(p)).toLowerCase().indexOf(v) >= 0; }) : people;
+      l.innerHTML = sh.map(function (p) {
+        return '<button type="button" class="cp-pick" data-open="' + p.id + '">' + ui.avatar(p, 'var(--brand)') +
+          '<span class="cp-pick-id"><span class="cp-pick-nm">' + ui.esc(WP.i18n.name(p)) + '</span>' +
+          '<span class="cp-pick-ttl">' + ui.esc(WP.i18n.title(p)) + '</span></span>' +
+          '<span class="cp-pick-lvl">' + ui.esc(WP.career.levelName(p.level, WP.state.lang === 'ar')) + '</span>' +
+          '<span class="ar ' + (WP.i18n.isRTL() ? 'ar-left' : 'ar-right') + '"></span></button>';
+      }).join('') || '<div class="sub" style="padding:16px 0">' + WP.i18n.t('noResults') + '</div>';
+      wirePicks(l);
+    };
+    wirePicks(root);
+  }
+  function wirePicks(scope) {
+    scope.querySelectorAll('[data-open]').forEach(function (b) {
+      b.onclick = function () { WP.setState({ route: 'career', selectedId: b.dataset.open }); };
+    });
+  }
+
+  /* ---- section builders (all return HTML strings) ---- */
+
+  function headerHTML(b, sens, selfView) {
+    var t = WP.i18n.t, p = b.person, ar = WP.state.lang === 'ar';
+    var mgr = p.managerId ? WP.access.byId(p.managerId) : null;
+    var kv = function (k, v) { return v ? '<div class="cp-hx"><span class="cp-hx-k">' + k + '</span><span class="cp-hx-v">' + v + '</span></div>' : ''; };
+    var teamName = ar ? (p.teamAr || p.team) : (p.team);
+    var meta =
+      kv(t('cpDept'), t('sigDept')) +
+      kv(t('tblTeam'), teamName ? ui.esc(teamName) : '') +
+      kv(t('cpManager'), mgr ? ui.esc(WP.i18n.name(mgr)) : '—') +
+      kv(t('cpJoined'), p.joined ? WP.i18n.shortDate(p.joined) + ' ' + p.joined.slice(0, 4) : '—') +
+      kv(t('cpLevel'), ui.esc(b.level.name)) +
+      kv(t('cpNextLevel'), b.careerPath.next ? ui.esc(b.careerPath.next.name) : t('cpTopLevel')) +
+      kv(t('cpLastReview'), b.review.last ? WP.i18n.shortDate(b.review.last) + ' ' + b.review.last.slice(0, 4) : '—') +
+      kv(t('cpNextReview'), b.review.next ? WP.i18n.shortDate(b.review.next) + ' ' + b.review.next.slice(0, 4) : '—');
+
+    var actions =
+      '<div class="cp-actions">' +
+        '<button class="btn" id="cp-workload">' + WP.ui.icon('gauge', 14) + ' ' + t('cpViewWorkload') + '</button>' +
+        (sens ? '<button class="btn" data-cp-scroll="cp-devplan">' + WP.ui.icon('target', 14) + ' ' + t('cpViewDevPlan') + '</button>' : '') +
+        (sens ? '<button class="btn" data-cp-scroll="cp-feedback">' + WP.ui.icon('clipboard', 14) + ' ' + t('cpViewFeedback') + '</button>' : '') +
+      '</div>';
+
+    return '<div class="cp-head">' +
+        '<div class="cp-head-main">' + ui.avatar(p, 'var(--brand)') +
+          '<div><div class="nm" style="font-size:22px">' + ui.esc(WP.i18n.name(p)) + '</div>' +
+          '<div class="ttl">' + ui.esc(WP.i18n.title(p)) + '</div></div>' +
+        '</div>' +
+        actions +
+        '<div class="cp-hgrid">' + meta + '</div>' +
+      '</div>';
+  }
+
+  // Executive summary (spec §2): the readiness STAGE + its reasons. Never a % score.
+  function summaryHTML(b, sens) {
+    var t = WP.i18n.t;
+    var rd = b.readiness;
+    var meta = {
+      ready:      { cls: 'ready',    icon: 'check',  lbl: t('cpReadyReady') },
+      nearly:     { cls: 'nearly',   icon: 'sprout', lbl: t('cpReadyNearly') },
+      developing: { cls: 'dev',      icon: 'sprout', lbl: t('cpReadyDeveloping') },
+      notready:   { cls: 'notready', icon: 'clock',  lbl: t('cpReadyNotYet') }
+    }[rd.key] || {};
+    var tag = function (arr, icon) { return (arr && arr.length) ? arr.map(function (x) { return '<span class="tag">' + WP.ui.icon(icon, 12) + ' ' + ui.esc(x) + '</span>'; }).join('') : '<span class="sub">—</span>'; };
+    var reasons = sens
+      ? '<div class="cp-sum-cols">' +
+          '<div><div class="mini-label">' + t('cpStrong') + '</div>' + tag(rd.strong, 'check') + '</div>' +
+          '<div><div class="mini-label">' + t('cpDevPriorities') + '</div>' + tag(rd.developing.concat(rd.blocking), 'sprout') + '</div>' +
+        '</div>'
+      : '<div class="disclaimer" style="margin-top:0">' + WP.ui.icon('lock', 13) + ' ' + t('cpSensHidden') + '</div>';
+
+    return '<div class="section cp-summary">' +
+      '<div class="cp-sum-top">' +
+        '<div><div class="mini-label">' + t('cpNextLevelReadiness') + '</div>' +
+          '<div class="cp-ready cp-ready--' + (meta.cls || 'dev') + '">' + WP.ui.icon(meta.icon || 'sprout', 18) + ' ' + (meta.lbl || '') + '</div>' +
+          '<div class="sub" style="margin-top:4px">' + t('cpToward') + ' ' + ui.esc(b.careerPath.next ? b.careerPath.next.name : b.level.name) + '</div>' +
+        '</div>' +
+      '</div>' + reasons +
+      '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('cpReadyDisc') + '</div>' +
+    '</div>';
+  }
+
+  function skillTrackHTML(sv) {
+    var maxN = 5;
+    var arrow = sv.trend > 0 ? '<span class="trend-up"><span class="ar ar-up"></span> +' + sv.trend + '</span>'
+              : sv.trend < 0 ? '<span class="trend-down"><span class="ar ar-dn"></span> ' + Math.abs(sv.trend) + '</span>' : '';
+    var bandLbl = { strong: WP.i18n.t('cpBandStrong'), ontrack: WP.i18n.t('cpBandOnTrack'), gap: WP.i18n.t('cpBandGap') }[sv.band];
+    return '<div class="cp-skill">' +
+      '<div class="cp-skill-h"><span class="cp-skill-nm">' + ui.esc(sv.name) + '</span>' +
+        '<span class="cp-skill-band cp-band--' + sv.band + '">' + bandLbl + '</span></div>' +
+      '<div class="track"><i style="width:' + (sv.level / maxN * 100) + '%"></i>' +
+        '<span class="req" style="inset-inline-start:' + (sv.target / maxN * 100) + '%" title="' + WP.i18n.t('required') + '"></span></div>' +
+      '<div class="cp-skill-meta"><span>' + WP.i18n.t('cpCurrent') + ': <b>' + ui.esc(sv.levelLabel) + '</b></span>' +
+        '<span>' + WP.i18n.t('required') + ': <b>' + ui.esc(sv.targetLabel) + '</b></span>' + arrow + '</div>' +
+    '</div>';
+  }
+
+  function skillsHTML(b) {
+    var t = WP.i18n.t, g = b.skillGroups;
+    if (!b.hasGrowth) return '<div class="section"><h3>' + WP.ui.icon('grid', 16) + ' ' + t('cpSkills') + '</h3><div class="sub">' + t('cpNoCapability') + '</div></div>';
+    var block = function (key, label, icon) {
+      var arr = g[key] || [];
+      if (!arr.length) return '';
+      return '<div class="cp-skill-group"><div class="mini-label">' + WP.ui.icon(icon, 13) + ' ' + label + '</div>' + arr.map(skillTrackHTML).join('') + '</div>';
+    };
+    // EQ = soft skills / competency framework (spec §6), development-only.
+    var eq = '';
+    if (b.eq && WP.data.EQ_DOMAINS) {
+      var ar = WP.state.lang === 'ar';
+      eq = '<div class="cp-skill-group"><div class="mini-label">' + WP.ui.icon('sprout', 13) + ' ' + t('eq') + '</div>' +
+        '<div class="cp-eq">' + WP.data.EQ_DOMAINS.map(function (d) {
+          var v = b.eq[d.key];
+          return '<div class="cp-eq-row"><span>' + (ar ? d.ar : d.en) + '</span><span class="eq-bar"><i style="width:' + (v / 5 * 100) + '%"></i></span><b>' + v + '/5</b></div>';
+        }).join('') + '</div>' +
+        '<div class="disclaimer" style="margin-top:6px">' + t('eqDisclaimer') + '</div></div>';
+    }
+    return '<div class="section"><h3>' + WP.ui.icon('grid', 16) + ' ' + t('cpSkills') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + t('cpSkillsNote') + '</div>' +
+      block('technical', t('cpGroupTechnical'), 'settings') +
+      block('behavioral', t('cpGroupBehavioral'), 'sprout') +
+      block('leadership', t('cpGroupLeadership'), 'users') +
+      eq +
+    '</div>';
+  }
+
+  function strengthsHTML(b) {
+    var t = WP.i18n.t;
+    if (!b.strengths.length) return '';
+    return '<div class="section"><h3>' + WP.ui.icon('star', 16) + ' ' + t('cpStrengths') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + t('cpStrengthsNote') + '</div>' +
+      b.strengths.map(function (s) {
+        return '<div class="cp-item"><div class="cp-item-t">' + ui.esc(s.area) + '</div>' +
+          '<div class="cp-item-ev">' + ui.esc(s.evidence) + ' ' + srcChip(s.source) + '</div></div>';
+      }).join('') +
+    '</div>';
+  }
+
+  function gapsHTML(b) {
+    var t = WP.i18n.t;
+    if (!b.gaps.length) return b.hasGrowth ? '<div class="section"><h3>' + WP.ui.icon('target', 16) + ' ' + t('cpGaps') + '</h3><div class="sub">' + t('cpNoGaps') + '</div></div>' : '';
+    return '<div class="section"><h3>' + WP.ui.icon('target', 16) + ' ' + t('cpGaps') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + t('cpGapsNote') + '</div>' +
+      b.gaps.map(function (g) {
+        return '<div class="cp-gap">' +
+          '<div class="cp-gap-h"><span class="cp-skill-nm">' + ui.esc(g.name) + '</span>' +
+            '<span class="cp-gap-lvl">' + ui.esc(g.current) + ' → <b>' + ui.esc(g.target) + '</b></span></div>' +
+          '<div class="cp-gap-act">' + WP.ui.icon('arrowUp', 12) + ' <span>' + ui.esc(g.action) + '</span></div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+
+  function feedbackHTML(b) {
+    var t = WP.i18n.t;
+    if (!b.feedback.length) return '<div class="section" id="cp-feedback"><h3>' + WP.ui.icon('clipboard', 16) + ' ' + t('cpFeedback') + '</h3><div class="sub">' + t('cpNoFeedback') + '</div></div>';
+    var typeLabel = { review: t('cpTypeReview'), checkin: t('cpTypeCheckin'), note: t('cpTypeNote') };
+    var tags = function (arr, icon) { return (arr && arr.length) ? arr.map(function (x) { return '<span class="tag">' + WP.ui.icon(icon, 11) + ' ' + ui.esc(x) + '</span>'; }).join('') : ''; };
+    var items = b.feedback.map(function (e) {
+      var by = e.by ? WP.access.byId(e.by) : null;
+      var dt = e.date ? (WP.i18n.shortDate(e.date) + ' ' + String(e.date).slice(0, 4)) : '';
+      return '<div class="cp-fb">' +
+        '<div class="cp-fb-top">' +
+          '<span class="cp-fb-type">' + (typeLabel[e.type] || e.type) + '</span>' +
+          (e.rating ? '<span class="rating ' + e.rating + '">' + ui.esc(e.rating) + '</span>' : '') +
+          '<span class="cp-fb-meta">' + (by ? ui.esc(WP.i18n.name(by)) + ' · ' : '') + dt + '</span>' +
+        '</div>' +
+        (e.comment ? '<div class="cp-fb-comment">' + ui.esc(e.comment) + '</div>' : '') +
+        (e.strengths && e.strengths.length ? '<div class="mini-label">' + t('strengths') + '</div><div>' + tags(e.strengths, 'check') + '</div>' : '') +
+        (e.improvements && e.improvements.length ? '<div class="mini-label" style="margin-top:4px">' + t('growthAreas') + '</div><div>' + tags(e.improvements, 'arrowUp') + '</div>' : '') +
+        (e.actions && e.actions.length ? '<div class="mini-label" style="margin-top:4px">' + t('cpAgreedActions') + '</div><ul class="cp-ul">' + e.actions.map(function (a) { return '<li>' + ui.esc(a) + '</li>'; }).join('') + '</ul>' : '') +
+      '</div>';
+    }).join('');
+    return '<div class="section" id="cp-feedback"><h3>' + WP.ui.icon('clipboard', 16) + ' ' + t('cpFeedback') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + t('cpFeedbackNote') + '</div>' +
+      '<div class="cp-timeline">' + items + '</div>' +
+    '</div>';
+  }
+
+  // Promotion readiness (spec §9) — the capability checklist WITH evidence + "what's blocking".
+  function readinessHTML(b) {
+    var t = WP.i18n.t;
+    var caps = b.caps;
+    var next = b.careerPath.next;
+    var rows = caps.length ? caps.map(function (c) {
+      var ev = (c.evidence || []).map(function (x) { return ui.esc(x.text); }).join(' · ');
+      return '<div class="cp-cap">' +
+        '<div class="cp-cap-h"><span class="cp-cap-nm">' + ui.esc(c.label) + '</span>' + statusPill(c.status) + '</div>' +
+        (c.why ? '<div class="cp-cap-why">' + ui.esc(c.why) + '</div>' : '') +
+        '<div class="cp-cap-ev">' + (ev || t('cpEvidenceNone')) + ' ' + srcChip(c.source) + '</div>' +
+      '</div>';
+    }).join('') : '<div class="sub">' + t('cpTopLevelNote') + '</div>';
+
+    var blocking = b.readiness.blocking.concat(b.readiness.developing);
+    var blockHTML = blocking.length
+      ? '<div class="cp-block"><div class="mini-label">' + WP.ui.icon('alert', 13) + ' ' + t('cpBlocking') + '</div>' +
+          '<div>' + blocking.map(function (x) { return '<span class="tag">' + ui.esc(x) + '</span>'; }).join('') + '</div></div>'
+      : '<div class="cp-block cp-block--clear">' + WP.ui.icon('check', 13) + ' ' + t('cpBlockingClear') + '</div>';
+
+    return '<div class="section"><h3>' + WP.ui.icon('key', 16) + ' ' + t('cpPromotionReadiness') +
+        (next ? ' <span class="sub">→ ' + ui.esc(next.name) + '</span>' : '') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + t('cpReadinessNote') + '</div>' +
+      rows + blockHTML +
+      '<div class="disclaimer">' + WP.ui.icon('lock', 13) + ' ' + t('cpManagerDecides') + '</div>' +
+    '</div>';
+  }
+
+  function devPlanHTML(b) {
+    var t = WP.i18n.t;
+    var ownerLbl = { employee: t('cpOwnerEmployee'), manager: t('cpOwnerManager'), both: t('cpOwnerBoth') };
+    var stLbl = { inprogress: t('cpPlanInProgress'), planned: t('cpPlanPlanned'), done: t('cpPlanDone'), proposed: t('cpPlanProposed') };
+    var rows = b.devPlan.length ? b.devPlan.map(function (o) {
+      return '<div class="cp-obj">' +
+        '<div class="cp-obj-h"><span class="cp-skill-nm">' + ui.esc(o.title) + '</span>' +
+          '<span class="cp-plan-st cp-plan--' + o.status + '">' + (stLbl[o.status] || o.status) + '</span></div>' +
+        '<div class="cp-obj-act">' + ui.esc(o.action) + '</div>' +
+        '<div class="cp-obj-meta">' +
+          '<span>' + WP.ui.icon('user', 11) + ' ' + (ownerLbl[o.owner] || o.owner) + '</span>' +
+          (o.due ? '<span>' + WP.ui.icon('clock', 11) + ' ' + WP.i18n.shortDate(o.due) + ' ' + String(o.due).slice(0, 4) + '</span>' : '') +
+        '</div>' +
+        (o.status !== 'proposed' ? '<div class="track cp-prog"><i style="width:' + (o.progress || 0) + '%"></i></div>' : '') +
+      '</div>';
+    }).join('') : '<div class="sub">' + t('cpNoPlan') + '</div>';
+    var proposed = b.devPlan.some(function (o) { return o.proposed; });
+    return '<div class="section" id="cp-devplan"><h3>' + WP.ui.icon('target', 16) + ' ' + t('cpDevPlan') + '</h3>' +
+      '<div class="disclaimer" style="margin-top:0">' + t('cpDevPlanNote') + '</div>' +
+      rows +
+      (proposed ? '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('cpProposedNote') + '</div>' : '') +
+    '</div>';
+  }
+
+  function careerPathHTML(b) {
+    var t = WP.i18n.t, cp = b.careerPath;
+    var node = function (n, cur) { return n ? '<div class="cp-node' + (cur ? ' cp-node--cur' : '') + '"><span class="cp-node-lvl">' + ui.esc(n.name) + '</span>' + (cur ? '<span class="cp-node-tag">' + t('cpCurrent') + '</span>' : '') + '</div>' : ''; };
+    var chain = node(cp.current, true) +
+      (cp.next ? '<span class="cp-arrow ar ' + (WP.i18n.isRTL() ? 'ar-left' : 'ar-right') + '"></span>' + node(cp.next) : '') +
+      (cp.future ? '<span class="cp-arrow ar ' + (WP.i18n.isRTL() ? 'ar-left' : 'ar-right') + '"></span>' + node(cp.future) : '');
+    var reqs = (cp.next && b.caps.length)
+      ? '<div class="mini-label" style="margin-top:10px">' + t('cpReqFor') + ' ' + ui.esc(cp.next.name) + '</div>' +
+        '<div>' + b.caps.map(function (c) { return '<span class="tag">' + ui.esc(c.label) + '</span>'; }).join('') + '</div>'
+      : '';
+    return '<div class="section"><h3>' + WP.ui.icon('tree', 16) + ' ' + t('cpCareerPath') + '</h3>' +
+      '<div class="cp-path">' + chain + '</div>' + reqs +
+      '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('cpConfigurable') + '</div>' +
+    '</div>';
+  }
+
+  function trainingHTML(b) {
+    var t = WP.i18n.t, tr = b.training;
+    var col = function (label, arr, empty) {
+      return '<div class="cp-tr-col"><div class="mini-label">' + label + '</div>' +
+        (arr.length ? arr.map(function (x) {
+          return '<div class="cp-tr"><div class="cp-tr-nm">' + ui.esc(x.name) + '</div>' +
+            '<div class="cp-tr-meta">' + (x.provider ? ui.esc(x.provider) + (x.date ? ' · ' + WP.i18n.shortDate(x.date) + ' ' + String(x.date).slice(0, 4) : '') : (x.action ? ui.esc(x.action) : '')) +
+            (x.skill ? ' · ' + ui.esc(x.skill) : '') + '</div></div>';
+        }).join('') : '<div class="sub">' + empty + '</div>') + '</div>';
+    };
+    return '<div class="section"><h3>' + WP.ui.icon('clipboard', 16) + ' ' + t('cpTraining') + '</h3>' +
+      '<div class="cp-tr-grid">' +
+        col(t('cpTrDone'), tr.done, t('cpTrNone')) +
+        col(t('cpTrInProgress'), tr.inprogress, t('cpTrNone')) +
+        col(t('cpTrRecommended'), tr.recommended, t('cpTrNone')) +
+      '</div>' +
+      '<div class="disclaimer">' + WP.ui.icon('bulb', 13) + ' ' + t('cpTrainingNote') + '</div>' +
+    '</div>';
+  }
+
+  // Data & sources (spec §15/§16/§17) — transparency footer.
+  function sourcesHTML() {
+    var t = WP.i18n.t;
+    return '<div class="section cp-sources"><h3>' + WP.ui.icon('eye', 16) + ' ' + t('cpSources') + '</h3>' +
+      '<ul class="cp-ul">' +
+        '<li><b>' + t('cpSrcManager') + '</b> — ' + t('cpSrcManagerDesc') + '</li>' +
+        '<li><b>' + t('cpSrcSystem') + '</b> — ' + t('cpSrcSystemDesc') + '</li>' +
+        '<li><b>' + t('cpSrcConfig') + '</b> — ' + t('cpSrcConfigDesc') + '</li>' +
+      '</ul>' +
+      '<div class="disclaimer">' + WP.ui.icon('lock', 13) + ' ' + t('cpEthos') + '</div>' +
+    '</div>';
+  }
+
+  /* ---- full render ---- */
+  function render(root) {
+    var viewer = WP.viewer();
+    if (!viewer) { root.innerHTML = '<div class="section">' + WP.ui.icon('lock', 14) + ' ' + WP.i18n.t('cpSensHidden') + '</div>'; return; }
+
+    // Resolve the subject. Specialists (own-only) auto-open their own profile;
+    // managers/directors with no selection get a picker. Fail closed.
+    var id = WP.state.selectedId;
+    var canManage = WP.access.canManage(viewer) || WP.access.canAct(viewer);
+    if (!id) {
+      if (!canManage) id = viewer.id;                 // members → their own profile
+      else { picker(root, viewer); return; }          // managers → pick a person
+    }
+    if (!WP.access.canSee(viewer, id)) { root.innerHTML = '<div class="section">' + WP.ui.icon('lock', 14) + ' ' + WP.i18n.t('cpDenied') + '</div>'; return; }
+
+    var b = WP.career.build(id, { ar: WP.state.lang === 'ar' });
+    if (!b) { root.innerHTML = '<div class="section">' + WP.i18n.t('cpDenied') + '</div>'; return; }
+
+    var rel = WP.access.relationshipTo(viewer, id);
+    var sens = WP.access.canSeeSensitive(viewer, id);
+    var selfView = rel === 'self';
+    var relText = { self: WP.i18n.t('relSelf'), manager: WP.i18n.t('relManager'), senior: WP.i18n.t('relSenior'), director: WP.i18n.t('relDirector') }[rel] || '';
+
+    var backBtn = canManage ? '<button class="btn" id="cp-back" style="margin-bottom:14px"><span class="ar ' + (WP.i18n.isRTL() ? 'ar-right' : 'ar-left') + '"></span> ' + WP.i18n.t('cpAllProfiles') + '</button>' : '';
+    var provenance = '<div class="provenance"><span>' + WP.ui.icon('lock', 14) + '</span> ' + relText + (sens ? '' : ' · <em>' + WP.i18n.t('cpSensHidden') + '</em>') + '</div>';
+
+    root.innerHTML =
+      '<div class="wbk-pageheader"><div class="wbk-ph-main">' +
+        '<h2 class="wbk-ph-title">' + WP.i18n.t('cpTitle') + '</h2>' +
+        '<div class="wbk-ph-sub">' + WP.i18n.t('cpSub') + '</div>' +
+      '</div></div>' +
+      backBtn +
+      headerHTML(b, sens, selfView) +
+      provenance +
+      summaryHTML(b, sens) +
+      skillsHTML(b) +
+      strengthsHTML(b) +
+      (sens ? gapsHTML(b) : '') +
+      (sens ? feedbackHTML(b) : '') +
+      (sens ? readinessHTML(b) : '') +
+      (sens ? devPlanHTML(b) : '') +
+      careerPathHTML(b) +
+      trainingHTML(b) +
+      sourcesHTML();
+
+    // wiring
+    var back = root.querySelector('#cp-back');
+    if (back) back.onclick = function () { WP.setState({ route: 'career', selectedId: null }); };
+    var wl = root.querySelector('#cp-workload');
+    if (wl) wl.onclick = function () { WP.setState({ route: 'workload', selectedId: id }); };
+    root.querySelectorAll('[data-cp-scroll]').forEach(function (btn) {
+      btn.onclick = function () { var el = document.getElementById(btn.dataset.cpScroll); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    });
+  }
+
+  WP.ui.career = { render: render };
 })(window.WP = window.WP || {});
 
 </script>
@@ -19114,6 +20268,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
       { id: 'workload',    routes: ['workload'],       icon: 'gauge',     label: t('navWorkload'),   group: 'overview' },
       { id: 'dashboard',   routes: ['dashboard'],      icon: 'gauge',     label: t('navDashboard'),  group: 'overview' },
       { id: 'map',         routes: ['map', 'profile'], icon: 'users',     label: t('navHome'),       group: 'work' },
+      { id: 'career',      routes: ['career'],         icon: 'sparkles',  label: t('navCareer'),     group: 'people' },
       { id: 'me',          routes: ['me'],             icon: 'target',    label: t('myProgress'),    group: 'work' },
       { id: 'evaluations', routes: ['evaluations', 'evaluation', 'upward'], icon: 'chart', label: t('evaluationsHub'), group: 'people' },
       { id: 'daily',       routes: ['daily'],          icon: 'clipboard', label: t('dailyTasks'),    group: 'work' },
@@ -19378,6 +20533,7 @@ const EMAIL_ALIAS_HASHES = { 'b6908006cb2271975f4fb220de76418a020ea57d4febbc7cea
     else if (route === 'workload') WP.ui.cockpit.render(root);
     else if (route === 'dashboard') WP.ui.dashboard.render(root);
     else if (route === 'profile') WP.ui.profile.render(root);
+    else if (route === 'career') WP.ui.career.render(root);
     else if (route === 'settings') WP.ui.settings.render(root);
     else if (route === 'activity') WP.ui.activity.render(root);
     else if (route === 'exec') WP.ui.exec.render(root);
