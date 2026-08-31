@@ -144,17 +144,27 @@ const fb = require(path.join(root, 'scripts', 'append-feedback.js'));
   if (!fs.existsSync(w)) { errors.push('[proxy] feedback-proxy/index.ts missing'); return; }
   const src = fs.readFileSync(w, 'utf8');
   assert(!/exec-status/.test(src), 'proxy never touches exec-status.json');
-  assert(/akram-webook\.github\.io/.test(src) && /Forbidden/.test(src), 'proxy enforces one allowed origin');
+  // Phase 2: CORS is a HARD-CODED allow-list Set literal (not a wildcard, not a
+  // reflected Origin). Our Pages origin is still a member; a bad origin still 403s.
+  assert(/const ALLOWED_ORIGINS = new Set/.test(src), 'proxy uses a hard-coded ALLOWED_ORIGINS Set literal');
+  assert(/akram-webook\.github\.io/.test(src) && /Forbidden/.test(src), 'proxy still allows the Pages origin + 403s others');
+  assert(!/["']https:\/\/\*/.test(src), 'no wildcard origin entry (e.g. "https://*.webook.com") in the allow-list');
   assert(/receive-feedback\.yml/.test(src), 'proxy forwards to the receive-feedback Action (one write path)');
   // A real token literal (ghp_/github_pat_ followed by many token chars), not the
   // "github_pat_xxx" placeholder in the deploy-instructions comment.
   assert(!/ghp_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9]{20}/.test(src), 'proxy source carries no hardcoded token');
   assert(/Deno\.env\.get\("GITHUB_PAT"\)/.test(src), 'proxy reads the token from a Supabase secret (Deno.env)');
   // origin gate runs before the OPTIONS branch (bad-origin preflight -> 403).
-  // Match the actual code (the `req.method === "OPTIONS"` branch), not the comment.
-  const gateIdx = src.indexOf('if (origin !== ALLOWED_ORIGIN)');
+  // The Set-membership gate (`if (!allow)`, where allow is set-validated) must
+  // precede the `req.method === "OPTIONS"` branch.
+  const gateIdx = src.indexOf('if (!allow) return new Response("Forbidden"');
   const optIdx = src.indexOf('req.method === "OPTIONS"');
-  assert(gateIdx > 0 && optIdx > 0 && gateIdx < optIdx, 'origin gate precedes the OPTIONS/preflight branch');
+  assert(gateIdx > 0 && optIdx > 0 && gateIdx < optIdx, 'origin gate (Set membership) precedes the OPTIONS/preflight branch');
+  // The Access-Control-Allow-Origin header must be a set-validated value, never a
+  // blind reflection of the raw request Origin.
+  assert(/ALLOWED_ORIGINS\.has\(origin\)/.test(src), 'origin is checked via Set membership (not reflected)');
+  assert(/CREATE_KEYS = \[[^\]]*"source"/.test(src), 'proxy forwards the immutable source field on create');
+  assert(!/UPDATE_KEYS = \[[^\]]*"source"/.test(src), 'proxy never lets update change source (immutable)');
 })();
 
 if (errors.length) { console.log('FAIL\n' + errors.join('\n')); process.exit(1); }

@@ -53,8 +53,8 @@ try{
 
   // exact WBK PRO V3 token values (re-baselined in Wave 1)
   const tk=fs.readFileSync(path.join(root,'src/css/tokens.css'),'utf8');
-  assert(/--text:\s*#071437/i.test(tk),'V3 Content-Primary navy #071437 wired (light base)');
-  assert(/--surface:\s*#FFFFFF/i.test(tk),'V3 Bg-Primary pure white #FFFFFF wired');
+  assert(/--text:\s*#18181B/i.test(tk),'Content-Primary #18181B wired (light base, synced to Figma 🌞 Light)');
+  assert(/--surface:\s*#FCFCFC/i.test(tk),'Surface-Base #FCFCFC wired (Figma 🌞 Light)');
   // Content-Secondary: the raw WBK V3 token is #78829D, but that is ~3.8:1 on white
   // and fails WCAG 1.4.3 for body text. Per Akram (Jul-2026 audit) + CLAUDE.md (WCAG
   // is non-negotiable), we override to a darker #5C6470 that clears 4.5:1. Fills/dots

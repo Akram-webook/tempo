@@ -54,6 +54,10 @@ on:
         description: 'Signed-in user name/email'
         required: false
         default: ''
+      source:
+        description: 'Which tool submitted (slug): workload | hr-portal | ... (create op)'
+        required: false
+        default: ''
       area:
         description: 'Current page/route'
         required: false
@@ -113,6 +117,7 @@ jobs:
           FB_KLASS: ${{ github.event.inputs.klass }}
           FB_PRIORITY: ${{ github.event.inputs.priority }}
           FB_OWNER: ${{ github.event.inputs.owner }}
+          FB_SOURCE: ${{ github.event.inputs.source }}
           FB_AREA: ${{ github.event.inputs.area }}
           FB_CONTEXT: ${{ github.event.inputs.context }}
           FB_URL: ${{ github.event.inputs.url }}

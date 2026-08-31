@@ -1676,6 +1676,8 @@ a.acct-item:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in sr
   padding: 3px 7px; border-radius: 999px; white-space: nowrap; }
 .ex-tl-tag--fb { color: var(--exec-violet); background: color-mix(in srgb, var(--exec-violet) 14%, transparent); }
 .ex-tl-tag--lane { color: var(--text-muted); background: var(--surface-2); }
+/* Source badge (Phase 2): which tool submitted. Neutral — Surface-L3 + Content-Secondary. */
+.ex-tl-tag--src { color: var(--text-muted); background: var(--surface-3); }
 .ex-tl-tag--wave { color: var(--exec-green); background: color-mix(in srgb, var(--exec-green) 14%, transparent); }
 /* A discarded idea stays visible for the audit trail but reads clearly "dropped". */
 .ex-tl-row--discarded { opacity: .55; }

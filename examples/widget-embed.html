@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WBK Feedback widget — embed example</title>
+  <style>
+    /* A pretend WBK host tool, single dark theme. It exposes the WBK design tokens,
+       so the embedded widget adopts them automatically (token-first theming). */
+    :root {
+      --brand: #ff2c79; --brand-hover: #ff4d8d; --brand-glow: rgba(255,44,121,0.40);
+      --surface-base: #09090b; --surface-l2: #27272a; --surface-l3: #3f3f46;
+      --content-primary: #e4e4e7; --content-secondary: #a1a1aa;
+      --border: rgba(255,255,255,0.10); --border-strong: rgba(255,255,255,0.20);
+    }
+    body { font: 16px/1.6 Figtree, system-ui, sans-serif; margin: 0; padding: 48px 24px;
+      color: var(--content-primary); background: var(--surface-base); }
+    main { max-width: 640px; margin: 0 auto; }
+    h1 { color: var(--content-primary); }
+    code { background: var(--surface-l3); padding: 2px 6px; border-radius: 4px; }
+    pre { background: var(--surface-l2); padding: 16px; border-radius: 8px; overflow: auto;
+      border: 1px solid var(--border); }
+    .note { color: var(--content-secondary); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>A pretend Webook tool</h1>
+    <p>This page is NOT the Tempo app — it stands in for any internal tool (e.g. an HR
+      portal). It embeds the Global Feedback widget with the two-line snippet below.
+      Look for the pink feedback button in the bottom-right, open it, and send a note.</p>
+
+    <pre><code>&lt;script src="https://akram-webook.github.io/tempo/widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;window.WBK.Feedback.init({ tool: 'hr-portal', endpoint: '&lt;proxy-url&gt;' })&lt;/script&gt;</code></pre>
+
+    <p class="note">Here the script is loaded from the local build (<code>../dist/widget.js</code>)
+      and the <code>endpoint</code> points at a <strong>demo shim</strong> defined in THIS page
+      (below) so you can see the full success flow without a live proxy. The shim is part of
+      the example page, never part of the widget bundle.</p>
+  </main>
+
+  <!-- Demo-only: intercept the widget's POST so the success toast shows offline.
+       This lives in the EXAMPLE page, not in dist/widget.js. -->
+  <script>
+    (function () {
+      var DEMO = 'https://demo.local/feedback-proxy';
+      var realFetch = window.fetch ? window.fetch.bind(window) : null;
+      window.fetch = function (url, opts) {
+        if (url === DEMO) {
+          try { console.log('[demo] widget POST', JSON.parse(opts.body)); } catch (e) {}
+          return Promise.resolve({ status: 200, json: function () { return Promise.resolve({ ok: true }); } });
+        }
+        return realFetch ? realFetch(url, opts) : Promise.reject(new Error('no fetch'));
+      };
+      window.__WBK_DEMO_ENDPOINT = DEMO;
+    })();
+  </script>
+
+  <!-- The two lines a real tool would add (endpoint filled from the demo shim here). -->
+  <script src="../dist/widget.js"></script>
+  <script>
+    window.WBK.Feedback.init({ tool: 'hr-portal', endpoint: window.__WBK_DEMO_ENDPOINT, locale: 'en' });
+  </script>
+</body>
+</html>

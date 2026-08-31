@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Upward feedback (employee → manager)
+ * Tickets Distribution — Upward feedback (employee → manager)
  * ------------------------------------------------------------
  * A report rates their manager on leadership BEHAVIORS. The result
  * is aggregated + anonymous and routed UP the chain (to the manager's

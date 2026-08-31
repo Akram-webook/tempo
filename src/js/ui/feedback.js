@@ -868,6 +868,7 @@
           klass: klass,                       // Frontend|Backend|Bug|Feature|Enhancement|New skill
           priority: canSetPriority() ? (it.priority || 'Medium') : '',
           owner: owner,
+          source: 'workload',                 // which TOOL this came from (Phase 2); the app IS Workload
           area: areaName(),                   // which PAGE it came from
           context: context,
           url: (location && location.href) || '',

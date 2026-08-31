@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Role dashboard (Director / Senior / Manager / Employee)
+ * Tickets Distribution — Role dashboard (Director / Senior / Manager / Employee)
  * ------------------------------------------------------------
  * One route that adapts to the viewer's role, built from REAL computed
  * data (capacity engine + growth signals + access scope). No mock numbers.

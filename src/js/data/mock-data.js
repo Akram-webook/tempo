@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Mock Data  (DEMO Event-Operations team)
+ * Tickets Distribution — Mock Data  (DEMO Event-Operations team)
  * ------------------------------------------------------------
  * Names, titles and hierarchy are FAKE demo people (no real staff PII).
  * Workload numbers, events, skills and reviews are all mocked for the demo.

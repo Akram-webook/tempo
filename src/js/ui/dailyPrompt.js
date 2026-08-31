@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Daily check-in pop-up (on open)
+ * Tickets Distribution — Daily check-in pop-up (on open)
  * ------------------------------------------------------------
  * When you open the app you get one tiny pop-up:
  *   • "Log what I did" — type freely, Save → goes to your progress

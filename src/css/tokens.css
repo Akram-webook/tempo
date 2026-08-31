@@ -30,19 +30,19 @@
 
 :root,
 [data-theme="light"] {
-  /* surfaces / backgrounds — V3 light base */
-  --bg:            #F1F1F4; /* Bg-Secondary */
-  --surface:       #FFFFFF; /* Bg-Primary / Surface-Base */
-  --surface-1:     #F9F9F9; /* Surface-L1 */
-  --surface-2:     #F1F1F4; /* Surface-L2 */
-  --surface-3:     #DBDFE9; /* Surface-L3 */
-  --border:        #DBDFE9; /* Border-Tertiary (default hairline) */
+  /* surfaces / backgrounds — synced to Figma 🌞 Light export (2026-08) */
+  --bg:            #E6E8EE; /* Bg-Secondary */
+  --surface:       #FCFCFC; /* Bg-Primary / Surface-Base */
+  --surface-1:     #FCFCFC; /* Surface-L1 */
+  --surface-2:     #F5F5F6; /* Surface-L2 */
+  --surface-3:     #CFD4E1; /* Surface-L3 */
+  --border:        #CFD4E1; /* Border-Tertiary (default hairline) */
   --border-secondary:#99A1B7; /* Border-Secondary (stronger) */
   --border-primary: #18181B; /* Border-Primary (strongest) */
 
-  /* text / content */
-  --text:          #071437; /* Content-Primary (navy) */
-  --text-muted:    #5C6470; /* Content-Secondary — darkened for WCAG 4.5:1 on white (was #78829D ~3.8:1) */
+  /* text / content — Content-Primary synced to Figma (#18181B, was navy #071437) */
+  --text:          #18181B; /* Content-Primary */
+  --text-muted:    #5C6470; /* Content-Secondary — kept darkened for WCAG 4.5:1 on white (Figma #8B8E9A is ~3.4:1 as text) */
   --text-tertiary: #6B7280; /* Content-Tertiary — darkened for 4.5:1 as text (was #99A1B7); decorative use only if lighter needed */
   --text-disabled: rgba(7,20,55,.30); /* Content-Disabled (#0714374D) */
 

@@ -1,8 +1,11 @@
-# CLAUDE.md — Tempo project guide for AI assistants
+# CLAUDE.md — Tickets Distribution project guide for AI assistants
 
 This file is read automatically each session. Follow it for every task. Keep it accurate.
 
-## What Tempo is
+> **Product name: Tickets Distribution.** `tempo` / `TAOS` remain the internal repo
+> codename and OS name in code paths, comments, and tooling — do not mass-rename those.
+
+## What Tickets Distribution is
 Internal Workforce-Intelligence / Operations web app for **Webook Event Operations** —
 org/workload map, capacity & team-health, performance evaluations (manager + self + 360),
 daily tasks, role dashboards, Super-Admin/permissions. EN + AR (RTL/LTR), light/dark, WBK tokens.

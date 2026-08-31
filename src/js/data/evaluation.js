@@ -1,5 +1,5 @@
 /* ============================================================
- * Webook Workload — Performance Evaluation (downward feedback)
+ * Tickets Distribution — Performance Evaluation (downward feedback)
  * ------------------------------------------------------------
  * Mirrors the real Webook evaluation: 16 weighted competency
  * criteria rated 1–5 (Scale) + 5 qualitative feedback questions.

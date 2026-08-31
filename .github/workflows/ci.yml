@@ -38,3 +38,18 @@ jobs:
           if git grep -nE 'sb_secret_[A-Za-z0-9]{8}|eyJ[A-Za-z0-9_-]{24,}[.][A-Za-z0-9_-]{16,}[.][A-Za-z0-9_-]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY-----' -- . ':!*.md' ':!docs/**'; then
             echo "::error::possible secret VALUE committed"; exit 1; fi
           echo "scope guard passed"
+      - name: Widget + proxy security greps (Phase 2)
+        run: |
+          set -e
+          fail() { echo "::error::$1"; exit 1; }
+          grep -nE 'github_pat_|ghp_|Bearer|GITHUB_PAT' dist/widget.js && fail "PAT/Bearer in dist/widget.js" || true
+          # Main bundle: real-token patterns only. The word "Bearer" legitimately
+          # appears in the app's Phase 1 direct-dispatch transport (a runtime concat;
+          # the token defaults to empty and is never in the bundle) — matching the
+          # repo's own secret definition in verify-crud.js, we do not flag it here.
+          grep -nE 'github_pat_|ghp_[A-Za-z0-9]|GITHUB_PAT' dist/index.html && fail "PAT in dist/index.html" || true
+          grep -n 'supabase\.co' dist/widget.js && fail "endpoint baked into dist/widget.js" || true
+          grep -nE '#[0-9a-fA-F]{6}' src/js/widget/ -r && fail "raw hex in src/js/widget/" || true
+          grep -q 'ALLOWED_ORIGINS = new Set' supabase/functions/feedback-proxy/index.ts || fail "proxy CORS is not a hard-coded Set"
+          grep -n 'exec-status' supabase/functions/feedback-proxy/index.ts && fail "proxy references exec-status" || true
+          echo "widget + proxy security greps passed"
