@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-06T11:35:37.065Z",
+  "generated": "2026-09-07T13:24:39.385Z",
   "cover": {
     "status": "Done",
     "progress": 100,
@@ -329,11 +329,6 @@
   ],
   "history": [
     {
-      "ts": "2026-08-08T07:52:51.698Z",
-      "progress": 100,
-      "health": "green"
-    },
-    {
       "ts": "2026-08-09T07:55:58.163Z",
       "progress": 100,
       "health": "green"
@@ -475,6 +470,11 @@
     },
     {
       "ts": "2026-09-06T11:35:37.065Z",
+      "progress": 100,
+      "health": "green"
+    },
+    {
+      "ts": "2026-09-07T13:24:39.385Z",
       "progress": 100,
       "health": "green"
     }
